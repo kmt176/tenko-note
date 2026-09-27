@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D6A80">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="点呼ノート">
+<meta name="robots" content="noindex">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;-webkit-text-size-adjust:100%}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>点呼時間ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDGothic:wght@700&display=swap">
+<style>
+:root{
+  --bg:#EEF2F1; --surface:#FFFFFF; --sunk:#E3E9E8; --ink:#15201E; --muted:#5A6866; --line:#CBD5D3;
+  --accent:#1D6A80; --accent-ink:#FFFFFF; --accent-soft:#D9EBF0;
+  --ok:#2C7A4B; --ok-soft:#DDEFE3; --warn:#9A6212; --warn-soft:#F6EAD3; --bad:#B3342A; --bad-soft:#F7DEDA;
+  --sans:"BIZ UDPGothic","Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;
+  --num:"BIZ UDGothic","Hiragino Sans","Yu Gothic UI",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#101716; --surface:#18221F; --sunk:#0C1211; --ink:#E4ECEA; --muted:#98A8A5; --line:#2C3A37;
+    --accent:#5FB3CC; --accent-ink:#0B1A1F; --accent-soft:#17323A;
+    --ok:#6FC993; --ok-soft:#173226; --warn:#E3AE5B; --warn-soft:#352812; --bad:#EE8176; --bad-soft:#3A1C19;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101716; --surface:#18221F; --sunk:#0C1211; --ink:#E4ECEA; --muted:#98A8A5; --line:#2C3A37;
+  --accent:#5FB3CC; --accent-ink:#0B1A1F; --accent-soft:#17323A;
+  --ok:#6FC993; --ok-soft:#173226; --warn:#E3AE5B; --warn-soft:#352812; --bad:#EE8176; --bad-soft:#3A1C19;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:12px 96px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.note{font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:8px 12px}
+.period{display:flex;align-items:center;gap:8px}
+.period h1{flex:1;margin:0;text-align:center;font-size:20px;text-wrap:balance}
+.period h1 small{display:block;font-size:12.5px;color:var(--muted);font-weight:400}
+.iconbtn{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px}
+
+.next{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:16px 18px;display:grid;gap:6px}
+.next .lbl{font-size:12.5px;letter-spacing:.06em;opacity:.85}
+.next .big{font-size:40px;line-height:1.1}
+.next .sub{font-size:13px;opacity:.9}
+
+.meter{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.meter .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.meter .total{font-size:24px}
+.bar{height:12px;border-radius:6px;background:var(--sunk);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .a{background:var(--accent)} .bar .p{background:var(--accent-soft)}
+.legend{font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+
+.list{display:flex;flex-direction:column;gap:10px}
+.shift{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;text-align:left;width:100%}
+.shift.prev{background:transparent;border-style:dashed}
+.shift .top{display:flex;align-items:baseline;gap:10px}
+.shift .date{font-size:17px;font-weight:700}
+.shift .dow{font-size:13px;color:var(--muted)}
+.shift .kind{margin-left:auto;font-size:12px;color:var(--muted)}
+.times{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:15px}
+.times dt{color:var(--muted);font-size:12.5px;align-self:center}
+.times dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;border-radius:999px;padding:3px 10px;background:var(--sunk);color:var(--ink)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad);font-weight:700}
+
+.add{border:1.5px dashed var(--accent);color:var(--accent);background:transparent;border-radius:12px;padding:14px;font-weight:700}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+details summary{cursor:pointer;font-weight:700}
+details .body{display:grid;gap:10px;margin-top:10px;font-size:13.5px;color:var(--muted)}
+details ul{margin:0;padding-left:1.2em}
+textarea{width:100%;min-height:90px;font:12px/1.4 var(--num);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border-radius:10px;padding:10px 14px;border:1px solid var(--line);background:var(--surface)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.msg{font-size:13px;color:var(--ok)}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--surface);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
+.sheet .in{max-width:560px;margin:0 auto;display:grid;gap:14px}
+.sheet h2{margin:0;font-size:17px}
+.field{display:grid;gap:4px}
+.field label{font-size:12.5px;color:var(--muted)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.grp h3{margin:0;font-size:13.5px}
+input[type=date],input[type=time]{width:100%;font:18px var(--num);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
+.live{font-size:13px;color:var(--muted)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar button{flex:1;border:0;background:none;padding:14px 0 12px;font-weight:700;font-size:15px;color:var(--muted)}
+.tabbar button[aria-selected="true"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
+.card h2{margin:0;font-size:16px}
+input[type=text],input[type=url],input[type=number],input[type=password]{width:100%;font:17px var(--sans);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.check input{width:22px;height:22px}
+.geo{font-size:13px;color:var(--muted)}
+.res{display:grid;gap:0}
+.res .tag{justify-self:start;font-size:12px;border-radius:6px;padding:2px 8px;background:var(--warn-soft);color:var(--warn);margin-bottom:6px}
+.leg{display:grid;gap:4px;padding:12px 0;border-top:1px solid var(--line)}
+.leg:first-of-type{border-top:0}
+.leg .h{font-size:12.5px;color:var(--muted)}
+.leg .v{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.leg .v strong{font-size:26px}
+.leg .d{font-size:13.5px}
+.pill{display:inline-block;border-radius:999px;padding:4px 12px;font-size:13.5px;font-weight:700}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)}
+.foot{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.links a{display:flex;align-items:center;justify-content:center;text-align:center;min-height:48px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--accent);font-weight:700;font-size:13.5px;text-decoration:none}
+.links a.main{grid-column:1/-1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:15px}
+.err{color:var(--bad);font-size:14px}
+@media (prefers-reduced-motion: no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(20px);opacity:.6}}}
+</style>
+
+<div class="wrap" id="tabTenko">
+  <div class="note" id="demoNote">試作版です。あなたのExcel（点呼時間_）の10月度の時刻を例として入れてあります。入力は、このスマホの中だけに保存されます。</div>
+
+  <div class="period">
+    <button class="iconbtn" id="prevP" aria-label="前の月度">◀</button>
+    <h1 id="pTitle">10月度<small>9/26〜10/26</small></h1>
+    <button class="iconbtn" id="nextP" aria-label="次の月度">▶</button>
+  </div>
+
+  <section class="next" id="nextCard" aria-live="polite"></section>
+
+  <section class="meter" id="meter"></section>
+
+  <div class="list" id="list"></div>
+
+  <button class="add" id="addBtn">＋ 勤務を追加</button>
+
+  <details>
+    <summary>チェックしているルール</summary>
+    <div class="body">
+      <ul>
+        <li>1回の拘束（業務前点呼〜業務後点呼）は22時間以内</li>
+        <li>前回と今回の2回の平均は21時間以内。このため今回の上限は「22時間」か「42時間－前回」の短いほう</li>
+        <li>勤務と勤務の間の休息は22時間以上（24時間以上が努力目標）</li>
+        <li>1か月の拘束は月度ごとの上限以内（262時間。4・6・7・8・11・12月度は270時間）</li>
+        <li>納金は10時30分まで</li>
+      </ul>
+      <div>出典：厚生労働省「タクシー運転者の改善基準告示」（2024年4月適用）</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>バックアップ・機種変更</summary>
+    <div class="body">
+      <div>下の文字をコピーして、メモやGoogleドライブに保存してください。新しいスマホでは、貼り付けて「復元」を押します。</div>
+      <textarea id="exportBox" readonly aria-label="バックアップ用の文字"></textarea>
+      <div class="btnrow"><button class="btn primary" id="copyBtn">コピー</button></div>
+      <textarea id="importBox" placeholder="ここに貼り付け" aria-label="復元する文字"></textarea>
+      <div class="btnrow">
+        <button class="btn" id="importBtn">復元</button>
+        <button class="btn" id="sampleBtn">例（10月度）を入れ直す</button>
+        <button class="btn danger" id="clearBtn">すべて消す</button>
+      </div>
+      <div class="msg" id="bkMsg" role="status"></div>
+    </div>
+  </details>
+</div>
+
+<div class="wrap" id="tabLong" hidden>
+  <section class="card" aria-labelledby="lTitle">
+    <h2 id="lTitle">ロングを受けたら</h2>
+    <div class="field"><label for="lDest">目的地（施設名・住所）</label><input type="text" id="lDest" placeholder="例：成田空港 第1ターミナル" autocomplete="off"></div>
+    <div class="field">
+      <label for="lFrom">出発地</label>
+      <div class="btnrow"><button class="btn" id="lGeo">現在地を使う</button></div>
+      <div class="geo" id="lGeoMsg" role="status">現在地が使えないときは、下に駅名や住所を入れてください</div>
+      <input type="text" id="lFrom" placeholder="例：渋谷駅" autocomplete="off">
+    </div>
+    <div class="pair">
+      <div class="field"><label for="lStay">目的地での降車・待ち（分）</label><input type="number" id="lStay" inputmode="numeric" min="0" value="5"></div>
+      <div class="field"><label for="lMargin">余裕として足す（分）</label><input type="number" id="lMargin" inputmode="numeric" min="0" value="15"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="lGoLocal">行きは一般道のみ（高速を使わない）</label>
+    <button class="btn primary" id="lRun">時間を調べる</button>
+  </section>
+
+  <section class="card" id="lResult" aria-live="polite"></section>
+
+  <section class="card" aria-labelledby="lkTitle">
+    <h2 id="lkTitle">渋滞・工事の情報</h2>
+    <div class="links" id="lLinks"></div>
+  </section>
+
+  <details>
+    <summary>接続の設定（最初に1回）</summary>
+    <div class="body">
+      <div>Apps Scriptを公開したときのURLと、合言葉を入れてください。このスマホの中に保存されます。</div>
+      <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
+      <div class="field"><label for="lPass">合言葉</label><input type="password" id="lPass" inputmode="numeric"></div>
+      <div class="btnrow"><button class="btn primary" id="lSave">保存</button></div>
+      <div class="msg" id="lCfgMsg" role="status"></div>
+    </div>
+  </details>
+</div>
+
+<nav class="tabbar" role="tablist" aria-label="画面の切り替え">
+  <button role="tab" id="tb1" aria-selected="true" aria-controls="tabTenko">点呼時間</button>
+  <button role="tab" id="tb2" aria-selected="false" aria-controls="tabLong">ロング判定</button>
+</nav>
+
+<div class="sheet-bg" id="sheetBg" hidden></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="in">
+    <h2 id="sheetTitle">勤務の入力</h2>
+    <div class="field"><label for="fDate">出社日</label><input type="date" id="fDate"></div>
+    <div class="grp">
+      <h3>計画</h3>
+      <div class="pair">
+        <div class="field"><label for="fPb">業務前点呼</label><input type="time" id="fPb"></div>
+        <div class="field"><label for="fPa">業務後点呼</label><input type="time" id="fPa"></div>
+      </div>
+    </div>
+    <div class="grp">
+      <h3>実績</h3>
+      <div class="pair">
+        <div class="field"><label for="fAb">業務前点呼</label><input type="time" id="fAb"></div>
+        <div class="field"><label for="fAa">業務後点呼</label><input type="time" id="fAa"></div>
+      </div>
+      <div class="btnrow"><button class="btn" id="samePlan">計画と同じ時刻を入れる</button></div>
+    </div>
+    <div class="live" id="live"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="saveBtn">保存</button>
+      <button class="btn" id="cancelBtn">閉じる</button>
+      <button class="btn danger" id="delBtn">削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // 本番用に書き出すときは build.py が PROD=true と Apps Script の URL に置き換える
+  const PROD=true, SCRIPT_URL="https://script.google.com/macros/s/AKfycbxXXegWotnxzAYrvKaYYxV9_m_tkR--QNrdmq9uTAkqBk-evzK8T388kKcsliG6t2lpVQ/exec";
+  // 会社の締め日表（勤務表ツールの「締め日」シートと同じ）
+  const PERIODS = [];
+  const ROWS = [[1,"12-26","01-25",262],[2,"01-26","02-24",262],[3,"02-25","03-26",262],[4,"03-27","04-25",270],[5,"04-26","05-26",262],[6,"05-27","06-25",270],[7,"06-26","07-26",270],[8,"07-27","08-26",270],[9,"08-27","09-25",262],[10,"09-26","10-26",262],[11,"10-27","11-25",270],[12,"11-26","12-25",270]];
+  for (let y=2026;y<=2028;y++) for (const [m,s,e,lim] of ROWS) PERIODS.push({y,m,start:(m===1?y-1:y)+"-"+s,end:y+"-"+e,limit:lim});
+
+  const KEY="tenko.v2", DAY=1440, NOKIN=10*60+30;
+  const SAMPLE=[["2026-09-25","12:56","08:48"],["2026-09-28","12:50","09:00"],["2026-09-30","12:50","08:50"],["2026-10-02","12:50","09:00"],["2026-10-04","12:50","09:30"],["2026-10-08","12:50","09:00"],["2026-10-10","12:50","09:00"],["2026-10-12","12:50","07:00"],["2026-10-15","12:50","09:00"],["2026-10-17","12:50","09:30"],["2026-10-19","12:50","09:30"],["2026-10-22","12:50","09:00"],["2026-10-24","12:50","09:00"],["2026-10-26","12:50","09:30"]]
+    .map(([d,b,a],i)=>({id:"s"+i,date:d,pb:b,pa:a,ab:b,aa:a}));
+
+  let recs=load(), pIdx=0, editId=null, delArmed=false;
+
+  // 試作版は保存が空なら例のデータで始める。本番は空から始める
+  function load(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(Array.isArray(v)&&(PROD||v.length)) return v; }catch(e){} return PROD?[]:SAMPLE.map(r=>({...r})); }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(recs)); }catch(e){} }
+
+  const $=id=>document.getElementById(id);
+  const toMin=t=>{ if(!t) return null; const [h,m]=t.split(":").map(Number); return h*60+m; };
+  const dayNo=d=>Math.round(Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10))/864e5);
+  const hm=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); return s+Math.floor(m/60)+":"+String(m%60).padStart(2,"0"); };
+  const clock=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+  const DOW="日月火水木金土";
+  const md=d=>(+d.slice(5,7))+"/"+(+d.slice(8,10));
+  const dow=d=>DOW[new Date(d+"T00:00:00").getDay()];
+  const absToLabel=abs=>{ const dn=Math.floor(abs/DAY), t=abs-dn*DAY, d=new Date(dn*864e5); return (d.getUTCMonth()+1)+"/"+d.getUTCDate()+"（"+DOW[d.getUTCDay()]+"） "+clock(t); };
+  const todayStr=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+
+  // 1件ごとの計算（Excelの F〜K 列と同じ考え方）
+  function calc(){
+    const s=[...recs].sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+    let prev=null;
+    return s.map(r=>{
+      const hasAct=!!(r.ab&&r.aa);
+      const b=toMin(r.ab||r.pb), a=toMin(r.aa||r.pa);
+      const c={r,hasAct,ok:b!=null&&a!=null};
+      if(c.ok){
+        c.dur=((a-b)%DAY+DAY)%DAY;
+        c.start=dayNo(r.date)*DAY+b; c.end=c.start+c.dur;
+        c.max=prev?Math.min(22*60,42*60-prev.dur):22*60;
+        c.deadline=c.start+c.max;
+        if(prev){ c.prevDur=prev.dur; c.avg=(c.dur+prev.dur)/2; c.rest=c.start-prev.end; }
+        if(r.pb&&r.pa&&hasAct){ const pd=((toMin(r.pa)-toMin(r.pb))%DAY+DAY)%DAY; c.diff=c.dur-pd; }
+        const endT=a; c.lateNokin = endT>NOKIN && endT<b;
+        prev=c;
+      }
+      return c;
+    });
+  }
+
+  function periodOf(d){ return PERIODS.findIndex(p=>d>=p.start&&d<=p.end); }
+
+  function chipsFor(c){
+    const out=[];
+    const lvl=(bad,warn)=>bad?"bad":warn?"warn":"ok";
+    out.push(`<span class="chip ${lvl(c.dur>22*60,c.dur>c.max)}">拘束 <span class="num">${hm(c.dur)}</span>${c.dur>c.max?" 上限超え":""}</span>`);
+    if(c.avg!=null) out.push(`<span class="chip ${lvl(c.avg>21*60,false)}">2回平均 <span class="num">${hm(c.avg)}</span></span>`);
+    if(c.rest!=null && c.rest<7*DAY) out.push(`<span class="chip ${lvl(c.rest<22*60,c.rest<24*60)}">休息 <span class="num">${hm(c.rest)}</span></span>`);
+    if(c.lateNokin) out.push(`<span class="chip warn">納金 10:30 過ぎ</span>`);
+    if(c.diff!=null && c.diff!==0) out.push(`<span class="chip">計画差 <span class="num">${c.diff>0?"+":""}${hm(c.diff)}</span></span>`);
+    return out.join("");
+  }
+
+  function render(){
+    const all=calc(), P=PERIODS[pIdx];
+    $("pTitle").innerHTML=`${P.m}月度<small>${md(P.start)}〜${md(P.end)}・上限 ${P.limit}時間</small>`;
+    const inP=all.filter(c=>c.r.date>=P.start&&c.r.date<=P.end);
+    const before=all.filter(c=>c.r.date<P.start&&c.ok).pop();
+
+    // 次の勤務
+    const t=todayStr();
+    const nx=all.find(c=>c.ok&&c.r.date>=t&&!c.r.aa) || all.filter(c=>c.ok).pop();
+    const nc=$("nextCard");
+    if(nx){
+      const restTxt=nx.rest!=null?`前の勤務からの休息 <span class="num">${hm(nx.rest)}</span>${nx.rest<22*60?"（22時間未満）":""}`:"";
+      nc.innerHTML=`<div class="lbl">${md(nx.r.date)}（${dow(nx.r.date)}）出社の勤務　業務後点呼の期限</div>
+        <div class="big num">${absToLabel(nx.deadline)}</div>
+        <div class="sub">今回の上限 <span class="num">${hm(nx.max)}</span>（前回 <span class="num">${nx.prevDur!=null?hm(nx.prevDur):"—"}</span>）・納金は10:30まで</div>
+        ${restTxt?`<div class="sub">${restTxt}</div>`:""}`;
+    } else nc.innerHTML=`<div class="lbl">勤務がまだありません</div><div class="sub">下の「＋ 勤務を追加」から入れてください</div>
+      ${PROD?"":`<div class="btnrow" style="margin-top:6px"><button class="btn" id="sampleBtn2" style="color:var(--ink)">例（10月度）を入れ直す</button></div>`}`;
+    const sb2=$("sampleBtn2"); if(sb2) sb2.onclick=loadSample;
+
+    // 月の拘束時間
+    let act=0, plan=0;
+    inP.forEach(c=>{ if(!c.ok) return; if(c.hasAct) act+=c.dur; else plan+=c.dur; });
+    const lim=P.limit*60, tot=act+plan, over=tot>lim;
+    $("meter").innerHTML=`<div class="row"><span>この月度の拘束時間</span><span class="total num" style="color:${over?"var(--bad)":"var(--ink)"}">${hm(tot)} <small style="font-size:14px;color:var(--muted)">/ ${P.limit}:00</small></span></div>
+      <div class="bar" role="img" aria-label="実績 ${hm(act)}、予定 ${hm(plan)}、上限 ${P.limit}時間">
+        <i class="a" style="width:${Math.min(100,act/lim*100)}%"></i><i class="p" style="width:${Math.max(0,Math.min(100-act/lim*100,plan/lim*100))}%"></i></div>
+      <div class="legend"><span><b style="background:var(--accent)"></b>実績 <span class="num">${hm(act)}</span></span><span><b style="background:var(--accent-soft)"></b>予定 <span class="num">${hm(plan)}</span></span><span>${over?`<strong style="color:var(--bad)">上限を <span class="num">${hm(tot-lim)}</span> 超えます</strong>`:`残り <span class="num">${hm(lim-tot)}</span>`}</span><span>${inP.length}回</span></div>`;
+
+    // 一覧
+    const card=(c,isPrev)=>{
+      const r=c.r;
+      return `<button class="shift${isPrev?" prev":""}" data-id="${r.id}">
+        <div class="top"><span class="date num">${md(r.date)}</span><span class="dow">${dow(r.date)}曜</span><span class="kind">${isPrev?"前月度の最後":c.hasAct?"実績あり":"予定"}</span></div>
+        <dl class="times">
+          <dt>計画</dt><dd class="num">${r.pb||"--:--"} → ${r.pa||"--:--"}</dd>
+          <dt>実績</dt><dd class="num">${r.ab||"--:--"} → ${r.aa||"--:--"}</dd>
+          ${c.ok?`<dt>期限</dt><dd class="num">${absToLabel(c.deadline)}</dd>`:""}
+        </dl>
+        ${c.ok?`<div class="chips">${chipsFor(c)}</div>`:""}
+      </button>`;
+    };
+    $("list").innerHTML=(before?card(before,true):"")+inP.map(c=>card(c,false)).join("") || "";
+    $("exportBox").value=JSON.stringify(recs);
+  }
+
+  // 入力パネル
+  function openSheet(id){
+    editId=id; delArmed=false; $("delBtn").textContent="削除";
+    let r=recs.find(x=>x.id===id);
+    if(!r){
+      const s=[...recs].sort((a,b)=>a.date<b.date?-1:1), last=s[s.length-1];
+      let d=PERIODS[pIdx].start;
+      if(last){ const n=new Date(last.date+"T00:00:00"); n.setDate(n.getDate()+2); d=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0"); }
+      r={date:d,pb:last?last.pb:"",pa:last?last.pa:"",ab:"",aa:""};
+    }
+    $("sheetTitle").textContent=id?"勤務を直す":"勤務を追加";
+    $("delBtn").hidden=!id;
+    $("fDate").value=r.date; $("fPb").value=r.pb; $("fPa").value=r.pa; $("fAb").value=r.ab; $("fAa").value=r.aa;
+    $("sheet").hidden=$("sheetBg").hidden=false; liveCalc(); $("fDate").focus();
+  }
+  function closeSheet(){ $("sheet").hidden=$("sheetBg").hidden=true; }
+  function formRec(){ return {id:editId||("r"+Date.now()),date:$("fDate").value,pb:$("fPb").value,pa:$("fPa").value,ab:$("fAb").value,aa:$("fAa").value}; }
+  function liveCalc(){
+    const f=formRec(); if(!f.date){ $("live").textContent="出社日を入れてください"; return; }
+    const keep=recs; recs=recs.filter(x=>x.id!==f.id).concat([f]); const c=calc().find(x=>x.r.id===f.id); recs=keep;
+    $("live").innerHTML=c&&c.ok?`業務後点呼の期限 <strong class="num">${absToLabel(c.deadline)}</strong>（上限 <span class="num">${hm(c.max)}</span>）<div class="chips" style="margin-top:6px">${chipsFor(c)}</div>`:"時刻を入れると、期限と休息時間をここに表示します";
+  }
+  ["fDate","fPb","fPa","fAb","fAa"].forEach(id=>$(id).addEventListener("input",liveCalc));
+  $("samePlan").onclick=()=>{ $("fAb").value=$("fPb").value; $("fAa").value=$("fPa").value; liveCalc(); };
+  $("saveBtn").onclick=()=>{
+    const f=formRec(); if(!f.date){ $("live").textContent="出社日を入れてください"; return; }
+    recs=recs.filter(x=>x.id!==f.id).concat([f]); save();
+    const i=periodOf(f.date); if(i>=0) pIdx=i; closeSheet(); render();
+  };
+  $("delBtn").onclick=()=>{
+    if(!delArmed){ delArmed=true; $("delBtn").textContent="もう一度押すと削除"; return; }
+    recs=recs.filter(x=>x.id!==editId); save(); closeSheet(); render();
+  };
+  $("cancelBtn").onclick=closeSheet; $("sheetBg").onclick=closeSheet;
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("sheet").hidden) closeSheet(); });
+  $("list").addEventListener("click",e=>{ const b=e.target.closest(".shift"); if(b) openSheet(b.dataset.id); });
+  $("addBtn").onclick=()=>openSheet(null);
+  $("prevP").onclick=()=>{ if(pIdx>0){pIdx--;render();} };
+  $("nextP").onclick=()=>{ if(pIdx<PERIODS.length-1){pIdx++;render();} };
+
+  // バックアップ
+  const msg=t=>{ $("bkMsg").textContent=t; };
+  $("copyBtn").onclick=()=>{ const t=$("exportBox").value; if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>msg("コピーしました"),()=>{ $("exportBox").select(); msg("選択しました。長押しでコピーしてください"); }); else { $("exportBox").select(); msg("選択しました。長押しでコピーしてください"); } };
+  $("importBtn").onclick=()=>{ try{ const v=JSON.parse($("importBox").value); if(!Array.isArray(v)) throw 0; recs=v; save(); $("importBox").value=""; render(); msg("復元しました（"+v.length+"件）"); }catch(e){ msg("読み込めませんでした。コピーした文字を全部貼り付けてください"); } };
+  function loadSample(){ recs=SAMPLE.map(r=>({...r})); save(); pIdx=Math.max(0,periodOf("2026-10-01")); render(); msg("例のデータを入れ直しました"); }
+  $("sampleBtn").onclick=loadSample;
+  let clrArmed=false;
+  $("clearBtn").onclick=()=>{ if(!clrArmed){ clrArmed=true; $("clearBtn").textContent="もう一度押すと全部消えます"; return; } recs=[]; save(); clrArmed=false; $("clearBtn").textContent="すべて消す"; render(); msg("消しました"); };
+
+  // ===== 画面の切り替え =====
+  function showTab(n){
+    $("tabTenko").hidden=n!==1; $("tabLong").hidden=n!==2;
+    $("tb1").setAttribute("aria-selected",n===1); $("tb2").setAttribute("aria-selected",n===2);
+    try{ localStorage.setItem("tenko.tab",String(n)); }catch(e){}
+    window.scrollTo(0,0);
+  }
+  $("tb1").onclick=()=>showTab(1); $("tb2").onclick=()=>showTab(2);
+
+  // ===== ロング判定 =====
+  const CFG_KEY="tenko.cfg";
+  let cfg={}; try{ cfg=JSON.parse(localStorage.getItem(CFG_KEY)||"{}")||{}; }catch(e){}
+  if(SCRIPT_URL){ cfg.url=SCRIPT_URL; $("lUrl").closest(".field").hidden=true; }
+  if(PROD){ $("demoNote").hidden=true; $("sampleBtn").hidden=true; }
+  const saveCfg=()=>{ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} };
+  $("lUrl").value=cfg.url||""; $("lPass").value=cfg.pass||"";
+  if(cfg.stay!=null) $("lStay").value=cfg.stay;
+  if(cfg.margin!=null) $("lMargin").value=cfg.margin;
+  $("lSave").onclick=()=>{ cfg.url=$("lUrl").value.trim(); cfg.pass=$("lPass").value.trim(); saveCfg(); $("lCfgMsg").textContent="保存しました"; };
+  ["lStay","lMargin"].forEach(id=>$(id).addEventListener("change",()=>{ cfg.stay=+$("lStay").value||0; cfg.margin=+$("lMargin").value||0; saveCfg(); }));
+
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const enc=encodeURIComponent;
+  const absFromDate=d=>{ const y=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); return dayNo(y)*DAY+d.getHours()*60+d.getMinutes(); };
+  const tl=(abs,base)=>(Math.floor(abs/DAY)>Math.floor(base/DAY)?"翌":"")+clock(((Math.round(abs)%DAY)+DAY)%DAY);
+
+  function renderLinks(dest){
+    const office=cfg.office||"";
+    const nav=office
+      ? `https://www.google.com/maps/dir/?api=1&destination=${enc(office)}${dest?`&waypoints=${enc(dest)}`:""}&travelmode=driving`
+      : `https://www.google.com/maps/dir/?api=1${dest?`&destination=${enc(dest)}`:""}&travelmode=driving`;
+    $("lLinks").innerHTML=`<a class="main" href="${nav}" target="_blank" rel="noopener">Googleマップでナビ（${dest?"目的地経由で会社へ":"会社へ"}）</a>
+      <a href="https://www.shutoko.jp/" target="_blank" rel="noopener">首都高<br>渋滞・規制</a>
+      <a href="https://www.driveplaza.com/" target="_blank" rel="noopener">NEXCO東日本<br>ドラぷら</a>
+      <a href="https://www.c-ihighway.jp/" target="_blank" rel="noopener">NEXCO中日本<br>アイハイウェイ</a>
+      <a href="https://www.jartic.or.jp/" target="_blank" rel="noopener">日本道路交通<br>情報センター</a>`;
+  }
+
+  // 今の勤務（業務前点呼を過ぎていて、期限前のもの）。なければ次の勤務
+  function shiftAt(nowAbs){
+    const all=calc().filter(c=>c.ok);
+    return all.find(c=>c.start<=nowAbs&&nowAbs<=c.deadline) || all.find(c=>c.start>nowAbs) || null;
+  }
+
+  function showResult(j,dest,sh,isDemo){
+    const margin=+$("lMargin").value||0;
+    const nowAbs=j.nowAbs!=null?j.nowAbs:absFromDate(new Date(j.now));
+    const leaveAbs=j.leaveAbs!=null?j.leaveAbs:absFromDate(new Date(j.leave));
+    const goArr=nowAbs+j.go.sec/60;
+    const delay=l=>{ const m=Math.round((l.sec-l.staticSec)/60); return m>0?`渋滞で <span class="num">+${hm(m)}</span>`:m<0?`普段より空いている見込み（<span class="num">${hm(m)}</span>）`:"普段どおりの見込み"; };
+    let limitAbs=null, deadline=null, nokin=null;
+    if(sh){ deadline=sh.deadline; nokin=(dayNo(sh.r.date)+1)*DAY+NOKIN; limitAbs=Math.min(deadline,nokin); }
+    const judge=arr=>{
+      if(!sh) return "";
+      const t=arr+margin;
+      if(t>deadline) return `<span class="pill bad">業務後点呼の期限に間に合いません</span>`;
+      if(t>nokin) return `<span class="pill warn">納金10:30を過ぎます</span>`;
+      return `<span class="pill ok">間に合います（余裕 <span class="num">${hm(limitAbs-t)}</span>）</span>`;
+    };
+    const back=(label,l)=>{
+      if(!l||!l.ok) return `<div class="leg"><div class="h">${label}</div><div class="err">${esc((l&&l.error)||"調べられませんでした")}</div></div>`;
+      const arr=leaveAbs+l.sec/60;
+      return `<div class="leg"><div class="h">${label}</div>
+        <div class="v"><strong class="num">${tl(arr,nowAbs)} 帰着</strong><span class="num">${hm(l.sec/60)}・${l.km}km</span></div>
+        <div class="d">${delay(l)}${l.via?`・${esc(l.via)}経由`:""}</div>${judge(arr)}</div>`;
+    };
+    $("lResult").innerHTML=`<div class="res">
+      ${isDemo?`<span class="tag">例の表示です（実際の経路ではありません）</span>`:""}
+      <div class="leg"><div class="h">行き　今 <span class="num">${clock(((nowAbs%DAY)+DAY)%DAY)}</span> → ${esc(dest)}${j.goLocal?"（一般道のみ）":""}</div>
+        <div class="v"><strong class="num">${tl(goArr,nowAbs)} 着</strong><span class="num">${hm(j.go.sec/60)}・${j.go.km}km</span></div>
+        <div class="d">${delay(j.go)}</div></div>
+      ${back("帰り　高速を使う",j.backHw)}
+      ${back("帰り　一般道のみ",j.backLocal)}
+      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金 10:30。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}目的地で <span class="num">${+$("lStay").value||0}</span>分、余裕として <span class="num">${margin}</span>分を足しています。</div>
+    </div>`;
+  }
+
+  function showDemo(){
+    const all=calc().filter(c=>c.ok);
+    const sh=all.find(c=>c.r.date>=todayStr()) || all[all.length-1];
+    const nowAbs=sh?(dayNo(sh.r.date)+1)*DAY+5*60+40:absFromDate(new Date());
+    const stay=+$("lStay").value||0;
+    showResult({nowAbs,leaveAbs:nowAbs+75+stay,
+      go:{ok:true,sec:75*60,staticSec:65*60,km:66.2},
+      backHw:{ok:true,sec:100*60,staticSec:80*60,km:71.5,via:"東関東道・首都高"},
+      backLocal:{ok:true,sec:155*60,staticSec:130*60,km:68.9,via:"国道14号"}},"成田空港",sh,true);
+  }
+
+  let pos=null;
+  $("lGeo").onclick=()=>{
+    const m=$("lGeoMsg");
+    if(!navigator.geolocation){ m.textContent="このスマホでは現在地が使えません。駅名や住所を入れてください"; return; }
+    m.textContent="現在地を調べています…";
+    navigator.geolocation.getCurrentPosition(
+      p=>{ pos={lat:p.coords.latitude,lng:p.coords.longitude}; m.textContent=`現在地を使います（誤差 約${Math.round(p.coords.accuracy)}m）`; $("lFrom").value=""; },
+      ()=>{ pos=null; m.textContent="現在地を取れませんでした。位置情報の許可を確認するか、駅名や住所を入れてください"; },
+      {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+  };
+  $("lFrom").addEventListener("input",()=>{ if($("lFrom").value.trim()){ pos=null; $("lGeoMsg").textContent="入力した出発地を使います"; } });
+  $("lDest").addEventListener("input",()=>renderLinks($("lDest").value.trim()));
+
+  $("lRun").onclick=async()=>{
+    const dest=$("lDest").value.trim(), out=$("lResult");
+    if(!dest){ out.innerHTML=`<div class="err">目的地を入れてください</div>`; return; }
+    if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ接続の設定がありません。下の「接続の設定」にApps ScriptのURLと合言葉を入れてください。</div>`; return; }
+    const body={action:"route",passcode:cfg.pass,dest,stayMin:+$("lStay").value||0,goLocal:$("lGoLocal").checked};
+    if(pos){ body.lat=pos.lat; body.lng=pos.lng; }
+    else if($("lFrom").value.trim()) body.from=$("lFrom").value.trim();
+    else { out.innerHTML=`<div class="err">「現在地を使う」を押すか、出発地を入れてください</div>`; return; }
+    out.innerHTML=`<div class="geo">調べています…</div>`; $("lRun").disabled=true;
+    try{
+      const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+      const j=await res.json();
+      if(!j.ok) throw new Error(j.error||"調べられませんでした");
+      if(j.office){ cfg.office=j.office; saveCfg(); renderLinks(dest); }
+      j.goLocal=body.goLocal;
+      showResult(j,dest,shiftAt(absFromDate(new Date(j.now))),false);
+    }catch(e){
+      const msg=/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。この試作ページからは外に接続できないので、本番のページで試してください。":e.message;
+      out.innerHTML=`<div class="err">${esc(msg)}</div>`;
+    }finally{ $("lRun").disabled=false; }
+  };
+
+  renderLinks("");
+  if(PROD) $("lResult").innerHTML=`<div class="geo">目的地を入れて「時間を調べる」を押すと、行きと帰り（高速・一般道）の時間と、業務後点呼の期限に間に合うかをここに出します。${cfg.pass?"":"<br>はじめに、下の「接続の設定」で合言葉を入れてください。"}</div>`;
+  else showDemo();
+  let startTab=1; try{ startTab=+(localStorage.getItem("tenko.tab")||1); }catch(e){}
+  showTab(startTab===2?2:1);
+
+  // 最初に表示する月度：データがあればその最新、なければ今日
+  const s=[...recs].sort((a,b)=>a.date<b.date?-1:1);
+  const firstNext=s.find(r=>r.date>=todayStr());
+  pIdx=Math.max(0,periodOf((firstNext||s[s.length-1]||{date:todayStr()}).date));
+  if(pIdx<0) pIdx=0;
+  render();
+})();
+</script>
+
+</body>
+</html>
