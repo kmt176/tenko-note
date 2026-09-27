@@ -112,6 +112,22 @@ input[type=date],input[type=time]{width:100%;font:20.5px var(--num);padding:10px
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabbar button{flex:1;border:0;background:none;padding:14px 0 12px;font-weight:700;font-size:17px;color:var(--muted)}
 .tabbar button[aria-selected="true"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.tabbar button{flex:0 0 40%}
+.tabbar .tb-help{flex:0 0 20%;font-size:14px;border-right:1px solid var(--line)}
+.help p{margin:0}
+.help h3{margin:4px 0 0;font-size:16px}
+.help small{display:block;font-size:14px;color:var(--muted);font-weight:400}
+.steps{margin:0;padding-left:1.4em;display:grid;gap:10px}
+.demo-next{background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.demo-next .lbl{font-size:13px;opacity:.85}
+.demo-next .big{font-size:clamp(24px,8vw,34px);line-height:1.15}
+.demo-next .sub{font-size:14px}
+.explain{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
+.explain dt{color:var(--muted)}
+.explain dd{margin:0}
+.legend-list{display:grid;gap:8px}
+.help ul{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.caution{border-color:var(--warn)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:12px}
 .card h2{margin:0;font-size:18.5px}
 input[type=text],input[type=url],input[type=number],input[type=password]{width:100%;font:19.5px var(--sans);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
@@ -223,7 +239,73 @@ input,textarea,button{font-weight:700}
   </details>
 </div>
 
+<div class="wrap" id="tabHelp" hidden>
+  <section class="card help">
+    <h2>点呼ノートの使い方</h2>
+    <p>点呼の時刻から、拘束時間のルールを自動でチェックします。朝のロングを受けてよいかも、渋滞予測込みで判定します。</p>
+  </section>
+
+  <section class="card help">
+    <h2>はじめに（最初の1回）</h2>
+    <ol class="steps">
+      <li><b>ホーム画面に追加</b>します。<br><small>iPhone：共有ボタン →「ホーム画面に追加」／Android：︙ →「ホーム画面に追加」</small></li>
+      <li><b>ホーム画面のアイコンから開きます。</b>以降もいつもアイコンから開いてください。<br><small>iPhoneは、ブラウザとアイコンで保存場所が別になります</small></li>
+      <li>「ロング判定」→「接続の設定」に<b>合言葉</b>を入れて保存します。<br><small>点呼時間だけなら合言葉なしで使えます。ロング判定を使うときは、紹介者に合言葉を聞いてください。</small></li>
+    </ol>
+  </section>
+
+  <section class="card help">
+    <h2>点呼時間</h2>
+    <ol class="steps">
+      <li>「＋ 勤務を追加」で、出社日と<b>計画</b>の業務前点呼・業務後点呼を入れます。</li>
+      <li>勤務が終わったら、勤務カードを押して<b>実績</b>を入れます。計画どおりなら「計画と同じ時刻を入れる」が便利です。</li>
+    </ol>
+    <div class="demo-next">
+      <div class="lbl">勤務中：9/28（月）出社　業務後点呼の期限（2日平均21時間）</div>
+      <div class="big num">9/29（火） 10:50</div>
+      <div class="sub">22時間を超える時刻 <span class="over num">9/29（火） 10:50</span></div>
+    </div>
+    <dl class="explain">
+      <dt>大きな時刻</dt><dd>業務後点呼の期限です。前回と今回の平均が21時間を超えない時刻です。</dd>
+      <dt>赤い時刻</dt><dd>1回の拘束が22時間を超える時刻です。</dd>
+    </dl>
+    <h3>色の意味</h3>
+    <div class="legend-list">
+      <div><span class="chip ok">拘束 20:10</span> ルール内です</div>
+      <div><span class="chip warn">休息 23:00</span> 注意（休息24時間未満、2日平均の上限超え、納金〆 10:30 過ぎ）</div>
+      <div><span class="chip bad">休息 21:30</span> 違反（22時間超え、2回平均21時間超え、休息22時間未満）</div>
+    </div>
+  </section>
+
+  <section class="card help">
+    <h2>ロング判定</h2>
+    <ol class="steps">
+      <li><b>目的地</b>を入れます（例：成田空港 第1ターミナル）。</li>
+      <li>「<b>現在地を使う</b>」を押すか、出発地に駅名・住所を入れます。<small>出発地に文字があれば、そちらが優先されます</small></li>
+      <li>「<b>時間を調べる</b>」を押します。</li>
+    </ol>
+    <p>行きと、帰りの2通り（高速・一般道）の時間を渋滞予測込みで出し、間に合うかを判定します。</p>
+    <div class="legend-list">
+      <div><span class="pill ok">間に合います（余裕 1:55）</span></div>
+      <div><span class="pill warn">納金〆 10:30 を過ぎます</span></div>
+      <div><span class="pill bad">22時間を超えます</span></div>
+    </div>
+    <p><small>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</small></p>
+  </section>
+
+  <section class="card help caution">
+    <h2>注意</h2>
+    <ul>
+      <li><b>操作は必ず停車中に</b>行ってください。</li>
+      <li>データはこのスマホの中だけに保存されます。他の人からは見えません。</li>
+      <li>機種変更に備えて、月1回「バックアップ・機種変更」でデータをコピーしてください。</li>
+      <li>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</li>
+    </ul>
+  </section>
+</div>
+
 <nav class="tabbar" role="tablist" aria-label="画面の切り替え">
+  <button role="tab" id="tb0" aria-selected="false" aria-controls="tabHelp" class="tb-help">使い方</button>
   <button role="tab" id="tb1" aria-selected="true" aria-controls="tabTenko">点呼時間</button>
   <button role="tab" id="tb2" aria-selected="false" aria-controls="tabLong">ロング判定</button>
 </nav>
@@ -425,12 +507,12 @@ input,textarea,button{font-weight:700}
 
   // ===== 画面の切り替え =====
   function showTab(n){
-    $("tabTenko").hidden=n!==1; $("tabLong").hidden=n!==2;
-    $("tb1").setAttribute("aria-selected",n===1); $("tb2").setAttribute("aria-selected",n===2);
+    $("tabHelp").hidden=n!==0; $("tabTenko").hidden=n!==1; $("tabLong").hidden=n!==2;
+    $("tb0").setAttribute("aria-selected",n===0); $("tb1").setAttribute("aria-selected",n===1); $("tb2").setAttribute("aria-selected",n===2);
     try{ localStorage.setItem("tenko.tab",String(n)); }catch(e){}
     window.scrollTo(0,0);
   }
-  $("tb1").onclick=()=>showTab(1); $("tb2").onclick=()=>showTab(2);
+  $("tb0").onclick=()=>showTab(0); $("tb1").onclick=()=>showTab(1); $("tb2").onclick=()=>showTab(2);
 
   // ===== ロング判定 =====
   const CFG_KEY="tenko.cfg";
@@ -497,7 +579,7 @@ input,textarea,button{font-weight:700}
         <div class="d">${delay(j.go)}</div></div>
       ${back("帰り　高速を使う",j.backHw)}
       ${back("帰り　一般道のみ",j.backLocal)}
-      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 10:30。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}目的地で <span class="num">${+$("lStay").value||0}</span>分、余裕として <span class="num">${margin}</span>分を足しています。</div>
+      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 10:30。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}目的地で <span class="num">${+$("lStay").value||0}</span>分、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
     </div>`;
   }
 
@@ -557,8 +639,9 @@ input,textarea,button{font-weight:700}
   renderLinks("");
   if(PROD) $("lResult").innerHTML=`<div class="geo">目的地を入れて「時間を調べる」を押すと、行きと帰り（高速・一般道）の時間と、業務後点呼の期限に間に合うかをここに出します。${cfg.pass?"":"<br>はじめに、下の「接続の設定」で合言葉を入れてください。"}</div>`;
   else showDemo();
-  let startTab=1; try{ startTab=+(localStorage.getItem("tenko.tab")||1); }catch(e){}
-  showTab(startTab===2?2:1);
+  // 初めて開いたとき（まだ画面を選んだことがない）は使い方から
+  let startTab=0; try{ const v=localStorage.getItem("tenko.tab"); if(v!==null) startTab=+v; }catch(e){}
+  showTab([0,1,2].includes(startTab)?startTab:1);
 
   // 最初に表示する月度：データがあればその最新、なければ今日
   const s=[...recs].sort((a,b)=>a.date<b.date?-1:1);
