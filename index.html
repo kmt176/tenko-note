@@ -213,10 +213,15 @@ input,textarea,button{font-weight:700}
       <input type="text" id="lFrom" placeholder="例：渋谷駅" autocomplete="off">
     </div>
     <div class="pair">
-      <div class="field"><label for="lStay">目的地での降車・待ち（分）</label><input type="number" id="lStay" inputmode="numeric" min="0" value="5"></div>
-      <div class="field"><label for="lMargin">余裕として足す（分）</label><input type="number" id="lMargin" inputmode="numeric" min="0" value="15"></div>
+      <div class="field"><label for="lStay">目的地での降車・待ち（分）</label><input type="number" id="lStay" inputmode="numeric" min="0" value="3"></div>
+      <div class="field"><label for="lMargin">余裕として足す（分）</label><input type="number" id="lMargin" inputmode="numeric" min="0" value="30"></div>
     </div>
     <label class="check"><input type="checkbox" id="lGoLocal">行きは一般道のみ（高速を使わない）</label>
+    <label class="check"><input type="checkbox" id="lViaOn">帰りに給油所に寄る</label>
+    <div class="grp" id="lViaBox" hidden>
+      <div class="field"><label for="lVia">給油所（名前・住所）　次回からも覚えておきます</label><input type="text" id="lVia" placeholder="例：〇〇LPGスタンド 板橋" autocomplete="off"></div>
+      <div class="field"><label for="lViaMin">給油にかかる時間（分）</label><input type="number" id="lViaMin" inputmode="numeric" min="0" value="5"></div>
+    </div>
     <button class="btn primary" id="lRun">時間を調べる</button>
   </section>
 
@@ -287,7 +292,7 @@ input,textarea,button{font-weight:700}
     <p>行きと、帰りの2通り（高速・一般道）の時間を渋滞予測込みで出し、間に合うかを判定します。</p>
     <div class="legend-list">
       <div><span class="pill ok">間に合います（余裕 1:55）</span></div>
-      <div><span class="pill warn">納金〆 10:30 を過ぎます</span></div>
+      <div><span class="pill warn">帰庫が10:10を過ぎます（納金〆 10:30）</span></div>
       <div><span class="pill bad">22時間を超えます</span></div>
     </div>
     <p><small>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</small></p>
@@ -349,6 +354,8 @@ input,textarea,button{font-weight:700}
   for (let y=2026;y<=2028;y++) for (const [m,s,e,lim] of ROWS) PERIODS.push({y,m,start:(m===1?y-1:y)+"-"+s,end:y+"-"+e,limit:lim});
 
   const KEY="tenko.v2", DAY=1440, NOKIN=10*60+30;
+  const DEFAULT_VIA="東京都板橋区中丸町12-1 陸王交通 オートガススタンド";   // 給油所の初期値（住所を先に書くと場所が確実に決まる）
+  const KIKO=10*60+10;   // 納金処理の時間を見込んだ帰庫の目安（10:10までに帰庫すれば納金〆 10:30 に間に合う）
   const SAMPLE=[["2026-09-25","12:56","08:48"],["2026-09-28","12:50","09:00"],["2026-09-30","12:50","08:50"],["2026-10-02","12:50","09:00"],["2026-10-04","12:50","09:30"],["2026-10-08","12:50","09:00"],["2026-10-10","12:50","09:00"],["2026-10-12","12:50","07:00"],["2026-10-15","12:50","09:00"],["2026-10-17","12:50","09:30"],["2026-10-19","12:50","09:30"],["2026-10-22","12:50","09:00"],["2026-10-24","12:50","09:00"],["2026-10-26","12:50","09:30"]]
     .map(([d,b,a],i)=>({id:"s"+i,date:d,pb:b,pa:a,ab:b,aa:a}));
 
@@ -523,6 +530,10 @@ input,textarea,button{font-weight:700}
   $("lUrl").value=cfg.url||""; $("lPass").value=cfg.pass||"";
   if(cfg.stay!=null) $("lStay").value=cfg.stay;
   if(cfg.margin!=null) $("lMargin").value=cfg.margin;
+  $("lViaOn").checked=!!cfg.viaOn; $("lVia").value=cfg.via||DEFAULT_VIA; if(cfg.viaMin!=null) $("lViaMin").value=cfg.viaMin;
+  $("lViaBox").hidden=!$("lViaOn").checked;
+  const saveVia=()=>{ cfg.viaOn=$("lViaOn").checked; cfg.via=$("lVia").value.trim(); cfg.viaMin=+$("lViaMin").value||0; saveCfg(); $("lViaBox").hidden=!cfg.viaOn; renderLinks($("lDest").value.trim()); };
+  ["lViaOn","lVia","lViaMin"].forEach(id=>$(id).addEventListener("change",saveVia));
   $("lSave").onclick=()=>{ cfg.url=$("lUrl").value.trim(); cfg.pass=$("lPass").value.trim(); saveCfg(); $("lCfgMsg").textContent="保存しました"; };
   ["lStay","lMargin"].forEach(id=>$(id).addEventListener("change",()=>{ cfg.stay=+$("lStay").value||0; cfg.margin=+$("lMargin").value||0; saveCfg(); }));
 
@@ -533,10 +544,11 @@ input,textarea,button{font-weight:700}
 
   function renderLinks(dest){
     const office=cfg.office||"";
+    const wps=[dest, cfg.viaOn?cfg.via:""].filter(Boolean);
     const nav=office
-      ? `https://www.google.com/maps/dir/?api=1&destination=${enc(office)}${dest?`&waypoints=${enc(dest)}`:""}&travelmode=driving`
+      ? `https://www.google.com/maps/dir/?api=1&destination=${enc(office)}${wps.length?`&waypoints=${enc(wps.join("|"))}`:""}&travelmode=driving`
       : `https://www.google.com/maps/dir/?api=1${dest?`&destination=${enc(dest)}`:""}&travelmode=driving`;
-    $("lLinks").innerHTML=`<a class="main" href="${nav}" target="_blank" rel="noopener">Googleマップでナビ（${dest?"目的地経由で会社へ":"会社へ"}）</a>
+    $("lLinks").innerHTML=`<a class="main" href="${nav}" target="_blank" rel="noopener">Googleマップでナビ（${wps.length?wps.map(esc).join("→")+"経由で会社へ":"会社へ"}）</a>
       <a href="https://www.shutoko.jp/" target="_blank" rel="noopener">首都高<br>渋滞・規制</a>
       <a href="https://www.driveplaza.com/" target="_blank" rel="noopener">NEXCO東日本<br>ドラぷら</a>
       <a href="https://www.c-ihighway.jp/" target="_blank" rel="noopener">NEXCO中日本<br>アイハイウェイ</a>
@@ -556,21 +568,22 @@ input,textarea,button{font-weight:700}
     const goArr=nowAbs+j.go.sec/60;
     const delay=l=>{ const m=Math.round((l.sec-l.staticSec)/60); return m>0?`渋滞で <span class="num">+${hm(m)}</span>`:m<0?`普段より空いている見込み（<span class="num">${hm(m)}</span>）`:"普段どおりの見込み"; };
     let limitAbs=null, deadline=null, nokin=null;
-    if(sh){ deadline=sh.deadline; nokin=(dayNo(sh.r.date)+1)*DAY+NOKIN; limitAbs=Math.min(deadline,nokin); }
+    if(sh){ deadline=sh.deadline; nokin=(dayNo(sh.r.date)+1)*DAY+KIKO; limitAbs=Math.min(deadline,nokin); }
     const judge=arr=>{
       if(!sh) return "";
       const t=arr+margin;
       if(t>sh.over22) return `<span class="pill bad">22時間を超えます</span>`;
       if(t>deadline) return `<span class="pill bad">2日平均21時間を超えます</span>`;
-      if(t>nokin) return `<span class="pill warn">納金〆 10:30 を過ぎます</span>`;
+      if(t>nokin) return `<span class="pill warn">帰庫が10:10を過ぎます（納金〆 10:30）</span>`;
       return `<span class="pill ok">間に合います（余裕 <span class="num">${hm(limitAbs-t)}</span>）</span>`;
     };
     const back=(label,l)=>{
       if(!l||!l.ok) return `<div class="leg"><div class="h">${label}</div><div class="err">${esc((l&&l.error)||"調べられませんでした")}</div></div>`;
-      const arr=leaveAbs+l.sec/60;
-      return `<div class="leg"><div class="h">${label}</div>
-        <div class="v"><strong class="num">${tl(arr,nowAbs)} 帰着</strong><span class="num">${hm(l.sec/60)}・${l.km}km</span></div>
-        <div class="d">${delay(l)}${l.via?`・${esc(l.via)}経由`:""}</div>${judge(arr)}</div>`;
+      const viaMin=j.via?(j.viaMin||0):0, arr=leaveAbs+l.sec/60+viaMin;
+      const gas=j.via&&l.legSec&&l.legSec.length>1?`<div class="d">給油所着 <span class="num">${tl(leaveAbs+l.legSec[0]/60,nowAbs)}</span>（給油 <span class="num">${viaMin}</span>分）</div>`:"";
+      return `<div class="leg"><div class="h">${label}${j.via?"（給油所経由）":""}</div>
+        <div class="v"><strong class="num">${tl(arr,nowAbs)} 帰着</strong><span class="num">${hm(l.sec/60+viaMin)}・${l.km}km</span></div>
+        ${gas}<div class="d">${delay(l)}${l.via?`・${esc(l.via)}経由`:""}</div>${judge(arr)}</div>`;
     };
     $("lResult").innerHTML=`<div class="res">
       ${isDemo?`<span class="tag">例の表示です（実際の経路ではありません）</span>`:""}
@@ -579,7 +592,7 @@ input,textarea,button{font-weight:700}
         <div class="d">${delay(j.go)}</div></div>
       ${back("帰り　高速を使う",j.backHw)}
       ${back("帰り　一般道のみ",j.backLocal)}
-      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 10:30。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}目的地で <span class="num">${+$("lStay").value||0}</span>分、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
+      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 10:30（納金処理があるので帰庫は10:10まで）。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}目的地で <span class="num">${+$("lStay").value||0}</span>分${j.via?`、給油所（${esc(j.via)}）で <span class="num">${j.viaMin||0}</span>分`:""}、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
     </div>`;
   }
 
@@ -590,8 +603,9 @@ input,textarea,button{font-weight:700}
     const stay=+$("lStay").value||0;
     showResult({nowAbs,leaveAbs:nowAbs+75+stay,
       go:{ok:true,sec:75*60,staticSec:65*60,km:66.2},
-      backHw:{ok:true,sec:100*60,staticSec:80*60,km:71.5,via:"東関東道・首都高"},
-      backLocal:{ok:true,sec:155*60,staticSec:130*60,km:68.9,via:"国道14号"}},"成田空港",sh,true);
+      via:"LPGスタンド（例）",viaMin:10,
+      backHw:{ok:true,sec:105*60,staticSec:85*60,km:73.0,via:"東関東道・首都高",legSec:[95*60,10*60]},
+      backLocal:{ok:true,sec:160*60,staticSec:135*60,km:70.1,via:"国道14号",legSec:[150*60,10*60]}},"成田空港",sh,true);
   }
 
   let pos=null;
@@ -615,6 +629,11 @@ input,textarea,button{font-weight:700}
     if(!dest){ out.innerHTML=`<div class="err">目的地を入れてください</div>`; return; }
     if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ接続の設定がありません。下の「接続の設定」にApps ScriptのURLと合言葉を入れてください。</div>`; return; }
     const body={action:"route",passcode:cfg.pass,dest,stayMin:+$("lStay").value||0,goLocal:$("lGoLocal").checked};
+    const viaTxt=$("lVia").value.trim();
+    if($("lViaOn").checked){
+      if(!viaTxt){ out.innerHTML=`<div class="err">給油所の名前か住所を入れてください</div>`; return; }
+      body.via=viaTxt;
+    }
     const fromTxt=$("lFrom").value.trim();
     if(fromTxt) body.from=fromTxt;
     else if(pos){ body.lat=pos.lat; body.lng=pos.lng; }
@@ -627,6 +646,7 @@ input,textarea,button{font-weight:700}
       if(!j.ok) throw new Error(j.error||"調べられませんでした");
       if(j.office){ cfg.office=j.office; saveCfg(); renderLinks(dest); }
       j.goLocal=body.goLocal; j.fromLabel=fromTxt||"現在地";
+      j.via=body.via||""; j.viaMin=body.via?(+$("lViaMin").value||0):0;
       showResult(j,dest,shiftAt(absFromDate(new Date(j.now))),false);
     }catch(e){
       const msg=/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。この試作ページからは外に接続できないので、本番のページで試してください。":e.message;
