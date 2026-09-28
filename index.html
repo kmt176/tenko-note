@@ -147,6 +147,7 @@ input[type=text],input[type=url],input[type=number],input[type=password]{width:1
 .foot{font-size:15px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 .links{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .links a{display:flex;align-items:center;justify-content:center;text-align:center;min-height:48px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--accent);font-weight:700;font-size:15.5px;text-decoration:none}
+.navsteps{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
 .links a.main{grid-column:1/-1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:17px}
 .err{color:var(--bad);font-size:16px}
 @media (prefers-reduced-motion: no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(20px);opacity:.6}}}
@@ -534,6 +535,7 @@ input,textarea,button{font-weight:700}
   $("lViaBox").hidden=!$("lViaOn").checked;
   const saveVia=()=>{ cfg.viaOn=$("lViaOn").checked; cfg.via=$("lVia").value.trim(); cfg.viaMin=+$("lViaMin").value||0; saveCfg(); $("lViaBox").hidden=!cfg.viaOn; renderLinks($("lDest").value.trim()); };
   ["lViaOn","lVia","lViaMin"].forEach(id=>$(id).addEventListener("change",saveVia));
+  $("lVia").addEventListener("input",()=>renderLinks($("lDest").value.trim()));
   $("lSave").onclick=()=>{ cfg.url=$("lUrl").value.trim(); cfg.pass=$("lPass").value.trim(); saveCfg(); $("lCfgMsg").textContent="保存しました"; };
   ["lStay","lMargin"].forEach(id=>$(id).addEventListener("change",()=>{ cfg.stay=+$("lStay").value||0; cfg.margin=+$("lMargin").value||0; saveCfg(); }));
 
@@ -543,12 +545,19 @@ input,textarea,button{font-weight:700}
   const tl=(abs,base)=>(Math.floor(abs/DAY)>Math.floor(base/DAY)?"翌":"")+clock(((Math.round(abs)%DAY)+DAY)%DAY);
 
   function renderLinks(dest){
+    // 画面の今の入力を使う（給油所のチェック・欄の内容をそのまま反映）
     const office=cfg.office||"";
-    const wps=[dest, cfg.viaOn?cfg.via:""].filter(Boolean);
+    const via=$("lViaOn").checked?$("lVia").value.trim():"";
+    const wps=[dest, via].filter(Boolean);
+    const to=d=>`https://www.google.com/maps/dir/?api=1&destination=${enc(d)}&travelmode=driving`;
     const nav=office
-      ? `https://www.google.com/maps/dir/?api=1&destination=${enc(office)}${wps.length?`&waypoints=${enc(wps.join("|"))}`:""}&travelmode=driving`
-      : `https://www.google.com/maps/dir/?api=1${dest?`&destination=${enc(dest)}`:""}&travelmode=driving`;
-    $("lLinks").innerHTML=`<a class="main" href="${nav}" target="_blank" rel="noopener">Googleマップでナビ（${wps.length?wps.map(esc).join("→")+"経由で会社へ":"会社へ"}）</a>
+      ? `${to(office)}${wps.length?`&waypoints=${enc(wps.join("|"))}`:""}`
+      : (dest?to(dest):"https://www.google.com/maps/");
+    // 経由地をまとめて渡すと地図アプリが一部を省くことがあるので、区間ごとのボタンも出す
+    const steps=[dest?["目的地へ",dest]:null, via?["給油所へ",via]:null, office?["会社へ",office]:null].filter(Boolean)
+      .map(([l,d],i)=>["①②③"[i]+" "+l,d]);
+    $("lLinks").innerHTML=`<a class="main" href="${nav}" target="_blank" rel="noopener">Googleマップでナビ（${wps.length?wps.map(esc).join(" → ")+" 経由で会社へ":"会社へ"}）</a>
+      ${steps.length>1?`<div class="navsteps">${steps.map(([l,d])=>`<a href="${to(d)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div>`:""}
       <a href="https://www.shutoko.jp/" target="_blank" rel="noopener">首都高<br>渋滞・規制</a>
       <a href="https://www.driveplaza.com/" target="_blank" rel="noopener">NEXCO東日本<br>ドラぷら</a>
       <a href="https://www.c-ihighway.jp/" target="_blank" rel="noopener">NEXCO中日本<br>アイハイウェイ</a>
