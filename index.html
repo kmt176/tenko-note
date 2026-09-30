@@ -147,6 +147,8 @@ input[type=text],input[type=url],input[type=number],input[type=password]{width:1
 .foot{font-size:15px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 .links{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .links a{display:flex;align-items:center;justify-content:center;text-align:center;min-height:48px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--accent);font-weight:700;font-size:15.5px;text-decoration:none}
+.check{align-items:flex-start}
+.check small{display:block;font-size:14px;color:var(--muted);font-weight:400}
 .navsteps{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
 .links a.main{grid-column:1/-1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:17px}
 .err{color:var(--bad);font-size:16px}
@@ -206,21 +208,27 @@ input,textarea,button{font-weight:700}
 <div class="wrap" id="tabLong" hidden>
   <section class="card" aria-labelledby="lTitle">
     <h2 id="lTitle">ロングを受けたら</h2>
-    <div class="field"><label for="lDest">目的地（施設名・住所）</label><input type="text" id="lDest" placeholder="例：成田空港 第1ターミナル" autocomplete="off"></div>
     <div class="field">
-      <label for="lFrom">出発地</label>
-      <div class="btnrow"><button class="btn" id="lGeo">現在地を使う</button></div>
-      <div class="geo" id="lGeoMsg" role="status">現在地が使えないときは、下に駅名や住所を入れてください</div>
+      <label for="lFrom">現在地</label>
+      <div class="btnrow"><button class="btn" id="lGeo">現在地を取得</button></div>
+      <div class="geo" id="lGeoMsg" role="status">「現在地を取得」を押すと、住所が下に入ります。駅名や住所を手で入れることもできます</div>
       <input type="text" id="lFrom" placeholder="例：渋谷駅" autocomplete="off">
     </div>
+    <label class="check"><input type="checkbox" id="lPickOn">出発点（お迎え先）を入力する<br><small>お迎え先に向かう前に調べるとき</small></label>
+    <div class="grp" id="lPickBox" hidden>
+      <div class="field"><label for="lPick">お迎え先（施設名・住所）</label><input type="text" id="lPick" placeholder="例：〇〇ホテル 新宿" autocomplete="off"></div>
+      <div class="field"><label for="lPickMin">お迎え先での待ち（分）</label><input type="number" id="lPickMin" inputmode="numeric" min="0" value="5"></div>
+    </div>
+    <div class="field"><label for="lDest">目的地（施設名・住所）</label><input type="text" id="lDest" placeholder="例：成田空港 第1ターミナル" autocomplete="off"></div>
     <div class="pair">
       <div class="field"><label for="lStay">目的地での降車・待ち（分）</label><input type="number" id="lStay" inputmode="numeric" min="0" value="3"></div>
       <div class="field"><label for="lMargin">余裕として足す（分）</label><input type="number" id="lMargin" inputmode="numeric" min="0" value="30"></div>
     </div>
     <label class="check"><input type="checkbox" id="lGoLocal">行きは一般道のみ（高速を使わない）</label>
-    <label class="check"><input type="checkbox" id="lViaOn">帰りに給油所に寄る</label>
+    <label class="check"><input type="checkbox" id="lViaOn">帰りに給油所に寄る<br><small>2か所のうち、帰り道で早く会社に着く方を自動で選びます</small></label>
     <div class="grp" id="lViaBox" hidden>
-      <div class="field"><label for="lVia">給油所（名前・住所）　次回からも覚えておきます</label><input type="text" id="lVia" placeholder="例：〇〇LPGスタンド 板橋" autocomplete="off"></div>
+      <div class="field"><label for="lVia1">給油所1</label><input type="text" id="lVia1" autocomplete="off"></div>
+      <div class="field"><label for="lVia2">給油所2</label><input type="text" id="lVia2" autocomplete="off"></div>
       <div class="field"><label for="lViaMin">給油にかかる時間（分）</label><input type="number" id="lViaMin" inputmode="numeric" min="0" value="5"></div>
     </div>
     <button class="btn primary" id="lRun">時間を調べる</button>
@@ -286,11 +294,13 @@ input,textarea,button{font-weight:700}
   <section class="card help">
     <h2>ロング判定</h2>
     <ol class="steps">
+      <li>「<b>現在地を取得</b>」を押します。住所が自動で入ります（違っていたら直せます）。</li>
+      <li><b>お迎え先に向かう前</b>なら「出発点（お迎え先）を入力する」にチェックを入れ、お迎え先を入れます。<small>チェックすると現在地も自動で取得します。お迎え先に着いてから調べるときは、チェック不要です</small></li>
       <li><b>目的地</b>を入れます（例：成田空港 第1ターミナル）。</li>
-      <li>「<b>現在地を使う</b>」を押すか、出発地に駅名・住所を入れます。<small>出発地に文字があれば、そちらが優先されます</small></li>
+      <li>給油するなら「<b>帰りに給油所に寄る</b>」にチェックを入れます。<small>陸王交通・豊玉の2か所のうち、帰り道で早く会社に着く方を自動で選びます</small></li>
       <li>「<b>時間を調べる</b>」を押します。</li>
     </ol>
-    <p>行きと、帰りの2通り（高速・一般道）の時間を渋滞予測込みで出し、間に合うかを判定します。</p>
+    <p>行きと、帰りの2通り（高速・一般道）の時間を渋滞予測込みで出し、間に合うかを判定します。待ち時間の初期値は、お迎え先5分・目的地3分・給油5分、余裕30分です。</p>
     <div class="legend-list">
       <div><span class="pill ok">間に合います（余裕 1:55）</span></div>
       <div><span class="pill warn">帰庫が10:10を過ぎます（納金〆 10:30）</span></div>
@@ -355,7 +365,8 @@ input,textarea,button{font-weight:700}
   for (let y=2026;y<=2028;y++) for (const [m,s,e,lim] of ROWS) PERIODS.push({y,m,start:(m===1?y-1:y)+"-"+s,end:y+"-"+e,limit:lim});
 
   const KEY="tenko.v2", DAY=1440, NOKIN=10*60+30;
-  const DEFAULT_VIA="東京都板橋区中丸町12-1 陸王交通 オートガススタンド";   // 給油所の初期値（住所を先に書くと場所が確実に決まる）
+  // 給油所の初期値（住所を先に書くと場所が確実に決まる）
+  const DEFAULT_VIAS=["東京都板橋区中丸町12-1 陸王交通 オートガススタンド","東京都練馬区豊玉北1丁目14-5 豊玉LPGスタンド kmGオートアシスト"];
   const KIKO=10*60+10;   // 納金処理の時間を見込んだ帰庫の目安（10:10までに帰庫すれば納金〆 10:30 に間に合う）
   const SAMPLE=[["2026-09-25","12:56","08:48"],["2026-09-28","12:50","09:00"],["2026-09-30","12:50","08:50"],["2026-10-02","12:50","09:00"],["2026-10-04","12:50","09:30"],["2026-10-08","12:50","09:00"],["2026-10-10","12:50","09:00"],["2026-10-12","12:50","07:00"],["2026-10-15","12:50","09:00"],["2026-10-17","12:50","09:30"],["2026-10-19","12:50","09:30"],["2026-10-22","12:50","09:00"],["2026-10-24","12:50","09:00"],["2026-10-26","12:50","09:30"]]
     .map(([d,b,a],i)=>({id:"s"+i,date:d,pb:b,pa:a,ab:b,aa:a}));
@@ -529,34 +540,46 @@ input,textarea,button{font-weight:700}
   if(PROD){ $("demoNote").hidden=true; $("sampleBtn").hidden=true; }
   const saveCfg=()=>{ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} };
   $("lUrl").value=cfg.url||""; $("lPass").value=cfg.pass||"";
+
+  // 入力欄の初期値と、スマホに覚えておく値
   if(cfg.stay!=null) $("lStay").value=cfg.stay;
   if(cfg.margin!=null) $("lMargin").value=cfg.margin;
-  $("lViaOn").checked=!!cfg.viaOn; $("lVia").value=cfg.via||DEFAULT_VIA; if(cfg.viaMin!=null) $("lViaMin").value=cfg.viaMin;
+  if(cfg.pickMin!=null) $("lPickMin").value=cfg.pickMin;
+  $("lViaOn").checked=!!cfg.viaOn;
+  $("lVia1").value=cfg.via1||DEFAULT_VIAS[0]; $("lVia2").value=cfg.via2||DEFAULT_VIAS[1];
+  if(cfg.viaMin!=null) $("lViaMin").value=cfg.viaMin;
   $("lViaBox").hidden=!$("lViaOn").checked;
-  const saveVia=()=>{ cfg.viaOn=$("lViaOn").checked; cfg.via=$("lVia").value.trim(); cfg.viaMin=+$("lViaMin").value||0; saveCfg(); $("lViaBox").hidden=!cfg.viaOn; renderLinks($("lDest").value.trim()); };
-  ["lViaOn","lVia","lViaMin"].forEach(id=>$(id).addEventListener("change",saveVia));
-  $("lVia").addEventListener("input",()=>renderLinks($("lDest").value.trim()));
+  const saveForm=()=>{
+    cfg.stay=+$("lStay").value||0; cfg.margin=+$("lMargin").value||0; cfg.pickMin=+$("lPickMin").value||0;
+    cfg.viaOn=$("lViaOn").checked; cfg.via1=$("lVia1").value.trim(); cfg.via2=$("lVia2").value.trim(); cfg.viaMin=+$("lViaMin").value||0;
+    saveCfg(); $("lViaBox").hidden=!cfg.viaOn; $("lPickBox").hidden=!$("lPickOn").checked; renderLinks();
+  };
+  ["lStay","lMargin","lPickMin","lViaOn","lVia1","lVia2","lViaMin"].forEach(id=>$(id).addEventListener("change",saveForm));
+  ["lDest","lPick","lVia1","lVia2"].forEach(id=>$(id).addEventListener("input",()=>renderLinks()));
   $("lSave").onclick=()=>{ cfg.url=$("lUrl").value.trim(); cfg.pass=$("lPass").value.trim(); saveCfg(); $("lCfgMsg").textContent="保存しました"; };
-  ["lStay","lMargin"].forEach(id=>$(id).addEventListener("change",()=>{ cfg.stay=+$("lStay").value||0; cfg.margin=+$("lMargin").value||0; saveCfg(); }));
 
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const enc=encodeURIComponent;
   const absFromDate=d=>{ const y=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); return dayNo(y)*DAY+d.getHours()*60+d.getMinutes(); };
   const tl=(abs,base)=>(Math.floor(abs/DAY)>Math.floor(base/DAY)?"翌":"")+clock(((Math.round(abs)%DAY)+DAY)%DAY);
+  const shortName=s=>s.replace(/^東京都\S*?区\S*?[0-9０-９-－丁目番地号]+\s*/,"")||s;   // 住所の後ろの名前だけ（ボタン用）
 
-  function renderLinks(dest){
-    // 画面の今の入力を使う（給油所のチェック・欄の内容をそのまま反映）
+  let navStation="";   // 最後に調べたときに選ばれた給油所（ナビに使う）
+  function renderLinks(){
+    // 画面の今の入力を使う
     const office=cfg.office||"";
-    const via=$("lViaOn").checked?$("lVia").value.trim():"";
-    const wps=[dest, via].filter(Boolean);
+    const pick=$("lPickOn").checked?$("lPick").value.trim():"";
+    const dest=$("lDest").value.trim();
+    const via=$("lViaOn").checked?(navStation||$("lVia1").value.trim()):"";
+    const wps=[pick, dest, via].filter(Boolean);
     const to=d=>`https://www.google.com/maps/dir/?api=1&destination=${enc(d)}&travelmode=driving`;
     const nav=office
       ? `${to(office)}${wps.length?`&waypoints=${enc(wps.join("|"))}`:""}`
-      : (dest?to(dest):"https://www.google.com/maps/");
+      : (wps.length?to(wps[wps.length-1]):"https://www.google.com/maps/");
     // 経由地をまとめて渡すと地図アプリが一部を省くことがあるので、区間ごとのボタンも出す
-    const steps=[dest?["目的地へ",dest]:null, via?["給油所へ",via]:null, office?["会社へ",office]:null].filter(Boolean)
-      .map(([l,d],i)=>["①②③"[i]+" "+l,d]);
-    $("lLinks").innerHTML=`<a class="main" href="${nav}" target="_blank" rel="noopener">Googleマップでナビ（${wps.length?wps.map(esc).join(" → ")+" 経由で会社へ":"会社へ"}）</a>
+    const steps=[pick?["お迎え先へ",pick]:null, dest?["目的地へ",dest]:null, via?["給油所へ",via]:null, office?["会社へ",office]:null].filter(Boolean)
+      .map(([l,d],i)=>["①②③④"[i]+" "+l,d]);
+    $("lLinks").innerHTML=`<a class="main" href="${nav}" target="_blank" rel="noopener">Googleマップでナビ（${wps.length?wps.map(w=>esc(shortName(w))).join(" → ")+" 経由で会社へ":"会社へ"}）</a>
       ${steps.length>1?`<div class="navsteps">${steps.map(([l,d])=>`<a href="${to(d)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div>`:""}
       <a href="https://www.shutoko.jp/" target="_blank" rel="noopener">首都高<br>渋滞・規制</a>
       <a href="https://www.driveplaza.com/" target="_blank" rel="noopener">NEXCO東日本<br>ドラぷら</a>
@@ -570,11 +593,12 @@ input,textarea,button{font-weight:700}
     return all.find(c=>c.start<=nowAbs&&nowAbs<=c.deadline) || all.find(c=>c.start>nowAbs) || null;
   }
 
-  function showResult(j,dest,sh,isDemo){
+  function showResult(j,sh,isDemo){
     const margin=+$("lMargin").value||0;
     const nowAbs=j.nowAbs!=null?j.nowAbs:absFromDate(new Date(j.now));
     const leaveAbs=j.leaveAbs!=null?j.leaveAbs:absFromDate(new Date(j.leave));
-    const goArr=nowAbs+j.go.sec/60;
+    const pickMin=j.pickup?(j.pickupMin||0):0;
+    const goArr=nowAbs+j.go.sec/60+pickMin;
     const delay=l=>{ const m=Math.round((l.sec-l.staticSec)/60); return m>0?`渋滞で <span class="num">+${hm(m)}</span>`:m<0?`普段より空いている見込み（<span class="num">${hm(m)}</span>）`:"普段どおりの見込み"; };
     let limitAbs=null, deadline=null, nokin=null;
     if(sh){ deadline=sh.deadline; nokin=(dayNo(sh.r.date)+1)*DAY+KIKO; limitAbs=Math.min(deadline,nokin); }
@@ -588,75 +612,99 @@ input,textarea,button{font-weight:700}
     };
     const back=(label,l)=>{
       if(!l||!l.ok) return `<div class="leg"><div class="h">${label}</div><div class="err">${esc((l&&l.error)||"調べられませんでした")}</div></div>`;
-      const viaMin=j.via?(j.viaMin||0):0, arr=leaveAbs+l.sec/60+viaMin;
-      const gas=j.via&&l.legSec&&l.legSec.length>1?`<div class="d">給油所着 <span class="num">${tl(leaveAbs+l.legSec[0]/60,nowAbs)}</span>（給油 <span class="num">${viaMin}</span>分）</div>`:"";
-      return `<div class="leg"><div class="h">${label}${j.via?"（給油所経由）":""}</div>
+      const viaMin=l.station?(j.viaMin||0):0, arr=leaveAbs+l.sec/60+viaMin;
+      const gas=l.station?`<div class="d">給油所：<b>${esc(shortName(l.station))}</b>${j.stationCount>1?"（早い方を自動で選択）":""}<br>給油所着 <span class="num">${tl(leaveAbs+(l.legSec&&l.legSec.length>1?l.legSec[0]:l.sec)/60,nowAbs)}</span>（給油 <span class="num">${viaMin}</span>分）</div>`:"";
+      return `<div class="leg"><div class="h">${label}</div>
         <div class="v"><strong class="num">${tl(arr,nowAbs)} 帰着</strong><span class="num">${hm(l.sec/60+viaMin)}・${l.km}km</span></div>
         ${gas}<div class="d">${delay(l)}${l.via?`・${esc(l.via)}経由`:""}</div>${judge(arr)}</div>`;
     };
+    const pickLine=j.pickup?`<div class="d">お迎え先着 <span class="num">${tl(nowAbs+(j.go.legSec&&j.go.legSec.length>1?j.go.legSec[0]:0)/60,nowAbs)}</span>（待ち <span class="num">${pickMin}</span>分）</div>`:"";
+    const route=[j.fromLabel||"現在地", j.pickup?shortName(j.pickup):"", j.dest].filter(Boolean).map(esc).join(" → ");
     $("lResult").innerHTML=`<div class="res">
       ${isDemo?`<span class="tag">例の表示です（実際の経路ではありません）</span>`:""}
-      <div class="leg"><div class="h">行き　今 <span class="num">${clock(((nowAbs%DAY)+DAY)%DAY)}</span> ${esc(j.fromLabel||"現在地")} → ${esc(dest)}${j.goLocal?"（一般道のみ）":""}</div>
-        <div class="v"><strong class="num">${tl(goArr,nowAbs)} 着</strong><span class="num">${hm(j.go.sec/60)}・${j.go.km}km</span></div>
+      <div class="leg"><div class="h">行き　今 <span class="num">${clock(((nowAbs%DAY)+DAY)%DAY)}</span> ${route}${j.goLocal?"（一般道のみ）":""}</div>
+        ${pickLine}
+        <div class="v"><strong class="num">${tl(goArr,nowAbs)} 目的地着</strong><span class="num">${hm(j.go.sec/60+pickMin)}・${j.go.km}km</span></div>
         <div class="d">${delay(j.go)}</div></div>
       ${back("帰り　高速を使う",j.backHw)}
       ${back("帰り　一般道のみ",j.backLocal)}
-      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 10:30（納金処理があるので帰庫は10:10まで）。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}目的地で <span class="num">${+$("lStay").value||0}</span>分${j.via?`、給油所（${esc(j.via)}）で <span class="num">${j.viaMin||0}</span>分`:""}、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
+      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 10:30（納金処理があるので帰庫は10:10まで）。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}${j.pickup?`お迎え先で <span class="num">${pickMin}</span>分、`:""}目的地で <span class="num">${+$("lStay").value||0}</span>分${j.stationCount?`、給油所で <span class="num">${j.viaMin||0}</span>分`:""}、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
     </div>`;
   }
 
   function showDemo(){
     const all=calc().filter(c=>c.ok);
     const sh=all.find(c=>c.r.date>=todayStr()) || all[all.length-1];
-    const nowAbs=sh?(dayNo(sh.r.date)+1)*DAY+5*60+40:absFromDate(new Date());
+    const nowAbs=sh?(dayNo(sh.r.date)+1)*DAY+5*60+10:absFromDate(new Date());
     const stay=+$("lStay").value||0;
-    showResult({nowAbs,leaveAbs:nowAbs+75+stay,
-      go:{ok:true,sec:75*60,staticSec:65*60,km:66.2},
-      via:"LPGスタンド（例）",viaMin:10,
-      backHw:{ok:true,sec:105*60,staticSec:85*60,km:73.0,via:"東関東道・首都高",legSec:[95*60,10*60]},
-      backLocal:{ok:true,sec:160*60,staticSec:135*60,km:70.1,via:"国道14号",legSec:[150*60,10*60]}},"成田空港",sh,true);
+    showResult({nowAbs,leaveAbs:nowAbs+20+5+75+stay,fromLabel:"東京都新宿区西新宿2丁目",pickup:"〇〇ホテル 新宿（例）",pickupMin:5,dest:"成田空港",
+      go:{ok:true,sec:95*60,staticSec:85*60,km:78.4,legSec:[20*60,75*60]},
+      viaMin:5,stationCount:2,
+      backHw:{ok:true,sec:100*60,staticSec:85*60,km:73.0,via:"東関東道・首都高",legSec:[80*60,20*60],station:DEFAULT_VIAS[0]},
+      backLocal:{ok:true,sec:160*60,staticSec:135*60,km:70.1,via:"国道14号",legSec:[140*60,20*60],station:DEFAULT_VIAS[1]}},sh,true);
   }
 
-  let pos=null;
-  $("lGeo").onclick=()=>{
+  // 現在地：座標を取り、住所に変換して欄に入れる。欄を手で書き換えたら、そちらを優先する
+  let pos=null, posAddr="";
+  function getLocation(){
     const m=$("lGeoMsg");
     if(!navigator.geolocation){ m.textContent="このスマホでは現在地が使えません。駅名や住所を入れてください"; return; }
-    m.textContent="現在地を調べています…"; $("lFrom").value="";
-    navigator.geolocation.getCurrentPosition(
-      p=>{ pos={lat:p.coords.latitude,lng:p.coords.longitude}; m.textContent=$("lFrom").value.trim()?"入力した出発地を使います":`現在地を使います（誤差 約${Math.round(p.coords.accuracy)}m）`; },
-      ()=>{ pos=null; m.textContent="現在地を取れませんでした。位置情報の許可を確認するか、駅名や住所を入れてください"; },
-      {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
-  };
-  // 出発地の欄に文字があれば、現在地より優先して使う
+    m.textContent="現在地を調べています…";
+    navigator.geolocation.getCurrentPosition(async p=>{
+      pos={lat:p.coords.latitude,lng:p.coords.longitude}; posAddr="";
+      m.textContent=`現在地を取得しました（誤差 約${Math.round(p.coords.accuracy)}m）。住所を調べています…`;
+      if(!cfg.url||!cfg.pass){ $("lFrom").value=""; m.textContent="現在地を取得しました。住所の表示には、下の「接続の設定」で合言葉が必要です"; return; }
+      try{
+        const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"address",passcode:cfg.pass,lat:pos.lat,lng:pos.lng})});
+        const j=await res.json();
+        if(!j.ok) throw new Error(j.error);
+        posAddr=j.address; $("lFrom").value=posAddr;
+        m.textContent="現在地を取得しました。違っていたら住所を直してください";
+      }catch(e){ $("lFrom").value=""; m.textContent="現在地は取得しましたが、住所を表示できませんでした（このまま調べられます）"; }
+    },()=>{ pos=null; m.textContent="現在地を取れませんでした。位置情報の許可を確認するか、駅名や住所を入れてください"; },
+    {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+  }
+  $("lGeo").onclick=getLocation;
   $("lFrom").addEventListener("input",()=>{
-    $("lGeoMsg").textContent=$("lFrom").value.trim()?"入力した出発地を使います":pos?"現在地を使います":"現在地が使えないときは、下に駅名や住所を入れてください";
+    const t=$("lFrom").value.trim();
+    $("lGeoMsg").textContent=t&&t!==posAddr?"入力した場所を現在地として使います":pos?"取得した現在地を使います":"「現在地を取得」を押すか、駅名や住所を入れてください";
   });
-  $("lDest").addEventListener("input",()=>renderLinks($("lDest").value.trim()));
+  // 「出発点を入力」にチェックしたら、欄を出して現在地を自動で取得する
+  $("lPickOn").addEventListener("change",()=>{
+    $("lPickBox").hidden=!$("lPickOn").checked; renderLinks();
+    if($("lPickOn").checked){ if(!pos&&!$("lFrom").value.trim()) getLocation(); $("lPick").focus(); }
+  });
 
   $("lRun").onclick=async()=>{
     const dest=$("lDest").value.trim(), out=$("lResult");
     if(!dest){ out.innerHTML=`<div class="err">目的地を入れてください</div>`; return; }
-    if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ接続の設定がありません。下の「接続の設定」にApps ScriptのURLと合言葉を入れてください。</div>`; return; }
+    if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ接続の設定がありません。下の「接続の設定」に合言葉を入れてください。</div>`; return; }
     const body={action:"route",passcode:cfg.pass,dest,stayMin:+$("lStay").value||0,goLocal:$("lGoLocal").checked};
-    const viaTxt=$("lVia").value.trim();
-    if($("lViaOn").checked){
-      if(!viaTxt){ out.innerHTML=`<div class="err">給油所の名前か住所を入れてください</div>`; return; }
-      body.via=viaTxt;
-    }
     const fromTxt=$("lFrom").value.trim();
-    if(fromTxt) body.from=fromTxt;
-    else if(pos){ body.lat=pos.lat; body.lng=pos.lng; }
-    else { out.innerHTML=`<div class="err">「現在地を使う」を押すか、出発地を入れてください</div>`; return; }
-    const fromLabel=fromTxt?`「${esc(fromTxt)}」から`:"現在地から";
-    out.innerHTML=`<div class="geo">${fromLabel}調べています…</div>`; $("lRun").disabled=true;
+    if(pos&&(!fromTxt||fromTxt===posAddr)){ body.lat=pos.lat; body.lng=pos.lng; }
+    else if(fromTxt) body.from=fromTxt;
+    else { out.innerHTML=`<div class="err">「現在地を取得」を押すか、現在地の住所を入れてください</div>`; return; }
+    if($("lPickOn").checked){
+      const pick=$("lPick").value.trim();
+      if(!pick){ out.innerHTML=`<div class="err">お迎え先を入れてください</div>`; return; }
+      body.pickup=pick; body.pickupMin=+$("lPickMin").value||0;
+    }
+    if($("lViaOn").checked){
+      const vias=[$("lVia1").value.trim(),$("lVia2").value.trim()].filter(Boolean);
+      if(!vias.length){ out.innerHTML=`<div class="err">給油所の名前か住所を入れてください</div>`; return; }
+      body.vias=vias;
+    }
+    out.innerHTML=`<div class="geo">調べています…（給油所を比べるので少し時間がかかります）</div>`; $("lRun").disabled=true;
     try{
       const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
       const j=await res.json();
       if(!j.ok) throw new Error(j.error||"調べられませんでした");
-      if(j.office){ cfg.office=j.office; saveCfg(); renderLinks(dest); }
-      j.goLocal=body.goLocal; j.fromLabel=fromTxt||"現在地";
-      j.via=body.via||""; j.viaMin=body.via?(+$("lViaMin").value||0):0;
-      showResult(j,dest,shiftAt(absFromDate(new Date(j.now))),false);
+      if(j.office){ cfg.office=j.office; saveCfg(); }
+      Object.assign(j,{goLocal:body.goLocal,fromLabel:body.from||posAddr||"現在地",dest,pickup:body.pickup||"",pickupMin:body.pickupMin||0,
+        viaMin:+$("lViaMin").value||0,stationCount:(body.vias||[]).length});
+      navStation=(j.backHw&&j.backHw.station)||"";
+      renderLinks();
+      showResult(j,shiftAt(absFromDate(new Date(j.now))),false);
     }catch(e){
       const msg=/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。この試作ページからは外に接続できないので、本番のページで試してください。":e.message;
       out.innerHTML=`<div class="err">${esc(msg)}</div>`;
@@ -665,7 +713,7 @@ input,textarea,button{font-weight:700}
 
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
-  renderLinks("");
+  renderLinks();
   if(PROD) $("lResult").innerHTML=`<div class="geo">目的地を入れて「時間を調べる」を押すと、行きと帰り（高速・一般道）の時間と、業務後点呼の期限に間に合うかをここに出します。${cfg.pass?"":"<br>はじめに、下の「接続の設定」で合言葉を入れてください。"}</div>`;
   else showDemo();
   // 初めて開いたとき（まだ画面を選んだことがない）は使い方から
