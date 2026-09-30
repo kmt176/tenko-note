@@ -694,7 +694,7 @@ input,textarea,button{font-weight:700}
       if(!vias.length){ out.innerHTML=`<div class="err">給油所の名前か住所を入れてください</div>`; return; }
       body.vias=vias;
     }
-    out.innerHTML=`<div class="geo">調べています…（給油所を比べるので少し時間がかかります）</div>`; $("lRun").disabled=true;
+    out.innerHTML=`<div class="geo">調べています…${body.vias&&body.vias.length>1?"（給油所を比べるので少し時間がかかります）":""}</div>`; $("lRun").disabled=true;
     try{
       const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
       const j=await res.json();
