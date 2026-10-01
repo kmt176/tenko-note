@@ -192,6 +192,9 @@ input,textarea,button{font-weight:700}
 .fl .st.late{background:var(--warn-soft);color:var(--warn)}
 .fl .st.bad{background:var(--bad-soft);color:var(--bad)}
 .fl .st.done{color:var(--muted)}
+a.flink{color:inherit;text-decoration:none}
+a.flink:active{background:var(--sunk)}
+a.flink .st small{color:var(--accent);font-size:12.5px}
 
 /* 売上 */
 .ridebtns{display:grid;gap:10px}
@@ -1576,9 +1579,12 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       } else { sel.hidden=true; $("fNote").textContent=`${j.group?j.group.name+"の、":""}直近3日の1万円以上の乗車です（新しい順）。`; }
       b.innerHTML=(cfg.empCode||!PROD?"":`<div class="note">社員コードが入っていないので、あなたの乗車は速報に出ません（メニューの「合言葉」で入れられます）。</div>`)+
         (items.map(x=>{ const t=new Date(x.at), dk=dKey(t);
-          return `<div class="fl"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
+          // タップで Googleマップ（乗車地→降車地の経路。片方しかなければその場所）
+          const q=enc, map=x.from&&x.to?`https://www.google.com/maps/dir/?api=1&origin=${q(x.from)}&destination=${q(x.to)}&travelmode=driving`
+            :(x.from||x.to)?`https://www.google.com/maps/search/?api=1&query=${q(x.from||x.to)}`:"";
+          return `<${map?`a href="${map}" target="_blank" rel="noopener"`:"div"} class="fl flink"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
             <div class="who">${esc(x.name||x.code)}${j.admin&&x.groupName?`<small>${esc(x.groupName)}</small>`:""}<small>${esc(x.from||"—")} → ${esc(x.to||"—")}</small></div>
-            <span class="st">${esc(x.pay||"")}</span></div>`; }).join("")||`<div class="geo">直近3日に、1万円以上の乗車はまだありません。</div>`);
+            <span class="st">${esc(x.pay||"")}${map?"<br><small>地図 ›</small>":""}</span></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、1万円以上の乗車はまだありません。</div>`);
     };
     drawFlash=draw;
     if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
