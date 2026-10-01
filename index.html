@@ -227,6 +227,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 .ckin{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
 .ckin .field label{font-size:13.5px}
 .ckin input{font-size:18px;min-height:44px}
+.nkt{width:100%;border-collapse:collapse;border:1.5px solid var(--ink);font-size:16px}
+.nkt th,.nkt td{border:1px solid var(--line);padding:4px 8px;height:42px}
+.nkt th{text-align:left;font-weight:700;white-space:nowrap;width:52%;letter-spacing:.02em}
+.nkt td{text-align:right;font-size:21px}
+.nkt td input{width:100%;text-align:right;font:21px var(--num);font-weight:700;min-height:36px;padding:4px 6px}
+.nkt tr.nk-cash th,.nkt tr.nk-cash td{border-top:2px solid var(--ink);background:var(--accent-soft)}
+.nkt tr.nk-cash td{font-size:24px}
 .paytbl{width:100%;border-collapse:collapse;font-size:15.5px}
 .paytbl td{padding:5px 2px;border-bottom:1px solid var(--line)}
 .paytbl td.n{text-align:right;font-family:var(--num)}
@@ -343,10 +350,30 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   </section>
 
   <section class="card" aria-labelledby="ckTitle">
-    <h2 id="ckTitle">集計・照合（日報・日計表）</h2>
-    <div id="ckPay"></div>
-    <div class="ckin" id="ckIn"></div>
-    <div id="ckResult"></div>
+    <h2 id="ckTitle">納金明細書</h2>
+    <table class="nkt" id="nkTable"><tbody>
+      <tr><th>売　上　額　①</th><td><input type="number" id="ck_total" data-ck="total" inputmode="numeric" min="0" aria-label="売上額①（日報の総営収）"></td></tr>
+      <tr class="nk-d"><th>日計表合計②</th><td class="num" id="nk_card"></td></tr>
+      <tr class="nk-d"><th>その他未収③</th><td class="num" id="nk_other"></td></tr>
+      <tr class="nk-d nk-blank"><th></th><td></td></tr>
+      <tr class="nk-d"><th>未収計④（②＋③）</th><td class="num" id="nk_mishu"></td></tr>
+      <tr class="nk-d"><th>アプリ手配料金</th><td><input type="number" id="ck_app" data-ck="app" inputmode="numeric" min="0" aria-label="アプリ手配料金"></td></tr>
+      <tr class="nk-d"><th>ＥＴＣ合計⑤</th><td><input type="number" id="ck_etc" data-ck="etc" inputmode="numeric" min="0" aria-label="ETC合計⑤"></td></tr>
+      <tr class="nk-d"><th>ＥＴＣ会社負担⑥</th><td><input type="number" id="ck_etcCo" data-ck="etcCo" inputmode="numeric" min="0" aria-label="ETC会社負担⑥"></td></tr>
+      <tr class="nk-d"><th>Ｂ空転</th><td class="num" id="nk_bku"></td></tr>
+      <tr class="nk-d nk-cash"><th>現金＝①−④＋⑤−⑥</th><td class="num" id="nk_cash"></td></tr>
+    </tbody></table>
+    <div class="field"><label for="ck_note">伝達事項、その他（チケットが書ききれない場合等）</label><textarea id="ck_note" data-ck="note" style="min-height:60px;font-family:var(--sans)"></textarea></div>
+    <div id="ckCheck">
+      <h3 style="margin:4px 0 0;font-size:16px">日計表と照合</h3>
+      <div class="ckin" id="ckIn">
+        <div class="field"><label for="ck_genshu">日計表の現収</label><input type="number" id="ck_genshu" data-ck="genshu" inputmode="numeric" min="0"></div>
+        <div class="field"><label for="ck_mishu">日計表の未収</label><input type="number" id="ck_mishu" data-ck="mishu" inputmode="numeric" min="0"></div>
+        <div class="field"><label for="ck_etcSelf">ETC自己負担</label><input type="number" id="ck_etcSelf" data-ck="etcSelf" inputmode="numeric" min="0"></div>
+      </div>
+      <div id="ckResult"></div>
+      <details><summary>決済別の内訳</summary><div id="ckPay"></div></details>
+    </div>
     <div class="lockline" id="ckLock"></div>
   </section>
   </div>
@@ -529,7 +556,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>配車／手上げ・決済は前の乗車と同じものが最初から入っています</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
-      <li>勤務が終わったら「集計・照合」に<b>日報の総営収</b>（合計金額欄）と、ETC・日計表の数字を入れます。<b>納金額</b>が出て、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します</small></li>
+      <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>現金（納金）</b>が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します</small></li>
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
@@ -1291,8 +1318,6 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   const CARD=["C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy"];   // ② 日計表に載るもの
   const OTHER=["A:GOPAY","T:チケット","福祉券"];                                        // ③ その他未収
   const PAYS=[...CARD,"現金","B空転",...OTHER];
-  // 日報・日計表から手で入れる欄（空欄のアプリ料・ETCは、乗車の記録から出した値を使う）
-  const CK_FIELDS=[["total","総営収（日報の合計金額欄・税込）"],["app","⑦アプリ手配料金"],["etc","⑤ETC合計"],["etcCo","⑥ETC会社負担（帰りの高速代）"],["etcSelf","ETC自己負担"],["genshu","日計表の現収"],["mishu","日計表の未収"]];
   function settle(d,s){
     const c=d.check||{}, num=v=>v==null||v===""?null:+v, by=k=>s.byPay[k]||0;
     const card=CARD.reduce((a,k)=>a+by(k),0), other=OTHER.reduce((a,k)=>a+by(k),0), mishu=card+other, bku=s.bku, cash=by("現金");
@@ -1498,36 +1523,36 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     const setVal=(id,v)=>{ if(document.activeElement!==$(id)) $(id).value=v??""; };
     setVal("smAmt",d.simple.amt); setVal("smCnt",d.simple.cnt); setVal("smHrs",d.simple.hrs);
 
-    // 集計・照合（売上管理Excelの「集計」シートと同じ）
+    // 納金明細書（紙と同じ並び）と、日計表との照合（売上管理Excelの「集計」シートと同じ計算）
     $("ckPay").innerHTML=simple?"":`<table class="paytbl"><tbody>
       ${PAYS.filter(p=>s.byPay[p]).map(p=>`<tr><td>${esc(p)}</td><td class="n">${s.cntPay[p]}回</td><td class="n">${yen(s.byPay[p])}</td></tr>`).join("")}
-      ${s.bku?`<tr><td>⑧ B空転（合計に入れない）</td><td class="n">${s.nbku}回</td><td class="n">${yen(s.bku)}</td></tr>`:""}
+      ${s.bku?`<tr><td>B空転（合計に入れない）</td><td class="n">${s.nbku}回</td><td class="n">${yen(s.bku)}</td></tr>`:""}
       <tr class="tot"><td>メーター日計（合計）</td><td class="n">${s.count}回</td><td class="n">${yen(s.total)}</td></tr></tbody></table>`;
-    // 入力欄（空欄のときは、乗車の記録から出した値を薄く表示して、その値で計算する）
-    const auto={app:s.app,etc:s.etc};
-    if(!$("ckIn").dataset.built){
-      $("ckIn").innerHTML=CK_FIELDS.map(([f,l])=>`<div class="field"><label for="ck_${f}">${l}</label><input type="number" id="ck_${f}" data-ck="${f}" inputmode="numeric" min="0"></div>`).join("");
-      $("ckIn").dataset.built="1";
-      $("ckIn").addEventListener("change",e=>{ const f=e.target.dataset.ck; if(!f) return; const dd=ensureDay(sDay);
+    if(!$("ckTitle").dataset.built){
+      $("ckTitle").dataset.built="1";
+      // 入力欄の変更を保存する（照合済みの日は確認してから）
+      $("ckTitle").parentElement.addEventListener("change",e=>{ const f=e.target.dataset&&e.target.dataset.ck; if(!f) return; const dd=ensureDay(sDay);
         if(dd.locked&&!guard(dd)){ renderSales(); return; }
-        dd.check[f]=e.target.value===""?null:+e.target.value; saveSales(); renderSales(); });
+        dd.check[f]=f==="note"?e.target.value:e.target.value===""?null:+e.target.value; saveSales(); renderSales(); });
     }
-    CK_FIELDS.forEach(([f])=>{ const el=$("ck_"+f); setVal("ck_"+f,d.check[f]); el.placeholder=auto[f]!=null&&!simple?yen(auto[f])+"（記録から）":""; el.closest(".field").hidden=simple&&!["total"].includes(f); });
-    $("ckResult").innerHTML=st.total==null?`<div class="geo">日報の<b>総営収</b>（合計金額欄）を入れると、納金額と照合の結果を出します。</div>`:
-      `${simple?`<div class="geo">簡易入力では決済の内訳がないため、納金額と照合は出しません。総営収を入れれば鍵をかけられます。</div>`:`<div class="nokin"><span>納金（入金金額）</span><span class="v num">${yen(st.nokin)}円</span></div>`}
-      ${simple?"":`<dl class="kv">
-        <dt>② 日計表合計（カード等）</dt><dd>${yen(st.card)}</dd>
-        <dt>③ その他未収（GOPAY・チケット・福祉券）</dt><dd>${yen(st.other)}</dd>
-        <dt>④ 未収計（②＋③）</dt><dd>${yen(st.mishu)}</dd>
-        <dt>⑧ B空転</dt><dd>${yen(st.bku)}</dd></dl>
-      <div class="checks">
-        ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／日報から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>`}
+    // 空欄のアプリ手配料金・ETCは、乗車の記録から出した値を薄く表示して、その値で計算する
+    const auto={app:s.app,etc:s.etc,etcCo:0};
+    ["total","app","etc","etcCo","genshu","mishu","etcSelf","note"].forEach(f=>setVal("ck_"+f,d.check[f]));
+    ["app","etc","etcCo"].forEach(f=>{ $("ck_"+f).placeholder=simple?"":yen(auto[f])+"（記録から）"; });
+    $("ck_total").placeholder="日報の総営収";
+    document.querySelectorAll("#nkTable .nk-d").forEach(tr=>tr.hidden=simple);
+    $("ckCheck").hidden=simple;
+    $("nk_card").textContent=yen(st.card); $("nk_other").textContent=yen(st.other); $("nk_mishu").textContent=yen(st.mishu);
+    $("nk_bku").textContent=st.bku?yen(st.bku):""; $("nk_cash").textContent=st.nokin==null?"":yen(st.nokin);
+    $("ckResult").innerHTML=simple?`<div class="geo">簡易入力では決済の内訳がないため、納金額と照合は出しません。売上額①を入れれば鍵をかけられます。</div>`:
+      st.total==null?`<div class="geo">売上額①（日報の総営収）を入れると、現金（納金）と照合の結果を出します。</div>`:
+      `<div class="checks">
+        ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／明細書から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>`}
         ${st.genOk==null?"":`<span class="pill ${st.genOk?"ok":"warn"}">日計表の現収 ${st.genOk?"OK":"要確認"}（現金＋B空転 ${yen(st.cash+st.bku)}円）</span>`}
         ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
       </div>
-      <div class="src">メーター照合：総営収＋⑦アプリ手配料金＋⑤ETC合計−⑥ETC会社負担−ETC自己負担−⑧B空転 が、記録の合計と同じならOK。納金＝（総営収−④）＋（⑤−⑥）＋⑦−⑧。</div>`}`;
-    const canLock=st.total!=null&&(simple||st.meterOk);
+      <div class="src">メーター照合：①＋アプリ手配料金＋⑤−⑥−ETC自己負担−B空転 が、記録の合計（メーター日計）と同じならOK。現金＝①−④＋⑤−⑥＋アプリ手配料金−B空転。</div>`;    const canLock=st.total!=null&&(simple||st.meterOk);
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
     if($("ckDoLock")) $("ckDoLock").onclick=()=>{ const dd=ensureDay(k); dd.locked=true; dd.lockedAt=new Date().toISOString(); saveSales(); renderSales(); };
@@ -1596,9 +1621,10 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 出庫日: YYYY-MM-DD（出庫日時の日付）
 総営収: 数字
 アプリ手配料金: 数字
-ETC合計: 数字（ETC料金の「実車」の金額）
-ETC会社負担: 0
+ETC合計: 数字（日報のETC料金の「合計」）
+ETC会社負担: 数字（納金明細書・高速道路利用明細があれば会社負担分の合計。なければETC料金の「迎車」と「空車」の合計）
 ETC自己負担: 0
+伝達事項: 納金明細書の伝達事項に書いてあれば、その文（なければ空欄）
 日計表の現収: 数字（日報の「現収」）
 日計表の未収: 数字（日報の「未収」）
 ---
@@ -1631,6 +1657,7 @@ ETC自己負担: 0
       if(!inRows){
         const m=/^([^:：]+)[:：]\s*(.*)$/.exec(line); if(!m) return;
         const k=m[1].trim(), v=m[2].trim();
+        if(k==="伝達事項"){ check.note=v; return; }
         if(k==="出庫日"){ const d=v.replace(/[\/年月.]/g,"-").replace(/日$/,"").replace(/-(\d)(?!\d)/g,"-0$1"); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) date=d; else errs.push(`出庫日が読めません：${v}`); }
         else if(HEAD_KEYS[k]){ const n=num(v.split(/[（(]/)[0]); if(Number.isNaN(n)) errs.push(`${k}が数字ではありません`); else check[HEAD_KEYS[k]]=n; }
         return;
