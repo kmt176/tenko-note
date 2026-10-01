@@ -42,6 +42,7 @@ img{max-width:100%}
   --ok:#6FC993; --ok-soft:#173226; --warn:#E3AE5B; --warn-soft:#352812; --bad:#EE8176; --bad-soft:#3A1C19;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:17px;line-height:1.55;padding-inline:16px;padding-block:12px 96px}
 .wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
@@ -155,6 +156,42 @@ input[type=text],input[type=url],input[type=number],input[type=password]{width:1
 @media (prefers-reduced-motion: no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(20px);opacity:.6}}}
 
 input,textarea,button{font-weight:700}
+
+/* メニュー（ロング判定・天気・電車・到着便） */
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--sunk);border-radius:12px;padding:5px}
+.seg button{border:0;background:none;border-radius:9px;padding:10px 0;font-size:15px;letter-spacing:-.02em;white-space:nowrap;color:var(--muted);min-height:46px}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.infohead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.infohead .btn{padding:8px 12px}
+.stamp{font-size:14px;color:var(--muted);font-weight:400}
+.src{font-size:13.5px;color:var(--muted);font-weight:400}
+.wxday{display:grid;gap:2px;padding:10px 0;border-top:1px solid var(--line)}
+.wxday:first-of-type{border-top:0}
+.wxday .h{font-size:14.5px;color:var(--muted)}
+.wxday .t{font-size:19px}
+.pops{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:6px}
+.pop{border-radius:10px;background:var(--sunk);padding:8px 4px;text-align:center;display:grid;gap:2px}
+.pop .h{font-size:13.5px;color:var(--muted)}
+.pop .v{font-size:22px}
+.pop.rain{background:var(--accent-soft);color:var(--accent)}
+.line{display:grid;gap:4px;padding:12px 0;border-top:1px solid var(--line)}
+.line:first-of-type{border-top:0}
+.line .n{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:18px}
+.line .x{font-size:15.5px;font-weight:400}
+.okline{font-size:15.5px;color:var(--ok)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.sum div{background:var(--sunk);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.sum .h{font-size:14px;color:var(--muted)}
+.sum .v{font-size:26px}
+.fl{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--line)}
+.fl .tm{font-size:24px}
+.fl .tm s{display:block;font-size:14px;color:var(--muted);font-weight:400}
+.fl .who{font-size:16px}
+.fl .who small{display:block;font-size:14px;color:var(--muted);font-weight:400}
+.fl .st{font-size:14.5px;border-radius:999px;padding:2px 10px;background:var(--sunk)}
+.fl .st.late{background:var(--warn-soft);color:var(--warn)}
+.fl .st.bad{background:var(--bad-soft);color:var(--bad)}
+.fl .st.done{color:var(--muted)}
 </style>
 
 <div class="wrap" id="tabTenko">
@@ -206,6 +243,50 @@ input,textarea,button{font-weight:700}
 </div>
 
 <div class="wrap" id="tabLong" hidden>
+  <div class="seg" role="tablist" aria-label="メニュー">
+    <button role="tab" data-sub="long" aria-selected="true">ロング判定</button>
+    <button role="tab" data-sub="wx" aria-selected="false">天気</button>
+    <button role="tab" data-sub="rail" aria-selected="false">電車</button>
+    <button role="tab" data-sub="fl" aria-selected="false">到着便</button>
+  </div>
+
+  <div class="wrap" id="subWx" hidden>
+    <section class="card" aria-live="polite">
+      <div class="infohead"><h2>天気（東京地方）</h2><button class="btn" data-reload="weather">更新</button></div>
+      <div id="wxBody" class="geo">読み込んでいます…</div>
+    </section>
+    <div class="links"><a class="main" href="https://www.jma.go.jp/bosai/nowc/" target="_blank" rel="noopener">雨雲の動き（気象庁 ナウキャスト）</a></div>
+  </div>
+
+  <div class="wrap" id="subRail" hidden>
+    <section class="card" aria-live="polite">
+      <div class="infohead"><h2>運行情報（東京メトロ・都営）</h2><button class="btn" data-reload="rail">更新</button></div>
+      <div id="railBody" class="geo">読み込んでいます…</div>
+    </section>
+    <section class="card">
+      <h2>JR・東武・西武（公式サイト）</h2>
+      <div class="links">
+        <a href="https://traininfo.jreast.co.jp/train_info/kanto.aspx" target="_blank" rel="noopener">JR東日本<br>関東の運行情報</a>
+        <a href="https://www.tobu.co.jp/service_status/" target="_blank" rel="noopener">東武鉄道<br>運行情報</a>
+        <a href="https://www.seiburailway.jp/railwayinfo/" target="_blank" rel="noopener">西武鉄道<br>運行情報</a>
+      </div>
+      <div class="src">この3社のデータは、アプリでの利用が認められていないため公式サイトを開きます。</div>
+    </section>
+  </div>
+
+  <div class="wrap" id="subFl" hidden>
+    <section class="card" aria-live="polite">
+      <div class="infohead"><h2>到着便（JAL・ANA）</h2><button class="btn" data-reload="flight">更新</button></div>
+      <div class="seg" role="tablist" aria-label="空港" style="grid-template-columns:1fr 1fr">
+        <button role="tab" data-ap="HND" aria-selected="true">羽田</button>
+        <button role="tab" data-ap="NRT" aria-selected="false">成田</button>
+      </div>
+      <div id="flBody" class="geo">読み込んでいます…</div>
+      <label class="check"><input type="checkbox" id="flAll">到着済み・3時間より先の便も表示する</label>
+    </section>
+  </div>
+
+  <div class="wrap" id="subLong">
   <section class="card" aria-labelledby="lTitle">
     <h2 id="lTitle">ロングを受けたら</h2>
     <div class="field">
@@ -240,6 +321,7 @@ input,textarea,button{font-weight:700}
     <h2 id="lkTitle">渋滞・工事の情報</h2>
     <div class="links" id="lLinks"></div>
   </section>
+  </div>
 
   <details>
     <summary>接続の設定（最初に1回）</summary>
@@ -264,7 +346,7 @@ input,textarea,button{font-weight:700}
     <ol class="steps">
       <li><b>ホーム画面に追加</b>します。<br><small>iPhone：共有ボタン →「ホーム画面に追加」／Android：︙ →「ホーム画面に追加」</small></li>
       <li><b>ホーム画面のアイコンから開きます。</b>以降もいつもアイコンから開いてください。<br><small>iPhoneは、ブラウザとアイコンで保存場所が別になります</small></li>
-      <li>「ロング判定」→「接続の設定」に<b>合言葉</b>を入れて保存します。<br><small>点呼時間だけなら合言葉なしで使えます。ロング判定を使うときは、紹介者に合言葉を聞いてください。</small></li>
+      <li>「メニュー」→ いちばん下の「接続の設定」に<b>合言葉</b>を入れて保存します。<br><small>点呼時間だけなら合言葉なしで使えます。ロング判定・天気・電車・到着便を使うときは、紹介者に合言葉を聞いてください。</small></li>
     </ol>
   </section>
 
@@ -293,6 +375,7 @@ input,textarea,button{font-weight:700}
 
   <section class="card help">
     <h2>ロング判定</h2>
+    <p>「メニュー」→「ロング判定」で開きます。</p>
     <ol class="steps">
       <li>「<b>現在地を取得</b>」を押します。住所が自動で入ります（違っていたら直せます）。</li>
       <li><b>お迎え先に向かう前</b>なら「出発点（お迎え先）を入力する」にチェックを入れ、お迎え先を入れます。<small>チェックすると現在地も自動で取得します。お迎え先に着いてから調べるときは、チェック不要です</small></li>
@@ -309,6 +392,16 @@ input,textarea,button{font-weight:700}
     <p><small>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</small></p>
   </section>
 
+  <section class="card help">
+    <h2>天気・電車・到着便</h2>
+    <p>「メニュー」の上のボタンで切り替えます。開くたびに新しい情報を読み込みます（「更新」でも読み込めます）。</p>
+    <dl class="explain">
+      <dt>天気</dt><dd>気象庁の東京地方の予報です。降水確率50%以上の時間帯に色が付きます。雨雲の動きは下のボタンから見られます。</dd>
+      <dt>電車</dt><dd>東京メトロ・都営の運行情報です。乱れのある路線を上に出します。JR・東武・西武は公式サイトを開きます。</dd>
+      <dt>到着便</dt><dd>羽田・成田に着くJAL・ANAの便です。これから60分に着く便の数、15分以上の遅れ、23時以降（電車が少ない時間）の便が分かります。</dd>
+    </dl>
+  </section>
+
   <section class="card help caution">
     <h2>注意</h2>
     <ul>
@@ -323,7 +416,7 @@ input,textarea,button{font-weight:700}
 <nav class="tabbar" role="tablist" aria-label="画面の切り替え">
   <button role="tab" id="tb0" aria-selected="false" aria-controls="tabHelp" class="tb-help">使い方</button>
   <button role="tab" id="tb1" aria-selected="true" aria-controls="tabTenko">点呼時間</button>
-  <button role="tab" id="tb2" aria-selected="false" aria-controls="tabLong">ロング判定</button>
+  <button role="tab" id="tb2" aria-selected="false" aria-controls="tabLong">メニュー</button>
 </nav>
 
 <div class="sheet-bg" id="sheetBg" hidden></div>
@@ -711,14 +804,142 @@ input,textarea,button{font-weight:700}
     }finally{ $("lRun").disabled=false; }
   };
 
+  // ===== メニュー（ロング判定・天気・電車・到着便） =====
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl"};
+  const KIND={wx:"weather",rail:"rail",fl:"flight"};
+  const info={};          // 種類ごとの最後の結果と取得時刻
+  let airport="HND", curSub="long";
+  function showSub(s){
+    if(!SUBS[s]) s="long";
+    curSub=s;
+    Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
+    document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sub===s));
+    try{ localStorage.setItem("tenko.sub",s); }catch(e){}
+    if(KIND[s]&&!$("tabLong").hidden) loadInfo(KIND[s],false);
+  }
+  // メニューのタブを開いたときも、表示中の情報を新しくする
+  $("tb2").onclick=()=>{ showTab(2); showSub(curSub); };
+  document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.onclick=()=>showSub(b.dataset.sub));
+  document.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>loadInfo(b.dataset.reload,true));
+  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{
+    airport=b.dataset.ap;
+    document.querySelectorAll("[data-ap]").forEach(x=>x.setAttribute("aria-selected",x===b));
+    loadInfo("flight",false);
+  });
+  $("flAll").addEventListener("change",()=>{ const r=info["flight"+airport]; if(r&&r.data) renderFlights(r.data); });
+
+  const BODY={weather:"wxBody",rail:"railBody",flight:"flBody"};
+  const hhmm=iso=>{ const d=new Date(iso); return isNaN(d)?"":clock(d.getHours()*60+d.getMinutes()); };
+  const stampOf=j=>j.fetchedAt?`<div class="stamp">${hhmm(j.fetchedAt)} 時点</div>`:"";
+  async function loadInfo(kind,force){
+    const slot=kind==="flight"?"flight"+airport:kind, body=$(BODY[kind]), have=info[slot];
+    if(have&&!force&&Date.now()-have.at<2*60*1000){ draw(kind,have.data); return; }
+    if(!PROD&&(!cfg.url||!cfg.pass)){ draw(kind,demoInfo(kind)); body.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です（実際の情報ではありません）</span></span>`); return; }
+    if(!cfg.url||!cfg.pass){ body.innerHTML=`<div class="err">下の「接続の設定」で合言葉を入れてください。</div>`; return; }
+    if(!have) body.innerHTML=`<div class="geo">読み込んでいます…</div>`;
+    try{
+      const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"info",passcode:cfg.pass,kind,airport})});
+      const j=await res.json();
+      if(!j.ok) throw new Error(j.error||"読み込めませんでした");
+      info[slot]={at:Date.now(),data:j};
+      if(kind!=="flight"||j.airport===airport) draw(kind,j);
+    }catch(e){
+      const m=/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。":e.message;
+      body.innerHTML=`<div class="err">${esc(m)}</div>`+(have?"<div class='geo'>（前に読み込んだ内容は消えました。更新を押してください）</div>":"");
+    }
+  }
+  // 試作版で接続がないときに見せる例
+  function demoInfo(kind){
+    const d=new Date(), iso=(dd,h)=>{ const x=new Date(d); x.setDate(x.getDate()+dd); x.setHours(h,0,0,0); return x.toISOString(); };
+    const at=m=>clock((((d.getHours()*60+d.getMinutes()+m)%DAY)+DAY)%DAY);
+    if(kind==="weather") return {ok:true,office:"気象庁",report:iso(0,5),tempArea:"東京",
+      days:[{time:iso(0,0),weather:"くもり　夕方　から　雨"},{time:iso(1,0),weather:"雨　昼過ぎ　から　くもり"}],
+      pops:[{time:iso(0,6),pop:"10"},{time:iso(0,12),pop:"30"},{time:iso(0,18),pop:"60"},{time:iso(1,0),pop:"70"}],
+      temps:[{time:iso(0,9),temp:"24"},{time:iso(1,0),temp:"19"}]};
+    if(kind==="rail") return {ok:true,lines:[
+      {operator:"Toei",railway:"Toei.Mita",status:"遅延",text:"〇時〇分頃、〇〇駅で車両点検を行った影響で、ダイヤが乱れています。（例）"},
+      ...["Ginza","Marunouchi","Hibiya","Tozai","Chiyoda","Yurakucho","Hanzomon","Namboku","Fukutoshin"].map(r=>({operator:"TokyoMetro",railway:"TokyoMetro."+r,status:"",text:"現在、平常どおり運転しています。"})),
+      ...["Asakusa","Shinjuku","Oedo"].map(r=>({operator:"Toei",railway:"Toei."+r,status:"平常運転",text:""}))]};
+    return {ok:true,airport,flights:[
+      {no:"JL0000",from:"CTS",term:"T1",sched:at(-20),est:"",act:at(-15),status:"Arrived"},
+      {no:"NH0000",from:"FUK",term:"T2",sched:at(10),est:at(10),act:"",status:"OnTime"},
+      {no:"JL0001",from:"OKA",term:"T1",sched:at(5),est:at(35),act:"",status:"Delayed"},
+      {no:"NH0001",from:"ITM",term:"T2",sched:at(45),est:at(45),act:"",status:"OnTime"},
+      {no:"JL0002",from:"KMJ",term:"T1",sched:at(90),est:at(90),act:"",status:"OnTime"},
+      {no:"NH0002",from:"KOJ",term:"T2",sched:at(130),est:"",act:"",status:"Cancelled"}]};
+  }
+  function draw(kind,j){ if(kind==="weather") renderWeather(j); else if(kind==="rail") renderRail(j); else renderFlights(j); }
+
+  // 天気：今日・明日の天気、6時間ごとの降水確率（50%以上を色付け）、気温
+  function renderWeather(j){
+    const day=iso=>{ const d=new Date(iso); return (d.getMonth()+1)+"/"+d.getDate()+"（"+DOW[d.getDay()]+"）"; };
+    const days=j.days.slice(0,2).map((d,i)=>`<div class="wxday"><div class="h">${i?"明日":"今日"} ${day(d.time)}</div><div class="t">${esc(d.weather.replace(/　/g," "))}</div></div>`).join("");
+    const pops=j.pops.filter(p=>p.pop!==""&&p.pop!=null).map(p=>{ const d=new Date(p.time), h=d.getHours(), n=+p.pop;
+      return `<div class="pop${n>=50?" rain":""}"><span class="h">${d.getDate()}日 ${h}〜${h+6}時</span><span class="v num">${n}%</span></div>`; }).join("");
+    const temps=j.temps.filter(t=>t.temp!==""&&t.temp!=null);
+    const tline=temps.length?`<div class="d">${esc(j.tempArea)}の気温：${temps.map(t=>{ const d=new Date(t.time); return `${d.getDate()}日${d.getHours()===0?"朝の最低":"日中の最高"} <span class="num">${t.temp}℃</span>`; }).join("、")}</div>`:"";
+    $("wxBody").innerHTML=`${days}<div class="wxday"><div class="h">降水確率</div><div class="pops">${pops}</div></div>${tline}
+      <div class="src">出典：気象庁（${esc(j.office)} ${hhmm(j.report)} 発表）</div>`;
+  }
+
+  // 電車：乱れのある路線を上に、平常の路線はまとめて1行に
+  const RAILWAY={"TokyoMetro.Ginza":"銀座線","TokyoMetro.Marunouchi":"丸ノ内線","TokyoMetro.MarunouchiBranch":"丸ノ内線（方南町支線）","TokyoMetro.Hibiya":"日比谷線","TokyoMetro.Tozai":"東西線","TokyoMetro.Chiyoda":"千代田線","TokyoMetro.Yurakucho":"有楽町線","TokyoMetro.Hanzomon":"半蔵門線","TokyoMetro.Namboku":"南北線","TokyoMetro.Fukutoshin":"副都心線",
+    "Toei.Asakusa":"浅草線","Toei.Mita":"三田線","Toei.Shinjuku":"新宿線","Toei.Oedo":"大江戸線","Toei.Arakawa":"都電荒川線","Toei.NipporiToneri":"日暮里・舎人ライナー"};
+  const OPN={TokyoMetro:"東京メトロ",Toei:"都営"};
+  function renderRail(j){
+    const name=l=>RAILWAY[l.railway]||(l.railway?l.railway.replace(/^.*\./,""):"全線");
+    const normal=l=>/平常|通常/.test(l.status+l.text)&&!/遅|見合|運休|振替|ダイヤ.*乱/.test(l.status+l.text);
+    const bad=j.lines.filter(l=>!normal(l)), ok=j.lines.filter(normal);
+    const badHtml=bad.map(l=>`<div class="line"><div class="n"><span>${esc(OPN[l.operator]||l.operator)} ${esc(name(l))}</span>${l.status?`<span class="pill warn">${esc(l.status)}</span>`:""}</div><div class="x">${esc(l.text)}</div>${l.date?`<div class="stamp">${hhmm(l.date)} 更新</div>`:""}</div>`).join("");
+    $("railBody").innerHTML=`${stampOf(j)}${badHtml||`<div class="okline">今は大きな乱れはありません。</div>`}
+      ${ok.length?`<div class="line"><div class="okline">平常どおり：${ok.map(l=>esc(name(l))).join("、")}</div></div>`:""}
+      <div class="src">公共交通オープンデータセンターが提供するデータを使っています（東京メトロ・東京都交通局）。正確さは保証されません。</div>`;
+  }
+
+  // 到着便：これから3時間の便を見込み時刻順に。遅れは色付け、23時以降は電車が少ない時間として印
+  const AIRPORT={CTS:"新千歳",HKD:"函館",AKJ:"旭川",KUH:"釧路",OBO:"帯広",MMB:"女満別",WKJ:"稚内",AOJ:"青森",MSJ:"三沢",AXT:"秋田",ONJ:"大館能代",GAJ:"山形",SYO:"庄内",SDJ:"仙台",KIJ:"新潟",TOY:"富山",KMQ:"小松",NTQ:"能登",NGO:"中部",ITM:"伊丹",KIX:"関西",UKB:"神戸",SHM:"南紀白浜",OKJ:"岡山",HIJ:"広島",IWK:"岩国",UBJ:"山口宇部",IZO:"出雲",YGJ:"米子",TTJ:"鳥取",TKS:"徳島",TAK:"高松",MYJ:"松山",KCZ:"高知",FUK:"福岡",KKJ:"北九州",HSG:"佐賀",NGS:"長崎",KMJ:"熊本",OIT:"大分",KMI:"宮崎",KOJ:"鹿児島",ASJ:"奄美",OKA:"那覇",ISG:"石垣",MMY:"宮古",HND:"羽田",NRT:"成田",HAC:"八丈島",
+    HNL:"ホノルル",ICN:"ソウル仁川",GMP:"ソウル金浦",PUS:"釜山",TPE:"台北桃園",TSA:"台北松山",KHH:"高雄",HKG:"香港",PVG:"上海浦東",SHA:"上海虹橋",PEK:"北京首都",PKX:"北京大興",CAN:"広州",DLC:"大連",BKK:"バンコク",SIN:"シンガポール",KUL:"クアラルンプール",MNL:"マニラ",SGN:"ホーチミン",HAN:"ハノイ",CGK:"ジャカルタ",DPS:"デンパサール",DEL:"デリー",BOM:"ムンバイ",SYD:"シドニー",MEL:"メルボルン",GUM:"グアム",LAX:"ロサンゼルス",SFO:"サンフランシスコ",SEA:"シアトル",JFK:"ニューヨーク",ORD:"シカゴ",DFW:"ダラス",IAD:"ワシントン",YVR:"バンクーバー",LHR:"ロンドン",CDG:"パリ",FRA:"フランクフルト",MUC:"ミュンヘン",HEL:"ヘルシンキ",IST:"イスタンブール",DOH:"ドーハ",DXB:"ドバイ"};
+  const STATUS={Arrived:["到着","done"],OnTime:["定刻",""],Delayed:["遅れ","late"],Cancelled:["欠航","bad"],Diverted:["他空港へ","bad"],Departed:["出発済",""],Takeoff:["出発済",""],Changed:["変更","late"],Returned:["引き返し","bad"],Landed:["着陸","done"]};
+  const tmin=t=>{ const m=/^(\d{1,2}):(\d{2})/.exec(t||""); return m?+m[1]*60+ +m[2]:null; };
+  function renderFlights(j){
+    const now=new Date(), nowM=now.getHours()*60+now.getMinutes();
+    const rel=m=>{ let d=m-nowM; if(d<-720) d+=DAY; if(d>720) d-=DAY; return d; };   // 日付をまたぐ便に対応
+    const all=$("flAll").checked;
+    const rows=j.flights.map(f=>{
+      const s=tmin(f.sched), e=tmin(f.act)??tmin(f.est)??s;
+      if(e==null) return null;
+      const st=STATUS[f.status]||[f.status||"",""], late=s!=null&&tmin(f.act)==null&&rel(e)-rel(s)>=15;
+      const done=f.status==="Arrived"||f.status==="Landed"||tmin(f.act)!=null;
+      return {f,s,e,d:rel(e),delay:s!=null?rel(e)-rel(s):0,st:late&&!st[1]?["遅れ","late"]:st,done,cancel:st[1]==="bad"};
+    }).filter(Boolean).sort((a,b)=>a.d-b.d);
+    const upcoming=rows.filter(r=>!r.done&&!r.cancel&&r.d>=-10);
+    const next60=upcoming.filter(r=>r.d<=60), late=upcoming.filter(r=>r.delay>=15&&r.d<=180);
+    const byT={}; next60.forEach(r=>{ const t=r.f.term||"?"; byT[t]=(byT[t]||0)+1; });
+    const view=all?rows:upcoming.filter(r=>r.d<=180);
+    const list=view.map(r=>{
+      const f=r.f, from=AIRPORT[f.from]||f.from||"";
+      const night=r.e>=23*60||r.e<5*60;
+      return `<div class="fl"><div class="tm num">${clock(((r.e%DAY)+DAY)%DAY)}${r.s!=null&&r.s!==r.e?`<s>${clock(r.s)} 予定</s>`:""}</div>
+        <div class="who">${esc(f.no)} ${esc(from)}発<small>${esc(f.term||"")}${night?"・電車が少ない時間":""}${f.note?"・"+esc(f.note):""}</small></div>
+        <span class="st ${r.st[1]}">${esc(r.st[0])}</span></div>`;
+    }).join("");
+    $("flBody").innerHTML=`${stampOf(j)}<div class="sum">
+        <div><span class="h">これから60分の到着</span><span class="v num">${next60.length}便</span><span class="stamp">${Object.keys(byT).sort().map(t=>esc(t)+" "+byT[t]).join("・")||"—"}</span></div>
+        <div><span class="h">15分以上の遅れ（3時間以内）</span><span class="v num">${late.length}便</span></div>
+      </div>
+      ${list||`<div class="geo">${all?"データがありません":"これから3時間に着く便はありません"}</div>`}
+      <div class="src">JAL・ANAの便だけです（他の航空会社・海外の航空会社は含みません）。公共交通オープンデータセンターが提供するデータを使っています。正確さは保証されません。</div>`;
+  }
+
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   renderLinks();
   if(PROD) $("lResult").innerHTML=`<div class="geo">目的地を入れて「時間を調べる」を押すと、行きと帰り（高速・一般道）の時間と、業務後点呼の期限に間に合うかをここに出します。${cfg.pass?"":"<br>はじめに、下の「接続の設定」で合言葉を入れてください。"}</div>`;
   else showDemo();
   // 初めて開いたとき（まだ画面を選んだことがない）は使い方から
-  let startTab=0; try{ const v=localStorage.getItem("tenko.tab"); if(v!==null) startTab=+v; }catch(e){}
+  let startTab=0, startSub="long"; try{ const v=localStorage.getItem("tenko.tab"); if(v!==null) startTab=+v; startSub=localStorage.getItem("tenko.sub")||"long"; }catch(e){}
   showTab([0,1,2].includes(startTab)?startTab:1);
+  showSub(startSub);
 
   // 最初に表示する月度：データがあればその最新、なければ今日
   const s=[...recs].sort((a,b)=>a.date<b.date?-1:1);
