@@ -227,6 +227,9 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 .daypick .btn{padding:8px 12px;font-size:15px}
 .nextday{font-size:14.5px;margin-top:4px}
 .nextday input{width:20px;height:20px}
+#rtMap{height:380px;border-radius:10px;border:1px solid var(--line);z-index:0}
+.rtno{background:var(--accent);color:var(--accent-ink);border-radius:999px;font:700 12px var(--num);padding:2px 6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.rtno.big{background:var(--bad);color:#fff}
 .hwrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15.5px}
 .hwrow .btn{padding:4px 10px}
 .agrp{display:grid;grid-template-columns:4.5em 1fr 1fr;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
@@ -402,6 +405,18 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div id="hwSum"></div>
     <div id="hwSlots"></div>
     <div class="src">距離控除は、高速道路を選ぶと関連するIC（接続する圏央道などを含む）が出ます。1回目を入れると2回目、2回目を入れると3回目の欄が出ます。消すときは高速道路を「（なし）」にします。控除距離は「高速道路(距離控除用)距離一覧表」（2021年5月27日現在）のとおりです。</div>
+  </section>
+
+  <section class="card" id="rtCard" aria-labelledby="rtTitle">
+    <h2 id="rtTitle">走行ルート（Googleマップのタイムライン）</h2>
+    <div id="rtInfo" class="geo"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="rtPick">タイムラインを読み込む</button>
+      <input type="file" id="rtFile" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
+      <button class="btn danger" id="rtDel" hidden>この勤務のルートを消す</button>
+    </div>
+    <div id="rtMap" hidden></div>
+    <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
   </section>
   </div>
 
@@ -628,6 +643,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
       <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
+      <dt>走行ルート</dt><dd>Googleマップのタイムラインを書き出したファイルを「タイムラインを読み込む」で選ぶと、勤務ごとに実際に走った道と乗車の地点を地図で見られます。ルートはこのスマホの中だけに保存します。</dd>
       <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の売上・税抜・給与見込み・決済別・納金の合計と、勤務ごとの一覧を見られます。</dd>
     </dl>
     <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
@@ -1684,7 +1700,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     if(reset||!sDay) sDay=activeDay();
     // 点呼に勤務がない日（点呼を使っていない人も）は、入力の画面を出さない
     const noShift=!sDay||(!hasShift(sDay)&&!hasData(sales.days[sDay]));
-    ["sSum","sDetail","sSimple","ckCard","hwCard"].forEach(id=>{ if(noShift) $(id).hidden=true; });
+    ["sSum","sDetail","sSimple","ckCard","hwCard","rtCard"].forEach(id=>{ if(noShift) $(id).hidden=true; });
     $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true; $("sDelDay").hidden=!hasData(sales.days[sDay]);
     if(noShift){
       const plan=sDay&&planOnly(sDay);
@@ -1696,7 +1712,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       if(sDay&&document.activeElement!==$("sDate")) $("sDate").value=sDay;
       return;
     }
-    $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=false;
+    $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=false; $("rtCard").hidden=false;
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
     if(document.activeElement!==$("sDate")) $("sDate").value=k;
     $("sMove").hidden=$("sDelDay").hidden=!hasData(d);
@@ -1782,7 +1798,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
         ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
       </div>
-      <div class="src">メーター照合：①＋アプリ手配料金＋⑤−⑥−ETC自己負担−B空転 が、記録の合計（メーター日計）と同じならOK。現金＝①−④＋⑤−⑥＋アプリ手配料金−B空転。</div>`;    renderHw(d);
+      <div class="src">メーター照合：①＋アプリ手配料金＋⑤−⑥−ETC自己負担−B空転 が、記録の合計（メーター日計）と同じならOK。現金＝①−④＋⑤−⑥＋アプリ手配料金−B空転。</div>`;    renderHw(d); renderRoute(k,d,s);
     const canLock=st.total!=null&&(simple||st.meterOk);
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
@@ -1902,6 +1918,93 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     const d=ensureDay(sDay); if(d.locked&&!guard(d)){ renderSales(); return; }
     d.hw=hwOf(d); d.hw[id==="hwOut"?"meterOut":"meterIn"]=numOf($(id).value); saveSales(); renderSales();
   }));
+
+  // ===== 走行ルート（Googleマップのタイムラインの書き出しファイルから、勤務の時間の分だけ取り出す） =====
+  // 形式：[{startTime, endTime, timelinePath:[{point:"geo:緯度,経度", durationMinutesOffsetFromStartTime}]}, {activity:{start,end}}, {visit:…}]
+  const geo=t=>{ const m=/geo:\s*(-?[\d.]+),\s*(-?[\d.]+)/.exec(t||""); return m?[+m[1],+m[2]]:null; };
+  function timelinePoints(arr){
+    const pts=[];
+    (Array.isArray(arr)?arr:(arr&&arr.semanticSegments)||[]).forEach(sg=>{
+      const st=Date.parse(sg.startTime); if(isNaN(st)) return;
+      // 走った道は timelinePath（ほぼ1分ごとの位置）だけを使う。activity の始点・終点を混ぜると距離が大きくずれるため
+      (sg.timelinePath||[]).forEach(x=>{ const g=geo(x.point), m=+x.durationMinutesOffsetFromStartTime||0; if(g) pts.push([st+m*60000,g[0],g[1]]); });
+    });
+    return pts.sort((a,b)=>a[0]-b[0]);
+  }
+  const distM=(a,b)=>{ const R=6371e3, r=Math.PI/180, dl=(b[0]-a[0])*r, dn=(b[1]-a[1])*r, x=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(x)); };
+  // 勤務の時間（出庫〜入庫。なければ点呼の業務前〜業務後）
+  function shiftWindow(k){
+    const d=getDay(k), r=recs.find(x=>x.date===k), evO=d.rides.find(x=>x.kind==="出庫"&&x.on!=null), evI=d.rides.find(x=>x.kind==="入庫"&&x.on!=null);
+    let a=evO?evO.on:r?toMin(r.ab||r.pb):null, b=evI?evI.on:r?toMin(r.aa||r.pa):null;
+    if(a==null) return null; if(b==null) b=a+20*60; if(b<=a) b+=DAY;
+    const s0=dayStart(k).getTime(); return [s0+a*60000, s0+b*60000];
+  }
+  // 点を間引く（前の点から30m以上動いたか、5分以上たった点だけ残す。時速150km超の飛びは位置の誤りとして捨てる）
+  function thin(pts){
+    const out=[]; let last=null;
+    pts.forEach(p=>{
+      if(last){ const dm=distM([last[1],last[2]],[p[1],p[2]]), dt=(p[0]-last[0])/1000;
+        if(dt>0&&dm/dt*3.6>150) return;
+        if(dm<30&&p[0]-last[0]<300000) return; }
+      out.push(p); last=p; });
+    return out;
+  }
+  $("rtPick").onclick=()=>{ $("rtFile").value=""; $("rtFile").click(); };
+  $("rtFile").addEventListener("change",async()=>{
+    const f=$("rtFile").files[0]; if(!f) return;
+    $("rtInfo").textContent="読み込んでいます…";
+    try{
+      const pts=timelinePoints(JSON.parse(await f.text()));
+      if(!pts.length) throw new Error("位置の記録が見つかりませんでした。Googleマップの「タイムライン データをエクスポート」で書き出したファイルか確かめてください");
+      const t0=pts[0][0], t1=pts[pts.length-1][0], got=[];
+      recs.filter(r=>r.ab).forEach(r=>{
+        const w=shiftWindow(r.date); if(!w||w[1]<t0||w[0]>t1) return;
+        const sel=thin(pts.filter(p=>p[0]>=w[0]&&p[0]<=w[1])); if(sel.length<2) return;
+        const s0=dayStart(r.date).getTime(), dd=ensureDay(r.date);
+        let km=0; for(let i=1;i<sel.length;i++) km+=distM([sel[i-1][1],sel[i-1][2]],[sel[i][1],sel[i][2]]);
+        dd.route={pts:sel.map(p=>[+p[1].toFixed(5),+p[2].toFixed(5),Math.round((p[0]-s0)/60000)]),km:r1(km/1000),at:new Date().toISOString()};
+        got.push(r.date);
+      });
+      saveSales(); rtKey=""; renderSales();
+      $("rtInfo").textContent=got.length?`${got.length}勤務分のルートを入れました（${got.map(md).join("・")}）`:"ファイルの期間に、点呼で業務前点呼（実績）が入った勤務がありませんでした";
+    }catch(e){ $("rtInfo").innerHTML=`<span class="err">${esc(e.message||"読み込めませんでした")}</span>`; }
+  });
+  $("rtDel").onclick=()=>{ const d=sales.days[sDay]; if(!d||!d.route) return; if(!confirm("この勤務のルートを消しますか？")) return; delete d.route; saveSales(); rtKey=""; renderSales(); };
+  // 地図（Leaflet＋地理院タイル）は、ルートのある勤務を開いたときだけ読み込む
+  let leafletP=null, rtMapObj=null, rtLayer=null, rtKey="";
+  function loadLeaflet(){
+    if(window.L) return Promise.resolve();
+    if(!leafletP) leafletP=new Promise((ok,ng)=>{
+      const c=document.createElement("link"); c.rel="stylesheet"; c.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(c);
+      const j=document.createElement("script"); j.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"; j.onload=ok; j.onerror=()=>{ leafletP=null; ng(new Error("地図を読み込めませんでした")); }; document.head.appendChild(j);
+    });
+    return leafletP;
+  }
+  function renderRoute(k,d,s){
+    const r=d.route; $("rtDel").hidden=!r; $("rtMap").hidden=!r;
+    if(!r){ if(!/読み込んで|入れました|ありませんでした|err/.test($("rtInfo").innerHTML)) $("rtInfo").textContent="この勤務のルートはまだありません。"; return; }
+    $("rtInfo").textContent=`タイムラインの距離 約${r.km}km（位置は約1分ごとなので、実際より少し短く出ます）・記録 ${r.pts.length}点。地図の番号を押すと乗車の内容が出ます`;
+    const key=k+"|"+r.at+"|"+s.rows.length+"|"+s.total;
+    if(key===rtKey&&rtMapObj) return; rtKey=key;
+    loadLeaflet().then(()=>{
+      if(!rtMapObj){
+        rtMapObj=L.map("rtMap",{zoomControl:true,attributionControl:true});
+        L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(rtMapObj);
+      }
+      if(rtLayer) rtLayer.remove();
+      rtLayer=L.layerGroup().addTo(rtMapObj);
+      const line=r.pts.map(p=>[p[0],p[1]]);
+      L.polyline(line,{color:getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#1D6A80",weight:4,opacity:.85}).addTo(rtLayer);
+      L.circleMarker(line[0],{radius:7,color:"#2C7A4B",fillOpacity:1}).bindTooltip("出庫側").addTo(rtLayer);
+      L.circleMarker(line[line.length-1],{radius:7,color:"#B3342A",fillOpacity:1}).bindTooltip("入庫側").addTo(rtLayer);
+      s.rows.filter(x=>!isEv(x.kind)&&x.onPos).forEach(x=>{
+        const big=(+x.amt||0)>=10000;
+        L.marker([x.onPos.lat,x.onPos.lng],{icon:L.divIcon({className:"",html:`<span class="rtno${big?" big":""}">${x._no}</span>`,iconSize:null})})
+          .bindPopup(`No.${x._no} ${tm(x.on)}→${x.off!=null?tm(x.off):""}<br>${esc(x.kind)} ${x.amt?yen(x.amt)+"円 "+esc(x.pay||""):""}<br>${esc(x.onAddr||"")}${x.offAddr?" → "+esc(x.offAddr):""}`).addTo(rtLayer);
+      });
+      setTimeout(()=>{ rtMapObj.invalidateSize(); rtMapObj.fitBounds(L.latLngBounds(line),{padding:[16,16]}); },60);
+    }).catch(e=>{ $("rtInfo").innerHTML=`<span class="err">${esc(e.message)}</span>`; });
+  }
 
   // ===== 日報から取り込む（AIに書き出してもらった文を貼り付ける） =====
   const IMPORT_PROMPT=`添付したタクシーの「乗務員日報」の写真（あれば「納金明細書」と「日計」のレシートも）を読み取り、次の形式の文だけを、1つのコードブロックに入れて書き出してください（説明や前置きは不要）。
