@@ -113,8 +113,8 @@ input[type=date],input[type=time]{width:100%;font:20.5px var(--num);padding:10px
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabbar button{flex:1;border:0;background:none;padding:14px 0 12px;font-weight:700;font-size:17px;color:var(--muted)}
 .tabbar button[aria-selected="true"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
-.tabbar button{flex:0 0 40%}
-.tabbar .tb-help{flex:0 0 20%;font-size:14px;border-right:1px solid var(--line)}
+.tabbar button{flex:0 0 28%}
+.tabbar .tb-help{flex:0 0 16%;font-size:14px;border-right:1px solid var(--line)}
 .help p{margin:0}
 .help h3{margin:4px 0 0;font-size:16px}
 .help small{display:block;font-size:14px;color:var(--muted);font-weight:400}
@@ -158,7 +158,7 @@ input[type=text],input[type=url],input[type=number],input[type=password]{width:1
 input,textarea,button{font-weight:700}
 
 /* メニュー（ロング判定・天気・電車・到着便） */
-.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--sunk);border-radius:12px;padding:5px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:var(--sunk);border-radius:12px;padding:5px}
 .seg button{border:0;background:none;border-radius:9px;padding:10px 0;font-size:15px;letter-spacing:-.02em;white-space:nowrap;color:var(--muted);min-height:46px}
 .seg button[aria-selected="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .infohead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -192,6 +192,34 @@ input,textarea,button{font-weight:700}
 .fl .st.late{background:var(--warn-soft);color:var(--warn)}
 .fl .st.bad{background:var(--bad-soft);color:var(--bad)}
 .fl .st.done{color:var(--muted)}
+
+/* 売上 */
+.ridebtns{display:grid;gap:10px}
+.bigbtn{border:0;border-radius:14px;padding:18px 16px;font-size:26px;font-weight:700;background:var(--accent);color:var(--accent-ink);display:grid;gap:2px;text-align:center}
+.bigbtn small{font-size:15px;font-weight:400;opacity:.9}
+.bigbtn.off{background:var(--ok);color:#fff}
+.evbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.evbtns .btn{padding:10px 0;font-size:15.5px;white-space:nowrap}
+.evbtns .btn.on{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.ride{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px;text-align:left;width:100%}
+.ride.open{border-color:var(--ok);border-width:2px}
+.ride .top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ride .no{font-size:14px;color:var(--muted);min-width:2.2em}
+.ride .tm{font-size:20px}
+.ride .amt{margin-left:auto;font-size:21px}
+.ride .sub{font-size:14.5px;color:var(--muted);font-weight:400}
+.ride .chips{gap:6px}
+.ride .chip{font-size:14px;padding:2px 10px}
+.evrow{display:flex;gap:10px;align-items:baseline;padding:6px 14px;font-size:15.5px;color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:10px;width:100%;text-align:left}
+.lockline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.sumgrid div{background:var(--sunk);border-radius:10px;padding:8px 10px;display:grid;gap:0}
+.sumgrid .h{font-size:13.5px;color:var(--muted)}
+.sumgrid .v{font-size:21px}
+select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
+.wxsel{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.wxsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 0;font-size:15.5px}
+.wxsel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 </style>
 
 <div class="wrap" id="tabTenko">
@@ -242,9 +270,49 @@ input,textarea,button{font-weight:700}
   </details>
 </div>
 
+<div class="wrap" id="tabSales" hidden>
+  <div class="period">
+    <button class="iconbtn" id="sPrev" aria-label="前の勤務">◀</button>
+    <h1 id="sTitle">売上</h1>
+    <button class="iconbtn" id="sNext" aria-label="次の勤務">▶</button>
+  </div>
+
+  <section class="meter" id="sSum" aria-live="polite"></section>
+
+  <div class="seg" role="tablist" aria-label="入力のしかた">
+    <button role="tab" data-mode="detail" aria-selected="true">詳細入力</button>
+    <button role="tab" data-mode="simple" aria-selected="false">簡易入力</button>
+  </div>
+
+  <div class="wrap" id="sDetail">
+    <div id="sNow"></div>
+    <div class="geo" id="sStatus" role="status"></div>
+    <div class="list" id="sList"></div>
+    <button class="add" id="sAdd">＋ 乗車を手で追加</button>
+  </div>
+
+  <section class="card" id="sSimple" hidden>
+    <h2>簡易入力（1勤務の合計だけ）</h2>
+    <div class="field"><label for="smAmt">売上（税込・円）</label><input type="number" id="smAmt" inputmode="numeric" min="0"></div>
+    <div class="pair">
+      <div class="field"><label for="smCnt">回数</label><input type="number" id="smCnt" inputmode="numeric" min="0"></div>
+      <div class="field"><label for="smHrs">営業時間（時間）</label><input type="number" id="smHrs" inputmode="decimal" min="0" step="0.1"></div>
+    </div>
+    <div class="btnrow"><button class="btn primary" id="smSave">保存</button></div>
+    <div class="msg" id="smMsg" role="status"></div>
+  </section>
+
+  <section class="card" aria-labelledby="ckTitle">
+    <h2 id="ckTitle">日報と照合</h2>
+    <div class="field"><label for="ckTotal">日報の総営収（円）</label><input type="number" id="ckTotal" inputmode="numeric" min="0"></div>
+    <div id="ckResult" class="geo"></div>
+    <div class="lockline" id="ckLock"></div>
+  </section>
+</div>
+
 <div class="wrap" id="tabLong" hidden>
   <div class="seg" role="tablist" aria-label="メニュー">
-    <button role="tab" data-sub="long" aria-selected="true">ロング判定</button>
+    <button role="tab" data-sub="long" id="segLong" aria-selected="true">ロング判定</button>
     <button role="tab" data-sub="wx" aria-selected="false">天気</button>
     <button role="tab" data-sub="rail" aria-selected="false">電車</button>
     <button role="tab" data-sub="fl" aria-selected="false">到着便</button>
@@ -277,7 +345,7 @@ input,textarea,button{font-weight:700}
   <div class="wrap" id="subFl" hidden>
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>到着便（JAL・ANA）</h2><button class="btn" data-reload="flight">更新</button></div>
-      <div class="seg" role="tablist" aria-label="空港" style="grid-template-columns:1fr 1fr">
+      <div class="seg" role="tablist" aria-label="空港">
         <button role="tab" data-ap="HND" aria-selected="true">羽田</button>
         <button role="tab" data-ap="NRT" aria-selected="false">成田</button>
       </div>
@@ -323,13 +391,13 @@ input,textarea,button{font-weight:700}
   </section>
   </div>
 
-  <details>
-    <summary>接続の設定（最初に1回）</summary>
+  <details id="cfgBox">
+    <summary id="cfgSum">仲間用の合言葉（ロング判定）</summary>
     <div class="body">
-      <div>合言葉を入れてください。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
+      <div>天気・電車・到着便は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると「ロング判定」が使えるようになります。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
       <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div class="field"><label for="lPass">合言葉</label><input type="password" id="lPass" inputmode="numeric"></div>
-      <div class="btnrow"><button class="btn primary" id="lSave">保存</button></div>
+      <div class="btnrow"><button class="btn primary" id="lSave">保存</button><button class="btn" id="lForget">合言葉を消す</button></div>
       <div class="msg" id="lCfgMsg" role="status"></div>
     </div>
   </details>
@@ -338,7 +406,8 @@ input,textarea,button{font-weight:700}
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
     <h2>点呼ノートの使い方</h2>
-    <p>点呼の時刻から、拘束時間のルールを自動でチェックします。朝のロングを受けてよいかも、渋滞予測込みで判定します。</p>
+    <p><small>有志が作った非公式のツールです。会社のものではありません。</small></p>
+    <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
   <section class="card help">
@@ -346,7 +415,7 @@ input,textarea,button{font-weight:700}
     <ol class="steps">
       <li><b>ホーム画面に追加</b>します。<br><small>iPhone：共有ボタン →「ホーム画面に追加」／Android：︙ →「ホーム画面に追加」</small></li>
       <li><b>ホーム画面のアイコンから開きます。</b>以降もいつもアイコンから開いてください。<br><small>iPhoneは、ブラウザとアイコンで保存場所が別になります</small></li>
-      <li>「メニュー」→ いちばん下の「接続の設定」に<b>合言葉</b>を入れて保存します。<br><small>点呼時間だけなら合言葉なしで使えます。ロング判定・天気・電車・到着便を使うときは、紹介者に合言葉を聞いてください。</small></li>
+      <li>これで準備はおしまいです。<b>合言葉は不要です。</b>点呼時間・天気・電車・到着便はすぐに使えます。</li>
     </ol>
   </section>
 
@@ -373,7 +442,7 @@ input,textarea,button{font-weight:700}
     </div>
   </section>
 
-  <section class="card help">
+  <section class="card help member-only">
     <h2>ロング判定</h2>
     <p>「メニュー」→「ロング判定」で開きます。</p>
     <ol class="steps">
@@ -393,8 +462,24 @@ input,textarea,button{font-weight:700}
   </section>
 
   <section class="card help">
+    <h2>売上</h2>
+    <ol class="steps">
+      <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
+      <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>配車／手上げ・決済は前の乗車と同じものが最初から入っています</small></li>
+      <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
+      <li>勤務が終わったら「日報と照合」に<b>日報の総営収</b>を入れます。一致したら「照合済みにする」で鍵をかけます。</li>
+    </ol>
+    <dl class="explain">
+      <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
+      <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
+      <dt>◀ ▶</dt><dd>前の勤務を見たり直したりできます。</dd>
+    </dl>
+    <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
+  </section>
+
+  <section class="card help">
     <h2>天気・電車・到着便</h2>
-    <p>「メニュー」の上のボタンで切り替えます。開くたびに新しい情報を読み込みます（「更新」でも読み込めます）。</p>
+    <p>「メニュー」の上のボタンで切り替えます。合言葉なしで使えます。開くたびに新しい情報を読み込みます（「更新」でも読み込めます）。</p>
     <dl class="explain">
       <dt>天気</dt><dd>気象庁の東京地方の予報です。降水確率50%以上の時間帯に色が付きます。雨雲の動きは下のボタンから見られます。</dd>
       <dt>電車</dt><dd>東京メトロ・都営の運行情報です。乱れのある路線を上に出します。JR・東武・西武は公式サイトを開きます。</dd>
@@ -408,7 +493,7 @@ input,textarea,button{font-weight:700}
       <li><b>操作は必ず停車中に</b>行ってください。</li>
       <li>データはこのスマホの中だけに保存されます。他の人からは見えません。</li>
       <li>機種変更に備えて、月1回「バックアップ・機種変更」でデータをコピーしてください。</li>
-      <li>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</li>
+      <li class="member-only">ロング判定の行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、ロング判定の画面のボタンから首都高・NEXCOの公式サイトで確認してください。</li>
     </ul>
   </section>
 </div>
@@ -416,8 +501,36 @@ input,textarea,button{font-weight:700}
 <nav class="tabbar" role="tablist" aria-label="画面の切り替え">
   <button role="tab" id="tb0" aria-selected="false" aria-controls="tabHelp" class="tb-help">使い方</button>
   <button role="tab" id="tb1" aria-selected="true" aria-controls="tabTenko">点呼時間</button>
+  <button role="tab" id="tb3" aria-selected="false" aria-controls="tabSales">売上</button>
   <button role="tab" id="tb2" aria-selected="false" aria-controls="tabLong">メニュー</button>
 </nav>
+
+<div class="sheet-bg" id="rBg" hidden></div>
+<div class="sheet" id="rSheet" hidden role="dialog" aria-modal="true" aria-labelledby="rTitle">
+  <div class="in">
+    <h2 id="rTitle">乗車の入力</h2>
+    <div class="field"><label for="rKind">内容</label>
+      <select id="rKind"><option>配車</option><option>手上げ</option><option>CAN</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option></select></div>
+    <div class="pair">
+      <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"></div>
+      <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"></div>
+    </div>
+    <div class="grp" id="rMoney">
+      <div class="field"><label for="rAmt">金額（円）</label><input type="number" id="rAmt" inputmode="numeric" min="0"></div>
+      <div class="field"><label for="rPay">決済</label>
+        <select id="rPay"><option>現金</option><option>A:GOPAY</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
+      <div class="field"><label for="rEtc">ETC（円）</label><input type="number" id="rEtc" inputmode="numeric" min="0"></div>
+      <div class="field"><label>天気</label><div class="wxsel" id="rWx"><button type="button" data-w="">自動</button><button type="button" data-w="晴">晴</button><button type="button" data-w="曇">曇</button><button type="button" data-w="雨">雨</button><button type="button" data-w="雪">雪</button></div></div>
+    </div>
+    <div class="field"><label for="rMemo">メモ</label><input type="text" id="rMemo" autocomplete="off"></div>
+    <div class="live" id="rInfo"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="rSave">保存</button>
+      <button class="btn" id="rClose">閉じる</button>
+      <button class="btn danger" id="rDel">削除</button>
+    </div>
+  </div>
+</div>
 
 <div class="sheet-bg" id="sheetBg" hidden></div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -464,7 +577,10 @@ input,textarea,button{font-weight:700}
   const SAMPLE=[["2026-09-25","12:56","08:48"],["2026-09-28","12:50","09:00"],["2026-09-30","12:50","08:50"],["2026-10-02","12:50","09:00"],["2026-10-04","12:50","09:30"],["2026-10-08","12:50","09:00"],["2026-10-10","12:50","09:00"],["2026-10-12","12:50","07:00"],["2026-10-15","12:50","09:00"],["2026-10-17","12:50","09:30"],["2026-10-19","12:50","09:30"],["2026-10-22","12:50","09:00"],["2026-10-24","12:50","09:00"],["2026-10-26","12:50","09:30"]]
     .map(([d,b,a],i)=>({id:"s"+i,date:d,pb:b,pa:a,ab:b,aa:a}));
 
-  let recs=load(), pIdx=0, editId=null, delArmed=false;
+  const SKEY="uriage.v1";   // 売上（勤務ごと）。点呼と同じく、このスマホの中だけに保存
+  let recs=load(), pIdx=0, editId=null, delArmed=false, sales=loadSales();
+  function loadSales(){ try{ const v=JSON.parse(localStorage.getItem(SKEY)||"null"); if(v&&v.days) return v; }catch(e){} return {days:{}}; }
+  function saveSales(){ try{ localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} }
 
   // 試作版は保存が空なら例のデータで始める。本番は空から始める
   function load(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(Array.isArray(v)&&(PROD||v.length)) return v; }catch(e){} return PROD?[]:SAMPLE.map(r=>({...r})); }
@@ -565,7 +681,7 @@ input,textarea,button{font-weight:700}
       </button>`;
     };
     $("list").innerHTML=(before?card(before,true):"")+inP.map(c=>card(c,false)).join("") || "";
-    $("exportBox").value=JSON.stringify(recs);
+    $("exportBox").value=JSON.stringify({v:3,tenko:recs,uriage:sales});
   }
 
   // 入力パネル
@@ -611,20 +727,30 @@ input,textarea,button{font-weight:700}
   // バックアップ
   const msg=t=>{ $("bkMsg").textContent=t; };
   $("copyBtn").onclick=()=>{ const t=$("exportBox").value; if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>msg("コピーしました"),()=>{ $("exportBox").select(); msg("選択しました。長押しでコピーしてください"); }); else { $("exportBox").select(); msg("選択しました。長押しでコピーしてください"); } };
-  $("importBtn").onclick=()=>{ try{ const v=JSON.parse($("importBox").value); if(!Array.isArray(v)) throw 0; recs=v; save(); $("importBox").value=""; render(); msg("復元しました（"+v.length+"件）"); }catch(e){ msg("読み込めませんでした。コピーした文字を全部貼り付けてください"); } };
+  // 前の版のバックアップ（点呼の配列だけ）も、売上入りの新しい形も復元できる
+  $("importBtn").onclick=()=>{ try{
+    const v=JSON.parse($("importBox").value);
+    const t=Array.isArray(v)?v:v&&Array.isArray(v.tenko)?v.tenko:null; if(!t) throw 0;
+    recs=t; save();
+    let n="";
+    if(!Array.isArray(v)&&v.uriage&&v.uriage.days){ sales=v.uriage; saveSales(); n="、売上 "+Object.keys(sales.days).length+"勤務"; }
+    $("importBox").value=""; render(); msg("復元しました（点呼 "+t.length+"件"+n+"）");
+  }catch(e){ msg("読み込めませんでした。コピーした文字を全部貼り付けてください"); } };
   function loadSample(){ recs=SAMPLE.map(r=>({...r})); save(); pIdx=Math.max(0,periodOf("2026-10-01")); render(); msg("例のデータを入れ直しました"); }
   $("sampleBtn").onclick=loadSample;
   let clrArmed=false;
   $("clearBtn").onclick=()=>{ if(!clrArmed){ clrArmed=true; $("clearBtn").textContent="もう一度押すと全部消えます"; return; } recs=[]; save(); clrArmed=false; $("clearBtn").textContent="すべて消す"; render(); msg("消しました"); };
 
   // ===== 画面の切り替え =====
+  // 0=使い方 1=点呼時間 2=メニュー 3=売上（番号は保存済みの値と合わせるため、並び順とは別）
+  const TABS=["tabHelp","tabTenko","tabLong","tabSales"];
   function showTab(n){
-    $("tabHelp").hidden=n!==0; $("tabTenko").hidden=n!==1; $("tabLong").hidden=n!==2;
-    $("tb0").setAttribute("aria-selected",n===0); $("tb1").setAttribute("aria-selected",n===1); $("tb2").setAttribute("aria-selected",n===2);
+    TABS.forEach((id,i)=>{ $(id).hidden=n!==i; $("tb"+i).setAttribute("aria-selected",n===i); });
     try{ localStorage.setItem("tenko.tab",String(n)); }catch(e){}
     window.scrollTo(0,0);
+    if(n===3&&typeof renderSales==="function") renderSales(true);
   }
-  $("tb0").onclick=()=>showTab(0); $("tb1").onclick=()=>showTab(1); $("tb2").onclick=()=>showTab(2);
+  $("tb0").onclick=()=>showTab(0); $("tb1").onclick=()=>showTab(1); $("tb2").onclick=()=>showTab(2); $("tb3").onclick=()=>showTab(3);
 
   // ===== ロング判定 =====
   const CFG_KEY="tenko.cfg";
@@ -649,7 +775,35 @@ input,textarea,button{font-weight:700}
   };
   ["lStay","lMargin","lPickMin","lViaOn","lVia1","lVia2","lViaMin"].forEach(id=>$(id).addEventListener("change",saveForm));
   ["lDest","lPick","lVia1","lVia2"].forEach(id=>$(id).addEventListener("input",()=>renderLinks()));
-  $("lSave").onclick=()=>{ cfg.url=$("lUrl").value.trim(); cfg.pass=$("lPass").value.trim(); saveCfg(); $("lCfgMsg").textContent="保存しました"; };
+  // 仲間用の合言葉：正しいか Apps Script で確かめてから、ロング判定を出す
+  const isMember=()=>!PROD||(!!cfg.pass&&cfg.member!==false);
+  async function checkPass(){
+    const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"config",passcode:cfg.pass})});
+    const j=await res.json();
+    if(j.office){ cfg.office=j.office; }
+    return j;
+  }
+  $("lSave").onclick=async()=>{
+    const m=$("lCfgMsg");
+    cfg.url=$("lUrl").value.trim()||cfg.url; cfg.pass=$("lPass").value.trim();
+    if(!cfg.pass){ m.textContent="合言葉を入れてください"; return; }
+    m.textContent="確かめています…";
+    try{
+      const j=await checkPass();
+      cfg.member=!!j.ok; saveCfg(); applyRole();
+      m.textContent=j.ok?"保存しました。上の「ロング判定」が使えます":(j.error||"合言葉が違います");
+      if(j.ok) showSub("long");
+    }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
+  };
+  $("lForget").onclick=()=>{ cfg.pass=""; cfg.member=false; saveCfg(); $("lPass").value=""; applyRole(); $("lCfgMsg").textContent="合言葉を消しました"; };
+  // 一般の人には、ロング判定のボタンと使い方を出さない
+  function applyRole(){
+    const mem=isMember();
+    $("segLong").hidden=!mem;
+    document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
+    $("cfgSum").textContent=mem&&PROD?"仲間用の合言葉（設定済み）":"仲間用の合言葉（ロング判定）";
+    if(!mem&&curSub==="long") showSub("wx");
+  }
 
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const enc=encodeURIComponent;
@@ -746,7 +900,7 @@ input,textarea,button{font-weight:700}
     navigator.geolocation.getCurrentPosition(async p=>{
       pos={lat:p.coords.latitude,lng:p.coords.longitude}; posAddr="";
       m.textContent=`現在地を取得しました（誤差 約${Math.round(p.coords.accuracy)}m）。住所を調べています…`;
-      if(!cfg.url||!cfg.pass){ $("lFrom").value=""; m.textContent="現在地を取得しました。住所の表示には、下の「接続の設定」で合言葉が必要です"; return; }
+      if(!cfg.url||!cfg.pass){ $("lFrom").value=""; m.textContent="現在地を取得しました。住所の表示には、下の「仲間用の合言葉」で合言葉が必要です"; return; }
       try{
         const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"address",passcode:cfg.pass,lat:pos.lat,lng:pos.lng})});
         const j=await res.json();
@@ -771,7 +925,7 @@ input,textarea,button{font-weight:700}
   $("lRun").onclick=async()=>{
     const dest=$("lDest").value.trim(), out=$("lResult");
     if(!dest){ out.innerHTML=`<div class="err">目的地を入れてください</div>`; return; }
-    if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ接続の設定がありません。下の「接続の設定」に合言葉を入れてください。</div>`; return; }
+    if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ合言葉が入っていません。下の「仲間用の合言葉」に合言葉を入れてください。</div>`; return; }
     const body={action:"route",passcode:cfg.pass,dest,stayMin:+$("lStay").value||0,goLocal:$("lGoLocal").checked};
     const fromTxt=$("lFrom").value.trim();
     if(pos&&(!fromTxt||fromTxt===posAddr)){ body.lat=pos.lat; body.lng=pos.lng; }
@@ -801,6 +955,7 @@ input,textarea,button{font-weight:700}
     }catch(e){
       const msg=/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。この試作ページからは外に接続できないので、本番のページで試してください。":e.message;
       out.innerHTML=`<div class="err">${esc(msg)}</div>`;
+      if(/合言葉が違います/.test(msg)){ cfg.member=false; saveCfg(); out.innerHTML+=`<div class="geo">合言葉が変わった可能性があります。下の「仲間用の合言葉」で入れ直してください。</div>`; }
     }finally{ $("lRun").disabled=false; }
   };
 
@@ -811,6 +966,7 @@ input,textarea,button{font-weight:700}
   let airport="HND", curSub="long";
   function showSub(s){
     if(!SUBS[s]) s="long";
+    if(s==="long"&&!isMember()) s="wx";
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
     document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sub===s));
@@ -834,8 +990,8 @@ input,textarea,button{font-weight:700}
   async function loadInfo(kind,force){
     const slot=kind==="flight"?"flight"+airport:kind, body=$(BODY[kind]), have=info[slot];
     if(have&&!force&&Date.now()-have.at<2*60*1000){ draw(kind,have.data); return; }
-    if(!PROD&&(!cfg.url||!cfg.pass)){ draw(kind,demoInfo(kind)); body.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です（実際の情報ではありません）</span></span>`); return; }
-    if(!cfg.url||!cfg.pass){ body.innerHTML=`<div class="err">下の「接続の設定」で合言葉を入れてください。</div>`; return; }
+    if(!PROD&&!cfg.url){ draw(kind,demoInfo(kind)); body.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です（実際の情報ではありません）</span></span>`); return; }
+    if(!cfg.url){ body.innerHTML=`<div class="err">接続先が設定されていません。</div>`; return; }
     if(!have) body.innerHTML=`<div class="geo">読み込んでいます…</div>`;
     try{
       const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"info",passcode:cfg.pass,kind,airport})});
@@ -931,15 +1087,294 @@ input,textarea,button{font-weight:700}
       <div class="src">JAL・ANAの便だけです（他の航空会社・海外の航空会社は含みません）。公共交通オープンデータセンターが提供するデータを使っています。正確さは保証されません。</div>`;
   }
 
+  // ===== 売上（1勤務ごと。時刻は出庫日の0:00からの分で持つので、日付をまたいでも並びが崩れない） =====
+  // 市区町村コード → 名前（国土地理院。東京・埼玉・千葉・神奈川）と、気温・降水量を測っている関東のアメダス観測所
+  const MUNI={"11100":"さいたま市","11101":"さいたま市西区","11102":"さいたま市北区","11103":"さいたま市大宮区","11104":"さいたま市見沼区","11105":"さいたま市中央区","11106":"さいたま市桜区","11107":"さいたま市浦和区","11108":"さいたま市南区","11109":"さいたま市緑区","11110":"さいたま市岩槻区","11201":"川越市","11202":"熊谷市","11203":"川口市","11206":"行田市","11207":"秩父市","11208":"所沢市","11209":"飯能市","11210":"加須市","11211":"本庄市","11212":"東松山市","11214":"春日部市","11215":"狭山市","11216":"羽生市","11217":"鴻巣市","11218":"深谷市","11219":"上尾市","11221":"草加市","11222":"越谷市","11223":"蕨市","11224":"戸田市","11225":"入間市","11227":"朝霞市","11228":"志木市","11229":"和光市","11230":"新座市","11231":"桶川市","11232":"久喜市","11233":"北本市","11234":"八潮市","11235":"富士見市","11237":"三郷市","11238":"蓮田市","11239":"坂戸市","11240":"幸手市","11241":"鶴ヶ島市","11242":"日高市","11243":"吉川市","11245":"ふじみ野市","11301":"伊奈町","11324":"三芳町","11326":"毛呂山町","11327":"越生町","11341":"滑川町","11342":"嵐山町","11343":"小川町","11346":"川島町","11347":"吉見町","11348":"鳩山町","11349":"ときがわ町","11361":"横瀬町","11362":"皆野町","11363":"長瀞町","11365":"小鹿野町","11369":"東秩父村","11381":"美里町","11383":"神川町","11385":"上里町","11408":"寄居町","11442":"宮代町","11246":"白岡市","11464":"杉戸町","11465":"松伏町","12100":"千葉市","12101":"千葉市中央区","12102":"千葉市花見川区","12103":"千葉市稲毛区","12104":"千葉市若葉区","12105":"千葉市緑区","12106":"千葉市美浜区","12202":"銚子市","12203":"市川市","12204":"船橋市","12205":"館山市","12206":"木更津市","12207":"松戸市","12208":"野田市","12210":"茂原市","12211":"成田市","12212":"佐倉市","12213":"東金市","12215":"旭市","12216":"習志野市","12217":"柏市","12218":"勝浦市","12219":"市原市","12220":"流山市","12221":"八千代市","12222":"我孫子市","12223":"鴨川市","12224":"鎌ケ谷市","12225":"君津市","12226":"富津市","12227":"浦安市","12228":"四街道市","12229":"袖ケ浦市","12230":"八街市","12231":"印西市","12232":"白井市","12233":"富里市","12234":"南房総市","12235":"匝瑳市","12236":"香取市","12237":"山武市","12238":"いすみ市","12322":"酒々井町","12329":"栄町","12342":"神崎町","12347":"多古町","12349":"東庄町","12239":"大網白里市","12403":"九十九里町","12409":"芝山町","12410":"横芝光町","12421":"一宮町","12422":"睦沢町","12423":"長生村","12424":"白子町","12426":"長柄町","12427":"長南町","12441":"大多喜町","12443":"御宿町","12463":"鋸南町","13101":"千代田区","13102":"中央区","13103":"港区","13104":"新宿区","13105":"文京区","13106":"台東区","13107":"墨田区","13108":"江東区","13109":"品川区","13110":"目黒区","13111":"大田区","13112":"世田谷区","13113":"渋谷区","13114":"中野区","13115":"杉並区","13116":"豊島区","13117":"北区","13118":"荒川区","13119":"板橋区","13120":"練馬区","13121":"足立区","13122":"葛飾区","13123":"江戸川区","13201":"八王子市","13202":"立川市","13203":"武蔵野市","13204":"三鷹市","13205":"青梅市","13206":"府中市","13207":"昭島市","13208":"調布市","13209":"町田市","13210":"小金井市","13211":"小平市","13212":"日野市","13213":"東村山市","13214":"国分寺市","13215":"国立市","13218":"福生市","13219":"狛江市","13220":"東大和市","13221":"清瀬市","13222":"東久留米市","13223":"武蔵村山市","13224":"多摩市","13225":"稲城市","13227":"羽村市","13228":"あきる野市","13229":"西東京市","13303":"瑞穂町","13305":"日の出町","13307":"檜原村","13308":"奥多摩町","13361":"大島町","13362":"利島村","13363":"新島村","13364":"神津島村","13381":"三宅村","13382":"御蔵島村","13401":"八丈町","13402":"青ヶ島村","13421":"小笠原村","14100":"横浜市","14101":"横浜市鶴見区","14102":"横浜市神奈川区","14103":"横浜市西区","14104":"横浜市中区","14105":"横浜市南区","14106":"横浜市保土ケ谷区","14107":"横浜市磯子区","14108":"横浜市金沢区","14109":"横浜市港北区","14110":"横浜市戸塚区","14111":"横浜市港南区","14112":"横浜市旭区","14113":"横浜市緑区","14114":"横浜市瀬谷区","14115":"横浜市栄区","14116":"横浜市泉区","14117":"横浜市青葉区","14118":"横浜市都筑区","14130":"川崎市","14131":"川崎市川崎区","14132":"川崎市幸区","14133":"川崎市中原区","14134":"川崎市高津区","14135":"川崎市多摩区","14136":"川崎市宮前区","14137":"川崎市麻生区","14150":"相模原市","14151":"相模原市緑区","14152":"相模原市中央区","14153":"相模原市南区","14201":"横須賀市","14203":"平塚市","14204":"鎌倉市","14205":"藤沢市","14206":"小田原市","14207":"茅ヶ崎市","14208":"逗子市","14210":"三浦市","14211":"秦野市","14212":"厚木市","14213":"大和市","14214":"伊勢原市","14215":"海老名市","14216":"座間市","14217":"南足柄市","14218":"綾瀬市","14301":"葉山町","14321":"寒川町","14341":"大磯町","14342":"二宮町","14361":"中井町","14362":"大井町","14363":"松田町","14364":"山北町","14366":"開成町","14382":"箱根町","14383":"真鶴町","14384":"湯河原町","14401":"愛川町","14402":"清川村"};
+  const AMEDAS=[["40091","常陸大宮",36.6067,140.325],["40136","日立",36.58,140.645],["40191","笠間",36.395,140.24],["40201","水戸",36.38,140.4667],["40221","古河",36.2017,139.7167],["40231","下館",36.2817,139.9883],["40281","下妻",36.1683,139.945],["40311","鉾田",36.1683,140.5267],["40336","つくば",36.0567,140.125],["40341","土浦",36.1033,140.22],["40406","鹿嶋",35.9633,140.6217],["40426","龍ケ崎",35.89,140.2117],["41247","那須烏山",36.6417,140.1167],["41271","鹿沼",36.5917,139.735],["41277","宇都宮",36.5483,139.8683],["41331","真岡",36.4767,139.9867],["41361","佐野",36.3633,139.57],["41376","小山",36.3383,139.83],["42146","沼田",36.6683,139.0217],["42186","中之条",36.5867,138.85],["42251","前橋",36.405,139.06],["42266","桐生",36.41,139.325],["42286","上里見",36.3767,138.895],["42302","伊勢崎",36.3317,139.165],["42326","西野牧",36.245,138.7067],["42366","館林",36.24,139.5133],["42396","神流",36.1083,138.8967],["43051","寄居",36.105,139.1833],["43056","熊谷",36.15,139.38],["43126","久喜",36.0867,139.635],["43156","秩父",35.99,139.0733],["43171","鳩山",35.985,139.335],["43241","さいたま",35.875,139.5867],["43256","越谷",35.8833,139.7567],["43266","所沢",35.7733,139.4133],["44046","小河内",35.7917,139.05],["44056","青梅",35.7883,139.3117],["44071","練馬",35.7383,139.5917],["44112","八王子",35.6667,139.3167],["44116","府中",35.6833,139.4833],["44132","東京",35.6917,139.75],["44136","江戸川臨海",35.6383,139.8633],["44166","羽田",35.5533,139.78],["45061","我孫子",35.8633,140.11],["45081","香取",35.8583,140.5017],["45106","船橋",35.7117,140.0433],["45116","佐倉",35.7283,140.2117],["45121","成田",35.7633,140.385],["45148","銚子",35.7383,140.8567],["45181","横芝光",35.655,140.505],["45212","千葉",35.6017,140.1033],["45261","茂原",35.4367,140.2933],["45282","木更津",35.3617,139.94],["45291","牛久",35.3967,140.1483],["45326","坂畑",35.235,140.0983],["45361","鴨川",35.1117,140.1],["45371","勝浦",35.15,140.3117],["45401","館山",34.9867,139.865],["46091","海老名",35.4333,139.3867],["46106","横浜",35.4383,139.6517],["46141","辻堂",35.32,139.45],["46166","小田原",35.2767,139.155],["46211","三浦",35.1783,139.63],["49151","勝沼",35.6633,138.725],["49161","大月",35.6083,138.9383],["49196","古関",35.5283,138.615],["49251","河口湖",35.5,138.76],["49256","山中",35.4367,138.8367],["50136","御殿場",35.305,138.9267],["50196","富士",35.185,138.6633],["50206","三島",35.1133,138.925],["50281","網代",35.045,139.0917]];
+  const EVENTS=["出庫","入庫","休憩","回送"];
+  const isEv=k=>EVENTS.includes(k);
+  const yen=n=>(Math.round(n)||0).toLocaleString("ja-JP");
+  const dKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const dayStart=k=>new Date(k+"T00:00:00");
+  const tm=m=>m==null?"--:--":(m>=DAY?"翌":"")+clock(((m%DAY)+DAY)%DAY);
+  let sDay=null, rEdit=null, rDelArmed=false, rWxSel="";
+
+  function getDay(k){ return sales.days[k]||{mode:"detail",rides:[],simple:{},check:{},locked:false}; }
+  function ensureDay(k){ if(!sales.days[k]) sales.days[k]=getDay(k); return sales.days[k]; }
+  // 照合済みの日は、直す前に確認する
+  const guard=d=>!d.locked||confirm("照合済みですが直しますか？");
+
+  // 今の勤務の出庫日：点呼で勤務中ならその日。なければ、昼前なら前日・昼以降なら今日
+  function activeDay(){
+    const now=new Date(), nowAbs=dayNo(todayStr())*DAY+now.getHours()*60+now.getMinutes();
+    const c=calc().filter(c=>c.ok).find(c=>c.start-120<=nowAbs&&nowAbs<=c.start+24*60);
+    if(c) return c.r.date;
+    const d=new Date(now); if(now.getHours()<12) d.setDate(d.getDate()-1); return dKey(d);
+  }
+  // 手で入れた時刻を、出庫日からの分にする（出庫より前の時刻は翌日とみなす）
+  function startOf(k){
+    const r=recs.find(x=>x.date===k), d=getDay(k), ev=d.rides.find(x=>x.kind==="出庫"&&x.on!=null);
+    return ev?ev.on:r&&(r.ab||r.pb)?toMin(r.ab||r.pb):10*60;
+  }
+  const fromInput=(k,t)=>{ const m=toMin(t); if(m==null) return null; return m<startOf(k)-60?m+DAY:m; };
+  const nowMin=k=>Math.round((Date.now()-dayStart(k).getTime())/60000);
+
+  // Excelの売上入力と同じ計算：営業(分)・待ち(分)・通し番号・アプリ料・分単価
+  function dayCalc(d){
+    const rows=[...d.rides].sort((a,b)=>(a.on??1e9)-(b.on??1e9));
+    let prevEnd=null, no=0;
+    const s={total:0,count:0,haisha:0,nagashi:0,app:0,etc:0,eig:0,byPay:{},rows};
+    rows.forEach(r=>{
+      const ev=isEv(r.kind);
+      r._eig=!ev&&r.on!=null&&r.off!=null?r.off-r.on:null;
+      r._wait=!ev&&r.on!=null&&prevEnd!=null?r.on-prevEnd:null;
+      r._no=ev?null:++no;
+      r._app=r.kind==="配車"&&r.pay&&r.pay!=="A:GOPAY"?200:0;
+      if(!ev){
+        const a=+r.amt||0;
+        if(a>0){ s.total+=a; s.count++; s.byPay[r.pay||"現金"]=(s.byPay[r.pay||"現金"]||0)+a; }
+        if(r.kind==="配車") s.haisha++; if(r.kind==="手上げ") s.nagashi++;
+        s.app+=r._app; s.etc+=+r.etc||0; if(r._eig>0) s.eig+=r._eig;
+      }
+      const end=r.off!=null?r.off:r.on; if(end!=null) prevEnd=end;
+    });
+    return s;
+  }
+
+  // ---- 位置・住所・天気（どれも無料。取れなかったら後で埋める） ----
+  function getPos(){
+    return new Promise(res=>{
+      if(!navigator.geolocation) return res(null);
+      navigator.geolocation.getCurrentPosition(p=>res({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)}),
+        ()=>res(null),{enableHighAccuracy:true,timeout:10000,maximumAge:30000});
+    });
+  }
+  async function townOf(p){   // 国土地理院の逆ジオコーダ：〇〇区〇〇町〇丁目まで
+    const r=await fetch(`https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=${p.lat}&lon=${p.lng}`);
+    const x=(await r.json()).results; if(!x) return "";
+    return (MUNI[x.muniCd]||"")+(x.lv01Nm&&x.lv01Nm!=="－"?x.lv01Nm:"");
+  }
+  function nearestSt(p){
+    let best=null, bd=1e9;
+    AMEDAS.forEach(s=>{ const dy=s[2]-p.lat, dx=(s[3]-p.lng)*Math.cos(p.lat*Math.PI/180), d=dx*dx+dy*dy; if(d<bd){ bd=d; best=s; } });
+    return best;
+  }
+  const amCache={};
+  async function amBlock(code,d){   // アメダスは観測所ごとに3時間分ずつのファイル
+    const b=new Date(d); b.setHours(Math.floor(d.getHours()/3)*3,0,0,0);
+    const url=`https://www.jma.go.jp/bosai/amedas/data/point/${code}/${dKey(b).replace(/-/g,"")}_${String(b.getHours()).padStart(2,"0")}.json`;
+    const c=amCache[url]; if(c&&Date.now()-c.at<5*60000) return c.j;
+    const r=await fetch(url); if(!r.ok) return null;
+    const j=await r.json(); amCache[url]={at:Date.now(),j}; return j;
+  }
+  async function weatherAt(p,d){
+    const st=nearestSt(p); if(!st) return null;
+    const want=dKey(d).replace(/-/g,"")+String(d.getHours()).padStart(2,"0")+String(Math.floor(d.getMinutes()/10)*10).padStart(2,"0")+"00";
+    for(const back of [0,3]){   // まだ今の3時間分が出ていなければ、1つ前を見る
+      const j=await amBlock(st[0],new Date(d.getTime()-back*3600000)); if(!j) continue;
+      const k=Object.keys(j).filter(x=>x<=want).sort().pop(); if(!k) continue;
+      const e=j[k], v=f=>e[f]&&e[f][0]!=null?e[f][0]:null;
+      return {st:st[1],at:k.slice(8,10)+":"+k.slice(10,12),t:v("temp"),p10:v("precipitation10m"),p1h:v("precipitation1h")};
+    }
+    return null;
+  }
+  const autoWx=w=>!w?"":(w.p10>0||w.p1h>0)?"雨":"";
+  const wxText=r=>{ const w=r.wx, lab=r.wxSel||autoWx(w); const parts=[]; if(lab) parts.push(lab); if(w&&w.t!=null) parts.push(w.t+"℃"); if(w&&w.p1h!=null) parts.push(w.p1h+"mm/h"); return parts.join(" "); };
+
+  // ボタンを押した時の位置を記録し、住所と天気をあとから足す（電波が悪くても位置と時刻は残る）
+  async function capture(k,id,which){
+    const p=await getPos(), d=sales.days[k], r=d&&d.rides.find(x=>x.id===id); if(!r) return;
+    if(!p){ $("sStatus").textContent="位置が取れませんでした（時刻は記録しました）。位置情報の許可を確認してください"; return; }
+    r[which+"Pos"]=p; saveSales(); renderSales();
+    await fillRide(k,r);
+  }
+  async function fillRide(k,r){
+    try{
+      for(const w of ["on","off"]){ const p=r[w+"Pos"]; if(p&&r[w+"Addr"]==null){ r[w+"Addr"]=await townOf(p); } }
+      if(r.onPos&&!r.wx&&r.on!=null){ const w=await weatherAt(r.onPos,new Date(dayStart(k).getTime()+r.on*60000)); if(w) r.wx=w; }
+      saveSales(); renderSales();
+    }catch(e){ /* 電波がないときは、次に開いたときにもう一度 */ }
+  }
+  // 3日以内で、住所や天気が抜けている乗車を埋め直す（1回開くごとに1度だけ）
+  let filled=false;
+  function fillPending(){
+    if(filled) return; filled=true;
+    const lim=Date.now()-3*864e5;
+    Object.entries(sales.days).forEach(([k,d])=>{ if(dayStart(k).getTime()<lim) return;
+      d.rides.forEach(r=>{ if((r.onPos&&(r.onAddr==null||!r.wx))||(r.offPos&&r.offAddr==null)) fillRide(k,r); }); });
+  }
+
+  // ---- 画面 ----
+  function dayList(){
+    const set=new Set([...recs.map(r=>r.date),...Object.keys(sales.days),activeDay()]);
+    return [...set].sort();
+  }
+  function renderSales(reset){
+    if(reset||!sDay) sDay=activeDay();
+    const k=sDay, d=getDay(k), s=dayCalc(d), act=k===activeDay(), simple=d.mode==="simple";
+    $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<small>${act?"今の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
+    document.querySelectorAll("#tabSales > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
+    $("sDetail").hidden=simple; $("sSimple").hidden=!simple;
+
+    // 合計
+    const tot=simple?+d.simple.amt||0:s.total, cnt=simple?+d.simple.cnt||0:s.count;
+    const hrs=simple?(+d.simple.hrs||0)*60:s.eig;
+    $("sSum").innerHTML=`<div class="row"><span>売上（税込）</span><span class="total num">${yen(tot)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
+      <div class="sumgrid">
+        <div><span class="h">回数</span><span class="v num">${cnt}回</span></div>
+        <div><span class="h">平均単価</span><span class="v num">${cnt?yen(tot/cnt):"—"}</span></div>
+        ${simple?`<div><span class="h">営業時間</span><span class="v num">${hm(hrs)}</span></div>`:
+        `<div><span class="h">配車／手上げ</span><span class="v num">${s.haisha}／${s.nagashi}</span></div>
+         <div><span class="h">実車時間</span><span class="v num">${hm(s.eig)}</span></div>`}
+      </div>
+      ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(p)} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
+
+    // 乗車・降車ボタン（今の勤務のときだけ）
+    const open=d.rides.find(r=>!isEv(r.kind)&&r.on!=null&&r.off==null);
+    const evOpen=kd=>d.rides.find(r=>r.kind===kd&&r.on!=null&&r.off==null);
+    if(act&&!simple){
+      const n=nowMin(k);
+      $("sNow").innerHTML=`<div class="ridebtns">
+        ${open?`<button class="bigbtn off" id="bOff">降車<small>乗車 ${tm(open.on)} から ${hm(n-open.on)}</small></button>`
+              :`<button class="bigbtn" id="bOn">乗車<small>押した時刻・場所・天気を記録します</small></button>`}
+        <div class="evbtns">
+          <button class="btn" data-ev="出庫">出庫</button>
+          <button class="btn${evOpen("休憩")?" on":""}" data-ev="休憩">${evOpen("休憩")?"休憩終了":"休憩"}</button>
+          <button class="btn${evOpen("回送")?" on":""}" data-ev="回送">${evOpen("回送")?"回送終了":"回送"}</button>
+          <button class="btn" data-ev="入庫">入庫</button>
+        </div></div>`;
+      if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff;
+      document.querySelectorAll("#sNow [data-ev]").forEach(b=>b.onclick=()=>evPress(b.dataset.ev));
+    } else $("sNow").innerHTML=act||simple?"":`<button class="btn" id="bToday">今の勤務（${md(activeDay())}出庫）に戻る</button>`;
+    if($("bToday")) $("bToday").onclick=()=>renderSales(true);
+
+    // 一覧（新しい乗車が上）
+    $("sList").innerHTML=s.rows.slice().reverse().map(r=>{
+      if(isEv(r.kind)) return `<button class="evrow" data-id="${r.id}"><span>${esc(r.kind)}</span><span class="num">${tm(r.on)}${r.kind==="休憩"||r.kind==="回送"?"〜"+(r.off!=null?tm(r.off):"")+(r.off!=null?`（${r.off-r.on}分）`:""):""}</span></button>`;
+      const addr=[r.onAddr,r.offAddr].map(a=>a==null?"":a).filter(Boolean);
+      return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
+        <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
+        ${addr.length?`<div class="sub">${addr.map(esc).join(" → ")}</div>`:""}
+        <div class="chips">${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}</div>
+      </button>`;
+    }).join("")||`<div class="geo">${act?"「乗車」を押すと、ここに記録が並びます":"この勤務の記録はありません"}</div>`;
+
+    // 簡易入力の値
+    // 入力中の欄は書き換えない（1分ごとの更新で消えないように）
+    const setVal=(id,v)=>{ if(document.activeElement!==$(id)) $(id).value=v??""; };
+    setVal("smAmt",d.simple.amt); setVal("smCnt",d.simple.cnt); setVal("smHrs",d.simple.hrs);
+
+    // 日報と照合
+    setVal("ckTotal",d.check.total);
+    const ck=d.check.total!==""&&d.check.total!=null, diff=ck?tot-(+d.check.total):0;
+    $("ckResult").innerHTML=!ck?"日報の総営収を入れると、アプリの合計と比べます。":
+      diff===0?`<span class="pill ok">一致しています（${yen(tot)}円）</span>`:
+      `<span class="pill bad">${diff>0?"アプリが":"日報が"} ${yen(Math.abs(diff))}円 多いです</span>`;
+    $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
+      ck&&diff===0?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
+    if($("ckDoLock")) $("ckDoLock").onclick=()=>{ const dd=ensureDay(k); dd.locked=true; dd.lockedAt=new Date().toISOString(); saveSales(); renderSales(); };
+    if($("ckUnlock")) $("ckUnlock").onclick=()=>{ if(!confirm("鍵を外しますか？")) return; const dd=ensureDay(k); dd.locked=false; saveSales(); renderSales(); };
+    fillPending();
+  }
+
+  function newId(){ return "u"+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+  function lastOf(d,f,def){ const r=[...d.rides].reverse().find(x=>!isEv(x.kind)&&x[f]); return r?r[f]:def; }
+  function rideOn(){
+    const k=sDay, d=ensureDay(k); if(!guard(d)) return;
+    const r={id:newId(),kind:lastOf(d,"kind","配車"),on:nowMin(k),off:null,pay:lastOf(d,"pay","A:GOPAY")};
+    d.rides.push(r); saveSales(); $("sStatus").textContent="乗車を記録しました。位置と天気を調べています…"; renderSales();
+    capture(k,r.id,"on").then(()=>{ $("sStatus").textContent=""; });
+  }
+  function rideOff(){
+    const k=sDay, d=ensureDay(k), r=d.rides.find(x=>!isEv(x.kind)&&x.on!=null&&x.off==null); if(!r||!guard(d)) return;
+    r.off=Math.max(r.on,nowMin(k)); saveSales(); renderSales();
+    capture(k,r.id,"off");
+    openRide(r.id,true);   // 金額と決済をすぐ入れる
+  }
+  function evPress(kind){
+    const k=sDay, d=ensureDay(k); if(!guard(d)) return;
+    const open=d.rides.find(r=>r.kind===kind&&r.on!=null&&r.off==null);
+    if(open) open.off=Math.max(open.on,nowMin(k));
+    else d.rides.push({id:newId(),kind,on:nowMin(k),off:null});
+    saveSales(); renderSales();
+  }
+
+  // 1件の入力・修正
+  function openRide(id,afterOff){
+    const k=sDay, d=getDay(k);
+    rEdit=id; rDelArmed=false; $("rDel").textContent="削除";
+    const r=id?d.rides.find(x=>x.id===id):{kind:lastOf(d,"kind","配車"),pay:lastOf(d,"pay","A:GOPAY")};
+    $("rTitle").textContent=id?(afterOff?"降車：金額を入れてください":"記録を直す"):"乗車を手で追加";
+    $("rKind").value=r.kind||"配車"; $("rOn").value=r.on!=null?clock(((r.on%DAY)+DAY)%DAY):""; $("rOff").value=r.off!=null?clock(((r.off%DAY)+DAY)%DAY):"";
+    $("rAmt").value=r.amt??""; $("rPay").value=r.pay||"現金"; $("rEtc").value=r.etc??""; $("rMemo").value=r.memo||"";
+    rWxSel=r.wxSel||""; markWx();
+    const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
+    $("rInfo").innerHTML=[w?`天気：${esc(w.st)} ${esc(w.at)}の観測 ${w.t??"—"}℃・10分 ${w.p10??"—"}mm・1時間 ${w.p1h??"—"}mm`:"",pos.length?`位置：${pos.join("・")}を記録済み`:""].filter(Boolean).join("<br>")
+      +(d.locked?`<div class="err">この勤務は照合済みです</div>`:"");
+    $("rDel").hidden=!id; kindUI();
+    $("rSheet").hidden=$("rBg").hidden=false;
+    if(afterOff) setTimeout(()=>$("rAmt").focus(),50);
+  }
+  function kindUI(){
+    const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
+    $("rMoney").hidden=ev; $("rOffF").hidden=point;
+    $("rOnL").textContent=ev?(point?"時刻":"開始"):"乗車"; $("rOffL").textContent=ev?"終了":"降車";
+  }
+  function markWx(){ document.querySelectorAll("#rWx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===rWxSel)); }
+  document.querySelectorAll("#rWx button").forEach(b=>b.onclick=()=>{ rWxSel=b.dataset.w; markWx(); });
+  $("rKind").addEventListener("change",kindUI);
+  const closeRide=()=>{ $("rSheet").hidden=$("rBg").hidden=true; };
+  $("rClose").onclick=closeRide; $("rBg").onclick=closeRide;
+  $("rSave").onclick=()=>{
+    const k=sDay, d=ensureDay(k); if(!guard(d)) return;
+    const on=fromInput(k,$("rOn").value); if(on==null){ $("rInfo").innerHTML=`<div class="err">${isEv($("rKind").value)?"時刻":"乗車の時刻"}を入れてください</div>`; return; }
+    let off=$("rOffF").hidden?null:fromInput(k,$("rOff").value); if(off!=null&&off<on) off+=DAY;
+    if(off==null&&$("rKind").value==="CAN") off=on;   // キャンセルは乗車中にしない
+    let r=rEdit&&d.rides.find(x=>x.id===rEdit); if(!r){ r={id:newId()}; d.rides.push(r); }
+    Object.assign(r,{kind:$("rKind").value,on,off,memo:$("rMemo").value.trim()});
+    if(isEv(r.kind)){ delete r.amt; delete r.pay; delete r.etc; delete r.wxSel; }
+    else Object.assign(r,{amt:$("rAmt").value===""?null:+$("rAmt").value,pay:$("rPay").value,etc:$("rEtc").value===""?null:+$("rEtc").value,wxSel:rWxSel});
+    if(d.locked) d.editedAfterLock=new Date().toISOString();
+    saveSales(); closeRide(); renderSales();
+  };
+  $("rDel").onclick=()=>{
+    const d=ensureDay(sDay);
+    if(!rDelArmed){ rDelArmed=true; $("rDel").textContent="もう一度押すと削除"; return; }
+    if(!guard(d)) return;
+    d.rides=d.rides.filter(x=>x.id!==rEdit); saveSales(); closeRide(); renderSales();
+  };
+  $("sList").addEventListener("click",e=>{ const b=e.target.closest("[data-id]"); if(b) openRide(b.dataset.id,false); });
+  $("sAdd").onclick=()=>openRide(null,false);
+  document.querySelectorAll("#tabSales > .seg button").forEach(b=>b.onclick=()=>{
+    const d=ensureDay(sDay); if(d.mode===b.dataset.mode) return; if(!guard(d)) return;
+    d.mode=b.dataset.mode; saveSales(); renderSales();
+  });
+  $("smSave").onclick=()=>{
+    const d=ensureDay(sDay); if(!guard(d)) return;
+    d.simple={amt:$("smAmt").value===""?null:+$("smAmt").value,cnt:$("smCnt").value===""?null:+$("smCnt").value,hrs:$("smHrs").value===""?null:+$("smHrs").value};
+    saveSales(); renderSales(); $("smMsg").textContent="保存しました";
+  };
+  $("ckTotal").addEventListener("change",()=>{ const d=ensureDay(sDay); d.check.total=$("ckTotal").value===""?null:+$("ckTotal").value; saveSales(); renderSales(); });
+  const moveDay=step=>{ const L=dayList(), i=L.indexOf(sDay); const j=i<0?L.length-1:i+step; if(j>=0&&j<L.length){ sDay=L[j]; renderSales(); } };
+  $("sPrev").onclick=()=>moveDay(-1); $("sNext").onclick=()=>moveDay(1);
+  // 乗車中は、経過時間の表示を1分ごとに更新する
+  setInterval(()=>{ if(!$("tabSales").hidden&&$("rSheet").hidden) renderSales(); },60000);
+
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   renderLinks();
-  if(PROD) $("lResult").innerHTML=`<div class="geo">目的地を入れて「時間を調べる」を押すと、行きと帰り（高速・一般道）の時間と、業務後点呼の期限に間に合うかをここに出します。${cfg.pass?"":"<br>はじめに、下の「接続の設定」で合言葉を入れてください。"}</div>`;
+  if(PROD) $("lResult").innerHTML=`<div class="geo">目的地を入れて「時間を調べる」を押すと、行きと帰り（高速・一般道）の時間と、業務後点呼の期限に間に合うかをここに出します。${cfg.pass?"":"<br>はじめに、下の「仲間用の合言葉」で合言葉を入れてください。"}</div>`;
   else showDemo();
   // 初めて開いたとき（まだ画面を選んだことがない）は使い方から
   let startTab=0, startSub="long"; try{ const v=localStorage.getItem("tenko.tab"); if(v!==null) startTab=+v; startSub=localStorage.getItem("tenko.sub")||"long"; }catch(e){}
-  showTab([0,1,2].includes(startTab)?startTab:1);
+  showTab([0,1,2,3].includes(startTab)?startTab:1);
+  applyRole();
   showSub(startSub);
+  // 合言葉が保存されていれば、まだ正しいか裏で確かめる（変わっていたらロング判定を隠す）
+  if(PROD&&cfg.pass&&cfg.url) checkPass().then(j=>{
+    if(j.ok) cfg.member=true; else if(/合言葉/.test(j.error||"")) cfg.member=false;
+    saveCfg(); applyRole();
+  }).catch(()=>{});
 
   // 最初に表示する月度：データがあればその最新、なければ今日
   const s=[...recs].sort((a,b)=>a.date<b.date?-1:1);
