@@ -593,7 +593,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <div class="in">
     <h2 id="rTitle">乗車の入力</h2>
     <div class="field"><label for="rKind">内容</label>
-      <select id="rKind"><option>配車</option><option>手上げ</option><option>CAN</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option></select></div>
+      <select id="rKind"><option>配車</option><option>手上げ</option><option>CAN</option><option>B空転</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option></select></div>
     <div class="pair">
       <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"><label class="check nextday"><input type="checkbox" id="rOnNext">翌日（出庫日の次の日）</label></div>
       <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
@@ -1267,16 +1267,18 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   function dayCalc(d){
     const rows=[...d.rides].sort((a,b)=>(a.on??1e9)-(b.on??1e9));
     let prevEnd=null, no=0;
-    const s={total:0,count:0,haisha:0,nagashi:0,app:0,etc:0,eig:0,byPay:{},cntPay:{},rows};
+    const s={total:0,count:0,haisha:0,nagashi:0,app:0,etc:0,eig:0,bku:0,nbku:0,byPay:{},cntPay:{},rows};
     rows.forEach(r=>{
       const ev=isEv(r.kind);
       r._eig=!ev&&r.on!=null&&r.off!=null?r.off-r.on:null;
       r._wait=!ev&&r.on!=null&&prevEnd!=null?r.on-prevEnd:null;
       r._no=ev?null:++no;
-      r._app=r.kind==="配車"&&r.pay&&r.pay!=="A:GOPAY"?200:0;
+      r._app=r.kind==="配車"&&r.pay&&r.pay!=="A:GOPAY"&&r.pay!=="B空転"?200:0;
       if(!ev){
         const a=+r.amt||0;
-        if(a>0){ const p=r.pay||"現金"; s.total+=a; s.count++; s.byPay[p]=(s.byPay[p]||0)+a; s.cntPay[p]=(s.cntPay[p]||0)+1; }
+        // B空転は日報の現収・総営収には入るが、メーター日計（乗車の合計）には入れない（Excelの⑧と同じ）
+        if(r.kind==="B空転"||r.pay==="B空転"){ s.bku+=a; s.nbku++; }
+        else if(a>0){ const p=r.pay||"現金"; s.total+=a; s.count++; s.byPay[p]=(s.byPay[p]||0)+a; s.cntPay[p]=(s.cntPay[p]||0)+1; }
         if(r.kind==="配車") s.haisha++; if(r.kind==="手上げ") s.nagashi++;
         s.app+=r._app; s.etc+=+r.etc||0; if(r._eig>0) s.eig+=r._eig;
       }
@@ -1293,7 +1295,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   const CK_FIELDS=[["total","総営収（日報の合計金額欄・税込）"],["app","⑦アプリ手配料金"],["etc","⑤ETC合計"],["etcCo","⑥ETC会社負担（帰りの高速代）"],["etcSelf","ETC自己負担"],["genshu","日計表の現収"],["mishu","日計表の未収"]];
   function settle(d,s){
     const c=d.check||{}, num=v=>v==null||v===""?null:+v, by=k=>s.byPay[k]||0;
-    const card=CARD.reduce((a,k)=>a+by(k),0), other=OTHER.reduce((a,k)=>a+by(k),0), mishu=card+other, bku=by("B空転"), cash=by("現金");
+    const card=CARD.reduce((a,k)=>a+by(k),0), other=OTHER.reduce((a,k)=>a+by(k),0), mishu=card+other, bku=s.bku, cash=by("現金");
     const app=num(c.app)??s.app, etc=num(c.etc)??s.etc, etcCo=num(c.etcCo)??0, etcSelf=num(c.etcSelf)??0;
     const total=num(c.total)??(d.mode==="simple"?num(d.simple&&d.simple.amt):null);
     const meter=s.total, meterCalc=total==null?null:total+app+etc-etcCo-etcSelf-bku;
@@ -1308,7 +1310,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   function shiftSales(k){
     const d=getDay(k), s=dayCalc(d), st=settle(d,s);
     const has=d.rides.some(r=>!isEv(r.kind))||(d.mode==="simple"&&d.simple.amt!=null)||st.total!=null;
-    const amt=st.total!=null?st.total:Math.max(0,s.total-st.app-st.etc);
+    const amt=st.total!=null?st.total:Math.max(0,s.total+s.bku-st.app-st.etc);
     return {k,d,s,st,has,amt,est:st.total==null,cnt:d.mode==="simple"?+d.simple.cnt||0:s.count};
   }
 
@@ -1499,6 +1501,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     // 集計・照合（売上管理Excelの「集計」シートと同じ）
     $("ckPay").innerHTML=simple?"":`<table class="paytbl"><tbody>
       ${PAYS.filter(p=>s.byPay[p]).map(p=>`<tr><td>${esc(p)}</td><td class="n">${s.cntPay[p]}回</td><td class="n">${yen(s.byPay[p])}</td></tr>`).join("")}
+      ${s.bku?`<tr><td>⑧ B空転（合計に入れない）</td><td class="n">${s.nbku}回</td><td class="n">${yen(s.bku)}</td></tr>`:""}
       <tr class="tot"><td>メーター日計（合計）</td><td class="n">${s.count}回</td><td class="n">${yen(s.total)}</td></tr></tbody></table>`;
     // 入力欄（空欄のときは、乗車の記録から出した値を薄く表示して、その値で計算する）
     const auto={app:s.app,etc:s.etc};
@@ -1603,7 +1606,7 @@ ETC自己負担: 0
 （明細を上から順に1行ずつ）
 
 明細の書き方：
-・内容：「出」は出庫、「入」は入庫、「回」は回送、「休」は休憩。番号の行は、迎の欄が2なら配車、空欄なら手上げ。合計金額が0の行はCAN。
+・内容：「出」は出庫、「入」は入庫、「回」は回送、「休」は休憩。番号の行は、迎の欄が2なら配車、空欄なら手上げ。合計金額が0の行はCAN。迎が空欄で合計金額が500、かつ1つ前の番号の行の迎が2のときはB空転（決済もB空転）。
 ・乗車・降車：HH:MM（日報のとおり。出庫・入庫は時刻を1つだけ）。
 ・金額：現収＋未収（合計金額ではありません）。
 ・決済：未収の記号で決めます。ﾈ→A:GOPAY、C→C:ｸﾚｼﾞｯﾄ、K→K:交通系IC、Q→Q:QUICPay、I→I:iD、W→W:WAON、ﾅ→ﾅ:nanaco、ｴ→ｴ:Wdy、T→T:チケット。現収だけの行は現金。
@@ -1614,7 +1617,7 @@ ETC自己負担: 0
   const PAY_ALIAS={"ﾈ":"A:GOPAY","ネット":"A:GOPAY","GO":"A:GOPAY","GOPAY":"A:GOPAY","C":"C:ｸﾚｼﾞｯﾄ","クレジット":"C:ｸﾚｼﾞｯﾄ","K":"K:交通系IC","Q":"Q:QUICPay","I":"I:iD","W":"W:WAON","ﾅ":"ﾅ:nanaco","ｴ":"ｴ:Wdy","T":"T:チケット","現収":"現金"};
   const KIND_ALIAS={"出":"出庫","入":"入庫","回":"回送","休":"休憩","迎車":"配車","流し":"手上げ","キャンセル":"CAN"};
   const HEAD_KEYS={"総営収":"total","アプリ手配料金":"app","ETC合計":"etc","ETC会社負担":"etcCo","ETC自己負担":"etcSelf","日計表の現収":"genshu","日計表の未収":"mishu"};
-  const KINDS=["配車","手上げ","CAN",...EVENTS];
+  const KINDS=["配車","手上げ","CAN","B空転",...EVENTS];
   let parsed=null;
   function parseNippo(text){
     const errs=[], check={}, rides=[]; let date=null, inRows=false, last=null, offset=0;
@@ -1641,7 +1644,7 @@ ETC自己負担: 0
       if(!isEv(kind)){
         const amt=num(c[3]), etc=num(c[5]);
         if(Number.isNaN(amt)||Number.isNaN(etc)){ errs.push(`${i+1}行目：金額かETCが数字ではありません`); return; }
-        let pay=PAY_ALIAS[c[4]]||c[4]||(amt?"現金":"");
+        let pay=kind==="B空転"?"B空転":PAY_ALIAS[c[4]]||c[4]||(amt?"現金":"");
         if(amt&&!PAYS.includes(pay)){ errs.push(`${i+1}行目：決済「${c[4]}」が分かりません`); return; }
         Object.assign(r,{amt:amt||null,pay:pay||"現金",etc:etc||null});
         if(r.off==null) r.off=on;
@@ -1702,7 +1705,7 @@ ETC自己負担: 0
     let r=rEdit&&d.rides.find(x=>x.id===rEdit); if(!r){ r={id:newId()}; d.rides.push(r); }
     Object.assign(r,{kind:$("rKind").value,on,off,memo:$("rMemo").value.trim()});
     if(isEv(r.kind)){ delete r.amt; delete r.pay; delete r.etc; delete r.wxSel; }
-    else Object.assign(r,{amt:$("rAmt").value===""?null:+$("rAmt").value,pay:$("rPay").value,etc:$("rEtc").value===""?null:+$("rEtc").value,wxSel:rWxSel});
+    else Object.assign(r,{amt:$("rAmt").value===""?null:+$("rAmt").value,pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:$("rEtc").value===""?null:+$("rEtc").value,wxSel:rWxSel});
     if(d.locked) d.editedAfterLock=new Date().toISOString();
     saveSales(); closeRide(); renderSales();
   };
