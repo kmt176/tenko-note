@@ -325,7 +325,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
   <section class="meter" id="sSum" aria-live="polite"></section>
 
-  <div class="seg" role="tablist" aria-label="入力のしかた">
+  <section class="card" id="sNoShift" hidden>
+    <h2>点呼時間に勤務がありません</h2>
+    <div>売上は、点呼時間に入れた勤務（出社日）ごとに記録します。先に「点呼時間」で勤務を追加してください。</div>
+    <div class="btnrow"><button class="btn primary" id="sGoTenko">点呼時間を開く</button></div>
+  </section>
+
+  <div class="seg" role="tablist" aria-label="入力のしかた" id="sModeSeg">
     <button role="tab" data-mode="detail" aria-selected="true">詳細入力</button>
     <button role="tab" data-mode="simple" aria-selected="false">簡易入力</button>
   </div>
@@ -349,7 +355,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div class="msg" id="smMsg" role="status"></div>
   </section>
 
-  <section class="card" aria-labelledby="ckTitle">
+  <section class="card" id="ckCard" aria-labelledby="ckTitle">
     <h2 id="ckTitle">納金明細書</h2>
     <table class="nkt" id="nkTable"><tbody>
       <tr><th>売　上　額　①</th><td><input type="number" id="ck_total" data-ck="total" inputmode="numeric" min="0" aria-label="売上額①（日報の総営収）"></td></tr>
@@ -552,6 +558,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
   <section class="card help">
     <h2>売上</h2>
+    <p>売上は、<b>点呼時間に入れた勤務（出社日）ごと</b>に記録します。先に点呼時間で勤務を追加してください。勤務中でないときは、直前の勤務が開きます。</p>
     <ol class="steps">
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>配車／手上げ・決済は前の乗車と同じものが最初から入っています</small></li>
@@ -1275,12 +1282,21 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   // 照合済みの日は、直す前に確認する
   const guard=d=>!d.locked||confirm("照合済みですが直しますか？");
 
-  // 今の勤務の出庫日：点呼で勤務中ならその日。なければ、昼前なら前日・昼以降なら今日
+  // 売上は点呼時間に勤務がある日だけ入力できる（ユーザー指定）
+  const nowAbsMin=()=>{ const now=new Date(); return dayNo(todayStr())*DAY+now.getHours()*60+now.getMinutes(); };
+  const hasShift=k=>recs.some(r=>r.date===k);
+  const hasData=d=>!!d&&(d.rides.length>0||d.simple.amt!=null||d.check.total!=null);
+  // 勤務中（業務前点呼の2時間前〜24時間後）の出社日。乗車ボタンはこの勤務だけに出す
+  function shiftNow(){
+    const n=nowAbsMin(), c=calc().filter(c=>c.ok).find(c=>c.start-120<=n&&n<=c.start+24*60);
+    return c?c.r.date:null;
+  }
+  // 売上タブで最初に開く勤務：勤務中ならそれ、なければ直前の勤務（明けの日の照合・取り込み用）、なければ次の勤務
   function activeDay(){
-    const now=new Date(), nowAbs=dayNo(todayStr())*DAY+now.getHours()*60+now.getMinutes();
-    const c=calc().filter(c=>c.ok).find(c=>c.start-120<=nowAbs&&nowAbs<=c.start+24*60);
-    if(c) return c.r.date;
-    const d=new Date(now); if(now.getHours()<12) d.setDate(d.getDate()-1); return dKey(d);
+    const now=shiftNow(); if(now) return now;
+    const n=nowAbsMin(), cs=calc().filter(c=>c.ok);
+    const past=cs.filter(c=>c.start<=n).pop(); if(past) return past.r.date;
+    const next=cs.find(c=>c.start>n); return next?next.r.date:null;
   }
   // 手で入れた時刻を、出庫日からの分にする（出庫より前の時刻は翌日とみなす）
   function startOf(k){
@@ -1344,7 +1360,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   try{ sView=localStorage.getItem("tenko.sview")||"day"; }catch(e){}
   const salesCfg=()=>Object.assign({tax:0.9,pay:0.62},sales.cfg||{});
   function renderMonth(){
-    if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()));
+    if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()||todayStr()));
     const P=PERIODS[mIdx], cf=salesCfg();
     $("mTitle").innerHTML=`${P.m}月度<small>${md(P.start)}〜${md(P.end)}</small>`;
     const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end).sort();
@@ -1463,15 +1479,26 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
   // ---- 画面 ----
   function dayList(){
-    const set=new Set([...recs.map(r=>r.date),...Object.keys(sales.days),activeDay(),...(sDay?[sDay]:[])]);
+    // 点呼の出社日と、売上の記録がある日だけ（空の日は出さない）
+    const set=new Set([...recs.map(r=>r.date),...Object.entries(sales.days).filter(([,d])=>hasData(d)).map(([k])=>k)]);
     return [...set].sort();
   }
   function renderSales(reset){
     if(reset||!sDay) sDay=activeDay();
-    const k=sDay, d=getDay(k), s=dayCalc(d), act=k===activeDay(), simple=d.mode==="simple";
+    // 点呼に勤務がない日（点呼を使っていない人も）は、入力の画面を出さない
+    const noShift=!sDay||(!hasShift(sDay)&&!hasData(sales.days[sDay]));
+    ["sSum","sDetail","sSimple","ckCard"].forEach(id=>{ if(noShift) $(id).hidden=true; });
+    $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true;
+    if(noShift){
+      $("sTitle").innerHTML=sDay?`${md(sDay)}（${dow(sDay)}）<small>点呼時間に勤務がありません</small>`:`売上<small>点呼時間に勤務がありません</small>`;
+      if(sDay&&document.activeElement!==$("sDate")) $("sDate").value=sDay;
+      return;
+    }
+    $("sSum").hidden=false; $("ckCard").hidden=false;
+    const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
     if(document.activeElement!==$("sDate")) $("sDate").value=k;
     $("sMove").hidden=!(d.rides.length||d.simple.amt!=null||d.check.total!=null);
-    $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<small>${act?"今の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
+    $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<small>${act?"今の勤務":k===activeDay()?"直前の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
     document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
     $("sDetail").hidden=simple; $("sSimple").hidden=!simple;
 
@@ -1504,7 +1531,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
         </div></div>`;
       if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff;
       document.querySelectorAll("#sNow [data-ev]").forEach(b=>b.onclick=()=>evPress(b.dataset.ev));
-    } else $("sNow").innerHTML=act||simple?"":`<button class="btn" id="bToday">今の勤務（${md(activeDay())}出庫）に戻る</button>`;
+    } else $("sNow").innerHTML=act||simple||k===activeDay()||!activeDay()?"":`<button class="btn" id="bToday">${shiftNow()?"今の勤務":"直前の勤務"}（${md(activeDay())}出庫）に戻る</button>`;
     if($("bToday")) $("bToday").onclick=()=>renderSales(true);
 
     // 一覧（新しい乗車が上）
@@ -1680,6 +1707,7 @@ ETC自己負担: 0
     });
     if(!date) errs.push("「出庫日: YYYY-MM-DD」の行がありません");
     if(!rides.length) errs.push("明細の行がありません");
+    if(date&&!hasShift(date)) errs.push(`点呼時間に ${md(date)} 出社の勤務がありません。先に点呼時間で勤務を追加してください`);
     return {date,check,rides,errs};
   }
   const closeImport=()=>{ $("iSheet").hidden=$("iBg").hidden=true; };
@@ -1712,9 +1740,11 @@ ETC自己負担: 0
   $("sDate").addEventListener("change",()=>{ if(!$("sDate").value) return; sDay=$("sDate").value; $("sMoveBox").hidden=true; renderSales(); });
   $("sMove").onclick=()=>{ $("sMoveBox").hidden=false; $("sMoveTo").value=sDay; $("sMoveMsg").textContent="記録の時刻はそのままで、出庫日だけが変わります"; };
   $("sMoveCancel").onclick=()=>{ $("sMoveBox").hidden=true; };
+  $("sGoTenko").onclick=()=>showTab(1);
   $("sMoveDo").onclick=()=>{
     const to=$("sMoveTo").value, from=sDay, d=sales.days[from];
     if(!to||to===from){ $("sMoveMsg").textContent="今と違う日付を選んでください"; return; }
+    if(!hasShift(to)){ $("sMoveMsg").textContent=`点呼時間に ${md(to)} 出社の勤務がありません。先に点呼時間で勤務を追加してください`; return; }
     const t=sales.days[to];
     if(t&&(t.rides.length||t.simple.amt!=null||t.check.total!=null)){ $("sMoveMsg").textContent=`${md(to)}にはもう記録があるので移せません`; return; }
     if(!d||!guard(d)) return;
