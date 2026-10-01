@@ -230,6 +230,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 #rtMap{height:380px;border-radius:10px;border:1px solid var(--line);z-index:0}
 .rtno{background:var(--accent);color:var(--accent-ink);border-radius:999px;font:700 12px var(--num);padding:2px 6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .rtno.big{background:var(--bad);color:#fff}
+.chip.rtbtn{background:var(--accent-soft);color:var(--accent)}
 .hwrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15.5px}
 .hwrow .btn{padding:4px 10px}
 .agrp{display:grid;grid-template-columns:4.5em 1fr 1fr;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
@@ -415,6 +416,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <input type="file" id="rtFile" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
       <button class="btn danger" id="rtDel" hidden>この勤務のルートを消す</button>
     </div>
+    <select id="rtSel" class="fgsel" hidden aria-label="表示する乗車"></select>
     <div id="rtMap" hidden></div>
     <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
   </section>
@@ -643,7 +645,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
       <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
-      <dt>走行ルート</dt><dd>Googleマップのタイムラインを書き出したファイルを「タイムラインを読み込む」で選ぶと、勤務ごとに実際に走った道と乗車の地点を地図で見られます。ルートはこのスマホの中だけに保存します。</dd>
+      <dt>走行ルート</dt><dd>Googleマップのタイムラインを書き出したファイルを「タイムラインを読み込む」で選ぶと、勤務ごとに実際に走った道と乗車の地点を地図で見られます。1つの乗車だけ見るときは、欄の選択か、乗車の一覧の「ルート ›」を押します。ルートはこのスマホの中だけに保存します。</dd>
       <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の売上・税抜・給与見込み・決済別・納金の合計と、勤務ごとの一覧を見られます。</dd>
     </dl>
     <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
@@ -1760,7 +1762,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
         <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
         ${addr.length?`<div class="sub">${addr.map(esc).join(" → ")}</div>`:""}
-        <div class="chips">${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}</div>
+        <div class="chips">${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
       </button>`;
     }).join("")||`<div class="geo">${act?"「乗車」を押すと、ここに記録が並びます":"この勤務の記録はありません"}</div>`;
 
@@ -1969,9 +1971,12 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       $("rtInfo").textContent=got.length?`${got.length}勤務分のルートを入れました（${got.map(md).join("・")}）`:"ファイルの期間に、点呼で業務前点呼（実績）が入った勤務がありませんでした";
     }catch(e){ $("rtInfo").innerHTML=`<span class="err">${esc(e.message||"読み込めませんでした")}</span>`; }
   });
+  // 地図の吹き出しの「この乗車のルートだけ見る」
+  $("rtMap").addEventListener("click",e=>{ const a=e.target.closest("[data-rtpick]"); if(!a) return; e.preventDefault(); rtSelId=a.dataset.rtpick; rtKey=""; renderSales(); });
   $("rtDel").onclick=()=>{ const d=sales.days[sDay]; if(!d||!d.route) return; if(!confirm("この勤務のルートを消しますか？")) return; delete d.route; saveSales(); rtKey=""; renderSales(); };
   // 地図（Leaflet＋地理院タイル）は、ルートのある勤務を開いたときだけ読み込む
-  let leafletP=null, rtMapObj=null, rtLayer=null, rtKey="";
+  let leafletP=null, rtMapObj=null, rtLayer=null, rtKey="", rtSelId="", rtSelDay="";
+  $("rtSel").addEventListener("change",()=>{ rtSelId=$("rtSel").value; rtKey=""; renderSales(); });
   function loadLeaflet(){
     if(window.L) return Promise.resolve();
     if(!leafletP) leafletP=new Promise((ok,ng)=>{
@@ -1983,8 +1988,17 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   function renderRoute(k,d,s){
     const r=d.route; $("rtDel").hidden=!r; $("rtMap").hidden=!r;
     if(!r){ if(!/読み込んで|入れました|ありませんでした|err/.test($("rtInfo").innerHTML)) $("rtInfo").textContent="この勤務のルートはまだありません。"; return; }
-    $("rtInfo").textContent=`タイムラインの距離 約${r.km}km（位置は約1分ごとなので、実際より少し短く出ます）・記録 ${r.pts.length}点。地図の番号を押すと乗車の内容が出ます`;
-    const key=k+"|"+r.at+"|"+s.rows.length+"|"+s.total;
+    // 表示の選択：全体か、1つの乗車（乗車〜降車の間）だけ
+    if(rtSelDay!==k){ rtSelDay=k; rtSelId=""; }
+    const rides=s.rows.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null&&x.off>x.on);
+    const sel=rides.find(x=>x.id===rtSelId)||null; if(!sel) rtSelId="";
+    $("rtSel").hidden=!rides.length;
+    $("rtSel").innerHTML=`<option value="">全体を表示</option>`+rides.map(x=>`<option value="${x.id}"${x.id===rtSelId?" selected":""}>No.${x._no} ${tm(x.on)}→${tm(x.off)} ${esc(x.kind)}${x.amt?" "+yen(x.amt)+"円":""}</option>`).join("");
+    const seg=sel?r.pts.filter(p=>p[2]>=sel.on-1&&p[2]<=sel.off+1):r.pts;
+    let segKm=0; for(let i=1;i<seg.length;i++) segKm+=distM(seg[i-1],seg[i]);
+    $("rtInfo").innerHTML=sel?`<b>No.${sel._no}</b> ${tm(sel.on)}→${tm(sel.off)}　${esc(sel.onAddr||"")}${sel.offAddr?" → "+esc(sel.offAddr):""}<br>この区間 約${r1(segKm/1000)}km（記録 ${seg.length}点）${seg.length<2?"：この間の記録がほとんどありません":""}`:
+      `タイムラインの距離 約${r.km}km（位置は約1分ごとなので、実際より少し短く出ます）・記録 ${r.pts.length}点。地図の番号を押すと乗車の内容が出ます。1つの乗車だけ見るときは、上の選択か、乗車の一覧の「ルート ›」を押します`;
+    const key=k+"|"+r.at+"|"+s.rows.length+"|"+s.total+"|"+rtSelId;
     if(key===rtKey&&rtMapObj) return; rtKey=key;
     loadLeaflet().then(()=>{
       if(!rtMapObj){
@@ -1993,14 +2007,27 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       }
       if(rtLayer) rtLayer.remove();
       rtLayer=L.layerGroup().addTo(rtMapObj);
-      const line=r.pts.map(p=>[p[0],p[1]]);
-      L.polyline(line,{color:getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#1D6A80",weight:4,opacity:.85}).addTo(rtLayer);
+      const accent=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#1D6A80";
+      let line=seg.map(p=>[p[0],p[1]]);
+      if(sel){
+        // 選んだ乗車：その間の道を太く、乗車地（緑）・降車地（赤）の印。全体の道は薄く残す
+        L.polyline(r.pts.map(p=>[p[0],p[1]]),{color:"#888",weight:2,opacity:.35}).addTo(rtLayer);
+        if(line.length>=2) L.polyline(line,{color:accent,weight:6,opacity:.95}).addTo(rtLayer);
+        const a=sel.onPos?[sel.onPos.lat,sel.onPos.lng]:line[0], b=sel.offPos?[sel.offPos.lat,sel.offPos.lng]:line[line.length-1];
+        if(a) L.circleMarker(a,{radius:9,color:"#2C7A4B",fillOpacity:1}).bindTooltip(`乗車 ${tm(sel.on)}`,{permanent:true,direction:"top"}).addTo(rtLayer);
+        if(b) L.circleMarker(b,{radius:9,color:"#B3342A",fillOpacity:1}).bindTooltip(`降車 ${tm(sel.off)}`,{permanent:true,direction:"top"}).addTo(rtLayer);
+        line=line.concat([a,b].filter(Boolean));
+        if(!line.length) line=r.pts.map(p=>[p[0],p[1]]);
+        setTimeout(()=>{ rtMapObj.invalidateSize(); rtMapObj.fitBounds(L.latLngBounds(line),{padding:[30,30],maxZoom:16}); },60);
+        return;
+      }
+      L.polyline(line,{color:accent,weight:4,opacity:.85}).addTo(rtLayer);
       L.circleMarker(line[0],{radius:7,color:"#2C7A4B",fillOpacity:1}).bindTooltip("出庫側").addTo(rtLayer);
       L.circleMarker(line[line.length-1],{radius:7,color:"#B3342A",fillOpacity:1}).bindTooltip("入庫側").addTo(rtLayer);
       s.rows.filter(x=>!isEv(x.kind)&&x.onPos).forEach(x=>{
         const big=(+x.amt||0)>=10000;
         L.marker([x.onPos.lat,x.onPos.lng],{icon:L.divIcon({className:"",html:`<span class="rtno${big?" big":""}">${x._no}</span>`,iconSize:null})})
-          .bindPopup(`No.${x._no} ${tm(x.on)}→${x.off!=null?tm(x.off):""}<br>${esc(x.kind)} ${x.amt?yen(x.amt)+"円 "+esc(x.pay||""):""}<br>${esc(x.onAddr||"")}${x.offAddr?" → "+esc(x.offAddr):""}`).addTo(rtLayer);
+          .bindPopup(`No.${x._no} ${tm(x.on)}→${x.off!=null?tm(x.off):""}<br>${esc(x.kind)} ${x.amt?yen(x.amt)+"円 "+esc(x.pay||""):""}<br>${esc(x.onAddr||"")}${x.offAddr?" → "+esc(x.offAddr):""}${x.off!=null&&x.off>x.on?`<br><a href="#" data-rtpick="${x.id}">この乗車のルートだけ見る ›</a>`:""}`).addTo(rtLayer);
       });
       setTimeout(()=>{ rtMapObj.invalidateSize(); rtMapObj.fitBounds(L.latLngBounds(line),{padding:[16,16]}); },60);
     }).catch(e=>{ $("rtInfo").innerHTML=`<span class="err">${esc(e.message)}</span>`; });
@@ -2148,7 +2175,10 @@ ETC自己負担: 0
     if(!guard(d)) return;
     d.rides=d.rides.filter(x=>x.id!==rEdit); saveSales(); closeRide(); renderSales();
   };
-  $("sList").addEventListener("click",e=>{ const b=e.target.closest("[data-id]"); if(b) openRide(b.dataset.id,false); });
+  $("sList").addEventListener("click",e=>{
+    const rt=e.target.closest("[data-rt]");
+    if(rt){ e.preventDefault(); e.stopPropagation(); rtSelId=rt.dataset.rt; rtKey=""; renderSales(); $("rtCard").scrollIntoView({behavior:"smooth",block:"start"}); return; }
+    const b=e.target.closest("[data-id]"); if(b) openRide(b.dataset.id,false); });
   $("sAdd").onclick=()=>openRide(null,false);
   document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.onclick=()=>{
     const d=ensureDay(sDay); if(d.mode===b.dataset.mode) return; if(!guard(d)) return;
