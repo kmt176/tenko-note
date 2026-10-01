@@ -221,7 +221,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 .wxsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 0;font-size:15.5px}
 .daypick{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
 .daypick label{font-size:14.5px;color:var(--muted)}
-.daypick .btn{grid-column:1/-1;justify-self:start;padding:8px 12px;font-size:15px}
+.daypick .btn{padding:8px 12px;font-size:15px}
 .nextday{font-size:14.5px;margin-top:4px}
 .nextday input{width:20px;height:20px}
 .hwrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15.5px}
@@ -317,7 +317,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   </div>
   <div class="daypick">
     <label for="sDate">出庫日を選ぶ</label><input type="date" id="sDate">
-    <button class="btn" id="sMove">この勤務の日付を変える</button>
+    <div class="btnrow" style="grid-column:1/-1"><button class="btn" id="sMove">この勤務の日付を変える</button><button class="btn danger" id="sDelDay">この勤務の売上を消す</button></div>
   </div>
   <div class="grp" id="sMoveBox" hidden>
     <div class="field"><label for="sMoveTo">正しい出庫日</label><input type="date" id="sMoveTo"></div>
@@ -583,7 +583,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
       <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。住所から位置と天気（9日以内）も自動で入ります。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
-      <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。</dd>
+      <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
       <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の売上・税抜・給与見込み・決済別・納金の合計と、勤務ごとの一覧を見られます。</dd>
     </dl>
@@ -1514,7 +1514,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     // 点呼に勤務がない日（点呼を使っていない人も）は、入力の画面を出さない
     const noShift=!sDay||(!hasShift(sDay)&&!hasData(sales.days[sDay]));
     ["sSum","sDetail","sSimple","ckCard","hwCard"].forEach(id=>{ if(noShift) $(id).hidden=true; });
-    $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true;
+    $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true; $("sDelDay").hidden=!hasData(sales.days[sDay]);
     if(noShift){
       const plan=sDay&&planOnly(sDay);
       $("sNoShiftTitle").textContent=plan?"業務前点呼（実績）がまだです":"点呼時間に勤務がありません";
@@ -1528,7 +1528,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=false;
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
     if(document.activeElement!==$("sDate")) $("sDate").value=k;
-    $("sMove").hidden=!(d.rides.length||d.simple.amt!=null||d.check.total!=null);
+    $("sMove").hidden=$("sDelDay").hidden=!hasData(d);
+    if(delDayArmed!==k){ delDayArmed=null; $("sDelDay").textContent="この勤務の売上を消す"; }
     $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<small>${act?"今の勤務":k===activeDay()?"直前の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
     document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
     $("sDetail").hidden=simple; $("sSimple").hidden=!simple;
@@ -1831,6 +1832,15 @@ ETC自己負担: 0
   $("sDate").addEventListener("change",()=>{ if(!$("sDate").value) return; sDay=$("sDate").value; $("sMoveBox").hidden=true; renderSales(); });
   $("sMove").onclick=()=>{ $("sMoveBox").hidden=false; $("sMoveTo").value=sDay; $("sMoveMsg").textContent="記録の時刻はそのままで、出庫日だけが変わります"; };
   $("sMoveCancel").onclick=()=>{ $("sMoveBox").hidden=true; };
+  // この勤務の売上（乗車・簡易入力・納金明細書・走行距離）をまるごと消す。2回押しで消す
+  let delDayArmed=null;
+  $("sDelDay").onclick=()=>{
+    const k=sDay, d=sales.days[k]; if(!d) return;
+    if(delDayArmed!==k){ delDayArmed=k; $("sDelDay").textContent="もう一度押すと消えます"; return; }
+    if(!guard(d)) return;
+    delete sales.days[k]; saveSales(); delDayArmed=null; $("sMoveBox").hidden=true; renderSales();
+    $("sStatus").textContent=`${md(k)}出庫の売上を消しました`;
+  };
   // 予定の日なら、その勤務の点呼の入力画面を開いて、業務前点呼（実績）を入れてもらう
   $("sGoTenko").onclick=()=>{ const id=$("sGoTenko").dataset.rec; showTab(1); if(id){ const r=recs.find(x=>x.id===id); if(r){ const i=periodOf(r.date); if(i>=0){ pIdx=i; render(); } openSheet(id); } } };
   $("sMoveDo").onclick=()=>{
