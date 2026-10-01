@@ -328,8 +328,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <section class="meter" id="sSum" aria-live="polite"></section>
 
   <section class="card" id="sNoShift" hidden>
-    <h2>点呼時間に勤務がありません</h2>
-    <div>売上は、点呼時間に入れた勤務（出社日）ごとに記録します。先に「点呼時間」で勤務を追加してください。</div>
+    <h2 id="sNoShiftTitle">点呼時間に勤務がありません</h2>
+    <div id="sNoShiftText">売上は、点呼時間に入れた勤務（出社日）ごとに記録します。</div>
     <div class="btnrow"><button class="btn primary" id="sGoTenko">点呼時間を開く</button></div>
   </section>
 
@@ -572,7 +572,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
   <section class="card help">
     <h2>売上</h2>
-    <p>売上は、<b>点呼時間に入れた勤務（出社日）ごと</b>に記録します。先に点呼時間で勤務を追加してください。勤務中でないときは、直前の勤務が開きます。</p>
+    <p>売上は、<b>点呼時間に入れた勤務（出社日）ごと</b>に記録します。その日の<b>業務前点呼（実績）</b>を入れると、その勤務の売上を入力できるようになります（予定だけの日はまだ入力できません）。勤務中でないときは、直前の勤務が開きます。</p>
     <ol class="steps">
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>配車／手上げ・決済は前の乗車と同じものが最初から入っています</small></li>
@@ -1302,21 +1302,25 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   // 照合済みの日は、直す前に確認する
   const guard=d=>!d.locked||confirm("照合済みですが直しますか？");
 
-  // 売上は点呼時間に勤務がある日だけ入力できる（ユーザー指定）
+  // 売上は、点呼時間でその日の業務前点呼（実績）が入った勤務だけ入力できる（ユーザー指定。計画だけの日はまだ）
   const nowAbsMin=()=>{ const now=new Date(); return dayNo(todayStr())*DAY+now.getHours()*60+now.getMinutes(); };
-  const hasShift=k=>recs.some(r=>r.date===k);
+  const hasShift=k=>recs.some(r=>r.date===k&&r.ab);
+  const planOnly=k=>recs.find(r=>r.date===k&&!r.ab);   // 計画だけで、業務前点呼の実績がまだの勤務
   const hasData=d=>!!d&&(d.rides.length>0||d.simple.amt!=null||d.check.total!=null);
   // 勤務中（業務前点呼の2時間前〜24時間後）の出社日。乗車ボタンはこの勤務だけに出す
   function shiftNow(){
-    const n=nowAbsMin(), c=calc().filter(c=>c.ok).find(c=>c.start-120<=n&&n<=c.start+24*60);
+    const n=nowAbsMin(), c=calc().filter(c=>c.ok&&c.r.ab).find(c=>c.start-120<=n&&n<=c.start+24*60);
     return c?c.r.date:null;
   }
   // 売上タブで最初に開く勤務：勤務中ならそれ、なければ直前の勤務（明けの日の照合・取り込み用）、なければ次の勤務
   function activeDay(){
     const now=shiftNow(); if(now) return now;
-    const n=nowAbsMin(), cs=calc().filter(c=>c.ok);
+    const n=nowAbsMin(), cs=calc().filter(c=>c.ok&&c.r.ab);
+    // 今日が予定の勤務で、まだ業務前点呼（実績）がないときは、その日を開いて入れるよう案内する
+    const planNow=calc().filter(c=>c.ok&&!c.r.ab).find(c=>c.start-120<=n&&n<=c.start+24*60); if(planNow) return planNow.r.date;
     const past=cs.filter(c=>c.start<=n).pop(); if(past) return past.r.date;
-    const next=cs.find(c=>c.start>n); return next?next.r.date:null;
+    // 実績の入った勤務がまだなければ、今日か次の予定の日を開いて「業務前点呼を入れる」を案内する
+    const plan=calc().filter(c=>c.ok).find(c=>c.start+24*60>=n); return plan?plan.r.date:null;
   }
   // 手で入れた時刻を、出庫日からの分にする（出庫より前の時刻は翌日とみなす）
   function startOf(k){
@@ -1502,7 +1506,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   // ---- 画面 ----
   function dayList(){
     // 点呼の出社日と、売上の記録がある日だけ（空の日は出さない）
-    const set=new Set([...recs.map(r=>r.date),...Object.entries(sales.days).filter(([,d])=>hasData(d)).map(([k])=>k)]);
+    const set=new Set([...recs.filter(r=>r.ab).map(r=>r.date),...Object.entries(sales.days).filter(([,d])=>hasData(d)).map(([k])=>k)]);
     return [...set].sort();
   }
   function renderSales(reset){
@@ -1512,7 +1516,12 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     ["sSum","sDetail","sSimple","ckCard","hwCard"].forEach(id=>{ if(noShift) $(id).hidden=true; });
     $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true;
     if(noShift){
-      $("sTitle").innerHTML=sDay?`${md(sDay)}（${dow(sDay)}）<small>点呼時間に勤務がありません</small>`:`売上<small>点呼時間に勤務がありません</small>`;
+      const plan=sDay&&planOnly(sDay);
+      $("sNoShiftTitle").textContent=plan?"業務前点呼（実績）がまだです":"点呼時間に勤務がありません";
+      $("sNoShiftText").textContent=plan?"点呼時間でこの日の業務前点呼（実績）を入れると、この勤務の売上を入力できます。":"売上は、点呼時間に入れた勤務（出社日）ごとに記録します。先に「点呼時間」で勤務を追加し、業務前点呼（実績）を入れてください。";
+      $("sGoTenko").textContent=plan?"業務前点呼（実績）を入れる":"点呼時間を開く";
+      $("sGoTenko").dataset.rec=plan?plan.id:"";
+      $("sTitle").innerHTML=sDay?`${md(sDay)}（${dow(sDay)}）<small>${plan?"勤務予定（業務前点呼の実績がまだ）":"点呼時間に勤務がありません"}</small>`:`売上<small>点呼時間に勤務がありません</small>`;
       if(sDay&&document.activeElement!==$("sDate")) $("sDate").value=sDay;
       return;
     }
@@ -1788,7 +1797,7 @@ ETC自己負担: 0
     });
     if(!date) errs.push("「出庫日: YYYY-MM-DD」の行がありません");
     if(!rides.length) errs.push("明細の行がありません");
-    if(date&&!hasShift(date)) errs.push(`点呼時間に ${md(date)} 出社の勤務がありません。先に点呼時間で勤務を追加してください`);
+    if(date&&!hasShift(date)) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
     return {date,check,rides,errs};
   }
   const closeImport=()=>{ $("iSheet").hidden=$("iBg").hidden=true; };
@@ -1822,11 +1831,12 @@ ETC自己負担: 0
   $("sDate").addEventListener("change",()=>{ if(!$("sDate").value) return; sDay=$("sDate").value; $("sMoveBox").hidden=true; renderSales(); });
   $("sMove").onclick=()=>{ $("sMoveBox").hidden=false; $("sMoveTo").value=sDay; $("sMoveMsg").textContent="記録の時刻はそのままで、出庫日だけが変わります"; };
   $("sMoveCancel").onclick=()=>{ $("sMoveBox").hidden=true; };
-  $("sGoTenko").onclick=()=>showTab(1);
+  // 予定の日なら、その勤務の点呼の入力画面を開いて、業務前点呼（実績）を入れてもらう
+  $("sGoTenko").onclick=()=>{ const id=$("sGoTenko").dataset.rec; showTab(1); if(id){ const r=recs.find(x=>x.id===id); if(r){ const i=periodOf(r.date); if(i>=0){ pIdx=i; render(); } openSheet(id); } } };
   $("sMoveDo").onclick=()=>{
     const to=$("sMoveTo").value, from=sDay, d=sales.days[from];
     if(!to||to===from){ $("sMoveMsg").textContent="今と違う日付を選んでください"; return; }
-    if(!hasShift(to)){ $("sMoveMsg").textContent=`点呼時間に ${md(to)} 出社の勤務がありません。先に点呼時間で勤務を追加してください`; return; }
+    if(!hasShift(to)){ $("sMoveMsg").textContent=`点呼時間で ${md(to)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`; return; }
     const t=sales.days[to];
     if(t&&(t.rides.length||t.simple.amt!=null||t.check.total!=null)){ $("sMoveMsg").textContent=`${md(to)}にはもう記録があるので移せません`; return; }
     if(!d||!guard(d)) return;
