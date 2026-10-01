@@ -346,7 +346,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
   <section class="card" id="sSimple" hidden>
     <h2>簡易入力（1勤務の合計だけ）</h2>
-    <div class="field"><label for="smAmt">売上（税込・円）</label><input type="number" id="smAmt" inputmode="numeric" min="0"></div>
+    <div class="field"><label for="smAmt">売上（税込・円）</label><input type="text" class="yenin" id="smAmt" inputmode="numeric" autocomplete="off"></div>
     <div class="pair">
       <div class="field"><label for="smCnt">回数</label><input type="number" id="smCnt" inputmode="numeric" min="0"></div>
       <div class="field"><label for="smHrs">営業時間（時間）</label><input type="number" id="smHrs" inputmode="decimal" min="0" step="0.1"></div>
@@ -358,14 +358,14 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <section class="card" id="ckCard" aria-labelledby="ckTitle">
     <h2 id="ckTitle">納金明細書</h2>
     <table class="nkt" id="nkTable"><tbody>
-      <tr><th>売　上　額　①</th><td><input type="number" id="ck_total" data-ck="total" inputmode="numeric" min="0" aria-label="売上額①（日報の総営収）"></td></tr>
+      <tr><th>売　上　額　①</th><td><input type="text" class="yenin" id="ck_total" data-ck="total" aria-label="売上額①（日報の総営収）" inputmode="numeric" autocomplete="off"></td></tr>
       <tr class="nk-d"><th>日計表合計②</th><td class="num" id="nk_card"></td></tr>
       <tr class="nk-d"><th>その他未収③</th><td class="num" id="nk_other"></td></tr>
       <tr class="nk-d nk-blank"><th></th><td></td></tr>
       <tr class="nk-d"><th>未収計④（②＋③）</th><td class="num" id="nk_mishu"></td></tr>
-      <tr class="nk-d"><th>アプリ手配料金</th><td><input type="number" id="ck_app" data-ck="app" inputmode="numeric" min="0" aria-label="アプリ手配料金"></td></tr>
-      <tr class="nk-d"><th>ＥＴＣ合計⑤</th><td><input type="number" id="ck_etc" data-ck="etc" inputmode="numeric" min="0" aria-label="ETC合計⑤"></td></tr>
-      <tr class="nk-d"><th>ＥＴＣ会社負担⑥</th><td><input type="number" id="ck_etcCo" data-ck="etcCo" inputmode="numeric" min="0" aria-label="ETC会社負担⑥"></td></tr>
+      <tr class="nk-d"><th>アプリ手配料金</th><td><input type="text" class="yenin" id="ck_app" data-ck="app" aria-label="アプリ手配料金" inputmode="numeric" autocomplete="off"></td></tr>
+      <tr class="nk-d"><th>ＥＴＣ合計⑤</th><td><input type="text" class="yenin" id="ck_etc" data-ck="etc" aria-label="ETC合計⑤" inputmode="numeric" autocomplete="off"></td></tr>
+      <tr class="nk-d"><th>ＥＴＣ会社負担⑥</th><td><input type="text" class="yenin" id="ck_etcCo" data-ck="etcCo" aria-label="ETC会社負担⑥" inputmode="numeric" autocomplete="off"></td></tr>
       <tr class="nk-d"><th>Ｂ空転</th><td class="num" id="nk_bku"></td></tr>
       <tr class="nk-d nk-cash"><th>現金＝①−④＋⑤−⑥</th><td class="num" id="nk_cash"></td></tr>
     </tbody></table>
@@ -373,9 +373,9 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div id="ckCheck">
       <h3 style="margin:4px 0 0;font-size:16px">日計表と照合</h3>
       <div class="ckin" id="ckIn">
-        <div class="field"><label for="ck_genshu">日計表の現収</label><input type="number" id="ck_genshu" data-ck="genshu" inputmode="numeric" min="0"></div>
-        <div class="field"><label for="ck_mishu">日計表の未収</label><input type="number" id="ck_mishu" data-ck="mishu" inputmode="numeric" min="0"></div>
-        <div class="field"><label for="ck_etcSelf">ETC自己負担</label><input type="number" id="ck_etcSelf" data-ck="etcSelf" inputmode="numeric" min="0"></div>
+        <div class="field"><label for="ck_genshu">日計表の現収</label><input type="text" class="yenin" id="ck_genshu" data-ck="genshu" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label for="ck_mishu">日計表の未収</label><input type="text" class="yenin" id="ck_mishu" data-ck="mishu" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label for="ck_etcSelf">ETC自己負担</label><input type="text" class="yenin" id="ck_etcSelf" data-ck="etcSelf" inputmode="numeric" autocomplete="off"></div>
       </div>
       <div id="ckResult"></div>
       <details><summary>決済別の内訳</summary><div id="ckPay"></div></details>
@@ -633,10 +633,10 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
     </div>
     <div class="grp" id="rMoney">
-      <div class="field"><label for="rAmt">金額（円）</label><input type="number" id="rAmt" inputmode="numeric" min="0"></div>
+      <div class="field"><label for="rAmt">金額（円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"></div>
       <div class="field"><label for="rPay">決済</label>
         <select id="rPay"><option>現金</option><option>A:GOPAY</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
-      <div class="field"><label for="rEtc">ETC（円）</label><input type="number" id="rEtc" inputmode="numeric" min="0"></div>
+      <div class="field"><label for="rEtc">ETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
       <div class="field"><label>天気</label><div class="wxsel" id="rWx"><button type="button" data-w="">自動</button><button type="button" data-w="晴">晴</button><button type="button" data-w="曇">曇</button><button type="button" data-w="雨">雨</button><button type="button" data-w="雪">雪</button></div></div>
     </div>
     <div class="field"><label for="rMemo">メモ</label><input type="text" id="rMemo" autocomplete="off"></div>
@@ -1272,6 +1272,11 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   const EVENTS=["出庫","入庫","休憩","回送"];
   const isEv=k=>EVENTS.includes(k);
   const yen=n=>(Math.round(n)||0).toLocaleString("ja-JP");
+  // 金額の入力欄はカンマ付きで表示し、読むときはカンマなどを取り除く
+  const numOf=v=>{ const t=String(v??"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).replace(/[^\d]/g,""); return t===""?null:+t; };
+  const fmtYen=v=>v==null||v===""?"":yen(v);
+  document.addEventListener("focusin",e=>{ if(e.target.classList&&e.target.classList.contains("yenin")) e.target.value=e.target.value.replace(/,/g,""); });
+  document.addEventListener("focusout",e=>{ if(e.target.classList&&e.target.classList.contains("yenin")){ const n=numOf(e.target.value); e.target.value=fmtYen(n); } });
   const dKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   const dayStart=k=>new Date(k+"T00:00:00");
   const tm=m=>m==null?"--:--":(m>=DAY?"翌":"")+clock(((m%DAY)+DAY)%DAY);
@@ -1547,7 +1552,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
     // 簡易入力の値
     // 入力中の欄は書き換えない（1分ごとの更新で消えないように）
-    const setVal=(id,v)=>{ if(document.activeElement!==$(id)) $(id).value=v??""; };
+    const setVal=(id,v)=>{ const el=$(id); if(document.activeElement!==el) el.value=el.classList.contains("yenin")?fmtYen(v):v??""; };
     setVal("smAmt",d.simple.amt); setVal("smCnt",d.simple.cnt); setVal("smHrs",d.simple.hrs);
 
     // 納金明細書（紙と同じ並び）と、日計表との照合（売上管理Excelの「集計」シートと同じ計算）
@@ -1560,7 +1565,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       // 入力欄の変更を保存する（照合済みの日は確認してから）
       $("ckTitle").parentElement.addEventListener("change",e=>{ const f=e.target.dataset&&e.target.dataset.ck; if(!f) return; const dd=ensureDay(sDay);
         if(dd.locked&&!guard(dd)){ renderSales(); return; }
-        dd.check[f]=f==="note"?e.target.value:e.target.value===""?null:+e.target.value; saveSales(); renderSales(); });
+        dd.check[f]=f==="note"?e.target.value:numOf(e.target.value); saveSales(); renderSales(); });
     }
     // 空欄のアプリ手配料金・ETCは、乗車の記録から出した値を薄く表示して、その値で計算する
     const auto={app:s.app,etc:s.etc,etcCo:0};
@@ -1618,7 +1623,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     $("rKind").value=r.kind||"配車"; $("rOn").value=r.on!=null?clock(((r.on%DAY)+DAY)%DAY):""; $("rOff").value=r.off!=null?clock(((r.off%DAY)+DAY)%DAY):"";
     $("rOnNext").checked=r.on!=null&&r.on>=DAY; $("rOffNext").checked=r.off!=null&&r.off>=DAY;
     nextTouched={on:id!=null,off:id!=null};   // 新しく入れるときだけ、時刻から「翌日」を推測して付ける
-    $("rAmt").value=r.amt??""; $("rPay").value=r.pay||"現金"; $("rEtc").value=r.etc??""; $("rMemo").value=r.memo||"";
+    $("rAmt").value=fmtYen(r.amt); $("rPay").value=r.pay||"現金"; $("rEtc").value=fmtYen(r.etc); $("rMemo").value=r.memo||"";
     rWxSel=r.wxSel||""; markWx();
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
     $("rInfo").innerHTML=[w?`天気：${esc(w.st)} ${esc(w.at)}の観測 ${w.t??"—"}℃・10分 ${w.p10??"—"}mm・1時間 ${w.p1h??"—"}mm`:"",pos.length?`位置：${pos.join("・")}を記録済み`:""].filter(Boolean).join("<br>")
@@ -1762,7 +1767,7 @@ ETC自己負担: 0
     let r=rEdit&&d.rides.find(x=>x.id===rEdit); if(!r){ r={id:newId()}; d.rides.push(r); }
     Object.assign(r,{kind:$("rKind").value,on,off,memo:$("rMemo").value.trim()});
     if(isEv(r.kind)){ delete r.amt; delete r.pay; delete r.etc; delete r.wxSel; }
-    else Object.assign(r,{amt:$("rAmt").value===""?null:+$("rAmt").value,pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:$("rEtc").value===""?null:+$("rEtc").value,wxSel:rWxSel});
+    else Object.assign(r,{amt:numOf($("rAmt").value),pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:numOf($("rEtc").value),wxSel:rWxSel});
     if(d.locked) d.editedAfterLock=new Date().toISOString();
     saveSales(); closeRide(); renderSales();
   };
@@ -1780,7 +1785,7 @@ ETC自己負担: 0
   });
   $("smSave").onclick=()=>{
     const d=ensureDay(sDay); if(!guard(d)) return;
-    d.simple={amt:$("smAmt").value===""?null:+$("smAmt").value,cnt:$("smCnt").value===""?null:+$("smCnt").value,hrs:$("smHrs").value===""?null:+$("smHrs").value};
+    d.simple={amt:numOf($("smAmt").value),cnt:$("smCnt").value===""?null:+$("smCnt").value,hrs:$("smHrs").value===""?null:+$("smHrs").value};
     saveSales(); renderSales(); $("smMsg").textContent="保存しました";
   };
   const moveDay=step=>{ const L=dayList(), i=L.indexOf(sDay); const j=i<0?L.length-1:i+step; if(j>=0&&j<L.length){ sDay=L[j]; renderSales(); } };
