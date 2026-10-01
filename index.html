@@ -226,6 +226,10 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 .nextday input{width:20px;height:20px}
 .hwrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15.5px}
 .hwrow .btn{padding:4px 10px}
+.agrp{display:grid;grid-template-columns:4.5em 1fr 1fr;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.agrp input{font-size:16px;min-height:40px;padding:6px 8px}
+.agrp .st{grid-column:2/4;font-size:13px;color:var(--muted);font-weight:400}
+.fgsel{width:100%;margin:4px 0 8px}
 .ckin{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
 .ckin .field label{font-size:13.5px}
 .ckin input{font-size:18px;min-height:44px}
@@ -401,7 +405,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <div class="wrap" id="sFlashView" hidden>
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>仲間の速報</h2><button class="btn" id="fReload">更新</button></div>
-      <div class="src">直近3日の、1万円以上の乗車です（新しい順）。</div>
+      <div class="src" id="fNote">直近3日の、1万円以上の乗車です（新しい順）。</div>
+      <select id="fGroupSel" class="fgsel" hidden aria-label="グループ"></select>
       <div id="fBody" class="geo">読み込んでいます…</div>
     </section>
   </div>
@@ -515,7 +520,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <div>天気・電車・到着便は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると使える機能が増えます。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
       <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div class="grp">
-        <h3>仲間の合言葉（仲間の速報）</h3>
+        <h3>仲間の合言葉（仲間の速報）<span id="nGroup" class="src"></span></h3>
         <div class="field"><label for="nPass">仲間の合言葉</label><input type="password" id="nPass" autocomplete="off"></div>
         <div class="field"><label for="nCode">社員コード</label><input type="text" id="nCode" inputmode="numeric" autocomplete="off"></div>
         <div class="field"><label for="nNick">速報に出す名前（空欄なら社員コード）</label><input type="text" id="nNick" maxlength="20" autocomplete="off"></div>
@@ -528,6 +533,20 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
         <div class="field"><label for="lPass">ロング判定の合言葉</label><input type="password" id="lPass" autocomplete="off"></div>
         <div class="btnrow"><button class="btn primary" id="lSave">保存</button><button class="btn" id="lForget">消す</button></div>
         <div class="msg" id="lCfgMsg" role="status"></div>
+      </div>
+      <div class="grp">
+        <h3>管理者</h3>
+        <div class="field"><label for="aPass">管理者の合言葉</label><input type="password" id="aPass" autocomplete="off"></div>
+        <div class="btnrow"><button class="btn primary" id="aOpen">管理の画面を開く</button><button class="btn" id="aForget" hidden>このスマホから管理者を外す</button></div>
+        <div class="msg" id="aMsg" role="status"></div>
+        <div id="adminBox" hidden>
+          <div class="src">グループの名前と合言葉を決めて「保存」を押します。合言葉が空のグループは使われません。合言葉を変えると、そのグループの人は入れ直しが必要です。</div>
+          <div id="aGroups"></div>
+          <div class="field"><label for="aLong">ロング判定の合言葉</label><input type="text" id="aLong" autocomplete="off"></div>
+          <div class="src" id="aLongInfo"></div>
+          <div class="btnrow"><button class="btn primary" id="aSave">保存</button><button class="btn" id="aReload">読み直す</button></div>
+          <div class="msg" id="aSaveMsg" role="status"></div>
+        </div>
       </div>
     </div>
   </details>
@@ -1025,11 +1044,47 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     m.textContent="確かめています…";
     try{
       const j=await checkNakama();
-      cfg.nakama=!!(j.ok&&j.nakama); saveCfg(); applyRole();
+      cfg.nakama=!!(j.ok&&j.nakama); cfg.group=j.group||null; saveCfg(); applyRole();
       m.textContent=cfg.nakama?(cfg.empCode?"保存しました。売上の「仲間の速報」が使えます。1万円以上の乗車は速報に出ます":"保存しました。売上の「仲間の速報」が見られます（社員コードがないので、あなたの乗車は出ません）"):"仲間の合言葉が違います";
       if(cfg.nakama&&cfg.empCode) Object.keys(sales.days).forEach(queueFlash);
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
   };
+  // ===== 管理者（グループと合言葉の管理。管理者の合言葉を知っている人だけ） =====
+  const isAdmin=()=>!!cfg.apass&&cfg.admin===true;
+  const post=async body=>{ const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}); return await res.json(); };
+  function drawAdmin(j){
+    $("aGroups").innerHTML=j.groups.map((g,i)=>`<div class="agrp" data-i="${i}"><span class="num">${i+1}</span>
+      <input type="text" data-a="name" value="${esc(g.name)}" maxlength="20" aria-label="グループ${i+1}の名前">
+      <input type="text" data-a="pass" value="${esc(g.pass)}" maxlength="50" placeholder="合言葉（空なら使わない）" aria-label="グループ${i+1}の合言葉">
+      <span class="st">${g.pass?`直近3日の速報 ${g.flash}件・${g.people}人`:"使っていない"}</span></div>`).join("");
+    $("aLong").value=j.longPass||"";
+    $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
+    $("adminBox").hidden=false; $("aForget").hidden=false;
+  }
+  async function openAdmin(){
+    const m=$("aMsg"); m.textContent="確かめています…";
+    try{
+      const j=await post({action:"admin",op:"get",adminPass:cfg.apass});
+      if(!j.ok){ cfg.admin=false; saveCfg(); applyRole(); $("adminBox").hidden=true; m.textContent=j.error||"管理者の合言葉が違います"; return; }
+      cfg.admin=true; saveCfg(); applyRole(); drawAdmin(j); m.textContent="管理の画面を開きました。売上の「仲間の速報」で全グループが見られます";
+    }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
+  }
+  $("aPass").value=cfg.apass||"";
+  $("aOpen").onclick=()=>{ cfg.url=$("lUrl").value.trim()||cfg.url; cfg.apass=$("aPass").value.trim(); if(!cfg.apass){ $("aMsg").textContent="管理者の合言葉を入れてください"; return; } openAdmin(); };
+  $("aReload").onclick=openAdmin;
+  $("aSave").onclick=async()=>{
+    const m=$("aSaveMsg"), groups=[...document.querySelectorAll("#aGroups .agrp")].map(r=>({name:r.querySelector('[data-a="name"]').value,pass:r.querySelector('[data-a="pass"]').value}));
+    m.textContent="保存しています…";
+    try{
+      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value});
+      if(!j.ok){ m.textContent=j.error; return; }
+      drawAdmin(j); m.textContent="保存しました";
+      // 自分のスマホの合言葉が変わっていたら、入れ直す
+      if(cfg.pass&&cfg.pass!==j.longPass){ cfg.pass=j.longPass; $("lPass").value=cfg.pass; }
+      saveCfg();
+    }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
+  };
+  $("aForget").onclick=()=>{ cfg.apass=""; cfg.admin=false; saveCfg(); $("aPass").value=""; $("adminBox").hidden=true; $("aForget").hidden=true; applyRole(); $("aMsg").textContent="このスマホから管理者を外しました"; };
   $("nForget").onclick=()=>{ cfg.npass=""; cfg.nakama=false; saveCfg(); $("nPass").value=""; applyRole(); $("nMsg").textContent="仲間の合言葉を消しました"; };
   // 一般の人には、ロング判定のボタンと使い方を出さない
   function applyRole(){
@@ -1037,7 +1092,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     $("segLong").hidden=!mem;
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
     $("cfgSum").textContent="合言葉（"+[isNakama()&&PROD?"仲間 設定済み":"仲間の速報",mem&&PROD?"ロング判定 設定済み":"ロング判定"].join("・")+"）";
-    if(typeof setView==="function"){ $("sViewFlash").hidden=!isNakama(); if(!isNakama()&&sView==="flash") setView("day"); }
+    $("nGroup").textContent=isNakama()&&cfg.group?"　"+cfg.group.name:"";
+    if(typeof setView==="function"){ const can=isNakama()||isAdmin(); $("sViewFlash").hidden=!can; if(!can&&sView==="flash") setView("day"); }
     if(!mem&&curSub==="long") showSub("wx");
   }
 
@@ -1465,7 +1521,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     sales.cfg=Object.assign(salesCfg(),{[id==="mTax"?"tax":"pay"]:v}); saveSales(); renderMonth();
   }));
   function setView(v){
-    sView=v==="month"?"month":v==="flash"&&isNakama()?"flash":"day";
+    sView=v==="month"?"month":v==="flash"&&(isNakama()||isAdmin())?"flash":"day";
     try{ localStorage.setItem("tenko.sview",sView); }catch(e){}
     document.querySelectorAll("#sView button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===sView));
     $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month"; $("sFlashView").hidden=sView!=="flash";
@@ -1508,23 +1564,37 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   async function loadFlash(){
     const b=$("fBody");
     const draw=j=>{
-      const items=j.items||[];
+      let items=j.items||[];
+      // 管理者はグループで絞り込める
+      const sel=$("fGroupSel");
+      if(j.admin){
+        const gs=[...new Map(items.map(x=>[x.group,x.groupName||x.group])).entries()];
+        const cur=sel.value; sel.innerHTML=`<option value="">全グループ（${items.length}件）</option>`+gs.map(([id,n])=>`<option value="${esc(id)}">${esc(n)}（${items.filter(x=>x.group===id).length}件）</option>`).join("");
+        sel.value=gs.some(([id])=>id===cur)?cur:""; sel.hidden=false;
+        if(sel.value) items=items.filter(x=>x.group===sel.value);
+        $("fNote").textContent="管理者：全グループの、直近3日の1万円以上の乗車です（新しい順）。";
+      } else { sel.hidden=true; $("fNote").textContent=`${j.group?j.group.name+"の、":""}直近3日の1万円以上の乗車です（新しい順）。`; }
       b.innerHTML=(cfg.empCode||!PROD?"":`<div class="note">社員コードが入っていないので、あなたの乗車は速報に出ません（メニューの「合言葉」で入れられます）。</div>`)+
         (items.map(x=>{ const t=new Date(x.at), dk=dKey(t);
           return `<div class="fl"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
-            <div class="who">${esc(x.name||x.code)}<small>${esc(x.from||"—")} → ${esc(x.to||"—")}</small></div>
+            <div class="who">${esc(x.name||x.code)}${j.admin&&x.groupName?`<small>${esc(x.groupName)}</small>`:""}<small>${esc(x.from||"—")} → ${esc(x.to||"—")}</small></div>
             <span class="st">${esc(x.pay||"")}</span></div>`; }).join("")||`<div class="geo">直近3日に、1万円以上の乗車はまだありません。</div>`);
     };
+    drawFlash=draw;
     if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
     b.textContent="読み込んでいます…";
     try{
       await flushFlash();
-      const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"flashGet",passcode:cfg.npass})});
+      // 管理者は全グループ（仲間の合言葉なしでも）、仲間は自分のグループだけ
+      const body=isAdmin()?{action:"flashGet",adminPass:cfg.apass}:{action:"flashGet",passcode:cfg.npass};
+      const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
       const j=await res.json(); if(!j.ok) throw new Error(j.error||"読み込めませんでした");
-      draw(j);
+      lastFlash=j; draw(j);
     }catch(e){ b.innerHTML=`<div class="err">${esc(/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。":e.message)}</div>`; }
   }
+  let lastFlash=null, drawFlash=null;
   $("fReload").onclick=loadFlash;
+  $("fGroupSel").addEventListener("change",()=>{ if(lastFlash&&drawFlash) drawFlash(lastFlash); });
 
   // ---- 位置・住所・天気（どれも無料。取れなかったら後で埋める） ----
   function getPos(){
@@ -1997,7 +2067,7 @@ ETC自己負担: 0
   showSub(startSub);
   // 合言葉が保存されていれば、まだ正しいか裏で確かめる（変わっていたらロング判定を隠す）
   if(PROD&&cfg.npass&&cfg.url) checkNakama().then(j=>{
-    if(j.ok) cfg.nakama=!!j.nakama; else if(/合言葉/.test(j.error||"")) cfg.nakama=false;
+    if(j.ok){ cfg.nakama=!!j.nakama; cfg.group=j.group||null; } else if(/合言葉/.test(j.error||"")) cfg.nakama=false;
     saveCfg(); applyRole(); flushFlash();
   }).catch(()=>{});
   if(PROD&&cfg.pass&&cfg.url) checkPass().then(j=>{
