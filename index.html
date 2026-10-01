@@ -219,6 +219,11 @@ input,textarea,button{font-weight:700}
 select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
 .wxsel{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wxsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 0;font-size:15.5px}
+.daypick{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.daypick label{font-size:14.5px;color:var(--muted)}
+.daypick .btn{grid-column:1/-1;justify-self:start;padding:8px 12px;font-size:15px}
+.nextday{font-size:14.5px;margin-top:4px}
+.nextday input{width:20px;height:20px}
 .ckin{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
 .ckin .field label{font-size:13.5px}
 .ckin input{font-size:18px;min-height:44px}
@@ -301,6 +306,15 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <h1 id="sTitle">売上</h1>
     <button class="iconbtn" id="sNext" aria-label="次の勤務">▶</button>
   </div>
+  <div class="daypick">
+    <label for="sDate">出庫日を選ぶ</label><input type="date" id="sDate">
+    <button class="btn" id="sMove">この勤務の日付を変える</button>
+  </div>
+  <div class="grp" id="sMoveBox" hidden>
+    <div class="field"><label for="sMoveTo">正しい出庫日</label><input type="date" id="sMoveTo"></div>
+    <div class="btnrow"><button class="btn primary" id="sMoveDo">この日に移す</button><button class="btn" id="sMoveCancel">やめる</button></div>
+    <div class="msg" id="sMoveMsg" role="status"></div>
+  </div>
 
   <section class="meter" id="sSum" aria-live="polite"></section>
 
@@ -314,6 +328,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div class="geo" id="sStatus" role="status"></div>
     <div class="list" id="sList"></div>
     <button class="add" id="sAdd">＋ 乗車を手で追加</button>
+    <button class="btn" id="sImport">日報から取り込む（貼り付け）</button>
   </div>
 
   <section class="card" id="sSimple" hidden>
@@ -518,8 +533,9 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
+      <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。住所から位置と天気（9日以内）も自動で入ります。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
-      <dt>◀ ▶</dt><dd>前の勤務を見たり直したりできます。</dd>
+      <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。</dd>
       <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の売上・税抜・給与見込み・決済別・納金の合計と、勤務ごとの一覧を見られます。</dd>
     </dl>
     <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
@@ -554,6 +570,24 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <button role="tab" id="tb2" aria-selected="false" aria-controls="tabLong">メニュー</button>
 </nav>
 
+<div class="sheet-bg" id="iBg" hidden></div>
+<div class="sheet" id="iSheet" hidden role="dialog" aria-modal="true" aria-labelledby="iTitle">
+  <div class="in">
+    <h2 id="iTitle">日報から取り込む</h2>
+    <ol class="steps">
+      <li>「AIへの頼み方をコピー」を押します。</li>
+      <li>自分のAI（Claude・Gemini・ChatGPTなど）に、<b>日報の写真</b>と<b>コピーした文</b>を送ります。<small>氏名の部分は隠して撮ってもかまいません</small></li>
+      <li>AIが書き出した文を全部コピーして、下に貼り付け、「確かめる」を押します。</li>
+    </ol>
+    <div class="btnrow"><button class="btn" id="iPrompt">AIへの頼み方をコピー</button></div>
+    <textarea id="iText" placeholder="ここに貼り付け" aria-label="取り込む文" style="min-height:140px"></textarea>
+    <div class="btnrow"><button class="btn primary" id="iCheck">確かめる</button><button class="btn" id="iClose">閉じる</button></div>
+    <div id="iResult" class="live"></div>
+    <div class="btnrow" id="iGoRow" hidden><button class="btn primary" id="iGo">取り込む</button></div>
+    <div class="msg" id="iMsg" role="status"></div>
+  </div>
+</div>
+
 <div class="sheet-bg" id="rBg" hidden></div>
 <div class="sheet" id="rSheet" hidden role="dialog" aria-modal="true" aria-labelledby="rTitle">
   <div class="in">
@@ -561,8 +595,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div class="field"><label for="rKind">内容</label>
       <select id="rKind"><option>配車</option><option>手上げ</option><option>CAN</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option></select></div>
     <div class="pair">
-      <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"></div>
-      <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"></div>
+      <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"><label class="check nextday"><input type="checkbox" id="rOnNext">翌日（出庫日の次の日）</label></div>
+      <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
     </div>
     <div class="grp" id="rMoney">
       <div class="field"><label for="rAmt">金額（円）</label><input type="number" id="rAmt" inputmode="numeric" min="0"></div>
@@ -1375,30 +1409,41 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     r[which+"Pos"]=p; saveSales(); renderSales();
     await fillRide(k,r);
   }
+  // 日報から取り込んだ住所（例：板橋区上板橋2）から、だいたいの位置を出す（国土地理院の住所検索）
+  async function posOfAddr(a){
+    const r=await fetch(`https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(a)}`);
+    const j=await r.json(), c=j&&j[0]&&j[0].geometry&&j[0].geometry.coordinates;
+    return c?{lat:+c[1].toFixed(6),lng:+c[0].toFixed(6),acc:null,from:"addr"}:null;
+  }
   async function fillRide(k,r){
     try{
+      for(const w of ["on","off"]){ if(!r[w+"Pos"]&&r[w+"Addr"]&&!r[w+"Tried"]){ r[w+"Tried"]=true; r[w+"Pos"]=await posOfAddr(r[w+"Addr"]); } }
       for(const w of ["on","off"]){ const p=r[w+"Pos"]; if(p&&r[w+"Addr"]==null){ r[w+"Addr"]=await townOf(p); } }
       if(r.onPos&&!r.wx&&r.on!=null){ const w=await weatherAt(r.onPos,new Date(dayStart(k).getTime()+r.on*60000)); if(w) r.wx=w; }
       saveSales(); renderSales();
     }catch(e){ /* 電波がないときは、次に開いたときにもう一度 */ }
   }
-  // 3日以内で、住所や天気が抜けている乗車を埋め直す（1回開くごとに1度だけ）
+  // 9日以内（アメダスが残っている期間）で、位置・住所・天気が抜けている乗車を埋め直す（1回開くごとに1度だけ）
   let filled=false;
   function fillPending(){
     if(filled) return; filled=true;
-    const lim=Date.now()-3*864e5;
+    const lim=Date.now()-9*864e5;
     Object.entries(sales.days).forEach(([k,d])=>{ if(dayStart(k).getTime()<lim) return;
-      d.rides.forEach(r=>{ if((r.onPos&&(r.onAddr==null||!r.wx))||(r.offPos&&r.offAddr==null)) fillRide(k,r); }); });
+      d.rides.forEach(r=>{ if(isEv(r.kind)) return;
+        const needPos=w=>!r[w+"Pos"]&&r[w+"Addr"]&&!r[w+"Tried"];
+        if(needPos("on")||needPos("off")||(r.onPos&&(r.onAddr==null||!r.wx))||(r.offPos&&r.offAddr==null)) fillRide(k,r); }); });
   }
 
   // ---- 画面 ----
   function dayList(){
-    const set=new Set([...recs.map(r=>r.date),...Object.keys(sales.days),activeDay()]);
+    const set=new Set([...recs.map(r=>r.date),...Object.keys(sales.days),activeDay(),...(sDay?[sDay]:[])]);
     return [...set].sort();
   }
   function renderSales(reset){
     if(reset||!sDay) sDay=activeDay();
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===activeDay(), simple=d.mode==="simple";
+    if(document.activeElement!==$("sDate")) $("sDate").value=k;
+    $("sMove").hidden=!(d.rides.length||d.simple.amt!=null||d.check.total!=null);
     $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<small>${act?"今の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
     document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
     $("sDetail").hidden=simple; $("sSimple").hidden=!simple;
@@ -1516,6 +1561,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     const r=id?d.rides.find(x=>x.id===id):{kind:lastOf(d,"kind","配車"),pay:lastOf(d,"pay","A:GOPAY")};
     $("rTitle").textContent=id?(afterOff?"降車：金額を入れてください":"記録を直す"):"乗車を手で追加";
     $("rKind").value=r.kind||"配車"; $("rOn").value=r.on!=null?clock(((r.on%DAY)+DAY)%DAY):""; $("rOff").value=r.off!=null?clock(((r.off%DAY)+DAY)%DAY):"";
+    $("rOnNext").checked=r.on!=null&&r.on>=DAY; $("rOffNext").checked=r.off!=null&&r.off>=DAY;
+    nextTouched={on:id!=null,off:id!=null};   // 新しく入れるときだけ、時刻から「翌日」を推測して付ける
     $("rAmt").value=r.amt??""; $("rPay").value=r.pay||"現金"; $("rEtc").value=r.etc??""; $("rMemo").value=r.memo||"";
     rWxSel=r.wxSel||""; markWx();
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
@@ -1533,12 +1580,124 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   function markWx(){ document.querySelectorAll("#rWx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===rWxSel)); }
   document.querySelectorAll("#rWx button").forEach(b=>b.onclick=()=>{ rWxSel=b.dataset.w; markWx(); });
   $("rKind").addEventListener("change",kindUI);
+  // 「翌日」：自分で触っていなければ、出庫時刻より前の時刻を翌日とみなして自動でチェックする
+  let nextTouched={on:false,off:false};
+  [["rOn","rOnNext","on"],["rOff","rOffNext","off"]].forEach(([t,c,w])=>{
+    $(c).addEventListener("change",()=>{ nextTouched[w]=true; });
+    $(t).addEventListener("change",()=>{ if(nextTouched[w]||!$(t).value) return; const m=fromInput(sDay,$(t).value); $(c).checked=m!=null&&m>=DAY; });
+  });
+
+  // ===== 日報から取り込む（AIに書き出してもらった文を貼り付ける） =====
+  const IMPORT_PROMPT=`添付したタクシーの「乗務員日報」の写真を読み取り、次の形式の文だけを書き出してください（説明や前置きは不要）。
+
+出庫日: YYYY-MM-DD（出庫日時の日付）
+総営収: 数字
+アプリ手配料金: 数字
+ETC合計: 数字（ETC料金の「実車」の金額）
+ETC会社負担: 0
+ETC自己負担: 0
+日計表の現収: 数字（日報の「現収」）
+日計表の未収: 数字（日報の「未収」）
+---
+内容,乗車,降車,金額,決済,ETC,乗車地,降車地,メモ
+（明細を上から順に1行ずつ）
+
+明細の書き方：
+・内容：「出」は出庫、「入」は入庫、「回」は回送、「休」は休憩。番号の行は、迎の欄が2なら配車、空欄なら手上げ。合計金額が0の行はCAN。
+・乗車・降車：HH:MM（日報のとおり。出庫・入庫は時刻を1つだけ）。
+・金額：現収＋未収（合計金額ではありません）。
+・決済：未収の記号で決めます。ﾈ→A:GOPAY、C→C:ｸﾚｼﾞｯﾄ、K→K:交通系IC、Q→Q:QUICPay、I→I:iD、W→W:WAON、ﾅ→ﾅ:nanaco、ｴ→ｴ:Wdy、T→T:チケット。現収だけの行は現金。
+・ETC：備考にEがある行だけ、（現収＋未収）−合計金額。ただし配車で決済がA:GOPAY以外なら、さらに200を引く。それ以外は空欄。
+・乗車地・降車地：日報のとおり（例：板橋区上板橋2）。
+・メモ：備考の文字（例：SA#）。
+・数字にカンマは付けない。値に「,」を入れない。`;
+  const PAY_ALIAS={"ﾈ":"A:GOPAY","ネット":"A:GOPAY","GO":"A:GOPAY","GOPAY":"A:GOPAY","C":"C:ｸﾚｼﾞｯﾄ","クレジット":"C:ｸﾚｼﾞｯﾄ","K":"K:交通系IC","Q":"Q:QUICPay","I":"I:iD","W":"W:WAON","ﾅ":"ﾅ:nanaco","ｴ":"ｴ:Wdy","T":"T:チケット","現収":"現金"};
+  const KIND_ALIAS={"出":"出庫","入":"入庫","回":"回送","休":"休憩","迎車":"配車","流し":"手上げ","キャンセル":"CAN"};
+  const HEAD_KEYS={"総営収":"total","アプリ手配料金":"app","ETC合計":"etc","ETC会社負担":"etcCo","ETC自己負担":"etcSelf","日計表の現収":"genshu","日計表の未収":"mishu"};
+  const KINDS=["配車","手上げ","CAN",...EVENTS];
+  let parsed=null;
+  function parseNippo(text){
+    const errs=[], check={}, rides=[]; let date=null, inRows=false, last=null, offset=0;
+    const num=v=>{ const s=String(v||"").replace(/[,，円\s]/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); return s===""?null:isFinite(+s)?+s:NaN; };
+    // 日付をまたいだら（前の時刻より6時間以上前に戻ったら）翌日とみなす
+    const abs=t=>{ const m=toMin(String(t||"").trim().replace(/：/g,":")); if(m==null||isNaN(m)) return null; let a=m+offset; if(last!=null&&a<last-360){ offset+=DAY; a+=DAY; } last=Math.max(last??a,a); return a; };
+    text.replace(/\r/g,"").split("\n").forEach((raw,i)=>{
+      const line=raw.trim(); if(!line||line.startsWith("（")) return;
+      if(/^-{3,}$/.test(line)){ inRows=true; return; }
+      if(/^内容[,\t]/.test(line)){ inRows=true; return; }
+      if(!inRows){
+        const m=/^([^:：]+)[:：]\s*(.*)$/.exec(line); if(!m) return;
+        const k=m[1].trim(), v=m[2].trim();
+        if(k==="出庫日"){ const d=v.replace(/[\/年月.]/g,"-").replace(/日$/,"").replace(/-(\d)(?!\d)/g,"-0$1"); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) date=d; else errs.push(`出庫日が読めません：${v}`); }
+        else if(HEAD_KEYS[k]){ const n=num(v.split(/[（(]/)[0]); if(Number.isNaN(n)) errs.push(`${k}が数字ではありません`); else check[HEAD_KEYS[k]]=n; }
+        return;
+      }
+      const c=line.split(/\t|,/).map(x=>x.trim());
+      let kind=KIND_ALIAS[c[0]]||c[0];
+      if(!KINDS.includes(kind)){ errs.push(`${i+1}行目：内容「${c[0]}」が分かりません`); return; }
+      const on=abs(c[1]), off=c[2]?abs(c[2]):null;
+      if(on==null){ errs.push(`${i+1}行目：時刻「${c[1]}」が読めません`); return; }
+      const r={id:newId(),kind,on,off:kind==="出庫"||kind==="入庫"?null:off,onAddr:c[6]||null,offAddr:c[7]||null,memo:c[8]||"",imported:true};
+      if(!isEv(kind)){
+        const amt=num(c[3]), etc=num(c[5]);
+        if(Number.isNaN(amt)||Number.isNaN(etc)){ errs.push(`${i+1}行目：金額かETCが数字ではありません`); return; }
+        let pay=PAY_ALIAS[c[4]]||c[4]||(amt?"現金":"");
+        if(amt&&!PAYS.includes(pay)){ errs.push(`${i+1}行目：決済「${c[4]}」が分かりません`); return; }
+        Object.assign(r,{amt:amt||null,pay:pay||"現金",etc:etc||null});
+        if(r.off==null) r.off=on;
+      }
+      rides.push(r);
+    });
+    if(!date) errs.push("「出庫日: YYYY-MM-DD」の行がありません");
+    if(!rides.length) errs.push("明細の行がありません");
+    return {date,check,rides,errs};
+  }
+  const closeImport=()=>{ $("iSheet").hidden=$("iBg").hidden=true; };
+  $("sImport").onclick=()=>{ parsed=null; $("iResult").innerHTML=""; $("iGoRow").hidden=true; $("iMsg").textContent=""; $("iSheet").hidden=$("iBg").hidden=false; };
+  $("iClose").onclick=closeImport; $("iBg").onclick=closeImport;
+  $("iPrompt").onclick=()=>{ const ok=()=>{ $("iMsg").textContent="コピーしました。AIに日報の写真と一緒に送ってください"; };
+    if(navigator.clipboard) navigator.clipboard.writeText(IMPORT_PROMPT).then(ok,()=>{ $("iText").value=IMPORT_PROMPT; $("iText").select(); $("iMsg").textContent="自動でコピーできませんでした。欄の文を長押ししてコピーしてください"; });
+    else { $("iText").value=IMPORT_PROMPT; $("iText").select(); } };
+  $("iCheck").onclick=()=>{
+    const p=parseNippo($("iText").value); parsed=p.errs.length?null:p;
+    if(p.errs.length){ $("iResult").innerHTML=`<div class="err">${p.errs.slice(0,8).map(esc).join("<br>")}</div>`; $("iGoRow").hidden=true; return; }
+    const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
+    const exists=ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
+    $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${s.count}回・記録の合計 ${yen(s.total)}円・総営収 ${st.total!=null?yen(st.total)+"円":"なし"}<br>
+      ${st.total==null?"":st.meterOk?`<span class="pill ok">メーター照合 OK</span>`:`<span class="pill bad">メーター照合 NG（差 ${yen(s.total-st.meterCalc)}円）：読み取りを確かめてください</span>`}
+      ${st.nokin!=null?`<br>納金 ${yen(st.nokin)}円${st.genOk===false?`（日報の現収と合いません）`:""}`:""}
+      ${exists?`<div class="err">この日にはもう記録があります。取り込むと置き換わります。</div>`:""}`;
+    $("iGoRow").hidden=false;
+  };
+  $("iGo").onclick=()=>{
+    if(!parsed) return;
+    const ex=sales.days[parsed.date];
+    if(ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null)){ if(!confirm(`${md(parsed.date)}の記録を、取り込んだ内容に置き換えますか？`)) return; if(!guard(ex)) return; }
+    sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString()};
+    saveSales(); filled=false; sDay=parsed.date; closeImport(); $("iText").value=""; renderSales();
+    $("sStatus").textContent="取り込みました。住所から位置と天気を調べています（9日より前の天気は取れません）";
+  };
+
+  // 出庫日を選ぶ・勤務の日付を変える
+  $("sDate").addEventListener("change",()=>{ if(!$("sDate").value) return; sDay=$("sDate").value; $("sMoveBox").hidden=true; renderSales(); });
+  $("sMove").onclick=()=>{ $("sMoveBox").hidden=false; $("sMoveTo").value=sDay; $("sMoveMsg").textContent="記録の時刻はそのままで、出庫日だけが変わります"; };
+  $("sMoveCancel").onclick=()=>{ $("sMoveBox").hidden=true; };
+  $("sMoveDo").onclick=()=>{
+    const to=$("sMoveTo").value, from=sDay, d=sales.days[from];
+    if(!to||to===from){ $("sMoveMsg").textContent="今と違う日付を選んでください"; return; }
+    const t=sales.days[to];
+    if(t&&(t.rides.length||t.simple.amt!=null||t.check.total!=null)){ $("sMoveMsg").textContent=`${md(to)}にはもう記録があるので移せません`; return; }
+    if(!d||!guard(d)) return;
+    sales.days[to]=d; delete sales.days[from]; saveSales();
+    sDay=to; $("sMoveBox").hidden=true; renderSales();
+  };
   const closeRide=()=>{ $("rSheet").hidden=$("rBg").hidden=true; };
   $("rClose").onclick=closeRide; $("rBg").onclick=closeRide;
   $("rSave").onclick=()=>{
     const k=sDay, d=ensureDay(k); if(!guard(d)) return;
-    const on=fromInput(k,$("rOn").value); if(on==null){ $("rInfo").innerHTML=`<div class="err">${isEv($("rKind").value)?"時刻":"乗車の時刻"}を入れてください</div>`; return; }
-    let off=$("rOffF").hidden?null:fromInput(k,$("rOff").value); if(off!=null&&off<on) off+=DAY;
+    const on0=toMin($("rOn").value), on=on0==null?null:on0+($("rOnNext").checked?DAY:0); if(on==null){ $("rInfo").innerHTML=`<div class="err">${isEv($("rKind").value)?"時刻":"乗車の時刻"}を入れてください</div>`; return; }
+    const off0=$("rOffF").hidden?null:toMin($("rOff").value);
+    let off=off0==null?null:off0+($("rOffNext").checked?DAY:0); if(off!=null&&off<on) off+=DAY;   // 降車が乗車より前なら日付をまたいだもの
     if(off==null&&$("rKind").value==="CAN") off=on;   // キャンセルは乗車中にしない
     let r=rEdit&&d.rides.find(x=>x.id===rEdit); if(!r){ r={id:newId()}; d.rides.push(r); }
     Object.assign(r,{kind:$("rKind").value,on,off,memo:$("rMemo").value.trim()});
