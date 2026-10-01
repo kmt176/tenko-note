@@ -256,10 +256,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <details>
     <summary>バックアップ・機種変更</summary>
     <div class="body">
-      <div>下の文字をコピーして、メモやGoogleドライブに保存してください。新しいスマホでは、貼り付けて「復元」を押します。</div>
-      <textarea id="exportBox" readonly aria-label="バックアップ用の文字"></textarea>
-      <div class="btnrow"><button class="btn primary" id="copyBtn">コピー</button></div>
+      <div>「バックアップを作る」→「コピー」で、点呼と売上をまとめた文字をコピーし、メモやGoogleドライブに保存してください。文字は暗号化されているので、見ても内容は分かりません。新しいスマホでは、貼り付けて「復元」を押します。</div>
+      <div class="field"><label for="bkPass">パスワード（付けなくてもよい）</label><input type="password" id="bkPass" autocomplete="new-password" placeholder="付けないときは空のまま">
+        <small class="src">付けると、そのパスワードを知らない人は誰も復元できません。<b>忘れると、自分でも復元できなくなります。</b></small></div>
+      <div class="btnrow"><button class="btn primary" id="makeBtn">バックアップを作る</button><button class="btn" id="copyBtn" disabled>コピー</button></div>
+      <textarea id="exportBox" readonly hidden aria-label="バックアップ用の文字"></textarea>
       <textarea id="importBox" placeholder="ここに貼り付け" aria-label="復元する文字"></textarea>
+      <div class="field" id="imPassF" hidden><label for="imPass">バックアップのパスワード</label><input type="password" id="imPass" autocomplete="off"></div>
       <div class="btnrow">
         <button class="btn" id="importBtn">復元</button>
         <button class="btn" id="sampleBtn">例（10月度）を入れ直す</button>
@@ -492,7 +495,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <ul>
       <li><b>操作は必ず停車中に</b>行ってください。</li>
       <li>データはこのスマホの中だけに保存されます。他の人からは見えません。</li>
-      <li>機種変更に備えて、月1回「バックアップ・機種変更」でデータをコピーしてください。</li>
+      <li>機種変更に備えて、月1回「バックアップ・機種変更」でデータをコピーしてください。バックアップの文字は暗号化されます。パスワードを付けた場合、忘れると復元できません。</li>
+      <li>スマホには画面ロック（パスコード・指紋・顔認証）を設定してください。</li>
       <li class="member-only">ロング判定の行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、ロング判定の画面のボタンから首都高・NEXCOの公式サイトで確認してください。</li>
     </ul>
   </section>
@@ -580,7 +584,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   const SKEY="uriage.v1";   // 売上（勤務ごと）。点呼と同じく、このスマホの中だけに保存
   let recs=load(), pIdx=0, editId=null, delArmed=false, sales=loadSales();
   function loadSales(){ try{ const v=JSON.parse(localStorage.getItem(SKEY)||"null"); if(v&&v.days) return v; }catch(e){} return {days:{}}; }
-  function saveSales(){ try{ localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} }
+  function saveSales(){ try{ localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} resetBackup(); }
 
   // 試作版は保存が空なら例のデータで始める。本番は空から始める
   function load(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(Array.isArray(v)&&(PROD||v.length)) return v; }catch(e){} return PROD?[]:SAMPLE.map(r=>({...r})); }
@@ -681,7 +685,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       </button>`;
     };
     $("list").innerHTML=(before?card(before,true):"")+inP.map(c=>card(c,false)).join("") || "";
-    $("exportBox").value=JSON.stringify({v:3,tenko:recs,uriage:sales});
+    resetBackup();   // データが変わったら、作ったバックアップは作り直してもらう
   }
 
   // 入力パネル
@@ -726,16 +730,77 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
   // バックアップ
   const msg=t=>{ $("bkMsg").textContent=t; };
-  $("copyBtn").onclick=()=>{ const t=$("exportBox").value; if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>msg("コピーしました"),()=>{ $("exportBox").select(); msg("選択しました。長押しでコピーしてください"); }); else { $("exportBox").select(); msg("選択しました。長押しでコピーしてください"); } };
-  // 前の版のバックアップ（点呼の配列だけ）も、売上入りの新しい形も復元できる
-  $("importBtn").onclick=()=>{ try{
-    const v=JSON.parse($("importBox").value);
-    const t=Array.isArray(v)?v:v&&Array.isArray(v.tenko)?v.tenko:null; if(!t) throw 0;
-    recs=t; save();
-    let n="";
-    if(!Array.isArray(v)&&v.uriage&&v.uriage.days){ sales=v.uriage; saveSales(); n="、売上 "+Object.keys(sales.days).length+"勤務"; }
-    $("importBox").value=""; render(); msg("復元しました（点呼 "+t.length+"件"+n+"）");
-  }catch(e){ msg("読み込めませんでした。コピーした文字を全部貼り付けてください"); } };
+  // バックアップの文字は AES-GCM で暗号化する。
+  //  パスワードなし（TNA1:）＝アプリに入っている固定の鍵で、見ても読めない文字にする（コードを調べれば戻せる程度）
+  //  パスワードあり（TNP1:）＝本人が決めたパスワードの鍵。知らない人は戻せない
+  const APP_SECRET="tenko-note/backup/v1";
+  const B64=u8=>{ let s=""; for(let i=0;i<u8.length;i+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000)); return btoa(s); };
+  const UB64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  async function bkKey(pass,salt){
+    const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveKey"]);
+    return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:150000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+  }
+  async function gzip(u8,on){   // 文字を短くする（対応していない古い機種では使わない）
+    if(typeof CompressionStream==="undefined") return null;
+    const st=new Blob([u8]).stream().pipeThrough(on?new CompressionStream("gzip"):new DecompressionStream("gzip"));
+    return new Uint8Array(await new Response(st).arrayBuffer());
+  }
+  async function packBackup(obj,pass){
+    let data=new TextEncoder().encode(JSON.stringify(obj)), flag=0;
+    const z=await gzip(data,true).catch(()=>null); if(z){ data=z; flag=1; }
+    const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},await bkKey(pass||APP_SECRET,salt),data));
+    const out=new Uint8Array(29+ct.length); out[0]=flag; out.set(salt,1); out.set(iv,17); out.set(ct,29);
+    return (pass?"TNP1:":"TNA1:")+B64(out);
+  }
+  async function unpackBackup(text,pass){
+    text=text.trim();
+    if(text[0]==="{"||text[0]==="[") return JSON.parse(text);   // 前の版（暗号化なし）のバックアップ
+    const m=/^TN([AP])1:([A-Za-z0-9+/=\s]+)$/.exec(text); if(!m) throw new Error("bad");
+    if(m[1]==="P"&&!pass) throw new Error("needpass");
+    const u=UB64(m[2].replace(/\s/g,""));
+    let data;
+    try{ data=new Uint8Array(await crypto.subtle.decrypt({name:"AES-GCM",iv:u.slice(17,29)},await bkKey(m[1]==="P"?pass:APP_SECRET,u.slice(1,17)),u.slice(29))); }
+    catch(e){ throw new Error(m[1]==="P"?"wrongpass":"bad"); }
+    if(u[0]===1){ data=await gzip(data,false).catch(()=>null); if(!data) throw new Error("old"); }
+    return JSON.parse(new TextDecoder().decode(data));
+  }
+  let prepared=null;
+  function resetBackup(){ prepared=null; $("copyBtn").disabled=true; $("exportBox").hidden=true; $("exportBox").value=""; }
+  $("makeBtn").onclick=async()=>{
+    msg("作っています…");
+    try{
+      const pass=$("bkPass").value;
+      prepared=await packBackup({v:3,tenko:recs,uriage:sales},pass);
+      $("copyBtn").disabled=false;
+      msg(`できました（${pass?"パスワード付き":"パスワードなし"}）。「コピー」を押してください`);
+    }catch(e){ resetBackup(); msg("作れませんでした。ブラウザを最新にしてください"); }
+  };
+  // 画面には出さずにコピーする。コピーできない機種だけ、欄を出して長押しでコピーしてもらう
+  $("copyBtn").onclick=()=>{
+    if(!prepared) return;
+    const fallback=()=>{ const b=$("exportBox"); b.value=prepared; b.hidden=false; b.select(); msg("自動でコピーできませんでした。出てきた欄を長押ししてコピーしてください"); };
+    if(navigator.clipboard) navigator.clipboard.writeText(prepared).then(()=>msg("コピーしました。メモなどに貼り付けて保存してください"),fallback); else fallback();
+  };
+  // 前の版のバックアップ（暗号化なし・点呼だけ）も、新しい形も復元できる
+  $("importBtn").onclick=async()=>{
+    const text=$("importBox").value;
+    if(!text.trim()){ msg("バックアップの文字を貼り付けてください"); return; }
+    try{
+      const v=await unpackBackup(text,$("imPass").value);
+      const t=Array.isArray(v)?v:v&&Array.isArray(v.tenko)?v.tenko:null; if(!t) throw new Error("bad");
+      recs=t; save();
+      let n="";
+      if(!Array.isArray(v)&&v.uriage&&v.uriage.days){ sales=v.uriage; saveSales(); n="、売上 "+Object.keys(sales.days).length+"勤務"; }
+      $("importBox").value=""; $("imPass").value=""; $("imPassF").hidden=true; render(); msg("復元しました（点呼 "+t.length+"件"+n+"）");
+    }catch(e){
+      const c=e.message;
+      if(c==="needpass"){ $("imPassF").hidden=false; $("imPass").focus(); msg("パスワード付きのバックアップです。パスワードを入れて、もう一度「復元」を押してください"); }
+      else if(c==="wrongpass"){ $("imPassF").hidden=false; msg("パスワードが違います"); }
+      else if(c==="old") msg("このスマホでは復元できません。OSとブラウザを最新にしてください");
+      else msg("読み込めませんでした。コピーした文字を全部貼り付けてください");
+    }
+  };
   function loadSample(){ recs=SAMPLE.map(r=>({...r})); save(); pIdx=Math.max(0,periodOf("2026-10-01")); render(); msg("例のデータを入れ直しました"); }
   $("sampleBtn").onclick=loadSample;
   let clrArmed=false;
