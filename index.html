@@ -219,6 +219,23 @@ input,textarea,button{font-weight:700}
 select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
 .wxsel{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wxsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 0;font-size:15.5px}
+.ckin{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.ckin .field label{font-size:13.5px}
+.ckin input{font-size:18px;min-height:44px}
+.paytbl{width:100%;border-collapse:collapse;font-size:15.5px}
+.paytbl td{padding:5px 2px;border-bottom:1px solid var(--line)}
+.paytbl td.n{text-align:right;font-family:var(--num)}
+.paytbl tr.tot td{font-weight:700;border-bottom:0}
+.nokin{display:flex;justify-content:space-between;align-items:baseline;background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin-top:4px}
+.nokin .v{font-size:26px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:15px}
+.kv dt{color:var(--muted);font-weight:400}
+.kv dd{margin:0;text-align:right;font-family:var(--num)}
+.checks{display:grid;gap:6px;margin-top:6px}
+.mrow{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left;width:100%}
+.mrow .d{font-size:17px}
+.mrow .a{font-size:19px;text-align:right}
+.mrow .s{grid-column:2/4;font-size:13.5px;color:var(--muted);font-weight:400}
 .wxsel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 </style>
 
@@ -274,6 +291,11 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 </div>
 
 <div class="wrap" id="tabSales" hidden>
+  <div class="seg" role="tablist" aria-label="表示" id="sView">
+    <button role="tab" data-view="day" aria-selected="true">勤務</button>
+    <button role="tab" data-view="month" aria-selected="false">月度の集計</button>
+  </div>
+  <div class="wrap" id="sDayView">
   <div class="period">
     <button class="iconbtn" id="sPrev" aria-label="前の勤務">◀</button>
     <h1 id="sTitle">売上</h1>
@@ -306,11 +328,33 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   </section>
 
   <section class="card" aria-labelledby="ckTitle">
-    <h2 id="ckTitle">日報と照合</h2>
-    <div class="field"><label for="ckTotal">日報の総営収（円）</label><input type="number" id="ckTotal" inputmode="numeric" min="0"></div>
-    <div id="ckResult" class="geo"></div>
+    <h2 id="ckTitle">集計・照合（日報・日計表）</h2>
+    <div id="ckPay"></div>
+    <div class="ckin" id="ckIn"></div>
+    <div id="ckResult"></div>
     <div class="lockline" id="ckLock"></div>
   </section>
+  </div>
+
+  <div class="wrap" id="sMonthView" hidden>
+    <div class="period">
+      <button class="iconbtn" id="mPrev" aria-label="前の月度">◀</button>
+      <h1 id="mTitle">月度</h1>
+      <button class="iconbtn" id="mNext" aria-label="次の月度">▶</button>
+    </div>
+    <section class="meter" id="mSum"></section>
+    <div class="list" id="mList"></div>
+    <details>
+      <summary>計算の設定</summary>
+      <div class="body">
+        <div class="pair">
+          <div class="field"><label for="mTax">税抜にする掛け率</label><input type="number" id="mTax" inputmode="decimal" step="0.001" min="0" max="1"></div>
+          <div class="field"><label for="mPay">歩合率（給与見込み）</label><input type="number" id="mPay" inputmode="decimal" step="0.01" min="0" max="1"></div>
+        </div>
+        <div>税抜売上＝総営収×掛け率、給与見込み＝税抜売上×歩合率です。初期値は売上管理Excelと同じ 0.9 と 0.62 です。会社の計算と違うときは直してください。</div>
+      </div>
+    </details>
+  </div>
 </div>
 
 <div class="wrap" id="tabLong" hidden>
@@ -470,12 +514,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>配車／手上げ・決済は前の乗車と同じものが最初から入っています</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
-      <li>勤務が終わったら「日報と照合」に<b>日報の総営収</b>を入れます。一致したら「照合済みにする」で鍵をかけます。</li>
+      <li>勤務が終わったら「集計・照合」に<b>日報の総営収</b>（合計金額欄）と、ETC・日計表の数字を入れます。<b>納金額</b>が出て、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します</small></li>
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
       <dt>◀ ▶</dt><dd>前の勤務を見たり直したりできます。</dd>
+      <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の売上・税抜・給与見込み・決済別・納金の合計と、勤務ごとの一覧を見られます。</dd>
     </dl>
     <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
   </section>
@@ -813,7 +858,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     TABS.forEach((id,i)=>{ $(id).hidden=n!==i; $("tb"+i).setAttribute("aria-selected",n===i); });
     try{ localStorage.setItem("tenko.tab",String(n)); }catch(e){}
     window.scrollTo(0,0);
-    if(n===3&&typeof renderSales==="function") renderSales(true);
+    if(n===3&&typeof setView==="function"){ sDay=null; setView(sView); }
   }
   $("tb0").onclick=()=>showTab(0); $("tb1").onclick=()=>showTab(1); $("tb2").onclick=()=>showTab(2); $("tb3").onclick=()=>showTab(3);
 
@@ -1188,7 +1233,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   function dayCalc(d){
     const rows=[...d.rides].sort((a,b)=>(a.on??1e9)-(b.on??1e9));
     let prevEnd=null, no=0;
-    const s={total:0,count:0,haisha:0,nagashi:0,app:0,etc:0,eig:0,byPay:{},rows};
+    const s={total:0,count:0,haisha:0,nagashi:0,app:0,etc:0,eig:0,byPay:{},cntPay:{},rows};
     rows.forEach(r=>{
       const ev=isEv(r.kind);
       r._eig=!ev&&r.on!=null&&r.off!=null?r.off-r.on:null;
@@ -1197,7 +1242,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       r._app=r.kind==="配車"&&r.pay&&r.pay!=="A:GOPAY"?200:0;
       if(!ev){
         const a=+r.amt||0;
-        if(a>0){ s.total+=a; s.count++; s.byPay[r.pay||"現金"]=(s.byPay[r.pay||"現金"]||0)+a; }
+        if(a>0){ const p=r.pay||"現金"; s.total+=a; s.count++; s.byPay[p]=(s.byPay[p]||0)+a; s.cntPay[p]=(s.cntPay[p]||0)+1; }
         if(r.kind==="配車") s.haisha++; if(r.kind==="手上げ") s.nagashi++;
         s.app+=r._app; s.etc+=+r.etc||0; if(r._eig>0) s.eig+=r._eig;
       }
@@ -1205,6 +1250,83 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     });
     return s;
   }
+
+  // ---- 集計（売上管理Excelの「集計」シートと同じ計算） ----
+  const CARD=["C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy"];   // ② 日計表に載るもの
+  const OTHER=["A:GOPAY","T:チケット","福祉券"];                                        // ③ その他未収
+  const PAYS=[...CARD,"現金","B空転",...OTHER];
+  // 日報・日計表から手で入れる欄（空欄のアプリ料・ETCは、乗車の記録から出した値を使う）
+  const CK_FIELDS=[["total","総営収（日報の合計金額欄・税込）"],["app","⑦アプリ手配料金"],["etc","⑤ETC合計"],["etcCo","⑥ETC会社負担（帰りの高速代）"],["etcSelf","ETC自己負担"],["genshu","日計表の現収"],["mishu","日計表の未収"]];
+  function settle(d,s){
+    const c=d.check||{}, num=v=>v==null||v===""?null:+v, by=k=>s.byPay[k]||0;
+    const card=CARD.reduce((a,k)=>a+by(k),0), other=OTHER.reduce((a,k)=>a+by(k),0), mishu=card+other, bku=by("B空転"), cash=by("現金");
+    const app=num(c.app)??s.app, etc=num(c.etc)??s.etc, etcCo=num(c.etcCo)??0, etcSelf=num(c.etcSelf)??0;
+    const total=num(c.total)??(d.mode==="simple"?num(d.simple&&d.simple.amt):null);
+    const meter=s.total, meterCalc=total==null?null:total+app+etc-etcCo-etcSelf-bku;
+    const gen=num(c.genshu), mis=num(c.mishu);
+    return {meter,card,other,mishu,bku,cash,app,etc,etcCo,etcSelf,total,meterCalc,
+      // 簡易入力は決済の内訳がないので、納金は出さない
+      nokin:total==null||d.mode==="simple"?null:((total-mishu)+(etc-etcCo)+app)-bku,
+      meterOk:meterCalc!=null&&meterCalc===meter,
+      genOk:gen==null?null:cash+bku===gen, misOk:mis==null?null:mishu===mis, sumOk:gen==null||mis==null?null:meter===gen+mis};
+  }
+  // 1勤務の売上（月度の合計用）：総営収があればそれ、なければ記録から見込み（アプリ料・ETCを引く）
+  function shiftSales(k){
+    const d=getDay(k), s=dayCalc(d), st=settle(d,s);
+    const has=d.rides.some(r=>!isEv(r.kind))||(d.mode==="simple"&&d.simple.amt!=null)||st.total!=null;
+    const amt=st.total!=null?st.total:Math.max(0,s.total-st.app-st.etc);
+    return {k,d,s,st,has,amt,est:st.total==null,cnt:d.mode==="simple"?+d.simple.cnt||0:s.count};
+  }
+
+  // ---- 月度の集計 ----
+  let mIdx=-1, sView="day";
+  try{ sView=localStorage.getItem("tenko.sview")||"day"; }catch(e){}
+  const salesCfg=()=>Object.assign({tax:0.9,pay:0.62},sales.cfg||{});
+  function renderMonth(){
+    if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()));
+    const P=PERIODS[mIdx], cf=salesCfg();
+    $("mTitle").innerHTML=`${P.m}月度<small>${md(P.start)}〜${md(P.end)}</small>`;
+    const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end).sort();
+    const rows=keys.map(shiftSales).filter(x=>x.has||recs.some(r=>r.date===x.k));
+    const done=rows.filter(x=>x.has), tot=done.reduce((a,x)=>a+x.amt,0), cnt=done.reduce((a,x)=>a+x.cnt,0);
+    const nokin=done.reduce((a,x)=>a+(x.st.nokin||0),0), locked=done.filter(x=>x.d.locked).length;
+    const hai=done.reduce((a,x)=>a+x.s.haisha,0), nag=done.reduce((a,x)=>a+x.s.nagashi,0);
+    const pay={}; done.forEach(x=>Object.entries(x.s.byPay).forEach(([p,a])=>pay[p]=(pay[p]||0)+a));
+    const est=done.some(x=>x.est);
+    $("mSum").innerHTML=`<div class="row"><span>売上（税込）${est?"<small style='font-size:13px;color:var(--muted)'>※見込みを含む</small>":""}</span><span class="total num">${yen(tot)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
+      <div class="sumgrid">
+        <div><span class="h">勤務</span><span class="v num">${done.length}回</span></div>
+        <div><span class="h">1勤務平均</span><span class="v num">${done.length?yen(tot/done.length):"—"}</span></div>
+        <div><span class="h">税抜</span><span class="v num">${yen(tot*cf.tax)}</span></div>
+        <div><span class="h">給与見込み</span><span class="v num">${yen(tot*cf.tax*cf.pay)}</span></div>
+        <div><span class="h">回数</span><span class="v num">${cnt}回</span></div>
+        <div><span class="h">配車／手上げ</span><span class="v num">${hai}／${nag}</span></div>
+        <div><span class="h">納金の合計</span><span class="v num">${yen(nokin)}</span></div>
+        <div><span class="h">照合済み</span><span class="v num">${locked}／${done.length}</span></div>
+      </div>
+      ${Object.keys(pay).length?`<div class="legend">${PAYS.filter(p=>pay[p]).map(p=>`<span>${esc(p)} <span class="num">${yen(pay[p])}</span></span>`).join("")}</div>`:""}`;
+    $("mList").innerHTML=rows.slice().reverse().map(x=>`<button class="mrow" data-k="${x.k}">
+        <span class="d num">${md(x.k)}（${dow(x.k)}）</span><span>${x.d.locked?"🔒":""}</span><span class="a num">${x.has?yen(x.amt)+"円":"未入力"}</span>
+        <span class="s">${x.has?`${x.cnt}回${x.st.nokin!=null?"・納金 "+yen(x.st.nokin)+"円":""}${x.est?"・総営収未入力（見込み）":""}`:"この勤務の売上はまだありません"}</span></button>`).join("")||`<div class="geo">この月度の勤務はまだありません</div>`;
+    if(document.activeElement!==$("mTax")) $("mTax").value=cf.tax;
+    if(document.activeElement!==$("mPay")) $("mPay").value=cf.pay;
+  }
+  $("mList").addEventListener("click",e=>{ const b=e.target.closest("[data-k]"); if(!b) return; sDay=b.dataset.k; setView("day"); });
+  $("mPrev").onclick=()=>{ if(mIdx>0){ mIdx--; renderMonth(); } };
+  $("mNext").onclick=()=>{ if(mIdx<PERIODS.length-1){ mIdx++; renderMonth(); } };
+  ["mTax","mPay"].forEach(id=>$(id).addEventListener("change",()=>{
+    const v=+$(id).value; if(!(v>0&&v<=1)){ renderMonth(); return; }
+    sales.cfg=Object.assign(salesCfg(),{[id==="mTax"?"tax":"pay"]:v}); saveSales(); renderMonth();
+  }));
+  function setView(v){
+    sView=v==="month"?"month":"day";
+    try{ localStorage.setItem("tenko.sview",sView); }catch(e){}
+    document.querySelectorAll("#sView button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===sView));
+    $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month";
+    if(sView==="month"){ mIdx=-1; renderMonth(); } else renderSales();
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll("#sView button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
 
   // ---- 位置・住所・天気（どれも無料。取れなかったら後で埋める） ----
   function getPos(){
@@ -1278,13 +1400,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     if(reset||!sDay) sDay=activeDay();
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===activeDay(), simple=d.mode==="simple";
     $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<small>${act?"今の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
-    document.querySelectorAll("#tabSales > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
+    document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
     $("sDetail").hidden=simple; $("sSimple").hidden=!simple;
 
     // 合計
-    const tot=simple?+d.simple.amt||0:s.total, cnt=simple?+d.simple.cnt||0:s.count;
+    const st=settle(d,s), tot=st.total!=null?st.total:simple?+d.simple.amt||0:s.total, cnt=simple?+d.simple.cnt||0:s.count;
     const hrs=simple?(+d.simple.hrs||0)*60:s.eig;
-    $("sSum").innerHTML=`<div class="row"><span>売上（税込）</span><span class="total num">${yen(tot)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
+    $("sSum").innerHTML=`<div class="row"><span>${st.total!=null?"売上（総営収・税込）":simple?"売上（税込）":"記録の合計<small style='font-size:13px;color:var(--muted)'>（ETC・アプリ料を含む）</small>"}</span><span class="total num">${yen(tot)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
       <div class="sumgrid">
         <div><span class="h">回数</span><span class="v num">${cnt}回</span></div>
         <div><span class="h">平均単価</span><span class="v num">${cnt?yen(tot/cnt):"—"}</span></div>
@@ -1329,14 +1451,37 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     const setVal=(id,v)=>{ if(document.activeElement!==$(id)) $(id).value=v??""; };
     setVal("smAmt",d.simple.amt); setVal("smCnt",d.simple.cnt); setVal("smHrs",d.simple.hrs);
 
-    // 日報と照合
-    setVal("ckTotal",d.check.total);
-    const ck=d.check.total!==""&&d.check.total!=null, diff=ck?tot-(+d.check.total):0;
-    $("ckResult").innerHTML=!ck?"日報の総営収を入れると、アプリの合計と比べます。":
-      diff===0?`<span class="pill ok">一致しています（${yen(tot)}円）</span>`:
-      `<span class="pill bad">${diff>0?"アプリが":"日報が"} ${yen(Math.abs(diff))}円 多いです</span>`;
+    // 集計・照合（売上管理Excelの「集計」シートと同じ）
+    $("ckPay").innerHTML=simple?"":`<table class="paytbl"><tbody>
+      ${PAYS.filter(p=>s.byPay[p]).map(p=>`<tr><td>${esc(p)}</td><td class="n">${s.cntPay[p]}回</td><td class="n">${yen(s.byPay[p])}</td></tr>`).join("")}
+      <tr class="tot"><td>メーター日計（合計）</td><td class="n">${s.count}回</td><td class="n">${yen(s.total)}</td></tr></tbody></table>`;
+    // 入力欄（空欄のときは、乗車の記録から出した値を薄く表示して、その値で計算する）
+    const auto={app:s.app,etc:s.etc};
+    if(!$("ckIn").dataset.built){
+      $("ckIn").innerHTML=CK_FIELDS.map(([f,l])=>`<div class="field"><label for="ck_${f}">${l}</label><input type="number" id="ck_${f}" data-ck="${f}" inputmode="numeric" min="0"></div>`).join("");
+      $("ckIn").dataset.built="1";
+      $("ckIn").addEventListener("change",e=>{ const f=e.target.dataset.ck; if(!f) return; const dd=ensureDay(sDay);
+        if(dd.locked&&!guard(dd)){ renderSales(); return; }
+        dd.check[f]=e.target.value===""?null:+e.target.value; saveSales(); renderSales(); });
+    }
+    CK_FIELDS.forEach(([f])=>{ const el=$("ck_"+f); setVal("ck_"+f,d.check[f]); el.placeholder=auto[f]!=null&&!simple?yen(auto[f])+"（記録から）":""; el.closest(".field").hidden=simple&&!["total"].includes(f); });
+    $("ckResult").innerHTML=st.total==null?`<div class="geo">日報の<b>総営収</b>（合計金額欄）を入れると、納金額と照合の結果を出します。</div>`:
+      `${simple?`<div class="geo">簡易入力では決済の内訳がないため、納金額と照合は出しません。総営収を入れれば鍵をかけられます。</div>`:`<div class="nokin"><span>納金（入金金額）</span><span class="v num">${yen(st.nokin)}円</span></div>`}
+      ${simple?"":`<dl class="kv">
+        <dt>② 日計表合計（カード等）</dt><dd>${yen(st.card)}</dd>
+        <dt>③ その他未収（GOPAY・チケット・福祉券）</dt><dd>${yen(st.other)}</dd>
+        <dt>④ 未収計（②＋③）</dt><dd>${yen(st.mishu)}</dd>
+        <dt>⑧ B空転</dt><dd>${yen(st.bku)}</dd></dl>
+      <div class="checks">
+        ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／日報から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>`}
+        ${st.genOk==null?"":`<span class="pill ${st.genOk?"ok":"warn"}">日計表の現収 ${st.genOk?"OK":"要確認"}（現金＋B空転 ${yen(st.cash+st.bku)}円）</span>`}
+        ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
+        ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
+      </div>
+      <div class="src">メーター照合：総営収＋⑦アプリ手配料金＋⑤ETC合計−⑥ETC会社負担−ETC自己負担−⑧B空転 が、記録の合計と同じならOK。納金＝（総営収−④）＋（⑤−⑥）＋⑦−⑧。</div>`}`;
+    const canLock=st.total!=null&&(simple||st.meterOk);
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
-      ck&&diff===0?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
+      canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
     if($("ckDoLock")) $("ckDoLock").onclick=()=>{ const dd=ensureDay(k); dd.locked=true; dd.lockedAt=new Date().toISOString(); saveSales(); renderSales(); };
     if($("ckUnlock")) $("ckUnlock").onclick=()=>{ if(!confirm("鍵を外しますか？")) return; const dd=ensureDay(k); dd.locked=false; saveSales(); renderSales(); };
     fillPending();
@@ -1410,7 +1555,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   };
   $("sList").addEventListener("click",e=>{ const b=e.target.closest("[data-id]"); if(b) openRide(b.dataset.id,false); });
   $("sAdd").onclick=()=>openRide(null,false);
-  document.querySelectorAll("#tabSales > .seg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.onclick=()=>{
     const d=ensureDay(sDay); if(d.mode===b.dataset.mode) return; if(!guard(d)) return;
     d.mode=b.dataset.mode; saveSales(); renderSales();
   });
@@ -1419,11 +1564,10 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     d.simple={amt:$("smAmt").value===""?null:+$("smAmt").value,cnt:$("smCnt").value===""?null:+$("smCnt").value,hrs:$("smHrs").value===""?null:+$("smHrs").value};
     saveSales(); renderSales(); $("smMsg").textContent="保存しました";
   };
-  $("ckTotal").addEventListener("change",()=>{ const d=ensureDay(sDay); d.check.total=$("ckTotal").value===""?null:+$("ckTotal").value; saveSales(); renderSales(); });
   const moveDay=step=>{ const L=dayList(), i=L.indexOf(sDay); const j=i<0?L.length-1:i+step; if(j>=0&&j<L.length){ sDay=L[j]; renderSales(); } };
   $("sPrev").onclick=()=>moveDay(-1); $("sNext").onclick=()=>moveDay(1);
   // 乗車中は、経過時間の表示を1分ごとに更新する
-  setInterval(()=>{ if(!$("tabSales").hidden&&$("rSheet").hidden) renderSales(); },60000);
+  setInterval(()=>{ if(!$("tabSales").hidden&&!$("sDayView").hidden&&$("rSheet").hidden) renderSales(); },60000);
 
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
