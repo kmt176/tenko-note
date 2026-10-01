@@ -387,20 +387,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 
   <section class="card" id="hwCard" aria-labelledby="hwTitle">
     <h2 id="hwTitle">走行距離（高速道路の距離控除）</h2>
-    <div id="hwSum"></div>
-    <div class="field"><label for="hwKm">この勤務の走行距離（km）</label><input type="text" id="hwKm" inputmode="decimal" autocomplete="off" placeholder="日報の走行距離、またはメーターの差"></div>
-    <div id="hwList"></div>
-    <div class="grp">
-      <h3>高速道路を足す</h3>
-      <div class="field"><label for="hwRoad">高速道路</label><select id="hwRoad"></select></div>
-      <div class="field"><label for="hwIc">利用IC</label><select id="hwIc"></select></div>
-      <div class="seg" role="tablist" aria-label="走行区分" id="hwTrip">
-        <button role="tab" data-trip="片道" aria-selected="true">片道</button>
-        <button role="tab" data-trip="往復" aria-selected="false">往復</button>
-      </div>
-      <div class="btnrow"><button class="btn primary" id="hwAdd">足す</button></div>
+    <div class="pair">
+      <div class="field"><label for="hwOut">出庫メーター（km）</label><input type="text" class="yenin" id="hwOut" inputmode="numeric" autocomplete="off"></div>
+      <div class="field"><label for="hwIn">帰庫メーター（km）</label><input type="text" class="yenin" id="hwIn" inputmode="numeric" autocomplete="off"></div>
     </div>
-    <div class="src">高速道路を選ぶと、関連するIC（接続する圏央道などを含む）が出ます。控除距離は「高速道路(距離控除用)距離一覧表」（2021年5月27日現在）のとおりです。</div>
+    <div id="hwSum"></div>
+    <div id="hwSlots"></div>
+    <div class="src">距離控除は、高速道路を選ぶと関連するIC（接続する圏央道などを含む）が出ます。1回目を入れると2回目、2回目を入れると3回目の欄が出ます。消すときは高速道路を「（なし）」にします。控除距離は「高速道路(距離控除用)距離一覧表」（2021年5月27日現在）のとおりです。</div>
   </section>
   </div>
 
@@ -591,7 +584,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。住所から位置と天気（9日以内）も自動で入ります。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
       <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。</dd>
-      <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」で、高速道路と利用IC・片道／往復を足すと、最大走行可能距離（基本362km＋控除）と、あと何km走れるかが出ます。走行距離は日報の取り込みでも入ります。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
+      <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは日報の取り込みでも入ります。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
       <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の売上・税抜・給与見込み・決済別・納金の合計と、勤務ごとの一覧を見られます。</dd>
     </dl>
     <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
@@ -1675,34 +1668,59 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   // ===== 走行距離（高速道路の距離控除。売上管理Excelの「高速道路(距離控除用)」と同じ） =====
   // [高速道路, IC, 控除距離km]（距離一覧表 2021年5月27日現在）
   const HW={"order":["東名道","中央道","関越道","東北道","常磐道","東関道","京葉道路","横横道","第三京浜"],"rows":[["東名道","東名川崎",7.6],["東名道","横浜青葉",13.3],["東名道","横浜町田",19.7],["東名道","綾瀬S.I",28.9],["東名道","厚木",35],["東名道","秦野中井",50.1],["東名道","大井松田",57.9],["東名道","御殿場",83.7],["東名道","新東名道:厚木南",36.9],["東名道","新東名道:伊勢原大山",42.6],["東名道","圏央道外回り:海老名",35.8],["東名道","圏央道外回り:圈央厚木",40.7],["東名道","圏央道外回り:厚木S.I",41.8],["東名道","圏央道外回り:相模原愛川",45.9],["東名道","圏央道内回り:寒川北",38.2],["東名道","圏央道内回り:寒川南",41.4],["東名道","圏央道内回り:茅ヶ崎西",45.4],["東名道","圏央道内回り:茅ヶ崎海岸",46.6],["中央道","調布",7.7],["中央道","稲城",10],["中央道","国立府中",17],["中央道","八王子",25.8],["中央道","相模湖東",34.7],["中央道","相模湖",45.4],["中央道","上野原",50.3],["中央道","談合坂S.I",57.9],["中央道","圏央道外回り:八王子西",40.4],["中央道","圏央道外回り:あきる野",45.6],["中央道","圏央道外回り:日の出",47.6],["中央道","圏央道外回り:青梅",56.3],["中央道","圏央道内回り:高尾山",38],["中央道","圏央道内回り:相模原",43.9],["中央道","圏央道内回り:相模原愛川",52.8],["中央道","圏央道内回り:厚木S.I",56.9],["関越道","所沢",9.4],["関越道","川越",21.2],["関越道","鶴ヶ島",29.6],["関越道","坂戸西S.I",32.5],["関越道","東松山",39.4],["関越道","嵐山小川",47.4],["関越道","花園",56.1],["関越道","寄居S.I",63.7],["関越道","圏央道外回り:坂戸",33],["関越道","圏央道外回り:川島",35.5],["関越道","圏央道外回り:桶川北本",41.2],["関越道","圏央道外回り:桶川加納",45.9],["関越道","圏央道外回り:白岡菖蒲",52],["関越道","圏央道内回り:圏央鶴ヶ島",30],["関越道","圏央道内回り:狭山日高",36.8],["関越道","圏央道内回り:入間",42.8],["関越道","圏央道内回り:青梅",47.6],["関越道","圏央道内回り:日の出",56.3],["東北道","浦和",3.2],["東北道","岩槻",10.5],["東北道","蓮田S.I",18.1],["東北道","久喜",25.5],["東北道","加須",33.4],["東北道","羽生",39.4],["東北道","館林",46],["東北道","佐野藤岡",55],["東北道","圏央道外回り:幸手",32.6],["東北道","圏央道外回り:五霞",36.8],["東北道","圏央道外回り:境古河",43.7],["東北道","圏央道外回り:坂東",52.8],["東北道","圏央道外回り:常総",61.7],["東北道","圏央道内回り:白岡菖蒲",27.4],["東北道","圏央道内回り:桶川加納",33.5],["東北道","圏央道内回り:桶川北本",38.2],["東北道","圏央道内回り:川島",43.9],["東北道","圏央道内回り:坂戸",46.4],["常磐道","流山",6.1],["常磐道","柏",10.8],["常磐道","谷和原",19.1],["常磐道","谷田部",30.3],["常磐道","桜土浦",38.7],["常磐道","土浦北",46.6],["常磐道","千代田石岡",54.7],["常磐道","石岡小美玉S.I",60.9],["常磐道","圏央道外回り:つくば牛久",36.1],["常磐道","圏央道外回り:牛久阿見",42.2],["常磐道","圏央道外回り:阿見東",48.1],["常磐道","圏央道外回り:稲敷",59.1],["常磐道","圏央道内回り:つくば中央",38.9],["常磐道","圏央道内回り:常総",49.4],["常磐道","圏央道内回り:坂東",58.3],["常磐道","圏央道内回り:境古河",67.4],["東関道","谷津船橋",5.5],["東関道","湾岸習志野",7.9],["東関道","千葉北",18.8],["東関道","四街道",24.6],["東関道","佐倉",30],["東関道","酒々井",37],["東関道","富里",39.5],["東関道","成田",44.9],["東関道","新空港道:新空港",48.8],["東関道","京葉道路:穴川",19.2],["東関道","京葉道路:貝塚",22.3],["東関道","京葉道路:松ヶ丘",26.4],["東関道","京葉道路:蘇我",29.4],["東関道","京葉道路:市原",39],["東関道","京葉道路:姉崎袖ケ浦",49],["東関道","千葉東金道:千葉東",28.3],["東関道","千葉東金道:大宮",32.6],["東関道","千葉東金道:高田",36.5],["東関道","千葉東金道:中野",39],["京葉道路","京葉市川",1.5],["京葉道路","原木",3.8],["京葉道路","船橋",5.4],["京葉道路","花輪",8.7],["京葉道路","幕張",12.5],["京葉道路","武石",15.2],["京葉道路","京葉道路:穴川",22],["京葉道路","京葉道路:貝塚",24.3],["京葉道路","京葉道路:松ヶ丘",28.3],["京葉道路","京葉道路:蘇我",31.7],["京葉道路","京葉道路:市原",41],["京葉道路","京葉道路:姉崎袖ケ浦",51],["京葉道路","東関道:千葉北",23.4],["京葉道路","東関道:四街道",26.6],["京葉道路","東関道:佐倉",32],["京葉道路","東関道:酒々井",41.6],["京葉道路","東関道:富里",44.1],["京葉道路","東関道:成田",46.9],["京葉道路","新空港道:新空港",50.8],["横横道","狩場スタート:別所",3.2],["横横道","狩場スタート:日野",7.7],["横横道","狩場スタート:港南台",9.3],["横横道","狩場スタート:朝比奈",13.5],["横横道","狩場スタート:逗子",19.1],["横横道","狩場スタート:横須賀",21.3],["横横道","狩場スタート:衣笠",26.6],["横横道","狩場スタート:佐原",27.8],["横横道","並木スタート:別所",6.3],["横横道","並木スタート:日野",11.9],["横横道","並木スタート:港南台",14.1],["横横道","並木スタート:朝比奈",19.4],["横横道","並木スタート:逗子",20.6],["第三京浜","京浜川崎",2.2],["第三京浜","都築",7.8],["第三京浜","巷北",10.8],["第三京浜","羽沢",14.7],["第三京浜","保土ヶ谷",16.4]]};
-  let hwTrip="片道";
   const hwOf=d=>d.hw||{km:null,items:[]};
   const r1=n=>Math.round(n*10)/10;
+  // 走行距離＝帰庫メーター−出庫メーター（メーターがなければ、日報から取り込んだ走行距離）
   function hwCalc(d){
-    const h=hwOf(d), base=salesCfg().maxKm, ded=r1(h.items.reduce((a,x)=>a+x.km*(x.trip==="往復"?2:1),0)), max=r1(base+ded);
-    return {h,base,ded,max,left:h.km==null?null:r1(max-h.km)};
+    const h=hwOf(d), base=salesCfg().maxKm;
+    const ded=r1(h.items.reduce((a,x)=>a+x.km*(x.trip==="往復"?2:1),0)), max=r1(base+ded);
+    const byMeter=h.meterOut!=null&&h.meterIn!=null&&h.meterIn>=h.meterOut;
+    const km=byMeter?r1(h.meterIn-h.meterOut):h.km;
+    return {h,base,ded,max,km,byMeter,over:km!=null&&km>=max};
   }
   function renderHw(d){
-    const c=hwCalc(d);
-    $("hwSum").innerHTML=`<dl class="kv"><dt>基本上限距離</dt><dd>${c.base}km</dd><dt>距離控除の合計</dt><dd>${c.ded}km</dd><dt><b>最大走行可能距離</b></dt><dd><b>${c.max}km</b></dd></dl>
-      ${c.left==null?`<div class="geo">走行距離を入れると、あと何km走れるかを出します。</div>`:c.left>=0?`<span class="pill ok">あと ${c.left}km 走れます（走行 ${c.h.km}km）</span>`:`<span class="pill bad">上限を ${r1(-c.left)}km 超えています（走行 ${c.h.km}km）</span>`}`;
-    $("hwList").innerHTML=c.h.items.map((x,i)=>`<div class="hwrow"><span>${esc(x.road)}　${esc(x.ic)}（${x.trip}）</span><span class="num">${r1(x.km*(x.trip==="往復"?2:1))}km</span><button class="btn" data-hwdel="${i}" aria-label="${esc(x.ic)}を消す">✕</button></div>`).join("");
-    if(document.activeElement!==$("hwKm")) $("hwKm").value=c.h.km??"";
+    const c=hwCalc(d), sv=(id,v)=>{ if(document.activeElement!==$(id)) $(id).value=fmtYen(v); };
+    sv("hwOut",c.h.meterOut); sv("hwIn",c.h.meterIn);
+    $("hwSum").innerHTML=`<dl class="kv">
+        <dt>走行距離${c.byMeter?"（帰庫−出庫）":c.km!=null?"（日報から）":""}</dt><dd><b>${c.km!=null?c.km+"km":"—"}</b></dd>
+        <dt>基本上限距離</dt><dd>${c.base}km</dd>
+        <dt>距離控除</dt><dd>${c.ded?"＋"+c.ded+"km":"なし"}</dd>
+        <dt><b>上限（基本＋控除）</b></dt><dd><b>${c.max}km</b></dd></dl>
+      ${c.km==null?`<div class="geo">出庫メーターと帰庫メーターを入れると、走行距離を出して上限と比べます。</div>`:
+        c.over?`<div class="pill bad" style="display:block">距離オーバー：上限 ${c.max}km 以上です（${c.km}km）。報告が必要です</div>`:
+        `<span class="pill ok">上限まであと ${r1(c.max-c.km)}km</span>`}`;
+    // 控除の欄：入れた分＋1つ（最大3回）
+    const items=c.h.items, n=Math.min(items.length+1,3), roads=HW.order;
+    $("hwSlots").innerHTML=Array.from({length:n},(_,i)=>{
+      const x=items[i]||{}, ics=x.road?HW.rows.filter(r=>r[0]===x.road):[];
+      return `<div class="grp hwslot" data-i="${i}"><h3>距離控除 ${i+1}回目${x.road?`　<span class="num">${r1(x.km*(x.trip==="往復"?2:1))}km</span>`:""}</h3>
+        <div class="field"><label>高速道路</label><select data-f="road"><option value="">（なし）</option>${roads.map(r=>`<option${r===x.road?" selected":""}>${esc(r)}</option>`).join("")}</select></div>
+        ${x.road?`<div class="field"><label>利用IC</label><select data-f="ic">${ics.map(r=>`<option value="${esc(r[1])}"${r[1]===x.ic?" selected":""}>${esc(r[1])}（${r[2]}km）</option>`).join("")}</select></div>
+        <div class="seg" role="tablist" aria-label="走行区分">${["片道","往復"].map(t=>`<button role="tab" data-trip="${t}" aria-selected="${(x.trip||"片道")===t}">${t}</button>`).join("")}</div>`:""}
+      </div>`;
+    }).join("");
   }
-  $("hwRoad").innerHTML=HW.order.map(r=>`<option>${esc(r)}</option>`).join("");
-  const fillIc=()=>{ const r=$("hwRoad").value; $("hwIc").innerHTML=HW.rows.filter(x=>x[0]===r).map(x=>`<option value="${esc(x[1])}">${esc(x[1])}（${x[2]}km）</option>`).join(""); };
-  $("hwRoad").addEventListener("change",fillIc); fillIc();
-  document.querySelectorAll("#hwTrip button").forEach(b=>b.onclick=()=>{ hwTrip=b.dataset.trip; document.querySelectorAll("#hwTrip button").forEach(x=>x.setAttribute("aria-selected",x===b)); });
-  $("hwAdd").onclick=()=>{
-    const d=ensureDay(sDay); if(!guard(d)) return;
-    const road=$("hwRoad").value, ic=$("hwIc").value, row=HW.rows.find(x=>x[0]===road&&x[1]===ic); if(!row) return;
-    d.hw=hwOf(d); d.hw.items.push({road,ic,km:row[2],trip:hwTrip}); saveSales(); renderSales();
-  };
-  $("hwList").addEventListener("click",e=>{ const b=e.target.closest("[data-hwdel]"); if(!b) return; const d=ensureDay(sDay); if(!guard(d)) return;
-    d.hw=hwOf(d); d.hw.items.splice(+b.dataset.hwdel,1); saveSales(); renderSales(); });
-  $("hwKm").addEventListener("change",()=>{ const d=ensureDay(sDay); if(d.locked&&!guard(d)){ renderSales(); return; }
-    const t=$("hwKm").value.replace(/[０-９．]/g,c=>c==="．"?".":String.fromCharCode(c.charCodeAt(0)-65248)).replace(/[^\d.]/g,"");
-    d.hw=hwOf(d); d.hw.km=t===""||!isFinite(+t)?null:r1(+t); saveSales(); renderSales(); });
+  // 控除の欄の変更：高速道路を選ぶと最初のICで入り、ICや片道／往復を直せる。「（なし）」で消す
+  $("hwSlots").addEventListener("change",e=>{
+    const slot=e.target.closest(".hwslot"); if(!slot) return; const i=+slot.dataset.i, f=e.target.dataset.f;
+    const d=ensureDay(sDay); if(d.locked&&!guard(d)){ renderSales(); return; }
+    d.hw=hwOf(d); const items=d.hw.items;
+    if(f==="road"){
+      const road=e.target.value;
+      if(!road) items.splice(i,1);
+      else { const r=HW.rows.find(x=>x[0]===road); items[i]={road,ic:r[1],km:r[2],trip:(items[i]&&items[i].trip)||"片道"}; }
+    } else if(f==="ic"&&items[i]){ const r=HW.rows.find(x=>x[0]===items[i].road&&x[1]===e.target.value); if(r){ items[i].ic=r[1]; items[i].km=r[2]; } }
+    saveSales(); renderSales();
+  });
+  $("hwSlots").addEventListener("click",e=>{
+    const b=e.target.closest("[data-trip]"), slot=e.target.closest(".hwslot"); if(!b||!slot) return;
+    const d=ensureDay(sDay), i=+slot.dataset.i; if(!d.hw||!d.hw.items[i]) return; if(!guard(d)) return;
+    d.hw.items[i].trip=b.dataset.trip; saveSales(); renderSales();
+  });
+  ["hwOut","hwIn"].forEach(id=>$(id).addEventListener("change",()=>{
+    const d=ensureDay(sDay); if(d.locked&&!guard(d)){ renderSales(); return; }
+    d.hw=hwOf(d); d.hw[id==="hwOut"?"meterOut":"meterIn"]=numOf($(id).value); saveSales(); renderSales();
+  }));
 
   // ===== 日報から取り込む（AIに書き出してもらった文を貼り付ける） =====
   const IMPORT_PROMPT=`添付したタクシーの「乗務員日報」の写真（あれば「納金明細書」と「日計」のレシートも）を読み取り、次の形式の文だけを、1つのコードブロックに入れて書き出してください（説明や前置きは不要）。
@@ -1717,6 +1735,8 @@ ETC自己負担: 0
 日計表の現収: 数字（日報の「現収」）
 日計表の未収: 数字（日報の「未収」）
 走行距離: 数字（日報の「走行距離」km。例 282.0）
+出庫メーター: 数字（日報右下の「出庫メータ」km。例 350218）
+帰庫メーター: 数字（日報右下の「帰庫メーター」km。例 350500）
 ---
 内容,乗車,降車,金額,決済,ETC,乗車地,降車地,メモ
 （明細を上から順に1行ずつ）
@@ -1736,7 +1756,7 @@ ETC自己負担: 0
   const KINDS=["配車","手上げ","CAN","B空転",...EVENTS];
   let parsed=null;
   function parseNippo(text){
-    const errs=[], check={}, rides=[]; let date=null, inRows=false, last=null, offset=0, hwKm=null;
+    const errs=[], check={}, rides=[]; let date=null, inRows=false, last=null, offset=0, hwKm=null, mOut=null, mIn=null;
     const num=v=>{ const s=String(v||"").replace(/[,，円\s]/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); return s===""?null:isFinite(+s)?+s:NaN; };
     // 日付をまたいだら（前の時刻より6時間以上前に戻ったら）翌日とみなす
     const abs=t=>{ const m=toMin(String(t||"").trim().replace(/：/g,":")); if(m==null||isNaN(m)) return null; let a=m+offset; if(last!=null&&a<last-360){ offset+=DAY; a+=DAY; } last=Math.max(last??a,a); return a; };
@@ -1749,6 +1769,7 @@ ETC自己負担: 0
         const k=m[1].trim(), v=m[2].trim();
         if(k==="伝達事項"){ check.note=v; return; }
         if(k==="走行距離"){ const n=parseFloat(v.replace(/[^\d.]/g,"")); if(isFinite(n)) hwKm=r1(n); return; }
+        if(k==="出庫メーター"||k==="帰庫メーター"){ const n=numOf(v.split(/[.．]/)[0]); if(n!=null) k==="出庫メーター"?mOut=n:mIn=n; return; }
         if(k==="出庫日"){ const d=v.replace(/[\/年月.]/g,"-").replace(/日$/,"").replace(/-(\d)(?!\d)/g,"-0$1"); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) date=d; else errs.push(`出庫日が読めません：${v}`); }
         else if(HEAD_KEYS[k]){ const n=num(v.split(/[（(]/)[0]); if(Number.isNaN(n)) errs.push(`${k}が数字ではありません`); else check[HEAD_KEYS[k]]=n; }
         return;
@@ -1772,7 +1793,7 @@ ETC自己負担: 0
     if(!date) errs.push("「出庫日: YYYY-MM-DD」の行がありません");
     if(!rides.length) errs.push("明細の行がありません");
     if(date&&!hasShift(date)) errs.push(`点呼時間に ${md(date)} 出社の勤務がありません。先に点呼時間で勤務を追加してください`);
-    return {date,check,rides,errs,hwKm};
+    return {date,check,rides,errs,hwKm,mOut,mIn};
   }
   const closeImport=()=>{ $("iSheet").hidden=$("iBg").hidden=true; };
   $("sImport").onclick=()=>{ parsed=null; $("iResult").innerHTML=""; $("iGoRow").hidden=true; $("iMsg").textContent=""; $("iSheet").hidden=$("iBg").hidden=false; };
@@ -1796,7 +1817,7 @@ ETC自己負担: 0
     const ex=sales.days[parsed.date];
     if(ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null)){ if(!confirm(`${md(parsed.date)}の記録を、取り込んだ内容に置き換えますか？`)) return; if(!guard(ex)) return; }
     const oldHw=ex&&ex.hw;   // 高速の距離控除は日報にないので、入れてあれば残す
-    sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:{km:parsed.hwKm??(oldHw?oldHw.km:null),items:oldHw?oldHw.items:[]}};
+    sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:{km:parsed.hwKm??(oldHw?oldHw.km:null),meterOut:parsed.mOut??(oldHw?oldHw.meterOut:null),meterIn:parsed.mIn??(oldHw?oldHw.meterIn:null),items:oldHw?oldHw.items:[]}};
     saveSales(); filled=false; sDay=parsed.date; closeImport(); $("iText").value=""; renderSales();
     $("sStatus").textContent="取り込みました。住所から位置と天気を調べています（9日より前の天気は取れません）";
   };
