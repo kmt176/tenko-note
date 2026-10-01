@@ -308,6 +308,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <div class="seg" role="tablist" aria-label="表示" id="sView">
     <button role="tab" data-view="day" aria-selected="true">勤務</button>
     <button role="tab" data-view="month" aria-selected="false">月度の集計</button>
+    <button role="tab" data-view="flash" aria-selected="false" id="sViewFlash" hidden>仲間の速報</button>
   </div>
   <div class="wrap" id="sDayView">
   <div class="period">
@@ -395,6 +396,14 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div id="hwSlots"></div>
     <div class="src">距離控除は、高速道路を選ぶと関連するIC（接続する圏央道などを含む）が出ます。1回目を入れると2回目、2回目を入れると3回目の欄が出ます。消すときは高速道路を「（なし）」にします。控除距離は「高速道路(距離控除用)距離一覧表」（2021年5月27日現在）のとおりです。</div>
   </section>
+  </div>
+
+  <div class="wrap" id="sFlashView" hidden>
+    <section class="card" aria-live="polite">
+      <div class="infohead"><h2>仲間の速報</h2><button class="btn" id="fReload">更新</button></div>
+      <div class="src">直近3日の、1万円以上の乗車です（新しい順）。</div>
+      <div id="fBody" class="geo">読み込んでいます…</div>
+    </section>
   </div>
 
   <div class="wrap" id="sMonthView" hidden>
@@ -501,13 +510,25 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   </div>
 
   <details id="cfgBox">
-    <summary id="cfgSum">仲間用の合言葉（ロング判定）</summary>
+    <summary id="cfgSum">合言葉（仲間の速報・ロング判定）</summary>
     <div class="body">
-      <div>天気・電車・到着便は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると「ロング判定」が使えるようになります。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
+      <div>天気・電車・到着便は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると使える機能が増えます。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
       <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
-      <div class="field"><label for="lPass">合言葉</label><input type="password" id="lPass" inputmode="numeric"></div>
-      <div class="btnrow"><button class="btn primary" id="lSave">保存</button><button class="btn" id="lForget">合言葉を消す</button></div>
-      <div class="msg" id="lCfgMsg" role="status"></div>
+      <div class="grp">
+        <h3>仲間の合言葉（仲間の速報）</h3>
+        <div class="field"><label for="nPass">仲間の合言葉</label><input type="password" id="nPass" autocomplete="off"></div>
+        <div class="field"><label for="nCode">社員コード</label><input type="text" id="nCode" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label for="nNick">速報に出す名前（空欄なら社員コード）</label><input type="text" id="nNick" maxlength="20" autocomplete="off"></div>
+        <div class="src">社員コードを入れると、あなたの1万円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。社員コードを入れなければ、見るだけになります。</div>
+        <div class="btnrow"><button class="btn primary" id="nSave">保存</button><button class="btn" id="nForget">消す</button></div>
+        <div class="msg" id="nMsg" role="status"></div>
+      </div>
+      <div class="grp">
+        <h3>ロング判定の合言葉</h3>
+        <div class="field"><label for="lPass">ロング判定の合言葉</label><input type="password" id="lPass" autocomplete="off"></div>
+        <div class="btnrow"><button class="btn primary" id="lSave">保存</button><button class="btn" id="lForget">消す</button></div>
+        <div class="msg" id="lCfgMsg" role="status"></div>
+      </div>
     </div>
   </details>
 </div>
@@ -712,7 +733,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   const SKEY="uriage.v1";   // 売上（勤務ごと）。点呼と同じく、このスマホの中だけに保存
   let recs=load(), pIdx=0, editId=null, delArmed=false, sales=loadSales();
   function loadSales(){ try{ const v=JSON.parse(localStorage.getItem(SKEY)||"null"); if(v&&v.days) return v; }catch(e){} return {days:{}}; }
-  function saveSales(){ try{ localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} resetBackup(); }
+  function saveSales(){ try{ localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} resetBackup(); if(typeof queueFlash==="function"&&sDay) queueFlash(sDay); }
 
   // 試作版は保存が空なら例のデータで始める。本番は空から始める
   function load(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(Array.isArray(v)&&(PROD||v.length)) return v; }catch(e){} return PROD?[]:SAMPLE.map(r=>({...r})); }
@@ -968,8 +989,14 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   };
   ["lStay","lMargin","lPickMin","lViaOn","lVia1","lVia2","lViaMin"].forEach(id=>$(id).addEventListener("change",saveForm));
   ["lDest","lPick","lVia1","lVia2"].forEach(id=>$(id).addEventListener("input",()=>renderLinks()));
-  // 仲間用の合言葉：正しいか Apps Script で確かめてから、ロング判定を出す
+  // ロング判定の合言葉（PASSCODE）：正しいか Apps Script で確かめてから、ロング判定を出す
   const isMember=()=>!PROD||(!!cfg.pass&&cfg.member!==false);
+  // 仲間の合言葉（NAKAMA_PASSCODE）：仲間の速報を出す
+  const isNakama=()=>!PROD||(!!cfg.npass&&cfg.nakama===true);
+  async function checkNakama(){
+    const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"role",passcode:cfg.npass})});
+    return await res.json();
+  }
   async function checkPass(){
     const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"config",passcode:cfg.pass})});
     const j=await res.json();
@@ -989,12 +1016,28 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
   };
   $("lForget").onclick=()=>{ cfg.pass=""; cfg.member=false; saveCfg(); $("lPass").value=""; applyRole(); $("lCfgMsg").textContent="合言葉を消しました"; };
+  $("nPass").value=cfg.npass||""; $("nCode").value=cfg.empCode||""; $("nNick").value=cfg.nick||"";
+  $("nSave").onclick=async()=>{
+    const m=$("nMsg");
+    cfg.url=$("lUrl").value.trim()||cfg.url; cfg.npass=$("nPass").value.trim();
+    cfg.empCode=$("nCode").value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); cfg.nick=$("nNick").value.trim();
+    if(!cfg.npass){ m.textContent="仲間の合言葉を入れてください"; return; }
+    m.textContent="確かめています…";
+    try{
+      const j=await checkNakama();
+      cfg.nakama=!!(j.ok&&j.nakama); saveCfg(); applyRole();
+      m.textContent=cfg.nakama?(cfg.empCode?"保存しました。売上の「仲間の速報」が使えます。1万円以上の乗車は速報に出ます":"保存しました。売上の「仲間の速報」が見られます（社員コードがないので、あなたの乗車は出ません）"):"仲間の合言葉が違います";
+      if(cfg.nakama&&cfg.empCode) Object.keys(sales.days).forEach(queueFlash);
+    }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
+  };
+  $("nForget").onclick=()=>{ cfg.npass=""; cfg.nakama=false; saveCfg(); $("nPass").value=""; applyRole(); $("nMsg").textContent="仲間の合言葉を消しました"; };
   // 一般の人には、ロング判定のボタンと使い方を出さない
   function applyRole(){
     const mem=isMember();
     $("segLong").hidden=!mem;
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
-    $("cfgSum").textContent=mem&&PROD?"仲間用の合言葉（設定済み）":"仲間用の合言葉（ロング判定）";
+    $("cfgSum").textContent="合言葉（"+[isNakama()&&PROD?"仲間 設定済み":"仲間の速報",mem&&PROD?"ロング判定 設定済み":"ロング判定"].join("・")+"）";
+    if(typeof setView==="function"){ $("sViewFlash").hidden=!isNakama(); if(!isNakama()&&sView==="flash") setView("day"); }
     if(!mem&&curSub==="long") showSub("wx");
   }
 
@@ -1148,7 +1191,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     }catch(e){
       const msg=/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。この試作ページからは外に接続できないので、本番のページで試してください。":e.message;
       out.innerHTML=`<div class="err">${esc(msg)}</div>`;
-      if(/合言葉が違います/.test(msg)){ cfg.member=false; saveCfg(); out.innerHTML+=`<div class="geo">合言葉が変わった可能性があります。下の「仲間用の合言葉」で入れ直してください。</div>`; }
+      if(/合言葉が違います/.test(msg)){ cfg.member=false; saveCfg(); out.innerHTML+=`<div class="geo">合言葉が変わった可能性があります。下の「合言葉」の「ロング判定の合言葉」で入れ直してください。</div>`; }
     }finally{ $("lRun").disabled=false; }
   };
 
@@ -1422,14 +1465,66 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     sales.cfg=Object.assign(salesCfg(),{[id==="mTax"?"tax":"pay"]:v}); saveSales(); renderMonth();
   }));
   function setView(v){
-    sView=v==="month"?"month":"day";
+    sView=v==="month"?"month":v==="flash"&&isNakama()?"flash":"day";
     try{ localStorage.setItem("tenko.sview",sView); }catch(e){}
     document.querySelectorAll("#sView button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===sView));
-    $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month";
-    if(sView==="month"){ mIdx=-1; renderMonth(); } else renderSales();
+    $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month"; $("sFlashView").hidden=sView!=="flash";
+    if(sView==="month"){ mIdx=-1; renderMonth(); } else if(sView==="flash") loadFlash(); else renderSales();
     window.scrollTo(0,0);
   }
   document.querySelectorAll("#sView button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
+
+  // ---- 仲間の速報（1万円以上の乗車を、仲間の合言葉を持つ人どうしで見る） ----
+  const FLASH_MIN=10000, FLASH_DAYS=3;
+  let flashQ={}; try{ flashQ=JSON.parse(localStorage.getItem("tenko.flashq")||"{}")||{}; }catch(e){}
+  let flashSig={}; try{ flashSig=JSON.parse(localStorage.getItem("tenko.flashsig")||"{}")||{}; }catch(e){}
+  const saveFlashState=()=>{ try{ localStorage.setItem("tenko.flashq",JSON.stringify(flashQ)); localStorage.setItem("tenko.flashsig",JSON.stringify(flashSig)); }catch(e){} };
+  // 1勤務の、速報に出す乗車（1万円以上・B空転以外）
+  function flashRides(k){
+    const d=sales.days[k]; if(!d) return [];
+    return d.rides.filter(r=>!isEv(r.kind)&&r.kind!=="B空転"&&(+r.amt||0)>=FLASH_MIN&&r.on!=null)
+      .map(r=>({id:r.id,at:new Date(dayStart(k).getTime()+r.on*60000).toISOString(),amt:+r.amt,pay:r.pay||"",from:r.onAddr||"",to:r.offAddr||""}));
+  }
+  let flashTimer=null;
+  function queueFlash(k){
+    if(!k||!isNakama()||!cfg.empCode) return;
+    if(dayStart(k).getTime()<Date.now()-(FLASH_DAYS+1)*864e5) return;   // 古い勤務は速報に出ないので送らない
+    flashQ[k]=1; saveFlashState();
+    clearTimeout(flashTimer); flashTimer=setTimeout(flushFlash,2500);
+  }
+  async function flushFlash(){
+    if(!PROD||!cfg.url||!cfg.npass||!isNakama()||!cfg.empCode) return;
+    for(const k of Object.keys(flashQ)){
+      const rides=flashRides(k), name=cfg.nick||cfg.empCode, sig=JSON.stringify([cfg.empCode,name,rides]);
+      if(flashSig[k]===sig){ delete flashQ[k]; continue; }   // 前に送った内容と同じなら送らない
+      try{
+        const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"flashSync",passcode:cfg.npass,code:cfg.empCode,name,date:k,rides})});
+        const j=await res.json(); if(!j.ok) throw new Error(j.error);
+        flashSig[k]=sig; delete flashQ[k];
+      }catch(e){ break; }   // 電波がないときは、次に開いたときに送り直す
+    }
+    saveFlashState();
+  }
+  async function loadFlash(){
+    const b=$("fBody");
+    const draw=j=>{
+      const items=j.items||[];
+      b.innerHTML=(cfg.empCode||!PROD?"":`<div class="note">社員コードが入っていないので、あなたの乗車は速報に出ません（メニューの「合言葉」で入れられます）。</div>`)+
+        (items.map(x=>{ const t=new Date(x.at), dk=dKey(t);
+          return `<div class="fl"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
+            <div class="who">${esc(x.name||x.code)}<small>${esc(x.from||"—")} → ${esc(x.to||"—")}</small></div>
+            <span class="st">${esc(x.pay||"")}</span></div>`; }).join("")||`<div class="geo">直近3日に、1万円以上の乗車はまだありません。</div>`);
+    };
+    if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
+    b.textContent="読み込んでいます…";
+    try{
+      await flushFlash();
+      const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"flashGet",passcode:cfg.npass})});
+      const j=await res.json(); if(!j.ok) throw new Error(j.error||"読み込めませんでした");
+      draw(j);
+    }catch(e){ b.innerHTML=`<div class="err">${esc(/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。":e.message)}</div>`; }
+  }
+  $("fReload").onclick=loadFlash;
 
   // ---- 位置・住所・天気（どれも無料。取れなかったら後で埋める） ----
   function getPos(){
@@ -1489,7 +1584,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       for(const w of ["on","off"]){ if(!r[w+"Pos"]&&r[w+"Addr"]&&!r[w+"Tried"]){ r[w+"Tried"]=true; r[w+"Pos"]=await posOfAddr(r[w+"Addr"]); } }
       for(const w of ["on","off"]){ const p=r[w+"Pos"]; if(p&&r[w+"Addr"]==null){ r[w+"Addr"]=await townOf(p); } }
       if(r.onPos&&!r.wx&&r.on!=null){ const w=await weatherAt(r.onPos,new Date(dayStart(k).getTime()+r.on*60000)); if(w) r.wx=w; }
-      saveSales(); renderSales();
+      saveSales(); queueFlash(k); renderSales();
     }catch(e){ /* 電波がないときは、次に開いたときにもう一度 */ }
   }
   // 9日以内（アメダスが残っている期間）で、位置・住所・天気が抜けている乗車を埋め直す（1回開くごとに1度だけ）
@@ -1824,7 +1919,7 @@ ETC自己負担: 0
     if(ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null)){ if(!confirm(`${md(parsed.date)}の記録を、取り込んだ内容に置き換えますか？`)) return; if(!guard(ex)) return; }
     const oldHw=ex&&ex.hw;   // メーター・距離控除は手入力なので、入れてあれば残す
     sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:oldHw||{items:[]}};
-    saveSales(); filled=false; sDay=parsed.date; closeImport(); $("iText").value=""; renderSales();
+    saveSales(); filled=false; sDay=parsed.date; queueFlash(parsed.date); closeImport(); $("iText").value=""; renderSales();
     $("sStatus").textContent="取り込みました。住所から位置と天気を調べています（9日より前の天気は取れません）";
   };
 
@@ -1851,7 +1946,7 @@ ETC自己負担: 0
     if(t&&(t.rides.length||t.simple.amt!=null||t.check.total!=null)){ $("sMoveMsg").textContent=`${md(to)}にはもう記録があるので移せません`; return; }
     if(!d||!guard(d)) return;
     sales.days[to]=d; delete sales.days[from]; saveSales();
-    sDay=to; $("sMoveBox").hidden=true; renderSales();
+    sDay=to; queueFlash(to); $("sMoveBox").hidden=true; renderSales();
   };
   const closeRide=()=>{ $("rSheet").hidden=$("rBg").hidden=true; };
   $("rClose").onclick=closeRide; $("rBg").onclick=closeRide;
@@ -1901,6 +1996,10 @@ ETC自己負担: 0
   applyRole();
   showSub(startSub);
   // 合言葉が保存されていれば、まだ正しいか裏で確かめる（変わっていたらロング判定を隠す）
+  if(PROD&&cfg.npass&&cfg.url) checkNakama().then(j=>{
+    if(j.ok) cfg.nakama=!!j.nakama; else if(/合言葉/.test(j.error||"")) cfg.nakama=false;
+    saveCfg(); applyRole(); flushFlash();
+  }).catch(()=>{});
   if(PROD&&cfg.pass&&cfg.url) checkPass().then(j=>{
     if(j.ok) cfg.member=true; else if(/合言葉/.test(j.error||"")) cfg.member=false;
     saveCfg(); applyRole();
