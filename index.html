@@ -1329,7 +1329,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       // 簡易入力は決済の内訳がないので、納金は出さない
       nokin:total==null||d.mode==="simple"?null:((total-mishu)+(etc-etcCo)+app)-bku,
       meterOk:meterCalc!=null&&meterCalc===meter,
-      genOk:gen==null?null:cash+bku===gen, misOk:mis==null?null:mishu===mis, sumOk:gen==null||mis==null?null:meter===gen+mis};
+      genOk:gen==null?null:cash+bku===gen, misOk:mis==null?null:mishu===mis, sumOk:gen==null||mis==null?null:meter+bku===gen+mis};   // B空転は日計表の現収に入るので足して比べる
   }
   // 1勤務の売上（月度の合計用）：総営収があればそれ、なければ記録から見込み（アプリ料・ETCを引く）
   function shiftSales(k){
@@ -1616,7 +1616,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   });
 
   // ===== 日報から取り込む（AIに書き出してもらった文を貼り付ける） =====
-  const IMPORT_PROMPT=`添付したタクシーの「乗務員日報」の写真を読み取り、次の形式の文だけを書き出してください（説明や前置きは不要）。
+  const IMPORT_PROMPT=`添付したタクシーの「乗務員日報」の写真（あれば「納金明細書」と「日計」のレシートも）を読み取り、次の形式の文だけを、1つのコードブロックに入れて書き出してください（説明や前置きは不要）。
 
 出庫日: YYYY-MM-DD（出庫日時の日付）
 総営収: 数字
@@ -1651,7 +1651,7 @@ ETC自己負担: 0
     // 日付をまたいだら（前の時刻より6時間以上前に戻ったら）翌日とみなす
     const abs=t=>{ const m=toMin(String(t||"").trim().replace(/：/g,":")); if(m==null||isNaN(m)) return null; let a=m+offset; if(last!=null&&a<last-360){ offset+=DAY; a+=DAY; } last=Math.max(last??a,a); return a; };
     text.replace(/\r/g,"").split("\n").forEach((raw,i)=>{
-      const line=raw.trim(); if(!line||line.startsWith("（")) return;
+      const line=raw.trim(); if(!line||line.startsWith("（")||line.startsWith("```")) return;   // AIがコードブロックで囲んでも読めるように
       if(/^-{3,}$/.test(line)){ inRows=true; return; }
       if(/^内容[,\t]/.test(line)){ inRows=true; return; }
       if(!inRows){
