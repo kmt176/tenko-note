@@ -2130,8 +2130,9 @@ ETC自己負担: 0
     if(!parsed) return;
     const ex=sales.days[parsed.date];
     if(ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null)){ if(!confirm(`${md(parsed.date)}の記録を、取り込んだ内容に置き換えますか？`)) return; if(!guard(ex)) return; }
-    const oldHw=ex&&ex.hw;   // メーター・距離控除は手入力なので、入れてあれば残す
+    const oldHw=ex&&ex.hw, oldRoute=ex&&ex.route;   // メーター・距離控除・走行ルートは日報にないので、入れてあれば残す
     sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:oldHw||{items:[]}};
+    if(oldRoute) sales.days[parsed.date].route=oldRoute;
     saveSales(); filled=false; sDay=parsed.date; queueFlash(parsed.date); closeImport(); $("iText").value=""; renderSales();
     $("sStatus").textContent="取り込みました。住所から位置と天気を調べています（9日より前の天気は取れません）";
   };
