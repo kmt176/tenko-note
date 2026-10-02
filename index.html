@@ -643,7 +643,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
-      <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。住所から位置と天気（9日以内）も自動で入ります。</dd>
+      <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。乗車ボタンで記録した日は、「突き合わせる」（金額などは日報に合わせ、位置と天気は残し、押し忘れは日報から足す）か「置き換える」かを選べます。住所から位置と天気（9日以内）も自動で入ります。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
       <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
@@ -2123,18 +2123,41 @@ ETC自己負担: 0
     $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${s.count}回・記録の合計 ${yen(s.total)}円・総営収 ${st.total!=null?yen(st.total)+"円":"なし"}<br>
       ${st.total==null?"":st.meterOk?`<span class="pill ok">メーター照合 OK</span>`:`<span class="pill bad">メーター照合 NG（差 ${yen(s.total-st.meterCalc)}円）：読み取りを確かめてください</span>`}
       ${st.nokin!=null?`<br>納金 ${yen(st.nokin)}円${st.genOk===false?`（日報の現収と合いません）`:""}`:""}
-      ${exists?`<div class="err">この日にはもう記録があります。取り込むと置き換わります。</div>`:""}`;
+      ${exists?`<div class="grp" style="margin-top:6px"><b>この日にはもう記録があります（乗車 ${ex.rides.filter(r=>!isEv(r.kind)).length}件）。取り込み方を選んでください。</b>
+        <label class="check"><input type="radio" name="iMode" value="merge" checked>突き合わせる（おすすめ）<br><small>時刻の近い乗車を組み合わせ、金額・決済などは日報に合わせて、ボタンで記録した位置と天気は残します。押し忘れた乗車は日報から足します</small></label>
+        <label class="check"><input type="radio" name="iMode" value="replace">置き換える<br><small>この日の乗車の記録を、日報の内容にまるごと置き換えます</small></label></div>`:""}`;
     $("iGoRow").hidden=false;
   };
   $("iGo").onclick=()=>{
     if(!parsed) return;
     const ex=sales.days[parsed.date];
-    if(ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null)){ if(!confirm(`${md(parsed.date)}の記録を、取り込んだ内容に置き換えますか？`)) return; if(!guard(ex)) return; }
+    const hasOld=ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
+    const modeEl=document.querySelector('input[name="iMode"]:checked'), mode=hasOld&&modeEl?modeEl.value:"replace";
+    if(hasOld){ if(!guard(ex)) return; }
+    let note="";
+    if(hasOld&&mode==="merge"){
+      // 突き合わせ：日報の乗車ごとに、乗車時刻が前後10分以内でいちばん近い、まだ使っていない記録を探す
+      const olds=ex.rides.filter(r=>!isEv(r.kind)&&r.on!=null), used=new Set(); let matched=0, added=0;
+      const merged=parsed.rides.map(nr=>{
+        if(isEv(nr.kind)) return nr;   // 出庫・休憩・回送・入庫は日報のまま
+        let best=null, bd=11;
+        olds.forEach(o=>{ if(used.has(o.id)) return; const dd=Math.abs(o.on-nr.on); if(dd<bd){ bd=dd; best=o; } });
+        if(!best){ added++; return nr; }
+        used.add(best.id); matched++;
+        // 日報の時刻・金額・決済などに合わせ、ボタンで記録した位置・住所・天気は残す
+        return Object.assign({},nr,{id:best.id,onPos:best.onPos||nr.onPos,offPos:best.offPos||nr.offPos,
+          onAddr:best.onPos&&best.onAddr?best.onAddr:nr.onAddr,offAddr:best.offPos&&best.offAddr?best.offAddr:nr.offAddr,
+          wx:best.wx||nr.wx,wxSel:best.wxSel||nr.wxSel,onTried:best.onTried,offTried:best.offTried,imported:true});
+      });
+      const leftover=olds.filter(o=>!used.has(o.id)).map(o=>Object.assign({},o,{memo:((o.memo||"")+" 日報になし").trim()}));
+      parsed.rides=merged.concat(leftover);
+      note=`突き合わせました：組み合わせ ${matched}件・日報から追加 ${added}件${leftover.length?`・日報にない記録 ${leftover.length}件（メモに「日報になし」と付けました。確認してください）`:""}`;
+    }
     const oldHw=ex&&ex.hw, oldRoute=ex&&ex.route;   // メーター・距離控除・走行ルートは日報にないので、入れてあれば残す
     sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:oldHw||{items:[]}};
     if(oldRoute) sales.days[parsed.date].route=oldRoute;
     saveSales(); filled=false; sDay=parsed.date; queueFlash(parsed.date); closeImport(); $("iText").value=""; renderSales();
-    $("sStatus").textContent="取り込みました。住所から位置と天気を調べています（9日より前の天気は取れません）";
+    $("sStatus").textContent=(note?note+"。":"取り込みました。")+"住所から位置と天気を調べています（9日より前の天気は取れません）";
   };
 
   // 出庫日を選ぶ・勤務の日付を変える
