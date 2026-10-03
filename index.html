@@ -231,6 +231,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 .wxsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 0;font-size:15.5px}
 /* 一番上の日付を押すと、勤務の一覧から選べる（透明なselectを重ねる） */
 .titlepick{flex:1;position:relative}
+.svlist{display:grid;gap:4px}
+.svlist div{display:grid;grid-template-columns:2.2em 1fr;gap:6px;padding:5px 8px;border-radius:8px;background:var(--sunk);font-size:15px}
+.svlist div.ok{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.svlist div.ref{opacity:.6}
+.svmeter{position:relative;height:16px;border-radius:8px;background:var(--sunk);overflow:hidden;margin-top:6px}
+.svmeter i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);width:0}
+.svmeter b{position:absolute;top:0;bottom:0;width:2px;background:var(--bad)}
 .verpill{font-size:14px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .hbar{display:grid;grid-template-columns:3.2em 1fr auto;gap:8px;align-items:center;font-size:15px;padding:2px 0}
 .hbar .b{height:14px;border-radius:4px;background:var(--accent);min-width:1px}
@@ -513,6 +520,23 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="wx" aria-selected="false">天気</button>
     <button role="tab" data-sub="rail" aria-selected="false">電車</button>
     <button role="tab" data-sub="fl" aria-selected="false">到着便</button>
+    <button role="tab" data-sub="sv" aria-selected="false" id="segSv" hidden>接遇</button>
+  </div>
+
+  <div class="wrap" id="subSv" hidden>
+    <section class="card">
+      <div class="infohead"><h2>接遇チェック（試験）</h2></div>
+      <div class="src">車内で唱和の言葉がどれだけ聞き取れるか、降車のあとにドアの「バン」の音を拾えるかを試す画面です。<b>録音も文字も保存しません</b>（聞き取った文字はこの画面に出るだけです）。聞き取りはiPhoneの音声認識を使うので、画面をつけたままにしてください。操作は必ず停車中に。</div>
+      <div class="btnrow"><button class="btn primary" id="svStart">到着（聞き取り開始）</button><button class="btn" id="svOff" disabled>降車（ドアの音を待つ）</button><button class="btn danger" id="svStop" disabled>止める</button></div>
+      <div id="svStat" class="geo">止まっています</div>
+      <div id="svList" class="svlist"></div>
+      <details><summary>ドアの音の感度</summary>
+        <div class="field"><label for="svTh">「バン」とみなす大きさ（小さいほど拾いやすい）</label><input type="range" id="svTh" min="0.05" max="0.6" step="0.01"></div>
+        <div class="svmeter"><i id="svLv"></i><b id="svThMark"></b></div>
+        <div class="src">今の音の大きさが棒で出ます。縦線より大きい音が短く鳴ると「バン」と数えます。車内でドアを閉めて、拾えるか確かめてください。</div>
+      </details>
+      <details><summary>聞き取った文字（確認用・保存しません）</summary><div id="svText" class="src" style="white-space:pre-wrap"></div></details>
+    </section>
   </div>
 
   <div class="wrap" id="subWx" hidden>
@@ -628,7 +652,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-03 21:44</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 00:11</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1184,9 +1208,12 @@ body.rtfull{overflow:hidden}
   $("aForget").onclick=()=>{ cfg.apass=""; cfg.admin=false; saveCfg(); $("aPass").value=""; $("adminBox").hidden=true; $("aForget").hidden=true; applyRole(); $("aMsg").textContent="このスマホから管理者を外しました"; };
   $("nForget").onclick=()=>{ cfg.npass=""; cfg.nakama=false; saveCfg(); $("nPass").value=""; applyRole(); $("nMsg").textContent="仲間の合言葉を消しました"; };
   // 一般の人には、ロング判定のボタンと使い方を出さない
+  // 接遇チェック（試験中）は、管理者の合言葉を入れたスマホだけに出す
+  const canSv=()=>!PROD||isAdmin();
   function applyRole(){
     const mem=isMember();
     $("segLong").hidden=!mem;
+    $("segSv").hidden=!canSv(); if(!canSv()&&typeof curSub!=="undefined"&&curSub==="sv"){ if(typeof svStop==="function") svStop(); showSub("wx"); }
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
     $("cfgSum").textContent="合言葉（"+[isNakama()&&PROD?"仲間 設定済み":"仲間の速報",mem&&PROD?"ロング判定 設定済み":"ロング判定"].join("・")+"）";
     $("nGroup").textContent=isNakama()&&cfg.group?"　"+cfg.group.name:"";
@@ -1350,19 +1377,86 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
   function showSub(s){
     if(!SUBS[s]) s="long";
     if(s==="long"&&!isMember()) s="wx";
+    if(s==="sv"&&!canSv()) s="wx";
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
     document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sub===s));
     try{ localStorage.setItem("tenko.sub",s); }catch(e){}
     if(KIND[s]&&!$("tabLong").hidden) loadInfo(KIND[s],false);
   }
+  // ===== 接遇チェック（試験）：音声認識で唱和の言葉を、マイクの音量でドアの「バン」を拾う。何も保存しない =====
+  const SV_ITEMS=[
+    ["①","ご乗車ください（乗車時の挨拶）",/どうぞ|乗車くださ|じょうしゃくださ/],
+    ["②","ドアをお閉め・お足元",/お?閉め|おしめ|足元|あしもと/],
+    ["③","挨拶（おはようございます／こんにちは／こんばんは）",/おはよう|こんにちは|こんにちわ|今日は|こんばんは|こんばんわ|今晩は/],
+    ["③","どちらまで",/どちらまで|何方まで/],
+    ["④","かしこまりました",/かしこまりました|畏まりました/],
+    ["⑤","ご希望のコース",/コース/],
+    ["⑥","○○を通って",/通って|とおって/],
+    ["⑦","○○と申します",/申します|もうします/],
+    ["⑧","シートベルト",/シートベルト/],
+    ["⑨","車内の温度",/温度|おんど/],
+    ["⑩","どのあたりにお停め",/どのあたり|どの辺|どのへん/],
+    ["⑪","お停めさせていただきます",/停めさせて|止めさせて|とめさせて/],
+    ["⑫","お忘れ物",/忘れ物|わすれもの/],
+    ["⑬","タブレットをご確認",/タブレット/],
+    ["⑭","外からドアをお開け",/外から|そとから/],
+    ["⑮","ドアサービス（ドアの音 2回）",null]
+  ];
+  let svOn=false, svRec=null, svHeard="", svBang=0, svOffAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0;
+  try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; }catch(e){}
+  function svRender(){
+    const t=svHeard.replace(/\s/g,"");
+    let n=0;
+    $("svList").innerHTML=SV_ITEMS.map(([no,label,re])=>{ const ok=re?re.test(t):svBang>=2; if(ok) n++;
+      return `<div class="${ok?"ok":""}"><span>${no}</span><span>${label}${!re?`（${svBang}回）`:""}</span></div>`; }).join("");
+    $("svStat").innerHTML=svOn?`聞き取り中… <b>${n}／${SV_ITEMS.length}</b>${svOffAt?"・降車後（ドアの音を待っています）":""}`:`止まっています${svHeard?`（前回 ${n}／${SV_ITEMS.length}）`:""}`;
+    $("svText").textContent=svHeard;
+  }
+  function svSpeech(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){ $("svText").textContent="このブラウザでは音声認識が使えません"; return; }
+    const r=new SR(); r.lang="ja-JP"; r.continuous=true; r.interimResults=true;
+    let fixed="";
+    r.onresult=e=>{ let interim=""; for(let i=e.resultIndex;i<e.results.length;i++){ const x=e.results[i][0].transcript; if(e.results[i].isFinal) fixed+=x+" "; else interim+=x; } svHeard=(svBase0+fixed+interim); svRender(); };
+    let svBase0=svHeard;
+    r.onerror=e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ $("svStat").textContent="マイクか音声認識が許可されていません（設定 → Safari（またはこのアプリ）→ マイク）"; svOn=false; } };
+    r.onend=()=>{ if(svOn){ svHeard=svBase0+fixed; setTimeout(()=>{ if(svOn) svSpeech(); },200); } };   // 途中で止まったら続ける
+    try{ r.start(); svRec=r; }catch(e){}
+  }
+  async function svMic(){
+    try{
+      const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      const ac=new (window.AudioContext||window.webkitAudioContext)(), src=ac.createMediaStreamSource(st), an=ac.createAnalyser(); an.fftSize=1024; src.connect(an);
+      const buf=new Float32Array(an.fftSize); svAudio={st,ac};
+      const loop=()=>{ an.getFloatTimeDomainData(buf); let pk=0; for(const v of buf) pk=Math.max(pk,Math.abs(v));
+        svBase=svBase*0.97+pk*0.03; $("svLv").style.width=Math.min(100,pk/0.6*100)+"%";
+        const now=Date.now();
+        // 降車のあと3分の間だけ、ふだんより急に大きい短い音を「バン」と数える（1.5秒に1回まで）
+        if(svOffAt&&now-svOffAt<180000&&pk>svTh&&pk>svBase*3&&now-svLastBang>1500){ svBang++; svLastBang=now; svRender(); }
+        if(svOffAt&&(now-svOffAt>=180000||svBang>=2)){ svStop(); return; }
+        svRaf=requestAnimationFrame(loop); };
+      loop();
+    }catch(e){ $("svStat").textContent="マイクが使えません（"+e.message+"）"; }
+  }
+  function svStart(){ if(svOn) return; svOn=true; svHeard=""; svBang=0; svOffAt=null; svSpeech(); svMic(); $("svStart").disabled=true; $("svOff").disabled=false; $("svStop").disabled=false; svRender(); }
+  function svStop(){ svOn=false; try{ svRec&&svRec.stop(); }catch(e){} svRec=null; cancelAnimationFrame(svRaf);
+    if(svAudio){ svAudio.st.getTracks().forEach(t=>t.stop()); try{ svAudio.ac.close(); }catch(e){} svAudio=null; }
+    $("svStart").disabled=false; $("svOff").disabled=true; $("svStop").disabled=true; $("svLv").style.width="0"; svRender(); }
+  $("svStart").onclick=svStart;
+  $("svOff").onclick=()=>{ svOffAt=Date.now(); svBang=0; svRender(); };
+  $("svStop").onclick=svStop;
+  const svThUI=()=>{ $("svTh").value=svTh; $("svThMark").style.left=Math.min(100,svTh/0.6*100)+"%"; };
+  $("svTh").addEventListener("input",()=>{ svTh=+$("svTh").value; try{ localStorage.setItem("tenko.svth",svTh); }catch(e){} svThUI(); });
+  svThUI(); svRender();
+
   // メニューのタブを開いたときも、表示中の情報を新しくする
   $("tb2").onclick=()=>{ showTab(2); showSub(curSub); };
   document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.onclick=()=>showSub(b.dataset.sub));
