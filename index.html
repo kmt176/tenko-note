@@ -339,10 +339,10 @@ body.rtfull{overflow:hidden}
   <details>
     <summary>バックアップ・機種変更</summary>
     <div class="body">
-      <div>「バックアップを作る」→「コピー」で、点呼と売上をまとめた文字をコピーし、メモやGoogleドライブに保存してください。文字は暗号化されているので、見ても内容は分かりません。新しいスマホでは、貼り付けて「復元」を押します。</div>
+      <div>「バックアップを作る」→「コピー」か「ファイルに保存」で、点呼と売上をまとめたバックアップを、メモ・OneDrive・iCloud Driveなどに保存してください。ファイルにした場合、復元は「ファイルから読み込む」でそのファイルを選ぶだけです。文字は暗号化されているので、見ても内容は分かりません。新しいスマホでは、貼り付けて「復元」を押します。</div>
       <div class="field"><label for="bkPass">パスワード（付けなくてもよい）</label><input type="password" id="bkPass" autocomplete="new-password" placeholder="付けないときは空のまま">
         <small class="src">付けると、そのパスワードを知らない人は誰も復元できません。<b>忘れると、自分でも復元できなくなります。</b></small></div>
-      <div class="btnrow"><button class="btn primary" id="makeBtn">バックアップを作る</button><button class="btn" id="copyBtn" disabled>コピー</button></div>
+      <div class="btnrow"><button class="btn primary" id="makeBtn">バックアップを作る</button><button class="btn" id="copyBtn" disabled>コピー</button><button class="btn" id="saveFileBtn" disabled>ファイルに保存</button></div>
       <textarea id="exportBox" readonly hidden aria-label="バックアップ用の文字"></textarea>
       <textarea id="importBox" placeholder="ここに貼り付け" aria-label="復元する文字"></textarea>
       <div class="btnrow"><button class="btn" data-pickfor="importBox">ファイルから読み込む</button></div>
@@ -657,7 +657,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 00:53</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 01:09</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1061,14 +1061,14 @@ body.rtfull{overflow:hidden}
     return JSON.parse(new TextDecoder().decode(data));
   }
   let prepared=null;
-  function resetBackup(){ prepared=null; $("copyBtn").disabled=true; $("exportBox").hidden=true; $("exportBox").value=""; }
+  function resetBackup(){ prepared=null; $("copyBtn").disabled=true; $("saveFileBtn").disabled=true; $("exportBox").hidden=true; $("exportBox").value=""; }
   $("makeBtn").onclick=async()=>{
     msg("作っています…");
     try{
       const pass=$("bkPass").value;
       prepared=await packBackup({v:3,tenko:recs,uriage:sales},pass);
-      $("copyBtn").disabled=false;
-      msg(`できました（${pass?"パスワード付き":"パスワードなし"}）。「コピー」を押してください`);
+      $("copyBtn").disabled=false; $("saveFileBtn").disabled=false;
+      msg(`できました（${pass?"パスワード付き":"パスワードなし"}）。「コピー」か「ファイルに保存」を押してください`);
     }catch(e){ resetBackup(); msg("作れませんでした。ブラウザを最新にしてください"); }
   };
   // 画面には出さずにコピーする。コピーできない機種だけ、欄を出して長押しでコピーしてもらう
@@ -1076,6 +1076,17 @@ body.rtfull{overflow:hidden}
     if(!prepared) return;
     const fallback=()=>{ const b=$("exportBox"); b.value=prepared; b.hidden=false; b.select(); msg("自動でコピーできませんでした。出てきた欄を長押ししてコピーしてください"); };
     if(navigator.clipboard) navigator.clipboard.writeText(prepared).then(()=>msg("コピーしました。メモなどに貼り付けて保存してください"),fallback); else fallback();
+  };
+  // バックアップをテキストファイルにする。iPhoneは共有の画面から「"ファイル"に保存」でOneDrive・iCloudなどに置ける
+  $("saveFileBtn").onclick=async()=>{
+    if(!prepared) return;
+    const d=new Date(), name=`点呼ノート_バックアップ_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.txt`;
+    const file=new File([prepared],name,{type:"text/plain"});
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); msg("保存先を選んでください（「ファイルに保存」→ OneDrive や iCloud Drive）"); return; }
+    }catch(e){ if(e.name==="AbortError") return; }
+    const a=document.createElement("a"); a.href=URL.createObjectURL(file); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+    msg(`「${name}」を保存しました`);
   };
   // 前の版のバックアップ（暗号化なし・点呼だけ）も、新しい形も復元できる
   let restoreArmed=null;
