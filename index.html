@@ -230,6 +230,12 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 #rtMap{height:380px;border-radius:10px;border:1px solid var(--line);z-index:0}
 .rtno{background:var(--accent);color:var(--accent-ink);border-radius:999px;font:700 12px var(--num);padding:2px 6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .rtno.big{background:var(--bad);color:#fff}
+.cmpt{width:100%;border-collapse:collapse;font-size:13px;color:var(--ink)}
+.cmpt th,.cmpt td{border-bottom:1px solid var(--line);padding:4px 3px;text-align:left;vertical-align:top}
+.cmpt td.num{white-space:nowrap}
+.cmpt tr.bad td{background:var(--bad-soft)}
+.cmpt tr.warn td{background:var(--warn-soft)}
+.cmpt small{display:block;color:var(--muted);font-weight:400}
 .chip.rtbtn{background:var(--accent-soft);color:var(--accent)}
 .hwrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15.5px}
 .hwrow .btn{padding:4px 10px}
@@ -354,6 +360,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div id="sNow"></div>
     <div class="geo" id="sStatus" role="status"></div>
     <div class="list" id="sList"></div>
+    <details id="cmpBox" hidden><summary id="cmpSum">日報との比較</summary><div class="body" id="cmpBody"></div></details>
     <button class="add" id="sAdd">＋ 乗車を手で追加</button>
     <button class="btn" id="sImport">日報から取り込む（貼り付け）</button>
   </div>
@@ -639,7 +646,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>配車／手上げ・決済は前の乗車と同じものが最初から入っています</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
-      <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>現金（納金）</b>が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します</small></li>
+      <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>現金（納金）</b>が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。GO Payでも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
@@ -716,10 +723,12 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
     </div>
     <div class="grp" id="rMoney">
-      <div class="field"><label for="rAmt">金額（円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"></div>
+      <div class="field"><label for="rAmt">金額（現収＋未収・円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"><small class="src">ETC・アプリ手配料（社内決済の200円）を含めた金額を入れます</small></div>
       <div class="field"><label for="rPay">決済</label>
         <select id="rPay"><option>現金</option><option>A:GOPAY</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
-      <div class="field"><label for="rEtc">ETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
+      <div class="field"><label for="rEtc">うちETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
+      <label class="check"><input type="checkbox" id="rInhouse">社内決済（アプリ手配料200円を含む）<br><small>配車でGO Pay以外は自動でチェックが入ります。GO Payでも社内決済のときはチェックしてください</small></label>
+      <div class="live" id="rFare"></div>
       <div class="field"><label>天気</label><div class="wxsel" id="rWx"><button type="button" data-w="">自動</button><button type="button" data-w="晴">晴</button><button type="button" data-w="曇">曇</button><button type="button" data-w="雨">雨</button><button type="button" data-w="雪">雪</button></div></div>
     </div>
     <div class="field"><label for="rMemo">メモ</label><input type="text" id="rMemo" autocomplete="off"></div>
@@ -1457,6 +1466,9 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   const fromInput=(k,t)=>{ const m=toMin(t); if(m==null) return null; return m<startOf(k)-60?m+DAY:m; };
   const nowMin=k=>Math.round((Date.now()-dayStart(k).getTime())/60000);
 
+  // アプリ手配料（社内決済の200円）：チェックがあればそれに従う。なければ「配車でGO Pay以外」を社内決済とみなす（Excelと同じ）
+  const appAuto=r=>r.kind==="配車"&&!!r.pay&&r.pay!=="A:GOPAY"&&r.pay!=="B空転";
+  const appFee=r=>isEv(r.kind)||r.kind==="B空転"?0:(r.inhouse!=null?r.inhouse:appAuto(r))?200:0;
   // Excelの売上入力と同じ計算：営業(分)・待ち(分)・通し番号・アプリ料・分単価
   function dayCalc(d){
     const rows=[...d.rides].sort((a,b)=>(a.on??1e9)-(b.on??1e9));
@@ -1467,7 +1479,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       r._eig=!ev&&r.on!=null&&r.off!=null?r.off-r.on:null;
       r._wait=!ev&&r.on!=null&&prevEnd!=null?r.on-prevEnd:null;
       r._no=ev?null:++no;
-      r._app=r.kind==="配車"&&r.pay&&r.pay!=="A:GOPAY"&&r.pay!=="B空転"?200:0;
+      r._app=appFee(r);
       if(!ev){
         const a=+r.amt||0;
         // B空転は日報の現収・総営収には入るが、メーター日計（乗車の合計）には入れない（Excelの⑧と同じ）
@@ -1683,6 +1695,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   async function fillRide(k,r){
     try{
       for(const w of ["on","off"]){ if(!r[w+"Pos"]&&r[w+"Addr"]&&!r[w+"Tried"]){ r[w+"Tried"]=true; r[w+"Pos"]=await posOfAddr(r[w+"Addr"]); } }
+      for(const w of ["On","Off"]){ if(r["n"+w+"Addr"]&&!r["n"+w+"Pos"]&&!r["n"+w+"Tried"]){ r["n"+w+"Tried"]=true; r["n"+w+"Pos"]=await posOfAddr(r["n"+w+"Addr"]); } }
       for(const w of ["on","off"]){ const p=r[w+"Pos"]; if(p&&r[w+"Addr"]==null){ r[w+"Addr"]=await townOf(p); } }
       if(r.onPos&&!r.wx&&r.on!=null){ const w=await weatherAt(r.onPos,new Date(dayStart(k).getTime()+r.on*60000)); if(w) r.wx=w; }
       saveSales(); queueFlash(k); renderSales();
@@ -1696,7 +1709,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     Object.entries(sales.days).forEach(([k,d])=>{ if(dayStart(k).getTime()<lim) return;
       d.rides.forEach(r=>{ if(isEv(r.kind)) return;
         const needPos=w=>!r[w+"Pos"]&&r[w+"Addr"]&&!r[w+"Tried"];
-        if(needPos("on")||needPos("off")||(r.onPos&&(r.onAddr==null||!r.wx))||(r.offPos&&r.offAddr==null)) fillRide(k,r); }); });
+        const needN=w=>r["n"+w+"Addr"]&&!r["n"+w+"Pos"]&&!r["n"+w+"Tried"];
+        if(needPos("on")||needPos("off")||needN("On")||needN("Off")||(r.onPos&&(r.onAddr==null||!r.wx))||(r.offPos&&r.offAddr==null)) fillRide(k,r); }); });
   }
 
   // ---- 画面 ----
@@ -1807,13 +1821,76 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
         ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
       </div>
-      <div class="src">メーター照合：①＋アプリ手配料金＋⑤−⑥−ETC自己負担−B空転 が、記録の合計（メーター日計）と同じならOK。現金＝①−④＋⑤−⑥＋アプリ手配料金−B空転。</div>`;    renderHw(d); renderRoute(k,d,s);
+      <div class="src">メーター照合：①＋アプリ手配料金＋⑤−⑥−ETC自己負担−B空転 が、記録の合計（メーター日計）と同じならOK。現金＝①−④＋⑤−⑥＋アプリ手配料金−B空転。</div>`;    renderHw(d); renderRoute(k,d,s); renderCmp(k,d);
     const canLock=st.total!=null&&(simple||st.meterOk);
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
     if($("ckDoLock")) $("ckDoLock").onclick=()=>{ const dd=ensureDay(k); dd.locked=true; dd.lockedAt=new Date().toISOString(); saveSales(); renderSales(); };
     if($("ckUnlock")) $("ckUnlock").onclick=()=>{ if(!confirm("鍵を外しますか？")) return; const dd=ensureDay(k); dd.locked=false; saveSales(); renderSales(); };
     fillPending();
+  }
+
+  // ===== 日報との比較（乗車ボタンの押し遅れの確認と、乗車地を日報に合わせる） =====
+  // 日報の住所は丁目までなので、位置はその丁目の代表点。同じ丁目でも400mくらいずれるため、
+  // 「町丁目の名前が違う」かつ500m以上を「ずれが大きい」とする（10/2の実データで確かめた）
+  const CMP_FAR=500;
+  const KANJI={"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10};
+  const normTown=a=>String(a||"").replace(/^東京都/,"").replace(/[ヶケが]/g,"ケ").replace(/麴/g,"麹").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248))
+    .replace(/(十?[一二三四五六七八九]?|十)丁目/g,m=>{ const k=m.replace("丁目",""); const n=k==="十"?10:k.startsWith("十")?10+(KANJI[k[1]]||0):k.endsWith("十")?(KANJI[k[0]]||1)*10:KANJI[k]||k; return String(n); })
+    .replace(/丁目/g,"").replace(/\s/g,"");
+  const sameTown=(a,b)=>!!a&&!!b&&normTown(a)===normTown(b);
+  const isGps=p=>p&&p.from!=="addr";
+  function routePosAt(d,min){
+    const pts=d.route&&d.route.pts; if(!pts||!pts.length) return null;
+    let a=null,b=null; for(const p of pts){ if(p[2]<=min) a=p; else { b=p; break; } }
+    if(a&&b&&b[2]-a[2]<=10){ const t=(min-a[2])/((b[2]-a[2])||1); return {lat:+(a[0]+(b[0]-a[0])*t).toFixed(6),lng:+(a[1]+(b[1]-a[1])*t).toFixed(6),from:"route"}; }
+    const c=[a,b].filter(Boolean).sort((x,y)=>Math.abs(x[2]-min)-Math.abs(y[2]-min))[0];
+    return c&&Math.abs(c[2]-min)<=3?{lat:c[0],lng:c[1],from:"route"}:null;
+  }
+  function cmpRows(d){
+    return dayCalc(d).rows.filter(r=>!isEv(r.kind)&&(r.nOnAddr||r.nOffAddr)&&(isGps(r.onPos)||isGps(r.offPos)||r.btnOnPos||r.btnOffPos)).map(r=>{
+      const gOn=r.btnOnPos||(isGps(r.onPos)?r.onPos:null), gOff=r.btnOffPos||(isGps(r.offPos)?r.offPos:null);
+      const dOn=gOn&&r.nOnPos?Math.round(distM([gOn.lat,gOn.lng],[r.nOnPos.lat,r.nOnPos.lng])):null;
+      const dOff=gOff&&r.nOffPos?Math.round(distM([gOff.lat,gOff.lng],[r.nOffPos.lat,r.nOffPos.lng])):null;
+      const aOn=r.btnOnAddr||(isGps(r.onPos)?r.onAddr:null), aOff=r.btnOffAddr||(isGps(r.offPos)?r.offAddr:null);
+      const farOn=dOn!=null&&dOn>=CMP_FAR&&!sameTown(aOn,r.nOnAddr), farOff=dOff!=null&&dOff>=CMP_FAR&&!sameTown(aOff,r.nOffAddr);
+      return {r,dOn,dOff,farOn,farOff,diffOn:!!aOn&&!sameTown(aOn,r.nOnAddr),diffOff:!!aOff&&!sameTown(aOff,r.nOffAddr),
+        lateOn:r.btnOn!=null?r.btnOn-r.on:null,lateOff:r.btnOff!=null&&r.off!=null?r.btnOff-r.off:null,fixed:!!(r.btnOnPos||r.btnOffPos)};
+    });
+  }
+  const mtxt=m=>m==null?"—":m>=1000?(m/1000).toFixed(1)+"km":m+"m";
+  const late=v=>v==null?"":v>0?`（ボタン ${v}分おそい）`:v<0?`（ボタン ${-v}分はやい）`:"";
+  function renderCmp(k,d){
+    const rows=cmpRows(d);
+    $("cmpBox").hidden=!rows.length; if(!rows.length) return;
+    const far=rows.filter(x=>!x.fixed&&(x.farOn||x.farOff));
+    $("cmpSum").textContent=`日報との比較（ボタンで記録した ${rows.length}件${far.length?`・ずれが大きい ${far.length}件`:""}）`;
+    $("cmpBody").innerHTML=`<div>乗車ボタン・降車ボタンを押した場所（GPS）と、日報の乗車地・降車地を比べます。日報の住所は丁目までなので、同じ丁目でも数百mのずれは出ます。<b>町丁目が違う</b>ものは黄色、さらに${CMP_FAR}m以上ずれているもの（押し遅れの目安）は赤です。</div>
+      <table class="cmpt"><thead><tr><th>No.</th><th>乗車地　日報／ボタン</th><th>ずれ</th></tr></thead><tbody>
+      ${rows.map(x=>{ const r=x.r, cls=x.farOn||x.farOff?"bad":x.diffOn||x.diffOff?"warn":"";
+        return `<tr class="${cls}"><td class="num">${r._no}<small>${tm(r.on)}</small></td>
+          <td>乗 ${esc(r.nOnAddr||"—")}<small>ボタン：${esc(r.btnOnAddr||(isGps(r.onPos)?r.onAddr:"")||"—")}${late(x.lateOn)}</small>
+              降 ${esc(r.nOffAddr||"—")}<small>ボタン：${esc(r.btnOffAddr||(isGps(r.offPos)?r.offAddr:"")||"—")}${late(x.lateOff)}</small>${x.fixed?`<small>→ 日報の場所に合わせ済み</small>`:""}</td>
+          <td class="num">乗 ${mtxt(x.dOn)}<br>降 ${mtxt(x.dOff)}</td></tr>`; }).join("")}
+      </tbody></table>
+      <div class="btnrow">${far.length?`<button class="btn primary" id="cmpFix">ずれが大きい ${far.length}件の場所を日報に合わせる</button>`:""}${rows.some(x=>x.fixed)?`<button class="btn" id="cmpUndo">合わせたのを元に戻す</button>`:""}</div>
+      <div class="src">合わせると、地図・速報などに使う乗降の場所が、${d.route?"走行ルートのその時刻の位置（なければ日報の住所）":"日報の住所の位置"}になります。ボタンで記録した場所は残るので、元に戻せます。</div>`;
+    if($("cmpFix")) $("cmpFix").onclick=()=>{
+      const dd=ensureDay(k); if(!guard(dd)) return;
+      far.forEach(x=>{ const r=dd.rides.find(y=>y.id===x.r.id); if(!r) return;
+        [["on","On",x.farOn],["off","Off",x.farOff]].forEach(([w,W,isFar])=>{
+          if(!isFar||r["btn"+W+"Pos"]) return;
+          const np=routePosAt(dd,r[w])||r["n"+W+"Pos"]; if(!np) return;
+          r["btn"+W+"Pos"]=r[w+"Pos"]; r["btn"+W+"Addr"]=r[w+"Addr"];
+          r[w+"Pos"]=np; r[w+"Addr"]=r["n"+W+"Addr"]||r[w+"Addr"]; });
+      });
+      saveSales(); queueFlash(k); rtKey=""; renderSales();
+    };
+    if($("cmpUndo")) $("cmpUndo").onclick=()=>{
+      const dd=ensureDay(k); if(!guard(dd)) return;
+      dd.rides.forEach(r=>{ ["On","Off"].forEach(W=>{ const w=W.toLowerCase(); if(r["btn"+W+"Pos"]){ r[w+"Pos"]=r["btn"+W+"Pos"]; r[w+"Addr"]=r["btn"+W+"Addr"]; delete r["btn"+W+"Pos"]; delete r["btn"+W+"Addr"]; } }); });
+      saveSales(); queueFlash(k); rtKey=""; renderSales();
+    };
   }
 
   function newId(){ return "u"+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
@@ -1848,6 +1925,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     $("rOnNext").checked=r.on!=null&&r.on>=DAY; $("rOffNext").checked=r.off!=null&&r.off>=DAY;
     nextTouched={on:id!=null,off:id!=null};   // 新しく入れるときだけ、時刻から「翌日」を推測して付ける
     $("rAmt").value=fmtYen(r.amt); $("rPay").value=r.pay||"現金"; $("rEtc").value=fmtYen(r.etc); $("rMemo").value=r.memo||"";
+    rInTouched=r.inhouse!=null; $("rInhouse").checked=r.inhouse!=null?r.inhouse:appAuto({kind:r.kind||"配車",pay:r.pay||"現金"}); rFareShown=r.fare; showFare();
     rWxSel=r.wxSel||""; markWx();
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
     $("rInfo").innerHTML=[w?`天気：${esc(w.st)} ${esc(w.at)}の観測 ${w.t??"—"}℃・10分 ${w.p10??"—"}mm・1時間 ${w.p1h??"—"}mm`:"",pos.length?`位置：${pos.join("・")}を記録済み`:""].filter(Boolean).join("<br>")
@@ -1864,6 +1942,16 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   function markWx(){ document.querySelectorAll("#rWx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===rWxSel)); }
   document.querySelectorAll("#rWx button").forEach(b=>b.onclick=()=>{ rWxSel=b.dataset.w; markWx(); });
   $("rKind").addEventListener("change",kindUI);
+  // 社内決済：自分で触っていなければ、内容と決済から自動で付ける。メーター料金（金額−ETC−アプリ手配料）も出す
+  let rInTouched=false, rFareShown=null;
+  function showFare(){
+    const amt=numOf($("rAmt").value), etc=numOf($("rEtc").value)||0, app=$("rInhouse").checked&&!["B空転"].includes($("rKind").value)?200:0;
+    $("rFare").innerHTML=amt==null||isEv($("rKind").value)?"":`メーター料金（計算）<b class="num">${yen(amt-etc-app)}円</b>＝金額 ${yen(amt)}−ETC ${yen(etc)}−アプリ手配料 ${yen(app)}`+
+      (rFareShown!=null?`<br>日報の合計金額 <b class="num">${yen(rFareShown)}円</b>${rFareShown===amt-etc-app?`<span class="pill ok">一致</span>`:`<span class="pill warn">差 ${yen(amt-etc-app-rFareShown)}円</span>`}`:"");
+  }
+  $("rInhouse").addEventListener("change",()=>{ rInTouched=true; showFare(); });
+  ["rKind","rPay"].forEach(id=>$(id).addEventListener("change",()=>{ if(!rInTouched) $("rInhouse").checked=appAuto({kind:$("rKind").value,pay:$("rPay").value}); showFare(); }));
+  ["rAmt","rEtc"].forEach(id=>$(id).addEventListener("input",showFare));
   // 「翌日」：自分で触っていなければ、出庫時刻より前の時刻を翌日とみなして自動でチェックする
   let nextTouched={on:false,off:false};
   [["rOn","rOnNext","on"],["rOff","rOffNext","off"]].forEach(([t,c,w])=>{
@@ -2053,15 +2141,18 @@ ETC自己負担: 0
 日計表の現収: 数字（日報の「現収」）
 日計表の未収: 数字（日報の「未収」）
 ---
-内容,乗車,降車,金額,決済,ETC,乗車地,降車地,メモ
+内容,乗車,降車,金額,決済,ETC,乗車地,降車地,メモ,合計金額
 （明細を上から順に1行ずつ）
 
 明細の書き方：
 ・内容：「出」は出庫、「入」は入庫、「回」は回送、「休」は休憩。番号の行は、迎の欄が2なら配車、空欄なら手上げ。合計金額が0の行はCAN。迎が空欄で合計金額が500、かつ1つ前の番号の行の迎が2のときはB空転（決済もB空転）。
 ・乗車・降車：HH:MM（日報のとおり。出庫・入庫は時刻を1つだけ）。
 ・金額：現収＋未収（合計金額ではありません）。
+・合計金額：日報の「合計金額」の欄の数字（最後の列）。
 ・決済：未収の記号で決めます。ﾈ→A:GOPAY、C→C:ｸﾚｼﾞｯﾄ、K→K:交通系IC、Q→Q:QUICPay、I→I:iD、W→W:WAON、ﾅ→ﾅ:nanaco、ｴ→ｴ:Wdy、T→T:チケット。現収だけの行は現金。
-・ETC：備考にEがある行だけ、（現収＋未収）−合計金額。ただし配車で決済がA:GOPAY以外なら、さらに200を引く。それ以外は空欄。
+・ETC：納金明細書の「高速道路利用明細」があれば、同じ日報No.の行のETCの金額。明細がなければ、備考にEがある行だけ（現収＋未収）−合計金額。ただし迎が2で、未収の記号が「ﾈ」ではない行（現金・C・Qなど）は、さらに200を引く。それ以外は空欄。
+・アプリ手配料（社内決済の200円）は書かなくてよい（アプリが「金額−合計金額−ETC」から判定します）。
+・現収と未収の両方に金額がある行は、同じ時刻で2行に分ける（1行目は未収の金額と未収の記号の決済、2行目は現収の金額と現金。合計金額は1行目だけに書く）。
 ・乗車地・降車地：日報のとおり（例：板橋区上板橋2）。
 ・メモ：備考の文字（例：SA#）。
 ・数字にカンマは付けない。値に「,」を入れない。`;
@@ -2100,6 +2191,12 @@ ETC自己負担: 0
         let pay=kind==="B空転"?"B空転":PAY_ALIAS[c[4]]||c[4]||(amt?"現金":"");
         if(amt&&!PAYS.includes(pay)){ errs.push(`${i+1}行目：決済「${c[4]}」が分かりません`); return; }
         Object.assign(r,{amt:amt||null,pay:pay||"現金",etc:etc||null});
+        // 10列目の合計金額（メーター料金）があれば、金額−合計金額−ETC＝200 を社内決済とする
+        const fare=num(c[9]);
+        if(fare!=null&&!Number.isNaN(fare)){ r.fare=fare;
+          if(amt&&kind!=="B空転"){ const diff=amt-fare-(etc||0); const inh=diff===200; if(inh!==appAuto(r)) r.inhouse=inh; } }
+        // 2行に分けた乗車の2行目（合計金額なし・同じ乗車時刻）には手配料を付けない
+        else { const pv=rides[rides.length-1]; if(pv&&pv.fare!=null&&pv.on===r.on&&appAuto(r)) r.inhouse=false; }
         if(r.off==null) r.off=on;
       }
       rides.push(r);
@@ -2140,14 +2237,22 @@ ETC自己負担: 0
       const olds=ex.rides.filter(r=>!isEv(r.kind)&&r.on!=null), used=new Set(); let matched=0, added=0;
       const merged=parsed.rides.map(nr=>{
         if(isEv(nr.kind)) return nr;   // 出庫・休憩・回送・入庫は日報のまま
-        let best=null, bd=11;
-        olds.forEach(o=>{ if(used.has(o.id)) return; const dd=Math.abs(o.on-nr.on); if(dd<bd){ bd=dd; best=o; } });
+        let best=null, bd=98;
+        // 乗車時刻が前後10分以内、または乗車中〜降車5分後に押した記録（押し遅れ）を候補にして、いちばん近いもの
+        olds.forEach(o=>{ if(used.has(o.id)) return; const dd=Math.abs(o.on-nr.on);
+          const inRide=nr.off!=null&&o.on>=nr.on&&o.on<=nr.off+5;
+          const score=dd<=10?dd:inRide?10+dd/100:99;
+          if(score<bd){ bd=score; best=o; } });
         if(!best){ added++; return nr; }
         used.add(best.id); matched++;
         // 日報の時刻・金額・決済などに合わせ、ボタンで記録した位置・住所・天気は残す
         return Object.assign({},nr,{id:best.id,onPos:best.onPos||nr.onPos,offPos:best.offPos||nr.offPos,
           onAddr:best.onPos&&best.onAddr?best.onAddr:nr.onAddr,offAddr:best.offPos&&best.offAddr?best.offAddr:nr.offAddr,
-          wx:best.wx||nr.wx,wxSel:best.wxSel||nr.wxSel,onTried:best.onTried,offTried:best.offTried,imported:true});
+          wx:best.wx||nr.wx,wxSel:best.wxSel||nr.wxSel,onTried:best.onTried,offTried:best.offTried,imported:true,
+          // 比較用：日報の乗降地と、ボタンを押した時刻（押し遅れの確認に使う）
+          nOnAddr:nr.onAddr,nOffAddr:nr.offAddr,nOnPos:best.nOnPos,nOffPos:best.nOffPos,
+          btnOn:best.btnOn!=null?best.btnOn:best.on,btnOff:best.btnOff!=null?best.btnOff:best.off,
+          btnOnPos:best.btnOnPos,btnOffPos:best.btnOffPos,btnOnAddr:best.btnOnAddr,btnOffAddr:best.btnOffAddr});
       });
       const leftover=olds.filter(o=>!used.has(o.id)).map(o=>Object.assign({},o,{memo:((o.memo||"")+" 日報になし").trim()}));
       parsed.rides=merged.concat(leftover);
@@ -2196,7 +2301,9 @@ ETC自己負担: 0
     let r=rEdit&&d.rides.find(x=>x.id===rEdit); if(!r){ r={id:newId()}; d.rides.push(r); }
     Object.assign(r,{kind:$("rKind").value,on,off,memo:$("rMemo").value.trim()});
     if(isEv(r.kind)){ delete r.amt; delete r.pay; delete r.etc; delete r.wxSel; }
-    else Object.assign(r,{amt:numOf($("rAmt").value),pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:numOf($("rEtc").value),wxSel:rWxSel});
+    else { Object.assign(r,{amt:numOf($("rAmt").value),pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:numOf($("rEtc").value),wxSel:rWxSel});
+      // 自動の判定と同じなら持たない（あとで決済を変えたときに自動で付け直せるように）
+      const auto=appAuto(r); if($("rInhouse").checked!==auto) r.inhouse=$("rInhouse").checked; else delete r.inhouse; }
     if(d.locked) d.editedAfterLock=new Date().toISOString();
     saveSales(); closeRide(); renderSales();
   };
