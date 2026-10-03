@@ -22,7 +22,7 @@ img{max-width:100%}
 <style>
 :root{
   --bg:#EEF2F1; --surface:#FFFFFF; --sunk:#E3E9E8; --ink:#15201E; --muted:#5A6866; --line:#CBD5D3;
-  --accent:#1D6A80; --accent-ink:#FFFFFF; --accent-soft:#D9EBF0;
+  --accent:#1D6A80; --accent-ink:#FFFFFF; --accent-soft:#D9EBF0; --pink-soft:#FBE3EC; --pink-line:#EBB8CB;
   --ok:#2C7A4B; --ok-soft:#DDEFE3; --warn:#9A6212; --warn-soft:#F6EAD3; --bad:#B3342A; --bad-soft:#F7DEDA;
   --sans:"BIZ UDPGothic","Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;
   --num:"BIZ UDGothic","Hiragino Sans","Yu Gothic UI",ui-monospace,monospace;
@@ -31,14 +31,14 @@ img{max-width:100%}
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --bg:#101716; --surface:#18221F; --sunk:#0C1211; --ink:#E4ECEA; --muted:#98A8A5; --line:#2C3A37;
-    --accent:#5FB3CC; --accent-ink:#0B1A1F; --accent-soft:#17323A;
+    --accent:#5FB3CC; --accent-ink:#0B1A1F; --accent-soft:#17323A; --pink-soft:#3A2230; --pink-line:#6E3E54;
     --ok:#6FC993; --ok-soft:#173226; --warn:#E3AE5B; --warn-soft:#352812; --bad:#EE8176; --bad-soft:#3A1C19;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#101716; --surface:#18221F; --sunk:#0C1211; --ink:#E4ECEA; --muted:#98A8A5; --line:#2C3A37;
-  --accent:#5FB3CC; --accent-ink:#0B1A1F; --accent-soft:#17323A;
+  --accent:#5FB3CC; --accent-ink:#0B1A1F; --accent-soft:#17323A; --pink-soft:#3A2230; --pink-line:#6E3E54;
   --ok:#6FC993; --ok-soft:#173226; --warn:#E3AE5B; --warn-soft:#352812; --bad:#EE8176; --bad-soft:#3A1C19;
 }
 *{box-sizing:border-box}
@@ -97,6 +97,7 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 .btn{border-radius:10px;padding:10px 14px;border:1px solid var(--line);background:var(--surface)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
 .btn.danger{color:var(--bad);border-color:var(--bad)}
+#sImport{background:var(--pink-soft);border-color:var(--pink-line)}
 .msg{font-size:15px;color:var(--ok)}
 
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10}
@@ -382,13 +383,12 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <tr><th>売　上　額　①</th><td><input type="text" class="yenin" id="ck_total" data-ck="total" aria-label="売上額①（日報の総営収）" inputmode="numeric" autocomplete="off"></td></tr>
       <tr class="nk-d"><th>日計表合計②</th><td class="num" id="nk_card"></td></tr>
       <tr class="nk-d"><th>その他未収③</th><td class="num" id="nk_other"></td></tr>
-      <tr class="nk-d nk-blank"><th></th><td></td></tr>
       <tr class="nk-d"><th>未収計④（②＋③）</th><td class="num" id="nk_mishu"></td></tr>
-      <tr class="nk-d"><th>アプリ手配料金</th><td><input type="text" class="yenin" id="ck_app" data-ck="app" aria-label="アプリ手配料金" inputmode="numeric" autocomplete="off"></td></tr>
+      <tr class="nk-d"><th>アプリ手配料金⑦</th><td><input type="text" class="yenin" id="ck_app" data-ck="app" aria-label="アプリ手配料金⑦" inputmode="numeric" autocomplete="off"></td></tr>
       <tr class="nk-d"><th>ＥＴＣ合計⑤</th><td><input type="text" class="yenin" id="ck_etc" data-ck="etc" aria-label="ETC合計⑤" inputmode="numeric" autocomplete="off"></td></tr>
       <tr class="nk-d"><th>ＥＴＣ会社負担⑥</th><td><input type="text" class="yenin" id="ck_etcCo" data-ck="etcCo" aria-label="ETC会社負担⑥" inputmode="numeric" autocomplete="off"></td></tr>
-      <tr class="nk-d"><th>Ｂ空転</th><td class="num" id="nk_bku"></td></tr>
-      <tr class="nk-d nk-cash"><th>現金＝①−④＋⑤−⑥</th><td class="num" id="nk_cash"></td></tr>
+      <tr class="nk-d"><th>Ｂ空転⑧</th><td class="num" id="nk_bku"></td></tr>
+      <tr class="nk-d nk-cash"><th>納金額＝①−④＋⑤−⑥＋⑦−⑧</th><td class="num" id="nk_cash"></td></tr>
     </tbody></table>
     <div class="field"><label for="ck_note">伝達事項、その他（チケットが書ききれない場合等）</label><textarea id="ck_note" data-ck="note" style="min-height:60px;font-family:var(--sans)"></textarea></div>
     <div id="ckCheck">
@@ -646,7 +646,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>配車／手上げ・決済は前の乗車と同じものが最初から入っています</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
-      <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>現金（納金）</b>が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。GO Payでも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
+      <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。GO Payでも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
@@ -1493,6 +1493,22 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     return s;
   }
 
+  // 空車時間：出庫〜入庫（入庫前の勤務中は今まで）から、実車・休憩・回送の時間を引く（重なりは1回だけ数える）
+  function emptyMin(d,act){
+    const ev=k=>d.rides.find(r=>r.kind===k&&r.on!=null);
+    const timed=d.rides.filter(r=>r.on!=null), st=ev("出庫"), en=ev("入庫");
+    if(!timed.length) return null;
+    const from=st?st.on:Math.min(...timed.map(r=>r.on));
+    const to=en?en.on:act?nowMin(sDay):Math.max(...timed.map(r=>r.off!=null?r.off:r.on));
+    if(!(to>from)) return null;
+    const iv=d.rides.filter(r=>r.on!=null&&r.off!=null&&r.off>r.on&&!["出庫","入庫"].includes(r.kind))
+      .map(r=>[Math.max(r.on,from),Math.min(r.off,to)]).filter(x=>x[1]>x[0]).sort((a,b)=>a[0]-b[0]);
+    let busy=0, cs=null, ce=null;
+    iv.forEach(([a,b])=>{ if(ce==null||a>ce){ if(ce!=null) busy+=ce-cs; cs=a; ce=b; } else ce=Math.max(ce,b); });
+    if(ce!=null) busy+=ce-cs;
+    return to-from-busy;
+  }
+
   // ---- 集計（売上管理Excelの「集計」シートと同じ計算） ----
   const CARD=["C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy"];   // ② 日計表に載るもの
   const OTHER=["A:GOPAY","T:チケット","福祉券"];                                        // ③ その他未収
@@ -1760,7 +1776,9 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
         <div><span class="h">平均単価</span><span class="v num">${cnt?yen(tot/cnt):"—"}</span></div>
         ${simple?`<div><span class="h">営業時間</span><span class="v num">${hm(hrs)}</span></div>`:
         `<div><span class="h">配車／手上げ</span><span class="v num">${s.haisha}／${s.nagashi}</span></div>
-         <div><span class="h">実車時間</span><span class="v num">${hm(s.eig)}</span></div>`}
+         <div><span class="h">実車時間</span><span class="v num">${hm(s.eig)}</span></div>
+         <div><span class="h">空車時間</span><span class="v num">${(e=>e==null?"—":hm(e))(emptyMin(d,act))}</span></div>`}
+        <div><span class="h">税抜営収</span><span class="v num">${yen(shiftSales(k).amt*salesCfg().tax)}</span></div>
       </div>
       ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(p)} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
 
@@ -1790,7 +1808,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
         <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
         ${addr.length?`<div class="sub">${addr.map(esc).join(" → ")}</div>`:""}
-        <div class="chips">${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
+        <div class="chips">${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${+r.amt>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(r.amt/r._eig)}円</span>`:""}${+r.amt>0&&r._eig>0&&r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(r.amt/(r._eig+r._wait))}円</span>`:""}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
       </button>`;
     }).join("")||`<div class="geo">${act?"「乗車」を押すと、ここに記録が並びます":"この勤務の記録はありません"}</div>`;
 
@@ -1821,14 +1839,14 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     $("nk_card").textContent=yen(st.card); $("nk_other").textContent=yen(st.other); $("nk_mishu").textContent=yen(st.mishu);
     $("nk_bku").textContent=st.bku?yen(st.bku):""; $("nk_cash").textContent=st.nokin==null?"":yen(st.nokin);
     $("ckResult").innerHTML=simple?`<div class="geo">簡易入力では決済の内訳がないため、納金額と照合は出しません。売上額①を入れれば鍵をかけられます。</div>`:
-      st.total==null?`<div class="geo">売上額①（日報の総営収）を入れると、現金（納金）と照合の結果を出します。</div>`:
+      st.total==null?`<div class="geo">売上額①（日報の総営収）を入れると、納金額と照合の結果を出します。</div>`:
       `<div class="checks">
         ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／明細書から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>`}
         ${st.genOk==null?"":`<span class="pill ${st.genOk?"ok":"warn"}">日計表の現収 ${st.genOk?"OK":"要確認"}（現金＋B空転 ${yen(st.cash+st.bku)}円）</span>`}
         ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
       </div>
-      <div class="src">メーター照合：①＋アプリ手配料金＋⑤−⑥−ETC自己負担−B空転 が、記録の合計（メーター日計）と同じならOK。現金＝①−④＋⑤−⑥＋アプリ手配料金−B空転。</div>`;    renderHw(d); renderRoute(k,d,s); renderCmp(k,d);
+      <div class="src">メーター照合：①＋⑦＋⑤−⑥−ETC自己負担−⑧ が、記録の合計（メーター日計）と同じならOK。納金額＝①−④＋⑤−⑥＋⑦−⑧。</div>`;    renderHw(d); renderRoute(k,d,s); renderCmp(k,d);
     const canLock=st.total!=null&&(simple||st.meterOk);
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
