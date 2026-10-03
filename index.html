@@ -233,6 +233,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 .hbar .b{height:14px;border-radius:4px;background:var(--accent);min-width:1px}
 .hbar .t{text-align:right;font-variant-numeric:tabular-nums}
 .hbar .t small{color:var(--muted);margin-left:6px}
+.abar{grid-template-columns:auto 1fr auto}
+.abar .t small{display:block;margin:0;font-size:12.5px}
+table.heat{border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+table.heat th{font-weight:400;color:var(--muted);padding:2px 3px;text-align:center}
+table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(--surface);border-radius:3px}
+#sView{grid-auto-columns:auto}
+#sView button{padding:10px 8px;font-size:14.5px}
 .titlepick select{position:absolute;inset:0;width:100%;height:100%;min-height:0;opacity:0;cursor:pointer;font-size:16px}
 .titlepick .dd{font-size:15px;color:var(--muted);margin-left:4px}
 #sFix .btnrow{margin-top:8px}
@@ -338,6 +345,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <div class="seg" role="tablist" aria-label="表示" id="sView">
     <button role="tab" data-view="day" aria-selected="true">勤務</button>
     <button role="tab" data-view="month" aria-selected="false">月度の集計</button>
+    <button role="tab" data-view="anal" aria-selected="false">営業分析</button>
     <button role="tab" data-view="flash" aria-selected="false" id="sViewFlash" hidden>仲間の速報</button>
   </div>
   <div class="wrap" id="sDayView">
@@ -443,6 +451,15 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   </details>
   </div>
 
+  <div class="wrap" id="sAnalView" hidden>
+    <div class="seg" id="aRange" role="tablist" aria-label="期間">
+      <button role="tab" data-r="p" aria-selected="true">この月度</button>
+      <button role="tab" data-r="3" aria-selected="false">直近3か月</button>
+      <button role="tab" data-r="all" aria-selected="false">全部</button>
+    </div>
+    <div id="aBody"></div>
+  </div>
+
   <div class="wrap" id="sFlashView" hidden>
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>仲間の速報</h2><button class="btn" id="fReload">更新</button></div>
@@ -458,6 +475,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <h1 id="mTitle">月度</h1>
       <button class="iconbtn" id="mNext" aria-label="次の月度">▶</button>
     </div>
+    <section class="card" id="mGoal"></section>
     <section class="meter" id="mSum"></section>
     <section class="card" id="mHourCard" hidden>
       <h2>時間帯別の売上</h2>
@@ -603,6 +621,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <section class="card help">
     <h2>点呼ノートの使い方</h2>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。</small></p>
+    <p class="ver"><small>版：2026-10-03 19:17（新しい版をアップロードしたあとは、アプリを閉じて開き直すとこの日時が変わります）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
@@ -676,7 +695,9 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <dt>過去の勤務</dt><dd>一番上の日付を押すと、勤務の一覧（売上つき）から選んで開けます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは、一番下の「勤務の修正」→「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは、同じ所の「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
       <dt>走行ルート</dt><dd>Googleマップのタイムラインを書き出したファイルを「タイムラインを読み込む」で選ぶと、勤務ごとに実際に走った道と乗車の地点を地図で見られます。1つの乗車だけ見るときは、欄の選択か、乗車の一覧の「ルート ›」を押します。ルートはこのスマホの中だけに保存します。</dd>
-      <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の税抜営収・概算給与・賞与積立（6月度と12月度は半年分の賞与見込みも）・時間帯別の売上・決済別・納金の合計と、勤務ごとの一覧を見られます。率は一番下の「計算の設定」で変えられます。</dd>
+      <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の税抜営収・概算給与・賞与積立（6月度と12月度は半年分の賞与見込みも）・時間帯別の売上・決済別・納金の合計と、勤務ごとの一覧を見られます。率は一番下の「計算の設定」で変えられます。いちばん上に<b>目標（税抜営収）</b>を入れると、残りの勤務（点呼時間の今日以降の予定）で1勤務いくら必要かと、今のペースの見込みを出します。</dd>
+      <dt>営業分析</dt><dd>上の「営業分析」で、曜日別・時間帯×曜日・乗車の多い場所・降ろしたあと次が早い場所・営業のしかた別（連続配車／配車／手上げ／乗り場）・天気別の傾向を見られます。期間は「この月度」「直近3か月」「全部」から選べます。金額はETC・アプリ手配料を除いたメーター料金の税抜です。</dd>
+      <dt>過去の分をまとめて取り込む</dt><dd>「日報から取り込む」には、何日分でも続けて貼り付けられます（「出庫日:」ごとに1日）。「業務前点呼: 12:56」「業務後点呼: 08:48」の行があれば、点呼時間にその日の勤務がなくても作って取り込みます。すでに記録がある日は取り込みません。</dd>
     </dl>
     <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
   </section>
@@ -1627,6 +1648,19 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     const hd=done.filter(x=>x.d.mode!=="simple"&&x.d.rides.some(r=>!isEv(r.kind)));
     const hs=Array(24).fill(0); hd.forEach(x=>hourly(x.d).forEach((v,h)=>hs[h]+=v));
     $("mHourCard").hidden=!hd.length;
+    // 目標（税抜営収）：残りの勤務（今日以降の点呼の予定で、まだ記録がない日）で1勤務いくら必要か
+    { const gk=P.y+"-"+P.m, goal=(sales.cfg&&sales.cfg.goals&&sales.cfg.goals[gk])||null, today=todayStr();
+      const rest=rows.filter(x=>!x.has&&x.k>=today).length, avg=done.length?net/done.length:0, pace=net+avg*rest;
+      const need=goal&&rest?(goal-net)/rest:null, pctv=goal?Math.min(100,net/goal*100):0;
+      $("mGoal").innerHTML=`<div class="infohead"><h2>${P.m}月度の目標（税抜営収）</h2></div>
+        <div class="field"><input type="text" class="yenin" id="mGoalIn" inputmode="numeric" autocomplete="off" placeholder="例：1,000,000" value="${goal?yen(goal):""}" aria-label="目標（税抜営収）"></div>
+        ${goal?`<div class="bar" role="img" aria-label="達成 ${Math.round(pctv)}%"><i class="a" style="width:${pctv}%"></i></div>
+        <div class="legend"><span>済み <span class="num">${yen(net)}</span>（${done.length}勤務）</span><span>${net>=goal?`<strong style="color:var(--ok)">達成しました</strong>`:`あと <span class="num">${yen(goal-net)}</span>`}</span></div>
+        ${net<goal?(rest?`<div class="row" style="margin-top:6px"><span>残り${rest}勤務 → 1勤務あたり</span><span class="num" style="font-size:22px;font-weight:700;color:${need>avg&&done.length?"var(--warn)":"var(--ink)"}">${yen(need)}<small style="font-size:14px;color:var(--muted)"> 円</small></span></div>
+          <div class="src">${done.length?`今の平均 ${yen(avg)}円 → ${need>avg?`あと1勤務あたり +${yen(need-avg)}円`:"このままなら届きます"}。このペースの見込み ${yen(pace)}円（概算給与 ${yen(pace*cf.pay*(1-cf.bonus))}円）`:"まだ記録がありません"}</div>`
+          :`<div class="src">この月度に残りの勤務（点呼時間の予定）がありません</div>`):""}`:`<div class="src">目標を入れると、残りの勤務で1勤務いくら必要かを出します（残りの勤務は、点呼時間に入れた今日以降の予定から数えます）</div>`}`;
+      $("mGoalIn").addEventListener("change",()=>{ const v=numOf($("mGoalIn").value); sales.cfg=Object.assign(salesCfg(),{goals:Object.assign({},(sales.cfg&&sales.cfg.goals)||{},{[gk]:v||null})}); saveSales(); renderMonth(); });
+    }
     if(hd.length) $("mHour").innerHTML=hourBars(hs,hs.map(v=>v/hd.length));
     $("mList").innerHTML=rows.slice().reverse().map(x=>`<button class="mrow" data-k="${x.k}">
         <span class="d num">${md(x.k)}（${dow(x.k)}）</span><span>${x.d.locked?"🔒":""}</span><span class="a num">${x.has?yen(x.amt*cf.tax)+"円":"未入力"}</span>
@@ -1645,12 +1679,70 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     const v=+$(id).value; if(!(v>0&&v<=1)){ renderMonth(); return; }
     sales.cfg=Object.assign(salesCfg(),{[id==="mTax"?"tax":"pay"]:v}); saveSales(); renderMonth();
   }));
+  // ---- 営業分析：曜日・時間帯・場所・営業のしかた・天気。金額はメーター料金（ETC・アプリ手配料を除く）を税抜にしたもの ----
+  let aRange="p"; try{ aRange=localStorage.getItem("tenko.arange")||"p"; }catch(e){}
+  document.querySelectorAll("#aRange button").forEach(b=>b.onclick=()=>{ aRange=b.dataset.r; try{ localStorage.setItem("tenko.arange",aRange); }catch(e){} renderAnal(); });
+  const fareOf=r=>(+r.amt||0)-(+r.etc||0)-appFee(r);
+  const isRide=r=>!isEv(r.kind)&&r.kind!=="B空転"&&r.pay!=="B空転"&&r.kind!=="CAN"&&+r.amt>0;
+  function renderAnal(){
+    document.querySelectorAll("#aRange button").forEach(b=>b.setAttribute("aria-selected",b.dataset.r===aRange));
+    const cf=salesCfg(), today=todayStr();
+    const P=PERIODS[Math.max(0,periodOf(sDay||activeDay()||today))];
+    let from="0000", to="9999";
+    if(aRange==="p"){ from=P.start; to=P.end; }
+    else if(aRange==="3"){ const d=new Date(); d.setMonth(d.getMonth()-3); from=d.toISOString().slice(0,10); }
+    const keys=Object.keys(sales.days).filter(k=>k>=from&&k<=to).sort();
+    const xs=keys.map(shiftSales).filter(x=>x.has&&x.d.mode!=="simple"&&x.d.rides.some(isRide));
+    const B=$("aBody");
+    if(!xs.length){ B.innerHTML=`<div class="geo">この期間に、乗車を記録した勤務がありません。</div>`; return; }
+    const card=(h,body,note)=>`<section class="card"><h2>${h}</h2>${note?`<div class="src">${note}</div>`:""}${body}</section>`;
+    const bars=(rows,unit)=>{ const mx=Math.max(...rows.map(r=>r.v),1); return rows.map(r=>`<div class="hbar abar"><span>${esc(r.k)}</span><span><span class="b" style="display:block;width:${Math.max(1,Math.round(r.v/mx*100))}%"></span></span><span class="t num">${r.vt}${r.sub?`<small>${r.sub}</small>`:""}</span></div>`).join(""); };
+    const perH=(fare,min)=>min>0?fare*cf.tax/(min/60):0;
+    let html=`<div class="src" style="margin:4px 2px 8px">${xs.length}勤務（${md(xs[0].k)}〜${md(xs[xs.length-1].k)}）。金額はETC・アプリ手配料を除いたメーター料金の税抜です。${xs.length<20?"勤務が少ないうちは、参考程度に見てください。":""}</div>`;
+
+    // 曜日別（出庫した曜日）：1勤務の平均（税抜営収）と時間あたり
+    const byD={}; xs.forEach(x=>{ const w=dow(x.k), t=workOf(x.k); const o=byD[w]=byD[w]||{n:0,net:0,work:0,wnet:0}; o.n++; o.net+=x.amt*cf.tax; if(t){ o.work+=t.work; o.wnet+=t.net; } });
+    html+=card("曜日別",bars([..."月火水木金土日"].filter(w=>byD[w]).map(w=>{ const o=byD[w]; return {k:w,v:o.net/o.n,vt:yen(o.net/o.n),sub:`${o.n}回・時間あたり ${o.work?yen(o.wnet/(o.work/60)):"—"}`}; })),"出庫した曜日ごとの、1勤務あたりの税抜営収（右は回数と時間あたり）。");
+
+    // 時間帯×曜日：その時間帯の1時間の売上（1勤務あたりの平均）
+    const ws=[..."月火水木金土日"].filter(w=>byD[w]), grid={}, hsum=Array(24).fill(0);
+    xs.forEach(x=>{ const w=dow(x.k), h=hourly(x.d); (grid[w]=grid[w]||Array(24).fill(0)); h.forEach((v,i)=>{ grid[w][i]+=v; hsum[i]+=v; }); });
+    const used=HOURS.filter(h=>hsum[h]>0), hs=used.length?HOURS.slice(HOURS.indexOf(used[0]),HOURS.indexOf(used[used.length-1])+1):[];
+    let mx=1; ws.forEach(w=>hs.forEach(h=>{ mx=Math.max(mx,grid[w][h]/byD[w].n); }));
+    const cell=v=>`<td style="background:color-mix(in srgb,var(--accent) ${Math.round(v/mx*85)}%,transparent);color:${v/mx>.55?"var(--accent-ink)":"var(--ink)"}">${v?Math.round(v*cf.tax/100)/10:""}</td>`;
+    html+=card("時間帯×曜日",`<div style="overflow-x:auto"><table class="heat"><thead><tr><th></th>${hs.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${ws.map(w=>`<tr><th>${w}</th>${hs.map(h=>cell(grid[w][h]/byD[w].n)).join("")}</tr>`).join("")}</tbody></table></div>`,
+      "その時間帯（乗車した時刻）の売上の、1勤務あたりの平均。単位は千円（税抜）。色が濃いほど高い。");
+
+    // 場所：乗車地と、降ろした場所から次の乗車までの待ち
+    const on={}, off={};
+    xs.forEach(x=>{ const rows=dayCalc(x.d).rows.filter(r=>!isEv(r.kind));
+      rows.forEach((r,i)=>{ if(!isRide(r)) return;
+        const a=normTown(r.onAddr||r.nOnAddr); if(a){ const o=on[a]=on[a]||{n:0,f:0}; o.n++; o.f+=fareOf(r); }
+        const nx=rows[i+1], b=normTown(r.offAddr||r.nOffAddr);
+        if(b&&nx&&nx._wait!=null&&nx._wait>=0&&nx._wait<180){ const o=off[b]=off[b]||{n:0,w:0}; o.n++; o.w+=nx._wait; } }); });
+    const top=(o,k)=>Object.entries(o).filter(([,v])=>v.n>=2).sort((a,b)=>b[1].n-a[1].n).slice(0,10);
+    const onT=top(on), offT=top(off);
+    html+=card("乗車の多い場所",onT.length?`<table class="cmpt"><tbody>${onT.map(([a,v])=>`<tr><td>${esc(a)}</td><td class="num">${v.n}回</td><td class="num">平均 ${yen(v.f*cf.tax/v.n)}</td></tr>`).join("")}</tbody></table>`:`<div class="geo">2回以上乗せた場所はまだありません</div>`,"乗車した町丁目（2回以上）。平均はメーター料金の税抜。");
+    html+=card("降ろしたあと、次が早い場所",offT.length?`<table class="cmpt"><tbody>${offT.sort((a,b)=>a[1].w/a[1].n-b[1].w/b[1].n).map(([a,v])=>`<tr><td>${esc(a)}</td><td class="num">${v.n}回</td><td class="num">次まで 平均 ${Math.round(v.w/v.n)}分</td></tr>`).join("")}</tbody></table>`:`<div class="geo">2回以上降ろした場所はまだありません</div>`,"降ろした町丁目（2回以上）ごとの、次の乗車までの平均の待ち（休憩・回送のあとはその終わりから）。");
+
+    // 営業のしかた別：時間あたり＝売上÷（待ち＋営業）
+    const byK={}; xs.forEach(x=>dayCalc(x.d).rows.forEach(r=>{ if(!isRide(r)||r._eig==null) return; const o=byK[r.kind]=byK[r.kind]||{n:0,f:0,m:0}; o.n++; o.f+=fareOf(r); o.m+=r._eig+Math.max(0,r._wait||0); }));
+    html+=card("営業のしかた別",bars(["連続配車","配車","手上げ","乗り場"].filter(k=>byK[k]).map(k=>{ const o=byK[k]; return {k,v:perH(o.f,o.m),vt:yen(perH(o.f,o.m)),sub:`${o.n}回・平均 ${yen(o.f*cf.tax/o.n)}`}; })),"時間あたり（税抜）＝売上÷（待ち＋営業の時間）。右は回数と1回の平均。");
+
+    // 天気別：記録した天気（10分か1時間の降水がある、または雨を選んだ）
+    const wx={雨:{n:0,f:0,m:0},雨以外:{n:0,f:0,m:0}}; let wxn=0;
+    xs.forEach(x=>dayCalc(x.d).rows.forEach(r=>{ if(!isRide(r)||r._eig==null) return; if(!r.wx&&!r.wxSel) return; wxn++;
+      const rain=/雨|雪/.test(r.wxSel||"")||(r.wx&&((+r.wx.p10||0)>0||(+r.wx.p1h||0)>0)); const o=wx[rain?"雨":"雨以外"]; o.n++; o.f+=fareOf(r); o.m+=r._eig+Math.max(0,r._wait||0); }));
+    html+=card("天気別",wxn?bars(["雨","雨以外"].filter(k=>wx[k].n).map(k=>{ const o=wx[k]; return {k,v:perH(o.f,o.m),vt:yen(perH(o.f,o.m)),sub:`${o.n}回`}; })):`<div class="geo">天気を記録した乗車がまだありません</div>`,"乗車のときの天気（気象庁アメダス、または自分で選んだ天気）ごとの時間あたり（税抜）。");
+    B.innerHTML=html;
+  }
+
   function setView(v){
-    sView=v==="month"?"month":v==="flash"&&(isNakama()||isAdmin())?"flash":"day";
+    sView=v==="month"?"month":v==="anal"?"anal":v==="flash"&&(isNakama()||isAdmin())?"flash":"day";
     try{ localStorage.setItem("tenko.sview",sView); }catch(e){}
     document.querySelectorAll("#sView button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===sView));
-    $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month"; $("sFlashView").hidden=sView!=="flash";
-    if(sView==="month"){ mIdx=-1; renderMonth(); } else if(sView==="flash") loadFlash(); else renderSales();
+    $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month"; $("sFlashView").hidden=sView!=="flash"; $("sAnalView").hidden=sView!=="anal";
+    if(sView==="month"){ mIdx=-1; renderMonth(); } else if(sView==="anal") renderAnal(); else if(sView==="flash") loadFlash(); else renderSales();
     window.scrollTo(0,0);
   }
   document.querySelectorAll("#sView button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
@@ -2266,10 +2358,13 @@ ETC自己負担: 0
   const KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転",...EVENTS];
   let parsed=null;
   function parseNippo(text){
-    const errs=[], check={}, rides=[]; let date=null, inRows=false, last=null, offset=0;
+    const errs=[], check={}, rides=[], tenko={}; let date=null, inRows=false, last=null, offset=0;
     const num=v=>{ const s=String(v||"").replace(/[,，円\s]/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); return s===""?null:isFinite(+s)?+s:NaN; };
     // 日付をまたいだら（前の時刻より6時間以上前に戻ったら）翌日とみなす
-    const abs=t=>{ const m=toMin(String(t||"").trim().replace(/：/g,":")); if(m==null||isNaN(m)) return null; let a=m+offset; if(last!=null&&a<last-360){ offset+=DAY; a+=DAY; } last=Math.max(last??a,a); return a; };
+    // 前の行が0時をまたいだあと、同じ23時台から始まる行（回送と休憩が重なるなど）は、前日のままにする（18時間以上先に飛ばない）
+    const abs=t=>{ const m=toMin(String(t||"").trim().replace(/：/g,":")); if(m==null||isNaN(m)) return null; let a=m+offset;
+      if(last!=null&&a<last-360){ offset+=DAY; a+=DAY; } else if(last!=null&&a-DAY>=last-360) a-=DAY;
+      last=Math.max(last??a,a); return a; };
     text.replace(/\r/g,"").split("\n").forEach((raw,i)=>{
       const line=raw.trim(); if(!line||line.startsWith("（")||line.startsWith("```")) return;   // AIがコードブロックで囲んでも読めるように
       if(/^-{3,}$/.test(line)){ inRows=true; return; }
@@ -2278,6 +2373,8 @@ ETC自己負担: 0
         const m=/^([^:：]+)[:：]\s*(.*)$/.exec(line); if(!m) return;
         const k=m[1].trim(), v=m[2].trim();
         if(k==="伝達事項"){ check.note=v; return; }
+        // 過去分の取り込み用：点呼の実績（点呼時間に勤務がない日は、取り込むときに作る）
+        if(k==="業務前点呼"||k==="業務後点呼"){ const t=v.replace(/：/g,":").replace(/^(\d):/,"0$1:"); if(/^\d{2}:\d{2}$/.test(t)) tenko[k==="業務前点呼"?"ab":"aa"]=t; else errs.push(`${k}の時刻が読めません：${v}`); return; }
         if(k==="走行距離"||k==="出庫メーター"||k==="帰庫メーター") return;   // 走行距離は手入力だけにする（取り込まない）
         if(k==="出庫日"){ const d=v.replace(/[\/年月.]/g,"-").replace(/日$/,"").replace(/-(\d)(?!\d)/g,"-0$1"); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) date=d; else errs.push(`出庫日が読めません：${v}`); }
         else if(HEAD_KEYS[k]){ const n=num(v.split(/[（(]/)[0]); if(Number.isNaN(n)) errs.push(`${k}が数字ではありません`); else check[HEAD_KEYS[k]]=n; }
@@ -2307,8 +2404,22 @@ ETC自己負担: 0
     });
     if(!date) errs.push("「出庫日: YYYY-MM-DD」の行がありません");
     if(!rides.length) errs.push("明細の行がありません");
-    if(date&&!hasShift(date)) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
-    return {date,check,rides,errs};
+    if(date&&!hasShift(date)&&!tenko.ab) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
+    return {date,check,rides,errs,tenko};
+  }
+  // 点呼時間にその日の勤務がなければ、取り込んだ点呼の実績で作る（計画も同じ時刻）。実績が空なら埋める
+  function applyTenko(p){
+    if(!p.tenko||!p.tenko.ab) return;
+    let r=recs.find(x=>x.date===p.date);
+    if(!r){ r={id:"r"+Date.now()+Math.random().toString(36).slice(2,5),date:p.date,pb:p.tenko.ab,pa:p.tenko.aa||"",ab:"",aa:""}; recs.push(r); }
+    if(!r.ab) r.ab=p.tenko.ab; if(!r.aa&&p.tenko.aa) r.aa=p.tenko.aa;
+    save();
+  }
+  // 「出庫日:」ごとに分ける（何日分かをまとめて貼り付けられる）
+  function splitDays(text){
+    const L=text.replace(/\r/g,"").split("\n"), out=[]; let cur=[];
+    L.forEach(l=>{ if(/^\s*出庫日\s*[:：]/.test(l)&&cur.some(x=>/^\s*出庫日\s*[:：]/.test(x))){ out.push(cur.join("\n")); cur=[]; } cur.push(l); });
+    out.push(cur.join("\n")); return out.filter(t=>t.trim());
   }
   const closeImport=()=>{ $("iSheet").hidden=$("iBg").hidden=true; };
   $("sImport").onclick=()=>{ parsed=null; $("iResult").innerHTML=""; $("iGoRow").hidden=true; $("iMsg").textContent=""; $("iSheet").hidden=$("iBg").hidden=false; };
@@ -2316,11 +2427,25 @@ ETC自己負担: 0
   $("iPrompt").onclick=()=>{ const ok=()=>{ $("iMsg").textContent="コピーしました。AIに日報の写真と一緒に送ってください"; };
     if(navigator.clipboard) navigator.clipboard.writeText(IMPORT_PROMPT).then(ok,()=>{ $("iText").value=IMPORT_PROMPT; $("iText").select(); $("iMsg").textContent="自動でコピーできませんでした。欄の文を長押ししてコピーしてください"; });
     else { $("iText").value=IMPORT_PROMPT; $("iText").select(); } };
+  let multi=null;
+  const dayHas=ex=>ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
   $("iCheck").onclick=()=>{
+    const blocks=splitDays($("iText").value); multi=null;
+    if(blocks.length>1){
+      // 何日分もまとめて：記録がまだない日だけ取り込む（もう記録がある日は、1日ずつ貼り付けて突き合わせる）
+      const ps=blocks.map(parseNippo); parsed=null;
+      const rows=ps.map(p=>{ if(p.errs.length) return `<tr><td>${p.date?md(p.date):"?"}</td><td colspan="2" class="red">${esc(p.errs[0])}</td></tr>`;
+        const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
+        p.skip=!!dayHas(ex);
+        return `<tr><td class="num">${md(p.date)}（${dow(p.date)}）</td><td class="num">${s.count}回・${st.total!=null?yen(st.total):yen(s.total)}円</td><td>${p.skip?"もう記録あり（取り込まない）":st.total==null?"取り込む":st.meterOk?`<span class="pill ok">照合OK</span>`:`<span class="pill warn">照合 差 ${yen(s.total-st.meterCalc)}</span>`}${!p.skip&&p.tenko.ab&&!hasShift(p.date)?"<br><small>点呼の記録も作ります</small>":""}</td></tr>`; });
+      const ok=ps.filter(p=>!p.errs.length&&!p.skip);
+      $("iResult").innerHTML=`<b>${ps.length}日分</b>：取り込めるのは ${ok.length}日分です<table class="cmpt" style="margin-top:6px"><tbody>${rows.join("")}</tbody></table>`;
+      multi=ok; $("iGoRow").hidden=!ok.length; return;
+    }
     const p=parseNippo($("iText").value); parsed=p.errs.length?null:p;
     if(p.errs.length){ $("iResult").innerHTML=`<div class="err">${p.errs.slice(0,8).map(esc).join("<br>")}</div>`; $("iGoRow").hidden=true; return; }
     const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
-    const exists=ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
+    const exists=dayHas(ex);
     $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${s.count}回・記録の合計 ${yen(s.total)}円・総営収 ${st.total!=null?yen(st.total)+"円":"なし"}<br>
       ${st.total==null?"":st.meterOk?`<span class="pill ok">メーター照合 OK</span>`:`<span class="pill bad">メーター照合 NG（差 ${yen(s.total-st.meterCalc)}円）：読み取りを確かめてください</span>`}
       ${st.nokin!=null?`<br>納金 ${yen(st.nokin)}円${st.genOk===false?`（日報の現収と合いません）`:""}`:""}
@@ -2330,7 +2455,14 @@ ETC自己負担: 0
     $("iGoRow").hidden=false;
   };
   $("iGo").onclick=()=>{
+    if(multi){
+      multi.forEach(p=>{ applyTenko(p); sales.days[p.date]={mode:"detail",rides:p.rides,simple:{},check:p.check,locked:false,importedAt:new Date().toISOString(),hw:{items:[]}}; });
+      const n=multi.length, lastD=multi[multi.length-1].date; multi=null;
+      saveSales(); render(); filled=false; sDay=lastD; closeImport(); $("iText").value=""; renderSales();
+      $("sStatus").textContent=`${n}日分を取り込みました。上の日付を押すと、ほかの日を選べます`; return;
+    }
     if(!parsed) return;
+    applyTenko(parsed);
     const ex=sales.days[parsed.date];
     const hasOld=ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
     const modeEl=document.querySelector('input[name="iMode"]:checked'), mode=hasOld&&modeEl?modeEl.value:"replace";
