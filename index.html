@@ -1524,6 +1524,15 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     return to-from-busy;
   }
 
+  // 営業時間（実車＋空車。休憩・回送を除く）と税抜営収。実車率（時間）と時間あたり売上に使う
+  const pct=v=>(Math.round(v*1000)/10).toFixed(1)+"%";
+  function workOf(k){
+    const d=getDay(k); if(d.mode==="simple") return null;
+    const s=dayCalc(d), e=emptyMin(d,k===shiftNow());
+    if(e==null||!(s.eig+e>0)) return null;
+    return {eig:s.eig,work:s.eig+e,net:shiftSales(k).amt*salesCfg().tax};
+  }
+
   // ---- 集計（売上管理Excelの「集計」シートと同じ計算） ----
   const CARD=["C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy"];   // ② 日計表に載るもの
   const OTHER=["A:GOPAY","T:チケット","福祉券"];                                        // ③ その他未収
@@ -1594,6 +1603,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
         <div><span class="h">概算給与</span><span class="v num">${yen(net*cf.pay*(1-cf.bonus))}</span></div>
         <div><span class="h">賞与積立</span><span class="v num">${yen(bonusNow)}</span></div>
         <div><span class="h">総営収</span><span class="v num">${yen(tot)}</span></div>
+        ${(w=>w.work?`<div><span class="h">実車率（時間）</span><span class="v num">${pct(w.eig/w.work)}</span></div>
+        <div><span class="h">時間あたり（税抜）</span><span class="v num">${yen(w.net/(w.work/60))}</span></div>`:"")(done.map(x=>workOf(x.k)).filter(Boolean).reduce((a,t)=>({eig:a.eig+t.eig,work:a.work+t.work,net:a.net+t.net}),{eig:0,work:0,net:0}))}
         <div><span class="h">回数</span><span class="v num">${cnt}回</span></div>
         <div><span class="h">配車／手上げ</span><span class="v num">${hai}／${nag}</span></div>
         <div><span class="h">納金の合計</span><span class="v num">${yen(nokin)}</span></div>
@@ -1833,6 +1844,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
          <div><span class="h">実車時間</span><span class="v num">${hm(s.eig)}</span></div>
          <div><span class="h">空車時間</span><span class="v num">${(e=>e==null?"—":hm(e))(emptyMin(d,act))}</span></div>`}
         <div><span class="h">税抜営収</span><span class="v num">${yen(shiftSales(k).amt*salesCfg().tax)}</span></div>
+        ${simple?"":(t=>`<div><span class="h">実車率（時間）</span><span class="v num">${t?pct(t.eig/t.work):"—"}</span></div>
+         <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?yen(t.net/(t.work/60)):"—"}</span></div>`)(workOf(k))}
       </div>
       ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(p)} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
 
