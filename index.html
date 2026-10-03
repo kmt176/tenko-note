@@ -231,6 +231,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
 .wxsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 0;font-size:15.5px}
 /* 一番上の日付を押すと、勤務の一覧から選べる（透明なselectを重ねる） */
 .titlepick{flex:1;position:relative}
+.verpill{font-size:14px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .hbar{display:grid;grid-template-columns:3.2em 1fr auto;gap:8px;align-items:center;font-size:15px;padding:2px 0}
 .hbar .b{height:14px;border-radius:4px;background:var(--accent);min-width:1px}
 .hbar .t{text-align:right;font-variant-numeric:tabular-nums}
@@ -627,9 +628,8 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <h2>点呼ノートの使い方</h2>
-    <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。</small></p>
-    <p class="ver"><small>版：2026-10-03 20:50（新しい版をアップロードしたあとは、アプリを閉じて開き直すとこの日時が変わります）</small></p>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-03 21:05</span></div>
+    <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
@@ -2284,6 +2284,7 @@ body.rtfull{overflow:hidden}
     });
     return leafletP;
   }
+  const ROUTE_PINK="#E8508A";   // 走行ルートの線の色（ユーザー指定）
   function setRtFull(on){
     document.body.classList.toggle("rtfull",on); $("rtFull").textContent=on?"閉じる":"全画面で見る";
     if(typeof rtMapObj!=="undefined"&&rtMapObj) setTimeout(()=>rtMapObj.invalidateSize(),80);
@@ -2316,7 +2317,7 @@ body.rtfull{overflow:hidden}
       if(sel){
         // 選んだ乗車：その間の道を太く、乗車地（緑）・降車地（赤）の印。全体の道は薄く残す
         L.polyline(r.pts.map(p=>[p[0],p[1]]),{color:"#888",weight:2,opacity:.35}).addTo(rtLayer);
-        if(line.length>=2) L.polyline(line,{color:accent,weight:6,opacity:.95}).addTo(rtLayer);
+        if(line.length>=2) L.polyline(line,{color:ROUTE_PINK,weight:6,opacity:.95}).addTo(rtLayer);
         const a=sel.onPos?[sel.onPos.lat,sel.onPos.lng]:line[0], b=sel.offPos?[sel.offPos.lat,sel.offPos.lng]:line[line.length-1];
         if(a) L.circleMarker(a,{radius:9,color:"#2C7A4B",fillOpacity:1}).bindTooltip(`乗車 ${tm(sel.on)}`,{permanent:true,direction:"top"}).addTo(rtLayer);
         if(b) L.circleMarker(b,{radius:9,color:"#B3342A",fillOpacity:1}).bindTooltip(`降車 ${tm(sel.off)}`,{permanent:true,direction:"top"}).addTo(rtLayer);
@@ -2325,7 +2326,7 @@ body.rtfull{overflow:hidden}
         setTimeout(()=>{ rtMapObj.invalidateSize(); rtMapObj.fitBounds(L.latLngBounds(line),{padding:[30,30],maxZoom:16}); },60);
         return;
       }
-      L.polyline(line,{color:accent,weight:4,opacity:.85}).addTo(rtLayer);
+      L.polyline(line,{color:ROUTE_PINK,weight:4,opacity:.85}).addTo(rtLayer);
       L.circleMarker(line[0],{radius:7,color:"#2C7A4B",fillOpacity:1}).bindTooltip("出庫側").addTo(rtLayer);
       L.circleMarker(line[line.length-1],{radius:7,color:"#B3342A",fillOpacity:1}).bindTooltip("入庫側").addTo(rtLayer);
       s.rows.filter(x=>!isEv(x.kind)&&x.onPos).forEach(x=>{
