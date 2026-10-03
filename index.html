@@ -223,9 +223,12 @@ a.flink .st small{color:var(--accent);font-size:12.5px}
 select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
 .wxsel{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wxsel button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 0;font-size:15.5px}
-.daypick{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
-.daypick label{font-size:14.5px;color:var(--muted)}
-.daypick .btn{padding:8px 12px;font-size:15px}
+/* 一番上の日付を押すと、勤務の一覧から選べる（透明なselectを重ねる） */
+.titlepick{flex:1;position:relative}
+.titlepick select{position:absolute;inset:0;width:100%;height:100%;min-height:0;opacity:0;cursor:pointer;font-size:16px}
+.titlepick .dd{font-size:15px;color:var(--muted);margin-left:4px}
+#sFix .btnrow{margin-top:8px}
+#sFix .btn{padding:8px 12px;font-size:15px}
 .nextday{font-size:14.5px;margin-top:4px}
 .nextday input{width:20px;height:20px}
 #rtMap{height:380px;border-radius:10px;border:1px solid var(--line);z-index:0}
@@ -331,17 +334,8 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
   <div class="wrap" id="sDayView">
   <div class="period">
     <button class="iconbtn" id="sPrev" aria-label="前の勤務">◀</button>
-    <h1 id="sTitle">売上</h1>
+    <div class="titlepick"><h1 id="sTitle">売上</h1><select id="sPick" aria-label="勤務を選ぶ"></select></div>
     <button class="iconbtn" id="sNext" aria-label="次の勤務">▶</button>
-  </div>
-  <div class="daypick">
-    <label for="sDate">出庫日を選ぶ</label><input type="date" id="sDate">
-    <div class="btnrow" style="grid-column:1/-1"><button class="btn" id="sMove">この勤務の日付を変える</button><button class="btn danger" id="sDelDay">この勤務の売上を消す</button></div>
-  </div>
-  <div class="grp" id="sMoveBox" hidden>
-    <div class="field"><label for="sMoveTo">正しい出庫日</label><input type="date" id="sMoveTo"></div>
-    <div class="btnrow"><button class="btn primary" id="sMoveDo">この日に移す</button><button class="btn" id="sMoveCancel">やめる</button></div>
-    <div class="msg" id="sMoveMsg" role="status"></div>
   </div>
 
   <section class="meter" id="sSum" aria-live="polite"></section>
@@ -427,6 +421,16 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     <div id="rtMap" hidden></div>
     <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
   </section>
+  <details id="sFix" hidden>
+    <summary>勤務の修正</summary>
+    <div class="src">点呼の実績を違う日に入れたまま記録したときなどに使います。</div>
+    <div class="btnrow"><button class="btn" id="sMove">この勤務の日付を変える</button><button class="btn danger" id="sDelDay">この勤務の売上を消す</button></div>
+    <div class="grp" id="sMoveBox" hidden>
+      <div class="field"><label for="sMoveTo">正しい出庫日</label><input type="date" id="sMoveTo"></div>
+      <div class="btnrow"><button class="btn primary" id="sMoveDo">この日に移す</button><button class="btn" id="sMoveCancel">やめる</button></div>
+      <div class="msg" id="sMoveMsg" role="status"></div>
+    </div>
+  </details>
   </div>
 
   <div class="wrap" id="sFlashView" hidden>
@@ -652,7 +656,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
       <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。乗車ボタンで記録した日は、「突き合わせる」（金額などは日報に合わせ、位置と天気は残し、押し忘れは日報から足す）か「置き換える」かを選べます。住所から位置と天気（9日以内）も自動で入ります。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
-      <dt>過去の勤務</dt><dd>「出庫日を選ぶ」で、どの日の勤務でも開いて入力・修正できます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは「この勤務の売上を消す」を2回押します。</dd>
+      <dt>過去の勤務</dt><dd>一番上の日付を押すと、勤務の一覧（売上つき）から選んで開けます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは、一番下の「勤務の修正」→「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは、同じ所の「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
       <dt>走行ルート</dt><dd>Googleマップのタイムラインを書き出したファイルを「タイムラインを読み込む」で選ぶと、勤務ごとに実際に走った道と乗車の地点を地図で見られます。1つの乗車だけ見るときは、欄の選択か、乗車の一覧の「ルート ›」を押します。ルートはこのスマホの中だけに保存します。</dd>
       <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の売上・税抜・給与見込み・決済別・納金の合計と、勤務ごとの一覧を見られます。</dd>
@@ -1742,28 +1746,35 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     const set=new Set([...recs.filter(r=>r.ab).map(r=>r.date),...Object.entries(sales.days).filter(([,d])=>hasData(d)).map(([k])=>k)]);
     return [...set].sort();
   }
+  // 一番上の日付の一覧：勤務（業務前点呼の実績がある日・記録がある日）を新しい順に
+  function fillPick(){
+    if(document.activeElement===$("sPick")) return;   // 選んでいる最中は作り直さない
+    const L=dayList(); if(sDay&&!L.includes(sDay)) L.push(sDay);
+    $("sPick").innerHTML=L.sort().reverse().map(k=>{ const x=shiftSales(k);
+      return `<option value="${k}">${md(k)}（${dow(k)}）${x.has?`　${yen(x.amt)}円${x.est?"（見込み）":""}`:""}</option>`; }).join("");
+    $("sPick").value=sDay||"";
+  }
   function renderSales(reset){
     if(reset||!sDay) sDay=activeDay();
     // 点呼に勤務がない日（点呼を使っていない人も）は、入力の画面を出さない
     const noShift=!sDay||(!hasShift(sDay)&&!hasData(sales.days[sDay]));
     ["sSum","sDetail","sSimple","ckCard","hwCard","rtCard"].forEach(id=>{ if(noShift) $(id).hidden=true; });
-    $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true; $("sDelDay").hidden=!hasData(sales.days[sDay]);
+    $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true; $("sDelDay").hidden=$("sFix").hidden=!hasData(sales.days[sDay]); fillPick();
     if(noShift){
       const plan=sDay&&planOnly(sDay);
       $("sNoShiftTitle").textContent=plan?"業務前点呼（実績）がまだです":"点呼時間に勤務がありません";
       $("sNoShiftText").textContent=plan?"点呼時間でこの日の業務前点呼（実績）を入れると、この勤務の売上を入力できます。":"売上は、点呼時間に入れた勤務（出社日）ごとに記録します。先に「点呼時間」で勤務を追加し、業務前点呼（実績）を入れてください。";
       $("sGoTenko").textContent=plan?"業務前点呼（実績）を入れる":"点呼時間を開く";
       $("sGoTenko").dataset.rec=plan?plan.id:"";
-      $("sTitle").innerHTML=sDay?`${md(sDay)}（${dow(sDay)}）<small>${plan?"勤務予定（業務前点呼の実績がまだ）":"点呼時間に勤務がありません"}</small>`:`売上<small>点呼時間に勤務がありません</small>`;
-      if(sDay&&document.activeElement!==$("sDate")) $("sDate").value=sDay;
+      $("sTitle").innerHTML=sDay?`${md(sDay)}（${dow(sDay)}）<span class="dd">▾</span><small>${plan?"勤務予定（業務前点呼の実績がまだ）":"点呼時間に勤務がありません"}</small>`:`売上<small>点呼時間に勤務がありません</small>`;
       return;
     }
     $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=false; $("rtCard").hidden=false;
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
-    if(document.activeElement!==$("sDate")) $("sDate").value=k;
-    $("sMove").hidden=$("sDelDay").hidden=!hasData(d);
+    fillPick();
+    $("sMove").hidden=$("sDelDay").hidden=$("sFix").hidden=!hasData(d);
     if(delDayArmed!==k){ delDayArmed=null; $("sDelDay").textContent="この勤務の売上を消す"; }
-    $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<small>${act?"今の勤務":k===activeDay()?"直前の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
+    $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<span class="dd">▾</span><small>${act?"今の勤務":k===activeDay()?"直前の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
     document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
     $("sDetail").hidden=simple; $("sSimple").hidden=!simple;
 
@@ -2290,8 +2301,8 @@ ETC自己負担: 0
     $("sStatus").textContent=(note?note+"。":"取り込みました。")+"住所から位置と天気を調べています（9日より前の天気は取れません）";
   };
 
-  // 出庫日を選ぶ・勤務の日付を変える
-  $("sDate").addEventListener("change",()=>{ if(!$("sDate").value) return; sDay=$("sDate").value; $("sMoveBox").hidden=true; renderSales(); });
+  // 勤務を選ぶ・勤務の日付を変える
+  $("sPick").addEventListener("change",()=>{ if(!$("sPick").value) return; sDay=$("sPick").value; $("sMoveBox").hidden=true; $("sFix").open=false; renderSales(); });
   $("sMove").onclick=()=>{ $("sMoveBox").hidden=false; $("sMoveTo").value=sDay; $("sMoveMsg").textContent="記録の時刻はそのままで、出庫日だけが変わります"; };
   $("sMoveCancel").onclick=()=>{ $("sMoveBox").hidden=true; };
   // この勤務の売上（乗車・簡易入力・納金明細書・走行距離）をまるごと消す。2回押しで消す
