@@ -1601,6 +1601,13 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
     }
     saveFlashState();
   }
+  // Apps Script がエラー画面（HTML）を返したときも、中身の文を見せる（iPhoneの英語のエラーにしない）
+  async function readJson(res){
+    const tx=await res.text();
+    try{ return JSON.parse(tx); }
+    catch(e){ const m=tx.replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;|&#39;|&quot;|&amp;/g," ").replace(/\s+/g," ").trim().slice(0,200);
+      throw new Error(`サーバーの返事が読めませんでした（${res.status}）。この画面を管理者に見せてください：${m||"空の返事"}`); }
+  }
   async function loadFlash(){
     const b=$("fBody");
     const draw=j=>{
@@ -1631,7 +1638,7 @@ select{width:100%;font:19px var(--sans);font-weight:700;padding:10px;border-radi
       // 管理者は全グループ（仲間の合言葉なしでも）、仲間は自分のグループだけ
       const body=isAdmin()?{action:"flashGet",adminPass:cfg.apass}:{action:"flashGet",passcode:cfg.npass};
       const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
-      const j=await res.json(); if(!j.ok) throw new Error(j.error||"読み込めませんでした");
+      const j=await readJson(res); if(!j.ok) throw new Error(j.error||"読み込めませんでした");
       lastFlash=j; draw(j);
     }catch(e){ b.innerHTML=`<div class="err">${esc(/fetch|network|Load failed/i.test(e.message)?"通信できませんでした。電波を確認してください。":e.message)}</div>`; }
   }
