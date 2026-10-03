@@ -345,6 +345,7 @@ body.rtfull{overflow:hidden}
       <div class="btnrow"><button class="btn primary" id="makeBtn">バックアップを作る</button><button class="btn" id="copyBtn" disabled>コピー</button></div>
       <textarea id="exportBox" readonly hidden aria-label="バックアップ用の文字"></textarea>
       <textarea id="importBox" placeholder="ここに貼り付け" aria-label="復元する文字"></textarea>
+      <div class="btnrow"><button class="btn" data-pickfor="importBox">ファイルから読み込む</button></div>
       <div class="field" id="imPassF" hidden><label for="imPass">バックアップのパスワード</label><input type="password" id="imPass" autocomplete="off"></div>
       <label class="check"><input type="checkbox" id="imTenkoOnly">点呼だけ戻す（売上はそのまま）<br><small>点呼の記録だけを消してしまったときなどに使います。チェックしないと、点呼と売上の両方がバックアップの内容に置き換わります</small></label>
       <div class="btnrow">
@@ -656,7 +657,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 00:31</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 00:53</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -790,6 +791,7 @@ body.rtfull{overflow:hidden}
     </ol>
     <div class="btnrow"><button class="btn" id="iPrompt">AIへの頼み方をコピー</button></div>
     <textarea id="iText" placeholder="ここに貼り付け" aria-label="取り込む文" style="min-height:140px"></textarea>
+    <div class="btnrow"><button class="btn" data-pickfor="iText">ファイルから読み込む</button></div>
     <div class="btnrow"><button class="btn primary" id="iCheck">確かめる</button><button class="btn" id="iClose">閉じる</button></div>
     <div id="iResult" class="live"></div>
     <div class="btnrow" id="iGoRow" hidden><button class="btn primary" id="iGo">取り込む</button></div>
@@ -1077,6 +1079,15 @@ body.rtfull{overflow:hidden}
   };
   // 前の版のバックアップ（暗号化なし・点呼だけ）も、新しい形も復元できる
   let restoreArmed=null;
+  // 長い文字は選んでコピーしにくいので、テキストファイル（OneDrive・iCloudなど「ファイル」から）をそのまま読み込めるようにする
+  { const fp=document.createElement("input"); fp.type="file"; fp.accept=".txt,text/plain"; fp.style.cssText="position:absolute;width:1px;height:1px;opacity:0"; document.body.appendChild(fp);
+    let target=null;
+    document.querySelectorAll("[data-pickfor]").forEach(b=>b.onclick=()=>{ target=b.dataset.pickfor; fp.value=""; fp.click(); });
+    fp.addEventListener("change",async()=>{ const file=fp.files&&fp.files[0]; if(!file||!target) return;
+      try{ const t=await file.text(); $(target).value=t.trim(); $(target).dispatchEvent(new Event("input"));
+        if(target==="importBox") msg(`「${file.name}」を読み込みました。「復元」を押してください`); else $("iMsg").textContent=`「${file.name}」を読み込みました。「確かめる」を押してください`;
+      }catch(e){ if(target==="importBox") msg("ファイルを読み込めませんでした"); else $("iMsg").textContent="ファイルを読み込めませんでした"; } });
+  }
   $("importBtn").onclick=async()=>{
     const text=$("importBox").value;
     if(!text.trim()){ msg("バックアップの文字を貼り付けてください"); return; }
