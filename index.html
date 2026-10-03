@@ -128,9 +128,11 @@ input[type=date],input[type=time]{width:100%;font:20.5px var(--num);padding:10px
 .demo-next .lbl{font-size:13px;opacity:.85}
 .demo-next .big{font-size:clamp(24px,8vw,34px);line-height:1.15}
 .demo-next .sub{font-size:14px}
-.explain{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
-.explain dt{color:var(--muted)}
-.explain dd{margin:0}
+/* 説明は見出しの下に本文を全幅で（見出しが長いと本文の幅が細くなって読みにくいため） */
+.explain{margin:0;display:block}
+.explain dt{color:var(--accent);font-weight:700;margin-top:12px}
+.explain dt:first-child{margin-top:0}
+.explain dd{margin:2px 0 0}
 .legend-list{display:grid;gap:8px}
 .help ul{margin:0;padding-left:1.2em;display:grid;gap:8px}
 .caution{border-color:var(--warn)}
@@ -621,7 +623,7 @@ table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(
   <section class="card help">
     <h2>点呼ノートの使い方</h2>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。</small></p>
-    <p class="ver"><small>版：2026-10-03 19:17（新しい版をアップロードしたあとは、アプリを閉じて開き直すとこの日時が変わります）</small></p>
+    <p class="ver"><small>版：2026-10-03 20:37（新しい版をアップロードしたあとは、アプリを閉じて開き直すとこの日時が変わります）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
