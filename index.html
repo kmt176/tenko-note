@@ -346,11 +346,15 @@ body.rtfull{overflow:hidden}
       <textarea id="exportBox" readonly hidden aria-label="バックアップ用の文字"></textarea>
       <textarea id="importBox" placeholder="ここに貼り付け" aria-label="復元する文字"></textarea>
       <div class="field" id="imPassF" hidden><label for="imPass">バックアップのパスワード</label><input type="password" id="imPass" autocomplete="off"></div>
+      <label class="check"><input type="checkbox" id="imTenkoOnly">点呼だけ戻す（売上はそのまま）<br><small>点呼の記録だけを消してしまったときなどに使います。チェックしないと、点呼と売上の両方がバックアップの内容に置き換わります</small></label>
       <div class="btnrow">
         <button class="btn" id="importBtn">復元</button>
         <button class="btn" id="sampleBtn">例（10月度）を入れ直す</button>
-        <button class="btn danger" id="clearBtn">すべて消す</button>
       </div>
+      <details class="danger-zone"><summary>点呼の記録をすべて消す</summary>
+        <div class="src">点呼時間に入れたすべての勤務を消します（売上は消えません）。消す前に、必ずバックアップを作ってください。</div>
+        <div class="btnrow"><button class="btn danger" id="clearBtn">点呼の記録をすべて消す</button></div>
+      </details>
       <div class="msg" id="bkMsg" role="status"></div>
     </div>
   </details>
@@ -652,7 +656,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 00:11</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 00:31</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1072,16 +1076,23 @@ body.rtfull{overflow:hidden}
     if(navigator.clipboard) navigator.clipboard.writeText(prepared).then(()=>msg("コピーしました。メモなどに貼り付けて保存してください"),fallback); else fallback();
   };
   // 前の版のバックアップ（暗号化なし・点呼だけ）も、新しい形も復元できる
+  let restoreArmed=null;
   $("importBtn").onclick=async()=>{
     const text=$("importBox").value;
     if(!text.trim()){ msg("バックアップの文字を貼り付けてください"); return; }
     try{
       const v=await unpackBackup(text,$("imPass").value);
       const t=Array.isArray(v)?v:v&&Array.isArray(v.tenko)?v.tenko:null; if(!t) throw new Error("bad");
+      const only=$("imTenkoOnly").checked, hasU=!Array.isArray(v)&&v.uriage&&v.uriage.days, nU=hasU?Object.keys(v.uriage.days).length:0;
+      const sig=text.length+"|"+only;
+      if(restoreArmed!==sig){ restoreArmed=sig;
+        msg(`このバックアップには、点呼 ${t.length}件${hasU?`・売上 ${nU}勤務`:""}が入っています。${only?"点呼だけ":"点呼と売上"}を、この内容に置き換えます。よければもう一度「復元」を押してください`); return; }
+      restoreArmed=null;
+      if(!t.length&&only){ msg("このバックアップには点呼の記録がありません（0件）。戻しませんでした"); return; }
       recs=t; save();
       let n="";
-      if(!Array.isArray(v)&&v.uriage&&v.uriage.days){ sales=v.uriage; saveSales(); n="、売上 "+Object.keys(sales.days).length+"勤務"; }
-      $("importBox").value=""; $("imPass").value=""; $("imPassF").hidden=true; render(); msg("復元しました（点呼 "+t.length+"件"+n+"）");
+      if(!only&&hasU){ sales=v.uriage; saveSales(); n="、売上 "+nU+"勤務"; }
+      $("importBox").value=""; $("imPass").value=""; $("imPassF").hidden=true; render(); msg("復元しました（点呼 "+t.length+"件"+n+(only?"。売上はそのままです":"")+"）");
     }catch(e){
       const c=e.message;
       if(c==="needpass"){ $("imPassF").hidden=false; $("imPass").focus(); msg("パスワード付きのバックアップです。パスワードを入れて、もう一度「復元」を押してください"); }
@@ -1093,7 +1104,11 @@ body.rtfull{overflow:hidden}
   function loadSample(){ recs=SAMPLE.map(r=>({...r})); save(); pIdx=Math.max(0,periodOf("2026-10-01")); render(); msg("例のデータを入れ直しました"); }
   $("sampleBtn").onclick=loadSample;
   let clrArmed=false;
-  $("clearBtn").onclick=()=>{ if(!clrArmed){ clrArmed=true; $("clearBtn").textContent="もう一度押すと全部消えます"; return; } recs=[]; save(); clrArmed=false; $("clearBtn").textContent="すべて消す"; render(); msg("消しました"); };
+  $("clearBtn").onclick=()=>{ if(!clrArmed){ clrArmed=true; $("clearBtn").textContent="もう一度押すと全部消えます"; return; }
+    clrArmed=false; $("clearBtn").textContent="点呼の記録をすべて消す";
+    if(!confirm(`点呼の記録 ${recs.length}件をすべて消します。元に戻せません。よろしいですか？`)) return;
+    recs=[]; save(); render(); msg("点呼の記録を消しました"); };
+  if(PROD) $("sampleBtn").hidden=true;   // 本番では例のデータは入れない（押し間違いで記録が置き換わらないように）
 
   // ===== 画面の切り替え =====
   // 0=使い方 1=点呼時間 2=メニュー 3=売上（番号は保存済みの値と合わせるため、並び順とは別）
