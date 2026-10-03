@@ -249,6 +249,11 @@ table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(
 .nextday{font-size:14.5px;margin-top:4px}
 .nextday input{width:20px;height:20px}
 #rtMap{height:380px;border-radius:10px;border:1px solid var(--line);z-index:0}
+/* 全画面：地図を画面いっぱいにして、右上に「閉じる」 */
+#rtFull{margin:0 0 8px auto;display:block}
+body.rtfull #rtMap{position:fixed!important;inset:0;height:100vh;height:100dvh;border-radius:0;border:0;z-index:1000}
+body.rtfull #rtFull{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:1001;margin:0;background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3);font-weight:700}
+body.rtfull{overflow:hidden}
 .rtno{background:var(--accent);color:var(--accent-ink);border-radius:999px;font:700 12px var(--num);padding:2px 6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .rtno.big{background:var(--bad);color:#fff}
 .cmpt{width:100%;border-collapse:collapse;font-size:13px;color:var(--ink)}
@@ -438,6 +443,7 @@ table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(
       <button class="btn danger" id="rtDel" hidden>この勤務のルートを消す</button>
     </div>
     <select id="rtSel" class="fgsel" hidden aria-label="表示する乗車"></select>
+    <button class="btn" id="rtFull" hidden>全画面で見る</button>
     <div id="rtMap" hidden></div>
     <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
   </section>
@@ -623,7 +629,7 @@ table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(
   <section class="card help">
     <h2>点呼ノートの使い方</h2>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。</small></p>
-    <p class="ver"><small>版：2026-10-03 20:37（新しい版をアップロードしたあとは、アプリを閉じて開き直すとこの日時が変わります）</small></p>
+    <p class="ver"><small>版：2026-10-03 20:50（新しい版をアップロードしたあとは、アプリを閉じて開き直すとこの日時が変わります）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
@@ -2278,8 +2284,13 @@ table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(
     });
     return leafletP;
   }
+  function setRtFull(on){
+    document.body.classList.toggle("rtfull",on); $("rtFull").textContent=on?"閉じる":"全画面で見る";
+    if(typeof rtMapObj!=="undefined"&&rtMapObj) setTimeout(()=>rtMapObj.invalidateSize(),80);
+  }
+  $("rtFull").onclick=()=>setRtFull(!document.body.classList.contains("rtfull"));
   function renderRoute(k,d,s){
-    const r=d.route; $("rtDel").hidden=!r; $("rtMap").hidden=!r;
+    const r=d.route; $("rtDel").hidden=!r; $("rtMap").hidden=!r; $("rtFull").hidden=!r; if(!r) setRtFull(false);
     if(!r){ if(!/読み込んで|入れました|ありませんでした|err/.test($("rtInfo").innerHTML)) $("rtInfo").textContent="この勤務のルートはまだありません。"; return; }
     // 表示の選択：全体か、1つの乗車（乗車〜降車の間）だけ
     if(rtSelDay!==k){ rtSelDay=k; rtSelId=""; }
