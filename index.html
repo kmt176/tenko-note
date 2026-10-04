@@ -657,7 +657,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 01:09</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 02:40</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1120,6 +1120,8 @@ body.rtfull{overflow:hidden}
       if(c==="needpass"){ $("imPassF").hidden=false; $("imPass").focus(); msg("パスワード付きのバックアップです。パスワードを入れて、もう一度「復元」を押してください"); }
       else if(c==="wrongpass"){ $("imPassF").hidden=false; msg("パスワードが違います"); }
       else if(c==="old") msg("このスマホでは復元できません。OSとブラウザを最新にしてください");
+      // 日報の取り込み用ファイルを、ここ（バックアップの復元）で読み込んでしまったとき
+      else if(/出庫日\s*[:：]/.test(text)) msg("これは日報の取り込み用ファイルです。バックアップではありません。売上 →「日報から取り込む」→「ファイルから読み込む」で読み込んでください");
       else msg("読み込めませんでした。コピーした文字を全部貼り付けてください");
     }
   };
