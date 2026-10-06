@@ -690,7 +690,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 23:08</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 23:12</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2426,7 +2426,8 @@ body.rtfull{overflow:hidden}
          <div><span class="h">空車時間</span><span class="v num">${(e=>e==null?"—":hm(e))(emptyMin(d,act))}</span></div>`}
         <div><span class="h">税抜営収</span><span class="v num">${yen(shiftSales(k).amt*salesCfg().tax)}</span></div>
         ${simple?"":(t=>`<div><span class="h">実車率（時間）</span><span class="v num">${t?pct(t.eig/t.work):"—"}</span></div>
-         <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?yen(t.net/(t.work/60)):"—"}</span></div>`)(workOf(k))}
+         <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?yen(t.net/(t.work/60)):"—"}</span></div>
+         <div><span class="h">時給（給与＋賞与）</span><span class="v num">${t?yen(t.net*salesCfg().pay/(t.work/60)):"—"}<small style="display:block;font-size:13px;color:var(--muted)">休憩・回送を除く</small></span></div>`)(workOf(k))}
       </div>
       ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(p)} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
 
