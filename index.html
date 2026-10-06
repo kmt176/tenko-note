@@ -689,7 +689,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 20:27</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 20:40</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1866,12 +1866,18 @@ body.rtfull{overflow:hidden}
     const timed=d.rides.filter(r=>r.on!=null), ms=timed.filter(r=>r.kind===RZ), st=ev("出庫"), en=ev("入庫");
     if(!timed.length) return null;
     const from=st?st.on:Math.min(...timed.map(r=>r.on));
-    const to=en?en.on:act?nowMin(k):Math.max(...timed.map(r=>r.off!=null?r.off:r.on));
+    let to=en?en.on:act?nowMin(k):Math.max(...timed.map(r=>r.off!=null?r.off:r.on));
+    // 入庫を押し忘れた終わった乗務は、点呼の業務後点呼（実績）を入庫の代わりにする（最後の記録より後なら）
+    if(!en&&!act){ const rc=recs.find(x=>x.date===k); const t0=rc&&rc.aa?toMin(rc.aa):null; if(t0!=null){ let t=t0; while(t<from) t+=DAY; if(t>to&&t-from<30*60) to=t; } }
     if(!(to>from)) return null;
     const iv=ms.map(m=>[Math.max(m.on,from),Math.min(m.off!=null?m.off:to,to)]).filter(x=>x[1]>x[0]).map(([a,b])=>[base+a,base+b]);
-    return {from:base+from,to:base+to,iv,n:ms.length,ended:!!en};
+    return {from:base+from,to:base+to,iv,n:ms.length,ended:!!en,started:!!st};
   }
   const planOf=k=>{ const z=rzCfg(); return z.plans[k]||z.tpl; };
+  // 休憩の時間：実績＝休憩ボタン（記録）の合計（休憩中なら今まで）、計画＝計画の休憩のマスの合計
+  function restAct(k){ const d=sales.days[k]; if(!d||!d.rides) return null; const rs=d.rides.filter(r=>r.kind==="休憩"&&r.on!=null); if(!rs.length) return null;
+    const now=k===shiftNow()?nowMin(k):null; return rs.reduce((t,r)=>t+Math.max(0,(r.off!=null?r.off:(now??r.on))-r.on),0); }
+  const restPlan=pl=>(pl.rest||[]).reduce((t,[x,y])=>t+Math.max(0,Math.min(y,pl.in)-Math.max(x,pl.out)),0);
   // 1乗務：終わった乗務は実績、勤務中は今までの実績＋これからの計画、これからの乗務は計画
   function rzShift(k){
     const base=dayNo(k)*DAY, z=rzSpan(k), pl=planOf(k), now=nowAbsMin(), mine=!!rzCfg().plans[k];
@@ -1925,6 +1931,7 @@ body.rtfull{overflow:hidden}
     const sh=W.shifts.map(s=>{ const m=mustOf(s), ren=sumIv(s.rz,s.a,s.b), wk=s.b-s.a;
       return `<tr><td class="num">${md(s.k)}（${dow(s.k)}）<br><small>${stLabel[s.state]}${s.mine?"・個別の計画":""}</small></td>
         <td class="num">${hm(ren)}／${hm(wk)}</td>
+        <td class="num">${(a=>a!=null?`実績 ${hm(a)}`:"")(restAct(s.k))}${restAct(s.k)!=null&&s.state==="done"?"":`${restAct(s.k)!=null?"<br>":""}計画 ${hm(restPlan(planOf(s.k)))}`}</td>
         <td class="num">${hm(m)} ${m>=MUST()?"✅":"❌"}${m<RZ_MUST?`<br><small>あと ${hm(MUST()-m)}</small>`:""}</td>
         <td>${s.state!=="done"?`<button class="btn" data-plan="${s.k}">計画</button>`:""}</td></tr>`; }).join("");
     // 記録のある週の一覧（新しい順・実績だけ）
@@ -1949,7 +1956,7 @@ body.rtfull{overflow:hidden}
     </section>
     <section class="card">
       <h2>乗務ごと（必須：8〜10時・16〜20時で合わせて2時間）</h2>
-      <div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>出庫日</td><td>連続配車／出庫〜入庫</td><td>必須2時間</td><td></td></tr></thead><tbody>${sh||`<tr><td colspan="4">この週の乗務がありません（点呼時間に予定を入れると、計画で見込みを出します）</td></tr>`}</tbody></table></div>
+      <div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>出庫日</td><td>連続配車／出庫〜入庫</td><td>休憩</td><td>必須2時間</td><td></td></tr></thead><tbody>${sh||`<tr><td colspan="5">この週の乗務がありません（点呼時間に予定を入れると、計画で見込みを出します）</td></tr>`}</tbody></table></div>
       <div class="src">勤務中の乗務は、今までの実績とこれからの計画を足しています。計画は「基本の型」を使い、乗務ごとに変えることもできます。</div>
       <div class="btnrow"><button class="btn" id="rzTplBtn">基本の型（毎回の計画）を直す</button></div>
     </section>
@@ -1968,7 +1975,7 @@ body.rtfull{overflow:hidden}
   // 計画の編集：Excel「1日の計画」と同じ15分のマス。押すたびに 手上げ → 連続配車 → 休憩 → 手上げ
   const inIv=(iv,m)=>iv.some(([x,y])=>m>=x&&m<y);
   // 計画（出庫・入庫・連続配車・休憩）を15分のマスにする
-  function stFrom(src){ const st={}; for(let m=Math.floor(src.out/15)*15;m<src.in;m+=15) st[m]=inIv(src.rz,m)?1:inIv(src.rest||[],m)?2:0; return st; }
+  function stFrom(src){ const st={}; for(let m=Math.floor(src.out/15)*15;m<src.in;m+=15) st[m]=inIv(src.rest||[],m)?2:inIv(src.rz,m)?1:0; return st; }   // 休憩と重なるマスは休憩にする
   // コピーのもと：この乗務より前で、いちばん近い乗務の「計画」（個別に作った計画）か「実績」（連続配車を記録した日）
   function prevPlan(k,want){
     const keys=[...new Set([...recs.map(r=>r.date),...Object.keys(sales.days)])].filter(x=>x<k).sort();
@@ -1976,7 +1983,8 @@ body.rtfull{overflow:hidden}
       if(want==="plan"&&pl) return {src:pl,label:`${md(pk)}（${dow(pk)}）の計画`};
       if(want==="act"&&z&&z.n){ const base=dayNo(pk)*DAY, d=sales.days[pk];
         const rest=d.rides.filter(r=>r.kind==="休憩"&&r.on!=null&&r.off!=null).map(r=>[r.on,r.off]);
-        return {src:{out:z.from-base,in:z.to-base,rz:z.iv.map(([a,b])=>[a-base,b-base]),rest},label:`${md(pk)}（${dow(pk)}）の実績`}; } }
+        return {src:{out:z.started?z.from-base:null,in:z.ended?z.to-base:null,rz:z.iv.map(([a,b])=>[a-base,b-base]),rest},label:`${md(pk)}（${dow(pk)}）の実績`,
+          miss:[!z.started&&"出庫",!z.ended&&"入庫"].filter(Boolean)}; } }
     return null;
   }
   function openRzEd(key){
@@ -2002,7 +2010,7 @@ body.rtfull{overflow:hidden}
       <div class="pair"><div class="field"><label for="edOut">出庫</label><input type="time" id="edOut" value="${t(e.out)}"></div><div class="field"><label for="edIn">入庫</label><input type="time" id="edIn" value="${t(e.in)}"></div></div>
       <div class="legend"><span><b style="background:var(--accent)"></b>連続配車</span><span><b style="background:var(--warn-soft);border:1px solid var(--warn)"></b>休憩</span><span><b style="background:var(--surface);border:1px solid var(--line)"></b>手上げ・営業</span><span style="color:var(--accent)">太字の時＝必須の時間帯</span></div>
       <div class="rzgrid">${rows}</div>
-      <div class="checks"><span class="pill ${m>=MUST()?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=MUST()?"✅":"❌ あと "+hm(MUST()-m)}</span><span class="pill">連続配車 ${hm(ren)}／出庫〜入庫 ${hm(e.in-e.out)}</span></div>
+      <div class="checks"><span class="pill ${m>=MUST()?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=MUST()?"✅":"❌ あと "+hm(MUST()-m)}</span><span class="pill">連続配車 ${hm(ren)}／出庫〜入庫 ${hm(e.in-e.out)}</span><span class="pill">休憩 ${hm(restPlan({out:e.out,in:e.in,rest:toIv(e.st,2)}))}</span></div>
       ${e.note?`<div class="src">${e.note}をコピーしました。よければ「保存」を押してください</div>`:""}
       <div class="btnrow"><button class="btn primary" id="edSave">保存</button>${e.key!=="tpl"?`<button class="btn" id="edCopy">前の乗務の計画をコピー</button><button class="btn" id="edCopyAct">前の乗務の実績をコピー</button>`:""}${e.key!=="tpl"&&rzCfg().plans[e.key]?`<button class="btn" id="edReset">基本の型に戻す</button>`:""}<button class="btn" id="edClose">閉じる</button></div>
       <small>マスを押すたびに、手上げ → 連続配車 → 休憩 → 手上げ と変わります。</small>`;
@@ -2015,7 +2023,9 @@ body.rtfull{overflow:hidden}
       if(e.key==="tpl") z.tpl=pl; else z.plans[e.key]=pl; saveSales(); rzEd=null; renderRzView(); };
     const copyFrom=want=>{ const pv=prevPlan(e.key,want);
       if(!pv){ alert(want==="plan"?"前の乗務に、個別に作った計画がありません（基本の型のままです）":"前の乗務に、連続配車の記録がありません"); return; }
-      e.out=pv.src.out; e.in=pv.src.in; e.st=stFrom(pv.src); e.note=pv.label; edRender(); };
+      const src=Object.assign({},pv.src,{out:pv.src.out??e.out,in:pv.src.in??e.in});
+      e.out=src.out; e.in=src.in; e.st=stFrom(src);
+      e.note=pv.label+(pv.miss&&pv.miss.length?`（${pv.miss.join("・")}の記録がないので、${pv.miss.join("・")}は今の計画の時刻のまま）`:""); edRender(); };
     if($("edCopy")) $("edCopy").onclick=()=>copyFrom("plan");
     if($("edCopyAct")) $("edCopyAct").onclick=()=>copyFrom("act");
     if($("edReset")) $("edReset").onclick=()=>{ delete rzCfg().plans[e.key]; saveSales(); rzEd=null; renderRzView(); };
