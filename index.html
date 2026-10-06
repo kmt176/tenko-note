@@ -211,6 +211,9 @@ a.flink .st small{color:var(--accent);font-size:12.5px}
 .evbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .evbtns .btn{padding:10px 0;font-size:15.5px;white-space:nowrap}
 .evbtns .btn.on{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.rzbtn{display:grid;gap:2px;text-align:center;padding:12px 10px;font-size:19px;font-weight:700;border:2px solid var(--accent);color:var(--accent);background:var(--surface)}
+.rzbtn small{font-size:13.5px;font-weight:400;color:var(--muted)}
+.rzbtn.on{background:var(--accent-soft);border-color:var(--accent)}
 .ride{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px;text-align:left;width:100%}
 .ride.open{border-color:var(--ok);border-width:2px}
 .ride .top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -376,6 +379,7 @@ body.rtfull{overflow:hidden}
   </div>
 
   <section class="meter" id="sSum" aria-live="polite"></section>
+  <section class="meter" id="rzCard" hidden></section>
   <details id="sHour" hidden><summary>時間帯別の売上</summary><div class="src">乗車した時刻の時間帯ごとの合計（ETC・アプリ手配料を除いたメーター料金）。</div><div id="sHourBody"></div></details>
 
   <section class="card" id="sNoShift" hidden>
@@ -657,7 +661,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-04 02:40</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 14:16</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -723,6 +727,7 @@ body.rtfull{overflow:hidden}
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
+      <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>モード中に乗車を押すと内容が「連続配車」、モードの外は「配車」「手上げ」になります（あとで時間を直すと、迎車の乗車も付け直します）。売上の画面に、この勤務と今週（月曜〜日曜）の連続配車の時間と達成率（目安60%）が出ます。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
       <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。GO Payでも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
     </ol>
     <dl class="explain">
@@ -804,7 +809,7 @@ body.rtfull{overflow:hidden}
   <div class="in">
     <h2 id="rTitle">乗車の入力</h2>
     <div class="field"><label for="rKind">内容</label>
-      <select id="rKind"><option>連続配車</option><option>配車</option><option>手上げ</option><option>乗り場</option><option>CAN</option><option>B空転</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option></select></div>
+      <select id="rKind"><option>連続配車</option><option>配車</option><option>手上げ</option><option>乗り場</option><option>CAN</option><option>B空転</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option><option>連続配車モード</option></select></div>
     <div class="pair">
       <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"><label class="check nextday"><input type="checkbox" id="rOnNext">翌日（出庫日の次の日）</label></div>
       <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
@@ -1614,7 +1619,8 @@ body.rtfull{overflow:hidden}
   // 市区町村コード → 名前（国土地理院。東京・埼玉・千葉・神奈川）と、気温・降水量を測っている関東のアメダス観測所
   const MUNI={"11100":"さいたま市","11101":"さいたま市西区","11102":"さいたま市北区","11103":"さいたま市大宮区","11104":"さいたま市見沼区","11105":"さいたま市中央区","11106":"さいたま市桜区","11107":"さいたま市浦和区","11108":"さいたま市南区","11109":"さいたま市緑区","11110":"さいたま市岩槻区","11201":"川越市","11202":"熊谷市","11203":"川口市","11206":"行田市","11207":"秩父市","11208":"所沢市","11209":"飯能市","11210":"加須市","11211":"本庄市","11212":"東松山市","11214":"春日部市","11215":"狭山市","11216":"羽生市","11217":"鴻巣市","11218":"深谷市","11219":"上尾市","11221":"草加市","11222":"越谷市","11223":"蕨市","11224":"戸田市","11225":"入間市","11227":"朝霞市","11228":"志木市","11229":"和光市","11230":"新座市","11231":"桶川市","11232":"久喜市","11233":"北本市","11234":"八潮市","11235":"富士見市","11237":"三郷市","11238":"蓮田市","11239":"坂戸市","11240":"幸手市","11241":"鶴ヶ島市","11242":"日高市","11243":"吉川市","11245":"ふじみ野市","11301":"伊奈町","11324":"三芳町","11326":"毛呂山町","11327":"越生町","11341":"滑川町","11342":"嵐山町","11343":"小川町","11346":"川島町","11347":"吉見町","11348":"鳩山町","11349":"ときがわ町","11361":"横瀬町","11362":"皆野町","11363":"長瀞町","11365":"小鹿野町","11369":"東秩父村","11381":"美里町","11383":"神川町","11385":"上里町","11408":"寄居町","11442":"宮代町","11246":"白岡市","11464":"杉戸町","11465":"松伏町","12100":"千葉市","12101":"千葉市中央区","12102":"千葉市花見川区","12103":"千葉市稲毛区","12104":"千葉市若葉区","12105":"千葉市緑区","12106":"千葉市美浜区","12202":"銚子市","12203":"市川市","12204":"船橋市","12205":"館山市","12206":"木更津市","12207":"松戸市","12208":"野田市","12210":"茂原市","12211":"成田市","12212":"佐倉市","12213":"東金市","12215":"旭市","12216":"習志野市","12217":"柏市","12218":"勝浦市","12219":"市原市","12220":"流山市","12221":"八千代市","12222":"我孫子市","12223":"鴨川市","12224":"鎌ケ谷市","12225":"君津市","12226":"富津市","12227":"浦安市","12228":"四街道市","12229":"袖ケ浦市","12230":"八街市","12231":"印西市","12232":"白井市","12233":"富里市","12234":"南房総市","12235":"匝瑳市","12236":"香取市","12237":"山武市","12238":"いすみ市","12322":"酒々井町","12329":"栄町","12342":"神崎町","12347":"多古町","12349":"東庄町","12239":"大網白里市","12403":"九十九里町","12409":"芝山町","12410":"横芝光町","12421":"一宮町","12422":"睦沢町","12423":"長生村","12424":"白子町","12426":"長柄町","12427":"長南町","12441":"大多喜町","12443":"御宿町","12463":"鋸南町","13101":"千代田区","13102":"中央区","13103":"港区","13104":"新宿区","13105":"文京区","13106":"台東区","13107":"墨田区","13108":"江東区","13109":"品川区","13110":"目黒区","13111":"大田区","13112":"世田谷区","13113":"渋谷区","13114":"中野区","13115":"杉並区","13116":"豊島区","13117":"北区","13118":"荒川区","13119":"板橋区","13120":"練馬区","13121":"足立区","13122":"葛飾区","13123":"江戸川区","13201":"八王子市","13202":"立川市","13203":"武蔵野市","13204":"三鷹市","13205":"青梅市","13206":"府中市","13207":"昭島市","13208":"調布市","13209":"町田市","13210":"小金井市","13211":"小平市","13212":"日野市","13213":"東村山市","13214":"国分寺市","13215":"国立市","13218":"福生市","13219":"狛江市","13220":"東大和市","13221":"清瀬市","13222":"東久留米市","13223":"武蔵村山市","13224":"多摩市","13225":"稲城市","13227":"羽村市","13228":"あきる野市","13229":"西東京市","13303":"瑞穂町","13305":"日の出町","13307":"檜原村","13308":"奥多摩町","13361":"大島町","13362":"利島村","13363":"新島村","13364":"神津島村","13381":"三宅村","13382":"御蔵島村","13401":"八丈町","13402":"青ヶ島村","13421":"小笠原村","14100":"横浜市","14101":"横浜市鶴見区","14102":"横浜市神奈川区","14103":"横浜市西区","14104":"横浜市中区","14105":"横浜市南区","14106":"横浜市保土ケ谷区","14107":"横浜市磯子区","14108":"横浜市金沢区","14109":"横浜市港北区","14110":"横浜市戸塚区","14111":"横浜市港南区","14112":"横浜市旭区","14113":"横浜市緑区","14114":"横浜市瀬谷区","14115":"横浜市栄区","14116":"横浜市泉区","14117":"横浜市青葉区","14118":"横浜市都筑区","14130":"川崎市","14131":"川崎市川崎区","14132":"川崎市幸区","14133":"川崎市中原区","14134":"川崎市高津区","14135":"川崎市多摩区","14136":"川崎市宮前区","14137":"川崎市麻生区","14150":"相模原市","14151":"相模原市緑区","14152":"相模原市中央区","14153":"相模原市南区","14201":"横須賀市","14203":"平塚市","14204":"鎌倉市","14205":"藤沢市","14206":"小田原市","14207":"茅ヶ崎市","14208":"逗子市","14210":"三浦市","14211":"秦野市","14212":"厚木市","14213":"大和市","14214":"伊勢原市","14215":"海老名市","14216":"座間市","14217":"南足柄市","14218":"綾瀬市","14301":"葉山町","14321":"寒川町","14341":"大磯町","14342":"二宮町","14361":"中井町","14362":"大井町","14363":"松田町","14364":"山北町","14366":"開成町","14382":"箱根町","14383":"真鶴町","14384":"湯河原町","14401":"愛川町","14402":"清川村"};
   const AMEDAS=[["40091","常陸大宮",36.6067,140.325],["40136","日立",36.58,140.645],["40191","笠間",36.395,140.24],["40201","水戸",36.38,140.4667],["40221","古河",36.2017,139.7167],["40231","下館",36.2817,139.9883],["40281","下妻",36.1683,139.945],["40311","鉾田",36.1683,140.5267],["40336","つくば",36.0567,140.125],["40341","土浦",36.1033,140.22],["40406","鹿嶋",35.9633,140.6217],["40426","龍ケ崎",35.89,140.2117],["41247","那須烏山",36.6417,140.1167],["41271","鹿沼",36.5917,139.735],["41277","宇都宮",36.5483,139.8683],["41331","真岡",36.4767,139.9867],["41361","佐野",36.3633,139.57],["41376","小山",36.3383,139.83],["42146","沼田",36.6683,139.0217],["42186","中之条",36.5867,138.85],["42251","前橋",36.405,139.06],["42266","桐生",36.41,139.325],["42286","上里見",36.3767,138.895],["42302","伊勢崎",36.3317,139.165],["42326","西野牧",36.245,138.7067],["42366","館林",36.24,139.5133],["42396","神流",36.1083,138.8967],["43051","寄居",36.105,139.1833],["43056","熊谷",36.15,139.38],["43126","久喜",36.0867,139.635],["43156","秩父",35.99,139.0733],["43171","鳩山",35.985,139.335],["43241","さいたま",35.875,139.5867],["43256","越谷",35.8833,139.7567],["43266","所沢",35.7733,139.4133],["44046","小河内",35.7917,139.05],["44056","青梅",35.7883,139.3117],["44071","練馬",35.7383,139.5917],["44112","八王子",35.6667,139.3167],["44116","府中",35.6833,139.4833],["44132","東京",35.6917,139.75],["44136","江戸川臨海",35.6383,139.8633],["44166","羽田",35.5533,139.78],["45061","我孫子",35.8633,140.11],["45081","香取",35.8583,140.5017],["45106","船橋",35.7117,140.0433],["45116","佐倉",35.7283,140.2117],["45121","成田",35.7633,140.385],["45148","銚子",35.7383,140.8567],["45181","横芝光",35.655,140.505],["45212","千葉",35.6017,140.1033],["45261","茂原",35.4367,140.2933],["45282","木更津",35.3617,139.94],["45291","牛久",35.3967,140.1483],["45326","坂畑",35.235,140.0983],["45361","鴨川",35.1117,140.1],["45371","勝浦",35.15,140.3117],["45401","館山",34.9867,139.865],["46091","海老名",35.4333,139.3867],["46106","横浜",35.4383,139.6517],["46141","辻堂",35.32,139.45],["46166","小田原",35.2767,139.155],["46211","三浦",35.1783,139.63],["49151","勝沼",35.6633,138.725],["49161","大月",35.6083,138.9383],["49196","古関",35.5283,138.615],["49251","河口湖",35.5,138.76],["49256","山中",35.4367,138.8367],["50136","御殿場",35.305,138.9267],["50196","富士",35.185,138.6633],["50206","三島",35.1133,138.925],["50281","網代",35.045,139.0917]];
-  const EVENTS=["出庫","入庫","休憩","回送"];
+  const RZ="連続配車モード";   // 連続配車の開始〜終了（手上げを取らず迎車だけを受ける時間）。休憩・回送と同じく開始と終了を持つ記録
+  const EVENTS=["出庫","入庫","休憩","回送",RZ];
   const isEv=k=>EVENTS.includes(k);
   const yen=n=>(Math.round(n)||0).toLocaleString("ja-JP");
   // 金額の入力欄はカンマ付きで表示し、読むときはカンマなどを取り除く
@@ -1697,7 +1703,7 @@ body.rtfull{overflow:hidden}
     const from=st?st.on:Math.min(...timed.map(r=>r.on));
     const to=en?en.on:act?nowMin(sDay):Math.max(...timed.map(r=>r.off!=null?r.off:r.on));
     if(!(to>from)) return null;
-    const iv=d.rides.filter(r=>r.on!=null&&r.off!=null&&r.off>r.on&&!["出庫","入庫"].includes(r.kind))
+    const iv=d.rides.filter(r=>r.on!=null&&r.off!=null&&r.off>r.on&&!["出庫","入庫",RZ].includes(r.kind))
       .map(r=>[Math.max(r.on,from),Math.min(r.off,to)]).filter(x=>x[1]>x[0]).sort((a,b)=>a[0]-b[0]);
     let busy=0, cs=null, ce=null;
     iv.forEach(([a,b])=>{ if(ce==null||a>ce){ if(ce!=null) busy+=ce-cs; cs=a; ce=b; } else ce=Math.max(ce,b); });
@@ -1712,6 +1718,51 @@ body.rtfull{overflow:hidden}
     const s=dayCalc(d), e=emptyMin(d,k===shiftNow());
     if(e==null||!(s.eig+e>0)) return null;
     return {eig:s.eig,work:s.eig+e,net:shiftSales(k).amt*salesCfg().tax};
+  }
+
+  // ===== 連続配車の時間（売上管理Excelの「週間配車管理」と同じ考え方） =====
+  // 週は月曜0:00〜日曜24:00。日をまたぐ勤務は週の境目で分ける。達成率＝連続配車の時間÷勤務（出庫〜入庫）、目安60%以上
+  const RZ_GOAL=0.6;
+  function rzSpan(k){
+    const d=sales.days[k]; if(!d||d.mode==="simple"||!d.rides) return null;
+    const act=k===shiftNow(), base=dayNo(k)*DAY, ev=kd=>d.rides.find(r=>r.kind===kd&&r.on!=null);
+    const timed=d.rides.filter(r=>r.on!=null), ms=timed.filter(r=>r.kind===RZ), st=ev("出庫"), en=ev("入庫");
+    if(!timed.length) return null;
+    const from=st?st.on:Math.min(...timed.map(r=>r.on));
+    const to=en?en.on:act?nowMin(k):Math.max(...timed.map(r=>r.off!=null?r.off:r.on));
+    if(!(to>from)) return null;
+    const iv=ms.map(m=>[Math.max(m.on,from),Math.min(m.off!=null?m.off:to,to)]).filter(x=>x[1]>x[0]).map(([a,b])=>[base+a,base+b]);
+    return {from:base+from,to:base+to,iv,n:ms.length};
+  }
+  const sumIv=(iv,a,b)=>iv.reduce((t,[x,y])=>t+Math.max(0,Math.min(y,b)-Math.max(x,a)),0);
+  const weekOf=abs=>{ const di=Math.floor(abs/DAY), wd=(new Date(di*864e5).getUTCDay()+6)%7; return (di-wd)*DAY; };
+  const hasRz=d=>!!(d&&d.rides&&d.rides.some(r=>r.kind===RZ));
+  function rzWeek(w){
+    const a=w, b=w+7*DAY; let work=0, ren=0, days=0;
+    Object.keys(sales.days).forEach(k=>{ const di=dayNo(k); if(di*DAY>=b||(di+2)*DAY<=a) return;
+      const z=rzSpan(k); if(!z) return; const wk=Math.max(0,Math.min(z.to,b)-Math.max(z.from,a)); if(!wk) return;
+      work+=wk; ren+=sumIv(z.iv,a,b); days++; });
+    return {work,ren,days};
+  }
+  const wkLabel=w=>{ const f=x=>{ const t=new Date(x/DAY*864e5); return (t.getUTCMonth()+1)+"/"+t.getUTCDate(); }; return `${f(w)}〜${f(w+6*DAY)}`; };
+  const rzJudge=(ren,work)=>!work?"":ren/work>=RZ_GOAL?`<span class="pill ok">🟢 達成中（${pct(ren/work)}）</span>`
+    :`<span class="pill warn">🔴 ${pct(ren/work)}・60%まで あと ${hm(Math.ceil(RZ_GOAL*work-ren))}</span>`;
+  function renderRz(k){
+    const el=$("rzCard"), z=rzSpan(k);
+    // 連続配車モードを一度も記録していなければ出さない
+    if(!z||!Object.values(sales.days).some(hasRz)){ el.hidden=true; return; }
+    const w=weekOf(z.from), W=rzWeek(w), ren=sumIv(z.iv,z.from,z.to), work=z.to-z.from;
+    const weeks=[...new Set(Object.keys(sales.days).filter(kk=>hasRz(sales.days[kk])).map(kk=>{ const zz=rzSpan(kk); return zz?weekOf(zz.from):null; }).filter(x=>x!=null))].sort((a,b)=>b-a);
+    el.hidden=false;
+    el.innerHTML=`<div class="row"><span>連続配車</span><span class="total num">${work?pct(ren/work):"—"}<small style="font-size:14px;color:var(--muted)"> この勤務</small></span></div>
+      <div class="sumgrid">
+        <div><span class="h">この勤務の連続配車</span><span class="v num">${hm(ren)}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
+        <div><span class="h">勤務（出庫〜入庫）</span><span class="v num">${hm(work)}</span></div>
+      </div>
+      <div style="margin-top:8px">今週（${wkLabel(w)}）：連続配車 <b class="num">${hm(W.ren)}</b>／勤務 <span class="num">${hm(W.work)}</span>（${W.days}勤務）</div>
+      <div class="checks">${rzJudge(W.ren,W.work)}</div>
+      ${weeks.length?`<details><summary>週ごとの記録</summary><table class="cmpt"><tbody>${weeks.map(x=>{ const v=rzWeek(x); return `<tr><td class="num">${wkLabel(x)}</td><td class="num">${hm(v.ren)}／${hm(v.work)}</td><td class="num">${v.work?pct(v.ren/v.work):"—"} ${v.work&&v.ren/v.work>=RZ_GOAL?"🟢":"🔴"}</td></tr>`; }).join("")}</tbody></table></details>`:""}
+      <div class="src">週は月曜0:00〜日曜24:00（日をまたぐ勤務は週の境目で分けます）。達成率＝連続配車の時間÷勤務（出庫〜入庫）、目安60%以上。売上管理Excelの「週間配車管理」と同じ考え方です。</div>`;
   }
 
   // ---- 集計（売上管理Excelの「集計」シートと同じ計算） ----
@@ -2063,7 +2114,7 @@ body.rtfull{overflow:hidden}
     if(reset||!sDay) sDay=activeDay();
     // 点呼に勤務がない日（点呼を使っていない人も）は、入力の画面を出さない
     const noShift=!sDay||(!hasShift(sDay)&&!hasData(sales.days[sDay]));
-    ["sSum","sDetail","sSimple","ckCard","hwCard","rtCard","sHour"].forEach(id=>{ if(noShift) $(id).hidden=true; });
+    ["sSum","rzCard","sDetail","sSimple","ckCard","hwCard","rtCard","sHour"].forEach(id=>{ if(noShift) $(id).hidden=true; });
     $("sModeSeg").hidden=noShift; $("sNoShift").hidden=!noShift; $("sMove").hidden=true; $("sDelDay").hidden=$("sFix").hidden=!hasData(sales.days[sDay]); fillPick();
     if(noShift){
       const plan=sDay&&planOnly(sDay);
@@ -2101,6 +2152,8 @@ body.rtfull{overflow:hidden}
       </div>
       ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(p)} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
 
+    renderRz(k);
+
     // 乗車・降車ボタン（今の勤務のときだけ）
     const open=d.rides.find(r=>!isEv(r.kind)&&r.on!=null&&r.off==null);
     const evOpen=kd=>d.rides.find(r=>r.kind===kd&&r.on!=null&&r.off==null);
@@ -2109,20 +2162,21 @@ body.rtfull{overflow:hidden}
       $("sNow").innerHTML=`<div class="ridebtns">
         ${open?`<button class="bigbtn off" id="bOff">降車<small>乗車 ${tm(open.on)} から ${hm(n-open.on)}</small></button>`
               :`<button class="bigbtn" id="bOn">乗車<small>押した時刻・場所・天気を記録します</small></button>`}
+        <button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>
         <div class="evbtns">
           <button class="btn" data-ev="出庫">出庫</button>
           <button class="btn${evOpen("休憩")?" on":""}" data-ev="休憩">${evOpen("休憩")?"休憩終了":"休憩"}</button>
           <button class="btn${evOpen("回送")?" on":""}" data-ev="回送">${evOpen("回送")?"回送終了":"回送"}</button>
           <button class="btn" data-ev="入庫">入庫</button>
         </div></div>`;
-      if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff;
+      if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff; $("bRz").onclick=()=>evPress(RZ);
       document.querySelectorAll("#sNow [data-ev]").forEach(b=>b.onclick=()=>evPress(b.dataset.ev));
     } else $("sNow").innerHTML=act||simple||k===activeDay()||!activeDay()?"":`<button class="btn" id="bToday">${shiftNow()?"今の勤務":"直前の勤務"}（${md(activeDay())}出庫）に戻る</button>`;
     if($("bToday")) $("bToday").onclick=()=>renderSales(true);
 
     // 一覧（新しい乗車が上）
     $("sList").innerHTML=s.rows.slice().reverse().map(r=>{
-      if(isEv(r.kind)) return `<button class="evrow" data-id="${r.id}"><span>${esc(r.kind)}</span><span class="num">${tm(r.on)}${r.kind==="休憩"||r.kind==="回送"?"〜"+(r.off!=null?tm(r.off):"")+(r.off!=null?`（${r.off-r.on}分）`:""):""}</span></button>`;
+      if(isEv(r.kind)) return `<button class="evrow" data-id="${r.id}"><span>${esc(r.kind)}</span><span class="num">${tm(r.on)}${r.kind==="休憩"||r.kind==="回送"||r.kind===RZ?"〜"+(r.off!=null?tm(r.off):"")+(r.off!=null?`（${r.off-r.on}分）`:""):""}</span></button>`;
       const addr=[r.onAddr,r.offAddr].map(a=>a==null?"":a).filter(Boolean);
       return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
         <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
@@ -2239,9 +2293,22 @@ body.rtfull{overflow:hidden}
 
   function newId(){ return "u"+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
   function lastOf(d,f,def){ const r=[...d.rides].reverse().find(x=>!isEv(x.kind)&&x[f]); return r?r[f]:def; }
+  // 新しい乗車の内容：連続配車モードを使っている日は、モード中なら「連続配車」、外なら前の乗車（連続配車だったら手上げ）
+  function kindNow(d,at){
+    const ms=d.rides.filter(r=>r.kind===RZ&&r.on!=null);
+    if(!ms.length) return lastOf(d,"kind","連続配車");
+    if(ms.some(m=>at>=m.on&&(m.off==null||at<=m.off))) return "連続配車";
+    const k=lastOf(d,"kind","手上げ"); return k==="連続配車"?"手上げ":k;
+  }
+  // 連続配車モードの時間に合わせて、迎車の乗車を「連続配車」と「配車」に付け直す（モードを記録した日だけ）
+  function syncRz(d){
+    const ms=d.rides.filter(r=>r.kind===RZ&&r.on!=null); if(!ms.length) return;
+    const inM=t=>ms.some(m=>t>=m.on&&(m.off==null||t<=m.off));
+    d.rides.forEach(r=>{ if(!isHai(r.kind)||r.on==null) return; r.kind=inM(r.on)?"連続配車":"配車"; });
+  }
   function rideOn(){
     const k=sDay, d=ensureDay(k); if(!guard(d)) return;
-    const r={id:newId(),kind:lastOf(d,"kind","連続配車"),on:nowMin(k),off:null,pay:lastOf(d,"pay","A:GOPAY")};
+    const r={id:newId(),kind:kindNow(d,nowMin(k)),on:nowMin(k),off:null,pay:lastOf(d,"pay","A:GOPAY")};
     d.rides.push(r); saveSales(); $("sStatus").textContent="乗車を記録しました。位置と天気を調べています…"; renderSales();
     capture(k,r.id,"on").then(()=>{ $("sStatus").textContent=""; });
   }
@@ -2256,6 +2323,7 @@ body.rtfull{overflow:hidden}
     const open=d.rides.find(r=>r.kind===kind&&r.on!=null&&r.off==null);
     if(open) open.off=Math.max(open.on,nowMin(k));
     else d.rides.push({id:newId(),kind,on:nowMin(k),off:null});
+    if(kind===RZ) syncRz(d);
     saveSales(); renderSales();
   }
 
@@ -2263,7 +2331,7 @@ body.rtfull{overflow:hidden}
   function openRide(id,afterOff){
     const k=sDay, d=getDay(k);
     rEdit=id; rDelArmed=false; $("rDel").textContent="削除";
-    const r=id?d.rides.find(x=>x.id===id):{kind:lastOf(d,"kind","連続配車"),pay:lastOf(d,"pay","A:GOPAY")};
+    const r=id?d.rides.find(x=>x.id===id):{kind:kindNow(d,nowMin(k)),pay:lastOf(d,"pay","A:GOPAY")};
     $("rTitle").textContent=id?(afterOff?"降車：金額を入れてください":"記録を直す"):"乗車を手で追加";
     $("rKind").value=r.kind||"連続配車"; $("rOn").value=r.on!=null?clock(((r.on%DAY)+DAY)%DAY):""; $("rOff").value=r.off!=null?clock(((r.off%DAY)+DAY)%DAY):"";
     $("rOnNext").checked=r.on!=null&&r.on>=DAY; $("rOffNext").checked=r.off!=null&&r.off>=DAY;
@@ -2512,7 +2580,7 @@ ETC自己負担: 0
   const KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転",...EVENTS];
   let parsed=null;
   function parseNippo(text){
-    const errs=[], check={}, rides=[], tenko={}; let date=null, inRows=false, last=null, offset=0;
+    const errs=[], check={}, rides=[], tenko={}, rzRaw=[]; let date=null, inRows=false, last=null, offset=0;
     const num=v=>{ const s=String(v||"").replace(/[,，円\s]/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); return s===""?null:isFinite(+s)?+s:NaN; };
     // 日付をまたいだら（前の時刻より6時間以上前に戻ったら）翌日とみなす
     // 前の行が0時をまたいだあと、同じ23時台から始まる行（回送と休憩が重なるなど）は、前日のままにする（18時間以上先に飛ばない）
@@ -2530,6 +2598,8 @@ ETC自己負担: 0
         // 過去分の取り込み用：点呼の実績（点呼時間に勤務がない日は、取り込むときに作る）
         if(k==="業務前点呼"||k==="業務後点呼"){ const t=v.replace(/：/g,":").replace(/^(\d):/,"0$1:"); if(/^\d{2}:\d{2}$/.test(t)) tenko[k==="業務前点呼"?"ab":"aa"]=t; else errs.push(`${k}の時刻が読めません：${v}`); return; }
         if(k==="走行距離"||k==="出庫メーター"||k==="帰庫メーター") return;   // 走行距離は手入力だけにする（取り込まない）
+        // 連続配車モードの時間：「連続配車: 13:12-17:37, 17:54-20:30」（開始-終了を「,」「、」で区切る）
+        if(k==="連続配車"){ v.replace(/：/g,":").split(/[,、，\s]+/).filter(Boolean).forEach(x=>{ const m2=/^(\d{1,2}:\d{2})[-〜~～ー－](\d{1,2}:\d{2})$/.exec(x); if(m2) rzRaw.push([m2[1],m2[2]]); else errs.push(`連続配車の時間が読めません：${x}（例 13:12-17:37）`); }); return; }
         if(k==="出庫日"){ const d=v.replace(/[\/年月.]/g,"-").replace(/日$/,"").replace(/-(\d)(?!\d)/g,"-0$1"); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) date=d; else errs.push(`出庫日が読めません：${v}`); }
         else if(HEAD_KEYS[k]){ const n=num(v.split(/[（(]/)[0]); if(Number.isNaN(n)) errs.push(`${k}が数字ではありません`); else check[HEAD_KEYS[k]]=n; }
         return;
@@ -2557,9 +2627,18 @@ ETC自己負担: 0
       rides.push(r);
     });
     if(!date) errs.push("「出庫日: YYYY-MM-DD」の行がありません");
+    // 連続配車の時間だけの日（明細なし）は、もうある勤務に連続配車の時間だけを入れる
+    const rzOnly=!!rzRaw.length&&!rides.length;
+    if(rzRaw.length&&date){
+      // 出庫より1時間以上前の時刻は翌日、前の終了より6時間以上前に戻ったら翌日とみなす
+      const ref=rides.length?Math.min(...rides.map(r=>r.on)):tenko.ab?toMin(tenko.ab):startOf(date); let prev=null;
+      rzRaw.forEach(([a,b])=>{ let x=toMin(a), y=toMin(b); if(x<ref-60) x+=DAY; if(prev!=null&&x<prev-360) x+=DAY; while(y<x) y+=DAY; prev=y;
+        rides.push({id:newId(),kind:RZ,on:x,off:y,imported:true}); });
+    }
     if(!rides.length) errs.push("明細の行がありません");
-    if(date&&!hasShift(date)&&!tenko.ab) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
-    return {date,check,rides,errs,tenko};
+    if(date&&!rzOnly&&!hasShift(date)&&!tenko.ab) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
+    if(date&&rzOnly&&!sales.days[date]&&!hasShift(date)) errs.push(`${md(date)} 出社の勤務がありません（連続配車の時間だけは入れられません）`);
+    return {date,check,rides,errs,tenko,rzOnly};
   }
   // 点呼時間にその日の勤務がなければ、取り込んだ点呼の実績で作る（計画も同じ時刻）。実績が空なら埋める
   function applyTenko(p){
@@ -2583,12 +2662,18 @@ ETC自己負担: 0
     else { $("iText").value=IMPORT_PROMPT; $("iText").select(); } };
   let multi=null;
   const dayHas=ex=>ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
+  // 連続配車の時間だけを、その日の記録に入れる（前に入れた連続配車の時間は置き換える）。金額は変わらないので照合済みの日も確認しない
+  function applyRz(p){
+    const dd=ensureDay(p.date); dd.rides=dd.rides.filter(r=>r.kind!==RZ).concat(p.rides.filter(r=>r.kind===RZ)); syncRz(dd);
+  }
+  const rzSum=p=>{ const ms=p.rides.filter(r=>r.kind===RZ); return `連続配車 ${ms.length}回・${hm(ms.reduce((t,m)=>t+(m.off-m.on),0))}`; };
   $("iCheck").onclick=()=>{
     const blocks=splitDays($("iText").value); multi=null;
     if(blocks.length>1){
       // 何日分もまとめて：記録がまだない日だけ取り込む（もう記録がある日は、1日ずつ貼り付けて突き合わせる）
       const ps=blocks.map(parseNippo); parsed=null;
       const rows=ps.map(p=>{ if(p.errs.length) return `<tr><td>${p.date?md(p.date):"?"}</td><td colspan="2" class="red">${esc(p.errs[0])}</td></tr>`;
+        if(p.rzOnly) return `<tr><td class="num">${md(p.date)}（${dow(p.date)}）</td><td class="num">${rzSum(p)}</td><td>連続配車の時間を入れる</td></tr>`;
         const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
         p.skip=!!dayHas(ex);
         return `<tr><td class="num">${md(p.date)}（${dow(p.date)}）</td><td class="num">${s.count}回・${st.total!=null?yen(st.total):yen(s.total)}円</td><td>${p.skip?"もう記録あり（取り込まない）":st.total==null?"取り込む":st.meterOk?`<span class="pill ok">照合OK</span>`:`<span class="pill warn">照合 差 ${yen(s.total-st.meterCalc)}</span>`}${!p.skip&&p.tenko.ab&&!hasShift(p.date)?"<br><small>点呼の記録も作ります</small>":""}</td></tr>`; });
@@ -2598,6 +2683,7 @@ ETC自己負担: 0
     }
     const p=parseNippo($("iText").value); parsed=p.errs.length?null:p;
     if(p.errs.length){ $("iResult").innerHTML=`<div class="err">${p.errs.slice(0,8).map(esc).join("<br>")}</div>`; $("iGoRow").hidden=true; return; }
+    if(p.rzOnly){ $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${rzSum(p)} を入れます（前に入れた連続配車の時間は置き換えます）`; $("iGoRow").hidden=false; return; }
     const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
     const exists=dayHas(ex);
     $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${s.count}回・記録の合計 ${yen(s.total)}円・総営収 ${st.total!=null?yen(st.total)+"円":"なし"}<br>
@@ -2610,12 +2696,13 @@ ETC自己負担: 0
   };
   $("iGo").onclick=()=>{
     if(multi){
-      multi.forEach(p=>{ applyTenko(p); sales.days[p.date]={mode:"detail",rides:p.rides,simple:{},check:p.check,locked:false,importedAt:new Date().toISOString(),hw:{items:[]}}; });
+      multi.forEach(p=>{ if(p.rzOnly){ applyRz(p); return; } applyTenko(p); sales.days[p.date]={mode:"detail",rides:p.rides,simple:{},check:p.check,locked:false,importedAt:new Date().toISOString(),hw:{items:[]}}; syncRz(sales.days[p.date]); });
       const n=multi.length, lastD=multi[multi.length-1].date; multi=null;
       saveSales(); render(); filled=false; sDay=lastD; closeImport(); $("iText").value=""; renderSales();
       $("sStatus").textContent=`${n}日分を取り込みました。上の日付を押すと、ほかの日を選べます`; return;
     }
     if(!parsed) return;
+    if(parsed.rzOnly){ applyRz(parsed); saveSales(); sDay=parsed.date; closeImport(); $("iText").value=""; renderSales(); $("sStatus").textContent="連続配車の時間を入れました"; return; }
     applyTenko(parsed);
     const ex=sales.days[parsed.date];
     const hasOld=ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
@@ -2649,9 +2736,12 @@ ETC自己負担: 0
       parsed.rides=merged.concat(leftover);
       note=`突き合わせました：組み合わせ ${matched}件・日報から追加 ${added}件${leftover.length?`・日報にない記録 ${leftover.length}件（メモに「日報になし」と付けました。確認してください）`:""}`;
     }
+    // 連続配車モードの時間は日報にないので、日報の文に「連続配車:」がなければ、ボタンで記録したものを残す
+    if(ex&&!parsed.rides.some(r=>r.kind===RZ)) parsed.rides=parsed.rides.concat(ex.rides.filter(r=>r.kind===RZ));
     const oldHw=ex&&ex.hw, oldRoute=ex&&ex.route;   // メーター・距離控除・走行ルートは日報にないので、入れてあれば残す
     sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:oldHw||{items:[]}};
     if(oldRoute) sales.days[parsed.date].route=oldRoute;
+    syncRz(sales.days[parsed.date]);
     saveSales(); filled=false; sDay=parsed.date; queueFlash(parsed.date); closeImport(); $("iText").value=""; renderSales();
     $("sStatus").textContent=(note?note+"。":"取り込みました。")+"住所から位置と天気を調べています（9日より前の天気は取れません）";
   };
@@ -2696,13 +2786,17 @@ ETC自己負担: 0
       // 自動の判定と同じなら持たない（あとで決済を変えたときに自動で付け直せるように）
       const auto=appAuto(r); if(isHai(r.kind)&&$("rInhouse").checked!==auto) r.inhouse=$("rInhouse").checked; else delete r.inhouse; }
     if(d.locked) d.editedAfterLock=new Date().toISOString();
+    if(r.kind===RZ) syncRz(d);
     saveSales(); closeRide(); renderSales();
   };
   $("rDel").onclick=()=>{
     const d=ensureDay(sDay);
     if(!rDelArmed){ rDelArmed=true; $("rDel").textContent="もう一度押すと削除"; return; }
     if(!guard(d)) return;
-    d.rides=d.rides.filter(x=>x.id!==rEdit); saveSales(); closeRide(); renderSales();
+    const wasRz=(d.rides.find(x=>x.id===rEdit)||{}).kind===RZ;
+    d.rides=d.rides.filter(x=>x.id!==rEdit);
+    if(wasRz){ if(d.rides.some(x=>x.kind===RZ)) syncRz(d); else d.rides.forEach(x=>{ if(x.kind==="連続配車") x.kind="配車"; }); }
+    saveSales(); closeRide(); renderSales();
   };
   $("sList").addEventListener("click",e=>{
     const rt=e.target.closest("[data-rt]");
