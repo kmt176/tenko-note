@@ -689,7 +689,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 19:58</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 20:16</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1268,8 +1268,8 @@ body.rtfull{overflow:hidden}
     render(); if(!$("tabSales").hidden) setView(sView); renderLinks(); }
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
-  // 管理者は、売上の上で車種を切り替えて、両方の画面を確かめられる
-  function renderCarSeg(){ const el=$("carSeg"); if(!el) return; el.hidden=!isAdmin(); if(el.hidden) return;
+  // 売上の上の切り替えは出さない（管理者も、メニューの設定で車種を選んだときだけ変わる。ユーザー指定）
+  function renderCarSeg(){ const el=$("carSeg"); if(!el) return; el.hidden=true; return;
     el.innerHTML=CAR_TYPES.map(t=>`<button role="tab" data-car="${t}" aria-selected="${t===carType}">${escC(carOf(t).name)}</button>`).join("");
     el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>setCar(b.dataset.car)); }
   // 管理者が保存した車種の設定を読み込む（合言葉なしで誰でも読める。書けるのは管理者だけ）
