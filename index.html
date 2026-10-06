@@ -670,7 +670,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 16:35</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 18:15</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -736,7 +736,7 @@ body.rtfull{overflow:hidden}
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
-      <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>モード中に乗車を押すと内容が「連続配車」になります。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（勤務時間の60%、または8〜10時の80%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須（8〜10時・16〜20時で合わせて2時間）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
+      <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>モード中に乗車を押すと内容が「連続配車」になります。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（出庫〜入庫の60%、または8〜10時の80%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須（8〜10時・16〜20時で合わせて2時間）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
       <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。GO Payでも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
     </ol>
     <dl class="explain">
@@ -1750,7 +1750,7 @@ body.rtfull{overflow:hidden}
   const hasRz=d=>!!(d&&d.rides&&d.rides.some(r=>r.kind===RZ));
   const wkLabel=w=>{ const f=x=>{ const t=new Date(Math.floor(x/DAY)*864e5); return (t.getUTCMonth()+1)+"/"+t.getUTCDate(); }; return `${f(w)}（月）〜${f(w+6*DAY)}（日）`; };
   function ruleOf(w){ const rs=rzCfg().rules.slice().sort((x,y)=>x.from<y.from?-1:1); let r=rs[0]; rs.forEach(x=>{ if(dayNo(x.from)*DAY<=w) r=x; }); return r; }
-  const ruleText=r=>r.type==="am"?`8〜10時の${r.pct}%`:`勤務時間の${r.pct}%`;
+  const ruleText=r=>r.type==="am"?`8〜10時の${r.pct}%`:`出庫〜入庫の${r.pct}%`;
   // 実績：記録（出庫〜入庫、連続配車モード）
   function rzSpan(k){
     const d=sales.days[k]; if(!d||d.mode==="simple"||!d.rides) return null;
@@ -1825,22 +1825,22 @@ body.rtfull{overflow:hidden}
       <div class="period"><button class="iconbtn" id="rzPrev" aria-label="前の週">◀</button><h2 style="flex:1;text-align:center;margin:0;font-size:17px">${wkLabel(rzW)}</h2><button class="iconbtn" id="rzNext" aria-label="次の週">▶</button></div>
       <div>この週の目標：<b>${ruleText(r)}</b> <button class="btn" id="rzRuleBtn">変える</button></div>
       <div class="grp" id="rzRuleBox" hidden>
-        <div class="field"><label for="rzType">目標のしかた</label><select id="rzType"><option value="all">週の勤務時間（出庫〜入庫）の○%</option><option value="am">週の8〜10時に勤務していた時間の○%</option></select></div>
+        <div class="field"><label for="rzType">目標のしかた</label><select id="rzType"><option value="all">週の出庫〜入庫の時間の○%</option><option value="am">週の8〜10時に勤務していた時間の○%</option></select></div>
         <div class="field"><label for="rzPct">目標（%）</label><input type="number" id="rzPct" inputmode="numeric" min="1" max="100" value="${r.pct}"></div>
         <div class="btnrow"><button class="btn primary" id="rzRuleSave">この週から変える</button></div>
         <small>この週から先の週がこの目標になります（前の週はそのまま）。</small>
       </div>
       <div class="row" style="margin-top:6px"><span>実績</span><span class="total num">${ra!=null?pct(ra):"—"}</span></div>
       <div class="bar">${bar(ra,"a")}</div>
-      <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.act.n)}／${r.type==="am"?"8〜10時の勤務":"勤務"} ${hm(W.act.d)}</div>
+      <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.act.n)}／${r.type==="am"?"8〜10時の勤務":"出庫〜入庫"} ${hm(W.act.d)}</div>
       <div class="row" style="margin-top:6px"><span>計画を含む見込み</span><span class="total num">${rp!=null?pct(rp):"—"}</span></div>
       <div class="bar">${bar(rp,"p")}</div>
-      <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.all.n)}／${r.type==="am"?"8〜10時の勤務":"勤務"} ${hm(W.all.d)}</div>
+      <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.all.n)}／${r.type==="am"?"8〜10時の勤務":"出庫〜入庫"} ${hm(W.all.d)}</div>
       <div class="checks">${rp==null?"":rp>=goal?`<span class="pill ok">🟢 計画どおりなら目標（${r.pct}%）に届きます</span>`:`<span class="pill warn">🔴 目標（${r.pct}%）まで、あと ${hm(short(W.all,r))} の連続配車が必要</span>`}</div>
     </section>
     <section class="card">
       <h2>乗務ごと（必須：8〜10時・16〜20時で合わせて2時間）</h2>
-      <div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>出庫日</td><td>連続配車／勤務</td><td>必須2時間</td><td></td></tr></thead><tbody>${sh||`<tr><td colspan="4">この週の乗務がありません（点呼時間に予定を入れると、計画で見込みを出します）</td></tr>`}</tbody></table></div>
+      <div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>出庫日</td><td>連続配車／出庫〜入庫</td><td>必須2時間</td><td></td></tr></thead><tbody>${sh||`<tr><td colspan="4">この週の乗務がありません（点呼時間に予定を入れると、計画で見込みを出します）</td></tr>`}</tbody></table></div>
       <div class="src">勤務中の乗務は、今までの実績とこれからの計画を足しています。計画は「基本の型」を使い、乗務ごとに変えることもできます。</div>
       <div class="btnrow"><button class="btn" id="rzTplBtn">基本の型（毎回の計画）を直す</button></div>
     </section>
@@ -1882,7 +1882,7 @@ body.rtfull{overflow:hidden}
       <div class="pair"><div class="field"><label for="edOut">出庫</label><input type="time" id="edOut" value="${t(e.out)}"></div><div class="field"><label for="edIn">入庫</label><input type="time" id="edIn" value="${t(e.in)}"></div></div>
       <div class="legend"><span><b style="background:var(--accent)"></b>連続配車</span><span><b style="background:var(--warn-soft);border:1px solid var(--warn)"></b>休憩</span><span><b style="background:var(--surface);border:1px solid var(--line)"></b>手上げ・営業</span><span style="color:var(--accent)">太字の時＝必須の時間帯</span></div>
       <div class="rzgrid">${rows}</div>
-      <div class="checks"><span class="pill ${m>=RZ_MUST?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=RZ_MUST?"✅":"❌ あと "+hm(RZ_MUST-m)}</span><span class="pill">連続配車 ${hm(ren)}／勤務 ${hm(e.in-e.out)}</span></div>
+      <div class="checks"><span class="pill ${m>=RZ_MUST?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=RZ_MUST?"✅":"❌ あと "+hm(RZ_MUST-m)}</span><span class="pill">連続配車 ${hm(ren)}／出庫〜入庫 ${hm(e.in-e.out)}</span></div>
       <div class="btnrow"><button class="btn primary" id="edSave">保存</button>${e.key!=="tpl"&&rzCfg().plans[e.key]?`<button class="btn" id="edReset">基本の型に戻す</button>`:""}<button class="btn" id="edClose">閉じる</button></div>
       <small>マスを押すたびに、手上げ → 連続配車 → 休憩 → 手上げ と変わります。</small>`;
     el.querySelectorAll(".rzgrid button[data-m]").forEach(bt=>bt.onclick=()=>{ const mm=+bt.dataset.m; e.st[mm]=((e.st[mm]||0)+1)%3; edRender(); });
