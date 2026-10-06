@@ -416,7 +416,7 @@ body.rtfull{overflow:hidden}
     <section class="card" id="svCard" hidden>
       <div class="infohead"><h2>接遇チェック（試験）</h2></div>
       <div class="src">乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。</div>
-      <div class="btnrow"><button class="btn primary" id="svStart">乗車接遇</button><button class="btn primary" id="svOff" disabled>降車接遇</button><button class="btn danger" id="svStop" disabled>止める</button></div>
+      <div class="btnrow"><button class="btn primary" id="svStart">乗車接遇</button><button class="btn primary" id="svOff">降車接遇</button><button class="btn danger" id="svStop" disabled>止める</button></div>
       <div id="svStat" class="geo">止まっています</div>
       <div id="svList" class="svlist"></div>
       <details><summary>ドアの音の感度</summary>
@@ -690,7 +690,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 21:02</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 21:31</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1576,11 +1576,11 @@ body.rtfull{overflow:hidden}
   try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; }catch(e){}
   const SV_OFF_FROM=SV_ITEMS.findIndex(x=>x[0]==="⑩");   // ⑩からは降車接遇を押してから出す
   function svRender(){
-    const t=svHeard.replace(/\s/g,""), shown=svOffAt||!svOn&&svHeard?SV_ITEMS:SV_ITEMS.slice(0,SV_OFF_FROM);
+    const t=svHeard.replace(/\s/g,""), shown=svPhase==="off"?SV_ITEMS.slice(SV_OFF_FROM):SV_ITEMS.slice(0,SV_OFF_FROM);
     let n=0;
     $("svList").innerHTML=shown.map(([no,label,re])=>{ const ok=re?re.test(t):svBang>=1; if(ok) n++;
       return `<div class="${ok?"ok":""}"><span>${no}</span><span>${label}${!re?`（${svBang?"聞こえました":"まだ"}）`:""}</span></div>`; }).join("");
-    $("svStat").innerHTML=svOn?`${svOffAt?"降車接遇":"乗車接遇"} 聞き取り中… <b>${n}／${shown.length}</b>${svOffAt?"・ドアの音を待っています":""}`:`止まっています${svHeard?`（前回 ${n}／${shown.length}）`:""}`;
+    $("svStat").innerHTML=svOn?`${svPhase==="off"?"降車接遇":"乗車接遇"} 聞き取り中… <b>${n}／${shown.length}</b>${svOffAt?"・ドアの音を待っています":""}`:`止まっています${svHeard?`（前回 ${n}／${shown.length}）`:""}`;
     $("svText").textContent=svHeard;
   }
   function svSpeech(){
@@ -1609,12 +1609,16 @@ body.rtfull{overflow:hidden}
       loop();
     }catch(e){ $("svStat").textContent="マイクが使えません（"+e.message+"）"; }
   }
-  function svStart(){ if(svOn) return; svOn=true; svHeard=""; svBang=0; svOffAt=null; svSpeech(); svMic(); $("svStart").disabled=true; $("svOff").disabled=false; $("svStop").disabled=false; svRender(); }
+  // 乗車接遇＝①〜⑨、降車接遇＝⑩〜⑮とドアの音。どちらも押したところから聞き直す（降車接遇は乗車接遇を押していなくても使える）
+  let svPhase="on";
+  function svBegin(phase){ svStop(); svPhase=phase; svOn=true; svHeard=""; svBang=0; svOffAt=phase==="off"?Date.now():null;
+    svSpeech(); svMic(); $("svStop").disabled=false; svRender(); }
+  const svStart=()=>svBegin("on");
   function svStop(){ svOn=false; try{ svRec&&svRec.stop(); }catch(e){} svRec=null; cancelAnimationFrame(svRaf);
     if(svAudio){ svAudio.st.getTracks().forEach(t=>t.stop()); try{ svAudio.ac.close(); }catch(e){} svAudio=null; }
-    $("svStart").disabled=false; $("svOff").disabled=true; $("svStop").disabled=true; $("svLv").style.width="0"; svRender(); }
+    $("svStart").disabled=false; $("svOff").disabled=false; $("svStop").disabled=true; $("svLv").style.width="0"; svRender(); }
   $("svStart").onclick=svStart;
-  $("svOff").onclick=()=>{ if(!svOn) return; svOffAt=Date.now(); svBang=0; $("svOff").disabled=true; svRender(); };
+  $("svOff").onclick=()=>svBegin("off");
   $("svStop").onclick=svStop;
   const svThUI=()=>{ $("svTh").value=svTh; $("svThMark").style.left=Math.min(100,svTh/0.6*100)+"%"; };
   $("svTh").addEventListener("input",()=>{ svTh=+$("svTh").value; try{ localStorage.setItem("tenko.svth",svTh); }catch(e){} svThUI(); });
