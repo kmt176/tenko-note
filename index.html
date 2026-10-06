@@ -689,7 +689,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 20:16</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 20:27</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1967,9 +1967,20 @@ body.rtfull{overflow:hidden}
 
   // 計画の編集：Excel「1日の計画」と同じ15分のマス。押すたびに 手上げ → 連続配車 → 休憩 → 手上げ
   const inIv=(iv,m)=>iv.some(([x,y])=>m>=x&&m<y);
+  // 計画（出庫・入庫・連続配車・休憩）を15分のマスにする
+  function stFrom(src){ const st={}; for(let m=Math.floor(src.out/15)*15;m<src.in;m+=15) st[m]=inIv(src.rz,m)?1:inIv(src.rest||[],m)?2:0; return st; }
+  // コピーのもと：この乗務より前で、いちばん近い乗務の「計画」（個別に作った計画）か「実績」（連続配車を記録した日）
+  function prevPlan(k,want){
+    const keys=[...new Set([...recs.map(r=>r.date),...Object.keys(sales.days)])].filter(x=>x<k).sort();
+    for(let i=keys.length-1;i>=0;i--){ const pk=keys[i], pl=rzCfg().plans[pk], z=rzSpan(pk);
+      if(want==="plan"&&pl) return {src:pl,label:`${md(pk)}（${dow(pk)}）の計画`};
+      if(want==="act"&&z&&z.n){ const base=dayNo(pk)*DAY, d=sales.days[pk];
+        const rest=d.rides.filter(r=>r.kind==="休憩"&&r.on!=null&&r.off!=null).map(r=>[r.on,r.off]);
+        return {src:{out:z.from-base,in:z.to-base,rz:z.iv.map(([a,b])=>[a-base,b-base]),rest},label:`${md(pk)}（${dow(pk)}）の実績`}; } }
+    return null;
+  }
   function openRzEd(key){
-    const z=rzCfg(), src=key==="tpl"?z.tpl:planOf(key), st={};
-    for(let m=Math.floor(src.out/15)*15;m<src.in;m+=15) st[m]=inIv(src.rz,m)?1:inIv(src.rest||[],m)?2:0;
+    const z=rzCfg(), src=key==="tpl"?z.tpl:planOf(key), st=stFrom(src);
     rzEd={key,out:src.out,in:src.in,st};
     edRender(); $("rzEdCard").scrollIntoView({behavior:"smooth",block:"start"});
   }
@@ -1992,7 +2003,8 @@ body.rtfull{overflow:hidden}
       <div class="legend"><span><b style="background:var(--accent)"></b>連続配車</span><span><b style="background:var(--warn-soft);border:1px solid var(--warn)"></b>休憩</span><span><b style="background:var(--surface);border:1px solid var(--line)"></b>手上げ・営業</span><span style="color:var(--accent)">太字の時＝必須の時間帯</span></div>
       <div class="rzgrid">${rows}</div>
       <div class="checks"><span class="pill ${m>=MUST()?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=MUST()?"✅":"❌ あと "+hm(MUST()-m)}</span><span class="pill">連続配車 ${hm(ren)}／出庫〜入庫 ${hm(e.in-e.out)}</span></div>
-      <div class="btnrow"><button class="btn primary" id="edSave">保存</button>${e.key!=="tpl"&&rzCfg().plans[e.key]?`<button class="btn" id="edReset">基本の型に戻す</button>`:""}<button class="btn" id="edClose">閉じる</button></div>
+      ${e.note?`<div class="src">${e.note}をコピーしました。よければ「保存」を押してください</div>`:""}
+      <div class="btnrow"><button class="btn primary" id="edSave">保存</button>${e.key!=="tpl"?`<button class="btn" id="edCopy">前の乗務の計画をコピー</button><button class="btn" id="edCopyAct">前の乗務の実績をコピー</button>`:""}${e.key!=="tpl"&&rzCfg().plans[e.key]?`<button class="btn" id="edReset">基本の型に戻す</button>`:""}<button class="btn" id="edClose">閉じる</button></div>
       <small>マスを押すたびに、手上げ → 連続配車 → 休憩 → 手上げ と変わります。</small>`;
     el.querySelectorAll(".rzgrid button[data-m]").forEach(bt=>bt.onclick=()=>{ const mm=+bt.dataset.m; e.st[mm]=((e.st[mm]||0)+1)%3; edRender(); });
     const setT=(id,f)=>$(id).addEventListener("change",()=>{ const v=toMin($(id).value); if(v==null) return;
@@ -2001,6 +2013,11 @@ body.rtfull{overflow:hidden}
     setT("edOut","out"); setT("edIn","in");
     $("edSave").onclick=()=>{ const z=rzCfg(), pl={out:e.out,in:e.in,rz:toIv(e.st,1).map(([x,y])=>[Math.max(x,e.out),Math.min(y,e.in)]).filter(([x,y])=>y>x),rest:toIv(e.st,2)};
       if(e.key==="tpl") z.tpl=pl; else z.plans[e.key]=pl; saveSales(); rzEd=null; renderRzView(); };
+    const copyFrom=want=>{ const pv=prevPlan(e.key,want);
+      if(!pv){ alert(want==="plan"?"前の乗務に、個別に作った計画がありません（基本の型のままです）":"前の乗務に、連続配車の記録がありません"); return; }
+      e.out=pv.src.out; e.in=pv.src.in; e.st=stFrom(pv.src); e.note=pv.label; edRender(); };
+    if($("edCopy")) $("edCopy").onclick=()=>copyFrom("plan");
+    if($("edCopyAct")) $("edCopyAct").onclick=()=>copyFrom("act");
     if($("edReset")) $("edReset").onclick=()=>{ delete rzCfg().plans[e.key]; saveSales(); rzEd=null; renderRzView(); };
     $("edClose").onclick=()=>{ rzEd=null; el.hidden=true; };
   }
