@@ -211,6 +211,14 @@ a.flink .st small{color:var(--accent);font-size:12.5px}
 .evbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .evbtns .btn{padding:10px 0;font-size:15.5px;white-space:nowrap}
 .evbtns .btn.on{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.cartbl{border-collapse:collapse;font-size:13.5px;min-width:520px;margin:6px 0}
+.cartbl td{border:1px solid var(--line);padding:5px 6px;vertical-align:top}
+.cartbl thead td{font-weight:700;background:var(--sunk)}
+.cartbl tr.sec td{background:var(--accent-soft);font-weight:700}
+.cartbl input[type=number],.cartbl input[type=time],.cartbl input[type=text]{width:100%;min-height:36px;font-size:15px;padding:4px}
+.cartbl textarea{width:100%;font-size:13px;min-height:52px}
+.cartbl .check{font-size:13px;gap:4px;margin:1px 0}
+.cartbl .check input{width:18px;height:18px}
 .rzgrid{display:grid;grid-template-columns:3.4em repeat(4,1fr);gap:3px;margin:6px 0}
 .rzgrid .hl{font-size:13.5px;color:var(--muted);align-self:center;font-weight:400}
 .rzgrid .hl.win{color:var(--accent);font-weight:700}
@@ -372,11 +380,12 @@ body.rtfull{overflow:hidden}
 </div>
 
 <div class="wrap" id="tabSales" hidden>
+  <div class="seg" id="carSeg" role="tablist" aria-label="車種（管理者の確認用）" hidden></div>
   <div class="seg" role="tablist" aria-label="表示" id="sView">
     <button role="tab" data-view="day" aria-selected="true">勤務</button>
     <button role="tab" data-view="month" aria-selected="false">月度の集計</button>
     <button role="tab" data-view="anal" aria-selected="false">営業分析</button>
-    <button role="tab" data-view="rz" aria-selected="false">連続配車</button>
+    <button role="tab" data-view="rz" aria-selected="false" id="sViewRz">連続配車</button>
     <button role="tab" data-view="flash" aria-selected="false" id="sViewFlash" hidden>仲間の速報</button>
   </div>
   <div class="wrap" id="sDayView">
@@ -633,6 +642,11 @@ body.rtfull{overflow:hidden}
   <details id="cfgBox">
     <summary id="cfgSum">合言葉（仲間の速報・ロング判定）</summary>
     <div class="body">
+      <div class="grp">
+        <h3>車種</h3>
+        <div class="field"><label for="carSel">乗っている車種</label><select id="carSel"></select></div>
+        <div class="src">車種によって、選べる内容・決済や計算の初期値が変わります（管理者が決めます）。</div>
+      </div>
       <div>天気・電車・到着便は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると使える機能が増えます。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
       <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div class="grp">
@@ -662,6 +676,11 @@ body.rtfull{overflow:hidden}
           <div class="src" id="aLongInfo"></div>
           <div class="btnrow"><button class="btn primary" id="aSave">保存</button><button class="btn" id="aReload">読み直す</button></div>
           <div class="msg" id="aSaveMsg" role="status"></div>
+          <h3 style="margin-top:14px">車種ごとの設定</h3>
+          <div class="src">全員のアプリに反映されます（開いたときに読み込みます）。乗務員が自分で変えた値（給与の率・余裕時間など）は、その人の値が優先されます。</div>
+          <div style="overflow-x:auto"><table class="cartbl" id="aCars"></table></div>
+          <div class="btnrow"><button class="btn primary" id="aCarSave">車種の設定を保存</button><button class="btn" id="aCarReset">初期値に戻す</button></div>
+          <div class="msg" id="aCarMsg" role="status"></div>
         </div>
       </div>
     </div>
@@ -670,7 +689,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 18:38</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 19:58</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -679,6 +698,7 @@ body.rtfull{overflow:hidden}
     <h2>はじめに（最初の1回）</h2>
     <ol class="steps">
       <li><b>ホーム画面に追加</b>します。<br><small>iPhone：共有ボタン →「ホーム画面に追加」／Android：︙ →「ホーム画面に追加」</small></li>
+      <li>メニューの一番下の設定で、<b>乗っている車種</b>（JPNタクシー／アルファード）を選びます。<small>車種によって、選べる内容・決済や計算の初期値が変わります</small></li>
       <li><b>ホーム画面のアイコンから開きます。</b>以降もいつもアイコンから開いてください。<br><small>iPhoneは、ブラウザとアイコンで保存場所が別になります</small></li>
       <li>点呼時間の「＋ 勤務を追加」で、<b>その月度の出社日と、計画の業務前点呼・業務後点呼</b>を入れておきます。<small>1か月分まとめて入れておくと便利です</small></li>
       <li>勤務の日は、<b>業務前点呼の実績を入れてから</b>売上を入力します。<small>実績を入れるまで、その日の売上は入力できません</small></li>
@@ -880,10 +900,27 @@ body.rtfull{overflow:hidden}
   const ROWS = [[1,"12-26","01-25",262],[2,"01-26","02-24",262],[3,"02-25","03-26",262],[4,"03-27","04-25",270],[5,"04-26","05-26",262],[6,"05-27","06-25",270],[7,"06-26","07-26",270],[8,"07-27","08-26",270],[9,"08-27","09-25",262],[10,"09-26","10-26",262],[11,"10-27","11-25",270],[12,"11-26","12-25",270]];
   for (let y=2026;y<=2028;y++) for (const [m,s,e,lim] of ROWS) PERIODS.push({y,m,start:(m===1?y-1:y)+"-"+s,end:y+"-"+e,limit:lim});
 
-  const KEY="tenko.v2", DAY=1440, NOKIN=10*60+30;
+  const KEY="tenko.v2", DAY=1440; let NOKIN=10*60+30;
   // 給油所の初期値（住所を先に書くと場所が確実に決まる）
   const DEFAULT_VIAS=["東京都板橋区中丸町12-1 陸王交通 オートガススタンド","東京都練馬区豊玉北1丁目14-5 豊玉LPGスタンド kmGオートアシスト"];
-  const KIKO=10*60+10;   // 納金処理の時間を見込んだ帰庫の目安（10:10までに帰庫すれば納金〆 10:30 に間に合う）
+  let KIKO=10*60+10, REP=21*60;   // 帰庫の目安（10:10までに帰庫すれば納金〆 10:30 に間に合う）、報告書が要る拘束時間（会社ルール21時間）
+
+  // ===== 車種ごとの設定（管理者が決める：JPNタクシー／アルファード（GO PREMIUM専用）） =====
+  // 乗務員は自分の車種を1回選ぶ。管理者が保存した値は Apps Script から読み込み、なければ下の初期値を使う
+  const ALL_KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転"];
+  const ALL_PAYS=["現金","A:GOPAY","C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy","T:チケット","福祉券","B空転"];
+  const CAR_BASE={kinds:ALL_KINDS,pays:ALL_PAYS,appFee:200,rz:true,rzMust:120,rzRules:null,tax:0.9,pay:0.62,bonus:0.1,maxKm:362,nokin:"10:30",kiko:"10:10",rep:21,margin:30,stay:3,viaMin:5,vias:DEFAULT_VIAS};
+  // アルファードはGO専用：内容は配車だけ、決済はGO Payだけ、アプリ手配料なし、連続配車なし、給与の率0.44（ユーザーの比較表）
+  const CAR_DEF={jpn:Object.assign({},CAR_BASE,{name:"JPNタクシー"}),alp:Object.assign({},CAR_BASE,{name:"アルファード（GO PREMIUM）",kinds:["配車"],pays:["A:GOPAY"],appFee:0,rz:false,pay:0.44})};
+  const CAR_TYPES=["jpn","alp"];
+  let carsCfg=null; try{ carsCfg=JSON.parse(localStorage.getItem("tenko.cars")||"null"); }catch(e){}
+  let carType="jpn"; try{ carType=localStorage.getItem("tenko.car")||"jpn"; }catch(e){} if(!CAR_DEF[carType]) carType="jpn";
+  const carOf=t=>Object.assign({},CAR_DEF[t]||CAR_DEF.jpn,(carsCfg&&carsCfg[t])||{});
+  const car=()=>carOf(carType);
+  const hm2m=v=>{ const m=/^(\d{1,2}):(\d{2})$/.exec(String(v||"").trim()); return m?+m[1]*60+ +m[2]:null; };
+  const m2hm=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+  function applyCarConsts(){ const c=car(); NOKIN=hm2m(c.nokin)??10*60+30; KIKO=hm2m(c.kiko)??10*60+10; REP=(+c.rep>0?+c.rep:21)*60; }
+  applyCarConsts();
   const SAMPLE=[["2026-09-25","12:56","08:48"],["2026-09-28","12:50","09:00"],["2026-09-30","12:50","08:50"],["2026-10-02","12:50","09:00"],["2026-10-04","12:50","09:30"],["2026-10-08","12:50","09:00"],["2026-10-10","12:50","09:00"],["2026-10-12","12:50","07:00"],["2026-10-15","12:50","09:00"],["2026-10-17","12:50","09:30"],["2026-10-19","12:50","09:30"],["2026-10-22","12:50","09:00"],["2026-10-24","12:50","09:00"],["2026-10-26","12:50","09:30"]]
     .map(([d,b,a],i)=>({id:"s"+i,date:d,pb:b,pa:a,ab:b,aa:a}));
 
@@ -921,7 +958,7 @@ body.rtfull{overflow:hidden}
         c.max=prev?Math.min(22*60,42*60-prev.dur):22*60;
         c.deadline=c.start+c.max;   // 2日平均21時間で決まる期限
         c.over22=c.start+22*60;     // 法令：1回22時間を超えない（この時刻まではよい）
-        c.ok21=c.start+21*60;       // 会社ルール：1回21時間を超えたら報告書（この時刻までは不要。業務前点呼の実績を入れると実績から）
+        c.ok21=c.start+REP;       // 会社ルール：1回21時間を超えたら報告書（この時刻までは不要。業務前点呼の実績を入れると実績から）
         if(prev){ c.prevDur=prev.dur; c.avg=(c.dur+prev.dur)/2; c.rest=c.start-prev.end; }
         if(r.pb&&r.pa&&hasAct){ const pd=((toMin(r.pa)-toMin(r.pb))%DAY+DAY)%DAY; c.diff=c.dur-pd; }
         const endT=a; c.lateNokin = endT>NOKIN && endT<b;
@@ -939,8 +976,8 @@ body.rtfull{overflow:hidden}
     out.push(`<span class="chip ${lvl(c.dur>22*60,c.dur>c.max)}">拘束 <span class="num">${hm(c.dur)}</span>${c.dur>c.max?" 上限超え":""}</span>`);
     if(c.avg!=null) out.push(`<span class="chip ${lvl(c.avg>21*60,false)}">2回平均 <span class="num">${hm(c.avg)}</span></span>`);
     if(c.rest!=null && c.rest<7*DAY) out.push(`<span class="chip ${lvl(c.rest<22*60,c.rest<24*60)}">休息 <span class="num">${hm(c.rest)}</span></span>`);
-    if(c.hasAct&&c.dur>21*60) out.push(`<span class="chip warn">21時間超え・報告書</span>`);
-    if(c.lateNokin) out.push(`<span class="chip warn">納金〆 10:30 過ぎ</span>`);
+    if(c.hasAct&&c.dur>REP) out.push(`<span class="chip warn">${REP/60}時間超え・報告書</span>`);
+    if(c.lateNokin) out.push(`<span class="chip warn">納金〆 ${m2hm(NOKIN)} 過ぎ</span>`);
     if(c.diff!=null && c.diff!==0) out.push(`<span class="chip">計画差 <span class="num">${c.diff>0?"+":""}${hm(c.diff)}</span></span>`);
     return out.join("");
   }
@@ -963,9 +1000,9 @@ body.rtfull{overflow:hidden}
       const restTxt=nx.rest!=null?`前の勤務からの休息 <span class="num">${hm(nx.rest)}</span>${nx.rest<22*60?"（22時間未満）":""}`:"";
       nc.innerHTML=`<div class="lbl">${state}：${md(nx.r.date)}（${dow(nx.r.date)}）出社　業務後点呼の期限（2日平均21時間）</div>
         <div class="big num">${absToLabel(nx.deadline)}</div>
-        <div class="sub r21">21時間（報告書）<span class="num">${absToLabel(nx.ok21)}</span>まで<small>${nx.r.ab?`業務前点呼 ${nx.r.ab}（実績）から`:`計画 ${nx.r.pb||"--:--"} から。実績を入れると直ります`}</small></div>
+        <div class="sub r21">${REP/60}時間（報告書）<span class="num">${absToLabel(nx.ok21)}</span>まで<small>${nx.r.ab?`業務前点呼 ${nx.r.ab}（実績）から`:`計画 ${nx.r.pb||"--:--"} から。実績を入れると直ります`}</small></div>
         <div class="sub">22時間（法令の上限）<span class="over num">${absToLabel(nx.over22)}</span> まで</div>
-        <div class="sub">今回の上限 <span class="num">${hm(nx.max)}</span>（前回 <span class="num">${nx.prevDur!=null?hm(nx.prevDur):"—"}</span>）・納金〆 10:30</div>
+        <div class="sub">今回の上限 <span class="num">${hm(nx.max)}</span>（前回 <span class="num">${nx.prevDur!=null?hm(nx.prevDur):"—"}</span>）・納金〆 ${m2hm(NOKIN)}</div>
         ${restTxt?`<div class="sub">${restTxt}</div>`:""}`;
     } else nc.innerHTML=`<div class="lbl">勤務がまだありません</div><div class="sub">下の「＋ 勤務を追加」から入れてください</div>
       ${PROD?"":`<div class="btnrow" style="margin-top:6px"><button class="btn" id="sampleBtn2" style="color:var(--ink)">例（10月度）を入れ直す</button></div>`}`;
@@ -988,7 +1025,7 @@ body.rtfull{overflow:hidden}
         <dl class="times">
           <dt>計画</dt><dd class="num">${r.pb||"--:--"} → ${r.pa||"--:--"}</dd>
           <dt>実績</dt><dd class="num">${r.ab||"--:--"} → ${r.aa||"--:--"}</dd>
-          ${c.ok?`<dt>期限</dt><dd class="num">${absToLabel(c.deadline)}</dd><dt>21h</dt><dd class="num warnt">${absToLabel(c.ok21)}</dd><dt>22h</dt><dd class="num red">${absToLabel(c.over22)}</dd>`:""}
+          ${c.ok?`<dt>期限</dt><dd class="num">${absToLabel(c.deadline)}</dd><dt>${REP/60}h</dt><dd class="num warnt">${absToLabel(c.ok21)}</dd><dt>22h</dt><dd class="num red">${absToLabel(c.over22)}</dd>`:""}
         </dl>
         ${c.ok?`<div class="chips">${chipsFor(c)}</div>`:""}
       </button>`;
@@ -1168,12 +1205,14 @@ body.rtfull{overflow:hidden}
   $("lUrl").value=cfg.url||""; $("lPass").value=cfg.pass||"";
 
   // 入力欄の初期値と、スマホに覚えておく値
-  if(cfg.stay!=null) $("lStay").value=cfg.stay;
-  if(cfg.margin!=null) $("lMargin").value=cfg.margin;
+  // 自分で変えていない欄は、車種の設定（管理者が決めた初期値）を入れる
+  function applyLongDefaults(){ const c=car();
+    $("lStay").value=cfg.stay!=null?cfg.stay:c.stay; $("lMargin").value=cfg.margin!=null?cfg.margin:c.margin;
+    $("lViaMin").value=cfg.viaMin!=null?cfg.viaMin:c.viaMin;
+    $("lVia1").value=cfg.via1||(c.vias||[])[0]||""; $("lVia2").value=cfg.via2||(c.vias||[])[1]||""; }
   if(cfg.pickMin!=null) $("lPickMin").value=cfg.pickMin;
   $("lViaOn").checked=!!cfg.viaOn;
-  $("lVia1").value=cfg.via1||DEFAULT_VIAS[0]; $("lVia2").value=cfg.via2||DEFAULT_VIAS[1];
-  if(cfg.viaMin!=null) $("lViaMin").value=cfg.viaMin;
+  applyLongDefaults();
   $("lViaBox").hidden=!$("lViaOn").checked;
   const saveForm=()=>{
     cfg.stay=+$("lStay").value||0; cfg.margin=+$("lMargin").value||0; cfg.pickMin=+$("lPickMin").value||0;
@@ -1223,9 +1262,74 @@ body.rtfull{overflow:hidden}
       if(cfg.nakama&&cfg.empCode) Object.keys(sales.days).forEach(queueFlash);
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
   };
+  // ===== 車種 =====
+  const escC=x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));   // この時点では esc がまだないので
+  function setCar(t){ if(!CAR_DEF[t]) return; carType=t; try{ localStorage.setItem("tenko.car",t); }catch(e){} applyCarConsts(); applyLongDefaults(); $("carSel").value=t;
+    render(); if(!$("tabSales").hidden) setView(sView); renderLinks(); }
+  function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
+  fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
+  // 管理者は、売上の上で車種を切り替えて、両方の画面を確かめられる
+  function renderCarSeg(){ const el=$("carSeg"); if(!el) return; el.hidden=!isAdmin(); if(el.hidden) return;
+    el.innerHTML=CAR_TYPES.map(t=>`<button role="tab" data-car="${t}" aria-selected="${t===carType}">${escC(carOf(t).name)}</button>`).join("");
+    el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>setCar(b.dataset.car)); }
+  // 管理者が保存した車種の設定を読み込む（合言葉なしで誰でも読める。書けるのは管理者だけ）
+  async function loadCars(){
+    if(!cfg.url) return;
+    try{ const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"cars"})}); const j=await res.json();
+      if(!j.ok) return; const before=JSON.stringify(carsCfg); carsCfg=j.cars||null;
+      try{ localStorage.setItem("tenko.cars",JSON.stringify(carsCfg)); }catch(e){}
+      if(before!==JSON.stringify(carsCfg)){ applyCarConsts(); applyLongDefaults(); fillCarSel(); render(); if(!$("tabSales").hidden) setView(sView); }
+    }catch(e){}
+  }
+  setTimeout(loadCars,800);
+
   // ===== 管理者（グループと合言葉の管理。管理者の合言葉を知っている人だけ） =====
   const isAdmin=()=>!!cfg.apass&&cfg.admin===true;
   const post=async body=>{ const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}); return await res.json(); };
+  // 管理者が決める項目の一覧（車種ごと）
+  const CAR_ITEMS=[["#","乗車"],["kinds","選べる内容","multi",ALL_KINDS],["pays","選べる決済（1つだけなら選ぶ欄を出さない）","multi",ALL_PAYS],["appFee","アプリ手配料（社内決済・円、0＝使わない）","num"],
+    ["#","連続配車"],["rz","連続配車のボタン・画面を使う","bool"],["rzMust","1乗務の必須（8〜10時・16〜20時の合計・分）","num"],["rzRules","週の目標（1行に「開始の月曜 しかた %」。しかたは 出庫〜入庫 か 8〜10時）","rules"],
+    ["#","売上"],["tax","税抜の掛け率","num"],["pay","給与の率","num"],["bonus","賞与積立（%）","pct"],["maxKm","走行距離の上限（km）","num"],
+    ["#","点呼・納金"],["nokin","納金〆","time"],["kiko","帰庫の目安","time"],["rep","報告書が要る拘束時間（時間）","num"],
+    ["#","ロング判定の初期値"],["margin","余裕（分）","num"],["stay","目的地での降車（分）","num"],["viaMin","給油（分）","num"],["vias","給油所（1行に1か所）","lines"]];
+  const rulesTxt=rs=>(rs||[]).map(r=>`${r.from} ${r.type==="am"?"8〜10時":"出庫〜入庫"} ${r.pct}`).join("\n");
+  function drawCars(cars){
+    const tb=$("aCars"); if(!tb) return;
+    const cell=(t,it)=>{ const c=Object.assign({},CAR_DEF[t],(cars&&cars[t])||{}), [k,,ty,opts]=it, id=`ac_${t}_${k}`, v=c[k];
+      if(ty==="multi") return opts.map(o=>`<label class="check"><input type="checkbox" data-car="${t}" data-k="${k}" value="${esc(o)}" ${(v||[]).includes(o)?"checked":""}>${esc(o)}</label>`).join("");
+      if(ty==="bool") return `<label class="check"><input type="checkbox" data-car="${t}" data-k="${k}" ${v?"checked":""}>使う</label>`;
+      if(ty==="rules") return `<textarea data-car="${t}" data-k="${k}" rows="3">${esc(rulesTxt(v&&v.length?v:(t==="jpn"?RZ_RULES:[])))}</textarea>`;
+      if(ty==="lines") return `<textarea data-car="${t}" data-k="${k}" rows="2">${esc((v||[]).join("\n"))}</textarea>`;
+      if(ty==="time") return `<input type="time" data-car="${t}" data-k="${k}" value="${esc(v||"")}">`;
+      if(ty==="pct") return `<input type="number" data-car="${t}" data-k="${k}" value="${Math.round((+v||0)*1000)/10}" step="0.1">`;
+      return `<input type="number" data-car="${t}" data-k="${k}" value="${v??""}" step="any">`; };
+    tb.innerHTML=`<thead><tr><td>項目</td>${CAR_TYPES.map(t=>`<td><input type="text" data-car="${t}" data-k="name" value="${esc(Object.assign({},CAR_DEF[t],(cars&&cars[t])||{}).name)}" aria-label="車種の名前"></td>`).join("")}</tr></thead><tbody>`+
+      CAR_ITEMS.map(it=>it[0]==="#"?`<tr class="sec"><td colspan="${CAR_TYPES.length+1}">${esc(it[1])}</td></tr>`:`<tr><td>${esc(it[1])}</td>${CAR_TYPES.map(t=>`<td>${cell(t,it)}</td>`).join("")}</tr>`).join("")+`</tbody>`;
+  }
+  function readCars(){
+    const out={}; let err="";
+    CAR_TYPES.forEach(t=>{ const o={}; const q=k=>[...document.querySelectorAll(`#aCars [data-car="${t}"][data-k="${k}"]`)];
+      o.name=(q("name")[0].value||"").trim()||CAR_DEF[t].name;
+      CAR_ITEMS.forEach(([k,label,ty])=>{ if(k==="#") return; const els=q(k);
+        if(ty==="multi"){ o[k]=els.filter(e=>e.checked).map(e=>e.value); if(!o[k].length) err=`${o.name}：「${label}」を1つ以上選んでください`; }
+        else if(ty==="bool") o[k]=els[0].checked;
+        else if(ty==="lines") o[k]=els[0].value.split("\n").map(x=>x.trim()).filter(Boolean);
+        else if(ty==="rules"){ const rs=[]; els[0].value.split("\n").map(x=>x.trim()).filter(Boolean).forEach(line=>{ const m=/^(\d{4}-\d{2}-\d{2})\s+(出庫〜入庫|8〜10時)\s+(\d{1,3})\s*%?$/.exec(line.replace(/～|~/g,"〜"));
+            if(!m){ err=`${o.name}：週の目標「${line}」が読めません（例 2026-10-05 8〜10時 80）`; return; } rs.push({from:m[1],type:m[2]==="8〜10時"?"am":"all",pct:+m[3]}); });
+          o[k]=rs.length?rs.sort((a,b)=>a.from<b.from?-1:1):null; }
+        else if(ty==="time"){ if(hm2m(els[0].value)==null) err=`${o.name}：「${label}」の時刻を入れてください`; o[k]=els[0].value; }
+        else if(ty==="pct") o[k]=(+els[0].value||0)/100;
+        else { const v=els[0].value; if(v===""||!isFinite(+v)) err=`${o.name}：「${label}」を数字で入れてください`; o[k]=+v; } });
+      out[t]=o; });
+    return {cars:out,err};
+  }
+  async function saveCars(cars,msg){
+    const m=$("aCarMsg"); m.textContent="保存しています…";
+    try{ const j=await post({action:"admin",op:"saveCars",adminPass:cfg.apass,cars}); if(!j.ok){ m.textContent=j.error||"保存できませんでした"; return; }
+      carsCfg=j.cars||null; try{ localStorage.setItem("tenko.cars",JSON.stringify(carsCfg)); }catch(e){}
+      applyCarConsts(); applyLongDefaults(); fillCarSel(); drawCars(carsCfg); render(); m.textContent=msg;
+    }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度押してください"; }
+  }
   function drawAdmin(j){
     $("aGroups").innerHTML=j.groups.map((g,i)=>`<div class="agrp" data-i="${i}"><span class="num">${i+1}</span>
       <input type="text" data-a="name" value="${esc(g.name)}" maxlength="20" aria-label="グループ${i+1}の名前">
@@ -1234,6 +1338,7 @@ body.rtfull{overflow:hidden}
     $("aLong").value=j.longPass||"";
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("adminBox").hidden=false; $("aForget").hidden=false;
+    drawCars(j.cars!==undefined?j.cars:carsCfg);
   }
   async function openAdmin(){
     const m=$("aMsg"); m.textContent="確かめています…";
@@ -1246,6 +1351,9 @@ body.rtfull{overflow:hidden}
   $("aPass").value=cfg.apass||"";
   $("aOpen").onclick=()=>{ cfg.url=$("lUrl").value.trim()||cfg.url; cfg.apass=$("aPass").value.trim(); if(!cfg.apass){ $("aMsg").textContent="管理者の合言葉を入れてください"; return; } openAdmin(); };
   $("aReload").onclick=openAdmin;
+  $("aCarSave").onclick=()=>{ const {cars,err}=readCars(); if(err){ $("aCarMsg").textContent=err; return; } saveCars(cars,"保存しました。全員のアプリに、次に開いたときから反映されます"); };
+  let carResetArmed=false;
+  $("aCarReset").onclick=()=>{ if(!carResetArmed){ carResetArmed=true; $("aCarReset").textContent="もう一度押すと初期値に戻します"; return; } carResetArmed=false; $("aCarReset").textContent="初期値に戻す"; saveCars(null,"初期値に戻しました"); };
   $("aSave").onclick=async()=>{
     const m=$("aSaveMsg"), groups=[...document.querySelectorAll("#aGroups .agrp")].map(r=>({name:r.querySelector('[data-a="name"]').value,pass:r.querySelector('[data-a="pass"]').value}));
     m.textContent="保存しています…";
@@ -1264,7 +1372,7 @@ body.rtfull{overflow:hidden}
   // 接遇チェック（試験中）は、管理者の合言葉を入れたスマホだけに出す
   const canSv=()=>!PROD||isAdmin();
   function applyRole(){
-    const mem=isMember();
+    const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
     $("segLong").hidden=!mem;
     $("segSv").hidden=!canSv(); if(!canSv()&&typeof curSub!=="undefined"&&curSub==="sv"){ if(typeof svStop==="function") svStop(); showSub("wx"); }
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
@@ -1323,8 +1431,8 @@ body.rtfull{overflow:hidden}
       const t=arr+margin;
       if(t>sh.over22) return `<span class="pill bad">22時間を超えます</span>`;
       if(t>deadline) return `<span class="pill bad">2日平均21時間を超えます</span>`;
-      if(t>sh.ok21) return `<span class="pill warn">21時間を超えます（報告書が必要）</span>`;
-      if(t>nokin) return `<span class="pill warn">帰庫が10:10を過ぎます（納金〆 10:30）</span>`;
+      if(t>sh.ok21) return `<span class="pill warn">${REP/60}時間を超えます（報告書が必要）</span>`;
+      if(t>nokin) return `<span class="pill warn">帰庫が${m2hm(KIKO)}を過ぎます（納金〆 ${m2hm(NOKIN)}）</span>`;
       return `<span class="pill ok">間に合います（余裕 <span class="num">${hm(limitAbs-t)}</span>）</span>`;
     };
     const back=(label,l)=>{
@@ -1345,7 +1453,7 @@ body.rtfull{overflow:hidden}
         <div class="d">${delay(j.go)}</div></div>
       ${back("帰り　高速を使う",j.backHw)}
       ${back("帰り　一般道のみ",j.backLocal)}
-      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 10:30（納金処理があるので帰庫は10:10まで）。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}${j.pickup?`お迎え先で <span class="num">${pickMin}</span>分、`:""}目的地で <span class="num">${+$("lStay").value||0}</span>分${j.stationCount?`、給油所で <span class="num">${j.viaMin||0}</span>分`:""}、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
+      <div class="foot">${sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 ${m2hm(NOKIN)}（納金処理があるので帰庫は${m2hm(KIKO)}まで）。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}${j.pickup?`お迎え先で <span class="num">${pickMin}</span>分、`:""}目的地で <span class="num">${+$("lStay").value||0}</span>分${j.stationCount?`、給油所で <span class="num">${j.viaMin||0}</span>分`:""}、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
     </div>`;
   }
 
@@ -1678,8 +1786,8 @@ body.rtfull{overflow:hidden}
   // アプリ手配料（社内決済の200円）：チェックがあればそれに従う。なければ「配車でGO Pay以外」を社内決済とみなす（Excelと同じ）
   // 連続配車＝手上げを取らず、ずっと迎車を受けるモード。計算は配車と同じ（アプリ手配料・配車の回数）
   const isHai=k=>k==="配車"||k==="連続配車";
-  const appAuto=r=>isHai(r.kind)&&!!r.pay&&r.pay!=="A:GOPAY"&&r.pay!=="B空転";
-  const appFee=r=>!isHai(r.kind)?0:(r.inhouse!=null?r.inhouse:appAuto(r))?200:0;   // 手上げ・乗り場などには手配料はない
+  const appAuto=r=>car().appFee>0&&isHai(r.kind)&&!!r.pay&&r.pay!=="A:GOPAY"&&r.pay!=="B空転";
+  const appFee=r=>!isHai(r.kind)||!(car().appFee>0)?0:(r.inhouse!=null?r.inhouse:appAuto(r))?car().appFee:0;   // 手上げ・乗り場などには手配料はない
   // Excelの売上入力と同じ計算：営業(分)・待ち(分)・通し番号・アプリ料・分単価
   function dayCalc(d){
     const rows=[...d.rides].sort((a,b)=>(a.on??1e9)-(b.on??1e9));
@@ -1749,7 +1857,7 @@ body.rtfull{overflow:hidden}
   const absDate=x=>new Date(Math.floor(x/DAY)*864e5).toISOString().slice(0,10);
   const hasRz=d=>!!(d&&d.rides&&d.rides.some(r=>r.kind===RZ));
   const wkLabel=w=>{ const f=x=>{ const t=new Date(Math.floor(x/DAY)*864e5); return (t.getUTCMonth()+1)+"/"+t.getUTCDate(); }; return `${f(w)}（月）〜${f(w+6*DAY)}（日）`; };
-  function ruleOf(w){ const rs=rzCfg().rules.slice().sort((x,y)=>x.from<y.from?-1:1); let r=rs[0]; rs.forEach(x=>{ if(dayNo(x.from)*DAY<=w) r=x; }); return r; }
+  function ruleOf(w){ const rs=(car().rzRules&&car().rzRules.length?car().rzRules:rzCfg().rules).slice().sort((x,y)=>x.from<y.from?-1:1); let r=rs[0]; rs.forEach(x=>{ if(dayNo(x.from)*DAY<=w) r=x; }); return r; }
   const ruleText=r=>r.type==="am"?`8〜10時の${r.pct}%`:`出庫〜入庫の${r.pct}%`;
   // 実績：記録（出庫〜入庫、連続配車モード）
   function rzSpan(k){
@@ -1774,6 +1882,7 @@ body.rtfull{overflow:hidden}
     return {k,state:"now",a:z.from,b:Math.max(now,P.b),rz:z.iv.concat(fut),act:{b:now,rz:z.iv},n:z.n,mine};
   }
   const mustOf=s=>winSum(s.rz,s.a,s.b,RZ_WIN);
+  const MUST=()=>+car().rzMust>0?+car().rzMust:RZ_MUST;
   // 週の計算：実績（終わった分）と見込み（実績＋計画）
   function rzWeekCalc(w){
     const a=w, b=w+7*DAY, rule=ruleOf(w);
@@ -1792,14 +1901,14 @@ body.rtfull{overflow:hidden}
   // 勤務の画面の小さなカード（この乗務の必須2時間と、今週）
   function renderRz(k){
     const el=$("rzCard"), z=rzSpan(k);
-    if(!z||!Object.values(sales.days).some(hasRz)){ el.hidden=true; return; }
+    if(!car().rz||!z||!Object.values(sales.days).some(hasRz)){ el.hidden=true; return; }
     const s=rzShift(k), m=mustOf(s), mAct=s.act?winSum(s.act.rz,s.a,s.act.b,RZ_WIN):m, W=rzWeekCalc(weekOf(z.from)), r=W.rule;
     const ra=rate(W.act), rp=rate(W.all), ok=v=>v!=null&&v>=r.pct/100;
     el.hidden=false;
     el.innerHTML=`<div class="row"><span>連続配車</span><button class="btn" id="rzOpen">連続配車の画面 ›</button></div>
       <div class="sumgrid">
         <div><span class="h">この乗務の連続配車</span><span class="v num">${hm(sumIv(z.iv,z.from,z.to))}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
-        <div><span class="h">必須（8〜10時・16〜20時）</span><span class="v num">${hm(mAct)} ${mAct>=RZ_MUST?"✅":"❌"}<small style="display:block;font-size:13px;color:var(--muted)">${mAct>=RZ_MUST?"2時間をクリア":`2時間まで あと ${hm(RZ_MUST-mAct)}`}</small></span></div>
+        <div><span class="h">必須（8〜10時・16〜20時）</span><span class="v num">${hm(mAct)} ${mAct>=MUST()?"✅":"❌"}<small style="display:block;font-size:13px;color:var(--muted)">${mAct>=MUST()?"2時間をクリア":`2時間まで あと ${hm(MUST()-mAct)}`}</small></span></div>
       </div>
       <div style="margin-top:8px">今週（${wkLabel(W.w)}）の目標：<b>${ruleText(r)}</b></div>
       <div class="checks"><span class="pill ${ok(ra)?"ok":"warn"}">実績 ${ra!=null?pct(ra):"—"}</span>${W.shifts.some(x=>x.state!=="done")?`<span class="pill ${ok(rp)?"ok":"warn"}">計画を含む見込み ${rp!=null?pct(rp):"—"}</span>`:""}</div>`;
@@ -1816,14 +1925,14 @@ body.rtfull{overflow:hidden}
     const sh=W.shifts.map(s=>{ const m=mustOf(s), ren=sumIv(s.rz,s.a,s.b), wk=s.b-s.a;
       return `<tr><td class="num">${md(s.k)}（${dow(s.k)}）<br><small>${stLabel[s.state]}${s.mine?"・個別の計画":""}</small></td>
         <td class="num">${hm(ren)}／${hm(wk)}</td>
-        <td class="num">${hm(m)} ${m>=RZ_MUST?"✅":"❌"}${m<RZ_MUST?`<br><small>あと ${hm(RZ_MUST-m)}</small>`:""}</td>
+        <td class="num">${hm(m)} ${m>=MUST()?"✅":"❌"}${m<RZ_MUST?`<br><small>あと ${hm(MUST()-m)}</small>`:""}</td>
         <td>${s.state!=="done"?`<button class="btn" data-plan="${s.k}">計画</button>`:""}</td></tr>`; }).join("");
     // 記録のある週の一覧（新しい順・実績だけ）
     const weeks=[...new Set(Object.keys(sales.days).filter(k=>hasRz(sales.days[k])).map(k=>{ const zz=rzSpan(k); return zz?weekOf(zz.from):null; }).filter(x=>x!=null))].sort((a,b)=>b-a);
     $("sRzView").innerHTML=`
     <section class="card">
       <div class="period"><button class="iconbtn" id="rzPrev" aria-label="前の週">◀</button><h2 style="flex:1;text-align:center;margin:0;font-size:17px">${wkLabel(rzW)}</h2><button class="iconbtn" id="rzNext" aria-label="次の週">▶</button></div>
-      <div>この週の目標：<b>${ruleText(r)}</b> <button class="btn" id="rzRuleBtn">変える</button></div>
+      <div>この週の目標：<b>${ruleText(r)}</b> ${car().rzRules&&car().rzRules.length?`<small>（管理者の設定）</small><button class="btn" id="rzRuleBtn" hidden>変える</button>`:`<button class="btn" id="rzRuleBtn">変える</button>`}</div>
       <div class="grp" id="rzRuleBox" hidden>
         <div class="field"><label for="rzType">目標のしかた</label><select id="rzType"><option value="all">週の出庫〜入庫の時間の○%</option><option value="am">週の8〜10時に勤務していた時間の○%</option></select></div>
         <div class="field"><label for="rzPct">目標（%）</label><input type="number" id="rzPct" inputmode="numeric" min="1" max="100" value="${r.pct}"></div>
@@ -1882,7 +1991,7 @@ body.rtfull{overflow:hidden}
       <div class="pair"><div class="field"><label for="edOut">出庫</label><input type="time" id="edOut" value="${t(e.out)}"></div><div class="field"><label for="edIn">入庫</label><input type="time" id="edIn" value="${t(e.in)}"></div></div>
       <div class="legend"><span><b style="background:var(--accent)"></b>連続配車</span><span><b style="background:var(--warn-soft);border:1px solid var(--warn)"></b>休憩</span><span><b style="background:var(--surface);border:1px solid var(--line)"></b>手上げ・営業</span><span style="color:var(--accent)">太字の時＝必須の時間帯</span></div>
       <div class="rzgrid">${rows}</div>
-      <div class="checks"><span class="pill ${m>=RZ_MUST?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=RZ_MUST?"✅":"❌ あと "+hm(RZ_MUST-m)}</span><span class="pill">連続配車 ${hm(ren)}／出庫〜入庫 ${hm(e.in-e.out)}</span></div>
+      <div class="checks"><span class="pill ${m>=MUST()?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=MUST()?"✅":"❌ あと "+hm(MUST()-m)}</span><span class="pill">連続配車 ${hm(ren)}／出庫〜入庫 ${hm(e.in-e.out)}</span></div>
       <div class="btnrow"><button class="btn primary" id="edSave">保存</button>${e.key!=="tpl"&&rzCfg().plans[e.key]?`<button class="btn" id="edReset">基本の型に戻す</button>`:""}<button class="btn" id="edClose">閉じる</button></div>
       <small>マスを押すたびに、手上げ → 連続配車 → 休憩 → 手上げ と変わります。</small>`;
     el.querySelectorAll(".rzgrid button[data-m]").forEach(bt=>bt.onclick=()=>{ const mm=+bt.dataset.m; e.st[mm]=((e.st[mm]||0)+1)%3; edRender(); });
@@ -1924,7 +2033,7 @@ body.rtfull{overflow:hidden}
   // ---- 月度の集計 ----
   let mIdx=-1, sView="day";
   try{ sView=localStorage.getItem("tenko.sview")||"day"; }catch(e){}
-  const salesCfg=()=>Object.assign({tax:0.9,pay:0.62,bonus:0.1,maxKm:362},sales.cfg||{});
+  const salesCfg=()=>{ const c=car(); return Object.assign({tax:c.tax,pay:c.pay,bonus:c.bonus,maxKm:c.maxKm},sales.cfg||{}); };   // 自分で変えた値があればそれ、なければ車種の初期値
   // 時間帯別（乗車した時刻の時）のメーター料金。並びは11時台〜翌10時台（売上管理Excelの「当月設定」と同じ）
   const HOURS=[...Array(24)].map((_,i)=>(i+11)%24);
   function hourly(d){
@@ -2068,9 +2177,10 @@ body.rtfull{overflow:hidden}
   }
 
   function setView(v){
-    sView=v==="month"?"month":v==="anal"?"anal":v==="rz"?"rz":v==="flash"&&(isNakama()||isAdmin())?"flash":"day";
+    sView=v==="month"?"month":v==="anal"?"anal":v==="rz"&&car().rz?"rz":v==="flash"&&(isNakama()||isAdmin())?"flash":"day";
     try{ localStorage.setItem("tenko.sview",sView); }catch(e){}
     document.querySelectorAll("#sView button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===sView));
+    $("sViewRz").hidden=!car().rz; renderCarSeg();
     $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month"; $("sFlashView").hidden=sView!=="flash"; $("sAnalView").hidden=sView!=="anal"; $("sRzView").hidden=sView!=="rz";
     if(sView==="month"){ mIdx=-1; renderMonth(); } else if(sView==="anal") renderAnal(); else if(sView==="rz"){ rzW=null; rzEd=null; renderRzView(); } else if(sView==="flash") loadFlash(); else renderSales();
     window.scrollTo(0,0);
@@ -2293,14 +2403,14 @@ body.rtfull{overflow:hidden}
       $("sNow").innerHTML=`<div class="ridebtns">
         ${open?`<button class="bigbtn off" id="bOff">降車<small>乗車 ${tm(open.on)} から ${hm(n-open.on)}</small></button>`
               :`<button class="bigbtn" id="bOn">乗車<small>押した時刻・場所・天気を記録します</small></button>`}
-        <button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>
+        ${car().rz?`<button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>`:""}
         <div class="evbtns">
           <button class="btn" data-ev="出庫">出庫</button>
           <button class="btn${evOpen("休憩")?" on":""}" data-ev="休憩">${evOpen("休憩")?"休憩終了":"休憩"}</button>
           <button class="btn${evOpen("回送")?" on":""}" data-ev="回送">${evOpen("回送")?"回送終了":"回送"}</button>
           <button class="btn" data-ev="入庫">入庫</button>
         </div></div>`;
-      if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff; $("bRz").onclick=()=>evPress(RZ);
+      if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff; if($("bRz")) $("bRz").onclick=()=>evPress(RZ);
       document.querySelectorAll("#sNow [data-ev]").forEach(b=>b.onclick=()=>evPress(b.dataset.ev));
     } else $("sNow").innerHTML=act||simple||k===activeDay()||!activeDay()?"":`<button class="btn" id="bToday">${shiftNow()?"今の勤務":"直前の勤務"}（${md(activeDay())}出庫）に戻る</button>`;
     if($("bToday")) $("bToday").onclick=()=>renderSales(true);
@@ -2426,6 +2536,13 @@ body.rtfull{overflow:hidden}
   function lastOf(d,f,def){ const r=[...d.rides].reverse().find(x=>!isEv(x.kind)&&x[f]); return r?r[f]:def; }
   // 新しい乗車の内容：連続配車モードを使っている日は、モード中なら「連続配車」、外なら前の乗車（連続配車だったら手上げ）
   function kindNow(d,at){
+    const ks=car().kinds; if(ks.length===1) return ks[0];
+    const k0=kindNow0(d,at); return ks.includes(k0)?k0:ks[0];
+  }
+  const payNow=d=>{ const ps=car().pays, p0=lastOf(d,"pay","A:GOPAY"); return ps.includes(p0)?p0:ps[0]; };
+  // 入力画面の「内容」「決済」は、車種で使うものだけを出す（今の記録の値は残す）
+  function fillOpts(id,list,cur){ const L=[...list]; if(cur&&!L.includes(cur)) L.push(cur); $(id).innerHTML=L.map(v=>`<option>${esc(v)}</option>`).join(""); }
+  function kindNow0(d,at){
     const ms=d.rides.filter(r=>r.kind===RZ&&r.on!=null);
     if(!ms.length) return lastOf(d,"kind","連続配車");
     if(ms.some(m=>at>=m.on&&(m.off==null||at<=m.off))) return "連続配車";
@@ -2439,7 +2556,7 @@ body.rtfull{overflow:hidden}
   }
   function rideOn(){
     const k=sDay, d=ensureDay(k); if(!guard(d)) return;
-    const r={id:newId(),kind:kindNow(d,nowMin(k)),on:nowMin(k),off:null,pay:lastOf(d,"pay","A:GOPAY")};
+    const r={id:newId(),kind:kindNow(d,nowMin(k)),on:nowMin(k),off:null,pay:payNow(d)};
     d.rides.push(r); saveSales(); $("sStatus").textContent="乗車を記録しました。位置と天気を調べています…"; renderSales();
     capture(k,r.id,"on").then(()=>{ $("sStatus").textContent=""; });
   }
@@ -2463,7 +2580,9 @@ body.rtfull{overflow:hidden}
   function openRide(id,afterOff){
     const k=sDay, d=getDay(k);
     rEdit=id; rDelArmed=false; $("rDel").textContent="削除";
-    const r=id?d.rides.find(x=>x.id===id):{kind:kindNow(d,nowMin(k)),pay:lastOf(d,"pay","A:GOPAY")};
+    const r=id?d.rides.find(x=>x.id===id):{kind:kindNow(d,nowMin(k)),pay:payNow(d)};
+    fillOpts("rKind",[...car().kinds,"出庫","入庫","休憩","回送",...(car().rz?[RZ]:[])],r.kind); fillOpts("rPay",car().pays,r.pay);
+    $("rPay").closest(".field").hidden=car().pays.length===1&&(!r.pay||r.pay===car().pays[0]);
     $("rTitle").textContent=id?(afterOff?"降車：金額を入れてください":"記録を直す"):"乗車を手で追加";
     $("rKind").value=r.kind||"連続配車"; $("rOn").value=r.on!=null?clock(((r.on%DAY)+DAY)%DAY):""; $("rOff").value=r.off!=null?clock(((r.off%DAY)+DAY)%DAY):"";
     $("rOnNext").checked=r.on!=null&&r.on>=DAY; $("rOffNext").checked=r.off!=null&&r.off>=DAY;
@@ -2480,7 +2599,7 @@ body.rtfull{overflow:hidden}
   }
   function kindUI(){
     const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
-    $("rMoney").hidden=ev; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k);
+    $("rMoney").hidden=ev; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k)||!(car().appFee>0);
     $("rOnL").textContent=ev?(point?"時刻":"開始"):"乗車"; $("rOffL").textContent=ev?"終了":"降車";
   }
   function markWx(){ document.querySelectorAll("#rWx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===rWxSel)); }
