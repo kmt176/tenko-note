@@ -690,7 +690,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 20:55</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 21:02</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2437,8 +2437,8 @@ body.rtfull{overflow:hidden}
         ${car().rz?`<button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>`:""}
         <div class="evbtns">
           <button class="btn" data-ev="出庫">出庫</button>
-          <button class="btn${evOpen("休憩")?" on":""}" data-ev="休憩">${evOpen("休憩")?"休憩終了":"休憩"}</button>
           <button class="btn${evOpen("回送")?" on":""}" data-ev="回送">${evOpen("回送")?"回送終了":"回送"}</button>
+          <button class="btn${evOpen("休憩")?" on":""}" data-ev="休憩">${evOpen("休憩")?"休憩終了":"休憩"}</button>
           <button class="btn" data-ev="入庫">入庫</button>
         </div></div>`;
       if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff; if($("bRz")) $("bRz").onclick=()=>evPress(RZ);
