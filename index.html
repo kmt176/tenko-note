@@ -211,6 +211,13 @@ a.flink .st small{color:var(--accent);font-size:12.5px}
 .evbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .evbtns .btn{padding:10px 0;font-size:15.5px;white-space:nowrap}
 .evbtns .btn.on{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.rzgrid{display:grid;grid-template-columns:3.4em repeat(4,1fr);gap:3px;margin:6px 0}
+.rzgrid .hl{font-size:13.5px;color:var(--muted);align-self:center;font-weight:400}
+.rzgrid .hl.win{color:var(--accent);font-weight:700}
+.rzgrid button{height:30px;border:1px solid var(--line);border-radius:5px;background:var(--surface);padding:0}
+.rzgrid button.s1{background:var(--accent);border-color:var(--accent)}
+.rzgrid button.s2{background:var(--warn-soft);border-color:var(--warn)}
+.rzgrid button:disabled{opacity:.2}
 .rzbtn{display:grid;gap:2px;text-align:center;padding:12px 10px;font-size:19px;font-weight:700;border:2px solid var(--accent);color:var(--accent);background:var(--surface)}
 .rzbtn small{font-size:13.5px;font-weight:400;color:var(--muted)}
 .rzbtn.on{background:var(--accent-soft);border-color:var(--accent)}
@@ -369,6 +376,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-view="day" aria-selected="true">勤務</button>
     <button role="tab" data-view="month" aria-selected="false">月度の集計</button>
     <button role="tab" data-view="anal" aria-selected="false">営業分析</button>
+    <button role="tab" data-view="rz" aria-selected="false">連続配車</button>
     <button role="tab" data-view="flash" aria-selected="false" id="sViewFlash" hidden>仲間の速報</button>
   </div>
   <div class="wrap" id="sDayView">
@@ -476,6 +484,7 @@ body.rtfull{overflow:hidden}
   </details>
   </div>
 
+  <div class="wrap" id="sRzView" hidden></div>
   <div class="wrap" id="sAnalView" hidden>
     <div class="seg" id="aRange" role="tablist" aria-label="期間">
       <button role="tab" data-r="p" aria-selected="true">この月度</button>
@@ -661,7 +670,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 14:16</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 16:33</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -727,7 +736,7 @@ body.rtfull{overflow:hidden}
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
-      <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>モード中に乗車を押すと内容が「連続配車」、モードの外は「配車」「手上げ」になります（あとで時間を直すと、迎車の乗車も付け直します）。売上の画面に、この勤務と今週（月曜〜日曜）の連続配車の時間と達成率（目安60%）が出ます。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
+      <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>モード中に乗車を押すと内容が「連続配車」になります。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（勤務時間の60%、または8〜10時の80%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須（8〜10時・16〜20時で合わせて2時間）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
       <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。GO Payでも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
     </ol>
     <dl class="explain">
@@ -1720,9 +1729,25 @@ body.rtfull{overflow:hidden}
     return {eig:s.eig,work:s.eig+e,net:shiftSales(k).amt*salesCfg().tax};
   }
 
-  // ===== 連続配車の時間（売上管理Excelの「週間配車管理」と同じ考え方） =====
-  // 週は月曜0:00〜日曜24:00。日をまたぐ勤務は週の境目で分ける。達成率＝連続配車の時間÷勤務（出庫〜入庫）、目安60%以上
-  const RZ_GOAL=0.6;
+  // ===== 連続配車（売上管理Excelの「週間配車管理」「1日の計画」と同じ考え方） =====
+  // 週は月曜0:00〜日曜24:00（日曜出庫の乗務は週の境目で分ける）。週の目標は時期で変わる：
+  //   all＝週の勤務（出庫〜入庫）の○%、am＝週の8〜10時に勤務していた時間の○%（9時に帰庫した日は8〜9時だけ）
+  // 1乗務の必須：8〜10時と16〜20時の中の連続配車を合わせて2時間以上（ユーザー指定）
+  const RZ_WIN=[[8*60,10*60],[16*60,20*60]], RZ_AM=[[8*60,10*60]], RZ_MUST=120;
+  // 計画の型の初期値：Excel「1日の計画」の「10月度より（計画中）」（13:15〜17:00・17:15〜18:30 連続配車、17:00〜17:15・20:00〜21:00 休憩）
+  const RZ_TPL={out:13*60+10,in:DAY+9*60+20,rz:[[13*60+15,17*60],[17*60+15,18*60+30]],rest:[[17*60,17*60+15],[20*60,21*60]]};
+  function rzCfg(){ const z=sales.rz=sales.rz||{}; if(!z.rules) z.rules=[{from:"2026-01-05",type:"all",pct:60}]; if(!z.tpl) z.tpl=JSON.parse(JSON.stringify(RZ_TPL)); if(!z.plans) z.plans={}; return z; }
+  const ovl=(a,b,c,d)=>Math.max(0,Math.min(b,d)-Math.max(a,c));
+  const sumIv=(iv,a,b)=>iv.reduce((t,[x,y])=>t+ovl(x,y,a,b),0);
+  // 区間 iv のうち、[a,b] の中で、毎日の時間帯 wins（8〜10時など）に入る長さ
+  function winSum(iv,a,b,wins){ let t=0; for(let di=Math.floor(a/DAY)-1;di<=Math.floor(b/DAY)+1;di++) wins.forEach(([s,e])=>{ const ws=Math.max(a,di*DAY+s), we=Math.min(b,di*DAY+e); if(we>ws) t+=sumIv(iv,ws,we); }); return t; }
+  const weekOf=abs=>{ const di=Math.floor(abs/DAY), wd=(new Date(di*864e5).getUTCDay()+6)%7; return (di-wd)*DAY; };
+  const absDate=x=>new Date(Math.floor(x/DAY)*864e5).toISOString().slice(0,10);
+  const hasRz=d=>!!(d&&d.rides&&d.rides.some(r=>r.kind===RZ));
+  const wkLabel=w=>{ const f=x=>{ const t=new Date(Math.floor(x/DAY)*864e5); return (t.getUTCMonth()+1)+"/"+t.getUTCDate(); }; return `${f(w)}（月）〜${f(w+6*DAY)}（日）`; };
+  function ruleOf(w){ const rs=rzCfg().rules.slice().sort((x,y)=>x.from<y.from?-1:1); let r=rs[0]; rs.forEach(x=>{ if(dayNo(x.from)*DAY<=w) r=x; }); return r; }
+  const ruleText=r=>r.type==="am"?`8〜10時の${r.pct}%`:`勤務時間の${r.pct}%`;
+  // 実績：記録（出庫〜入庫、連続配車モード）
   function rzSpan(k){
     const d=sales.days[k]; if(!d||d.mode==="simple"||!d.rides) return null;
     const act=k===shiftNow(), base=dayNo(k)*DAY, ev=kd=>d.rides.find(r=>r.kind===kd&&r.on!=null);
@@ -1732,37 +1757,139 @@ body.rtfull{overflow:hidden}
     const to=en?en.on:act?nowMin(k):Math.max(...timed.map(r=>r.off!=null?r.off:r.on));
     if(!(to>from)) return null;
     const iv=ms.map(m=>[Math.max(m.on,from),Math.min(m.off!=null?m.off:to,to)]).filter(x=>x[1]>x[0]).map(([a,b])=>[base+a,base+b]);
-    return {from:base+from,to:base+to,iv,n:ms.length};
+    return {from:base+from,to:base+to,iv,n:ms.length,ended:!!en};
   }
-  const sumIv=(iv,a,b)=>iv.reduce((t,[x,y])=>t+Math.max(0,Math.min(y,b)-Math.max(x,a)),0);
-  const weekOf=abs=>{ const di=Math.floor(abs/DAY), wd=(new Date(di*864e5).getUTCDay()+6)%7; return (di-wd)*DAY; };
-  const hasRz=d=>!!(d&&d.rides&&d.rides.some(r=>r.kind===RZ));
-  function rzWeek(w){
-    const a=w, b=w+7*DAY; let work=0, ren=0, days=0;
-    Object.keys(sales.days).forEach(k=>{ const di=dayNo(k); if(di*DAY>=b||(di+2)*DAY<=a) return;
-      const z=rzSpan(k); if(!z) return; const wk=Math.max(0,Math.min(z.to,b)-Math.max(z.from,a)); if(!wk) return;
-      work+=wk; ren+=sumIv(z.iv,a,b); days++; });
-    return {work,ren,days};
+  const planOf=k=>{ const z=rzCfg(); return z.plans[k]||z.tpl; };
+  // 1乗務：終わった乗務は実績、勤務中は今までの実績＋これからの計画、これからの乗務は計画
+  function rzShift(k){
+    const base=dayNo(k)*DAY, z=rzSpan(k), pl=planOf(k), now=nowAbsMin(), mine=!!rzCfg().plans[k];
+    const P={a:base+pl.out,b:base+pl.in,rz:pl.rz.map(([x,y])=>[base+x,base+y])};
+    if(!z){ if(P.b<now) return {k,state:"none"}; return {k,state:"plan",a:P.a,b:P.b,rz:P.rz,mine}; }
+    if(z.ended||k!==shiftNow()) return {k,state:"done",a:z.from,b:z.to,rz:z.iv,act:{b:z.to,rz:z.iv},n:z.n};
+    const fut=P.rz.map(([x,y])=>[Math.max(x,now),y]).filter(([x,y])=>y>x);
+    return {k,state:"now",a:z.from,b:Math.max(now,P.b),rz:z.iv.concat(fut),act:{b:now,rz:z.iv},n:z.n,mine};
   }
-  const wkLabel=w=>{ const f=x=>{ const t=new Date(x/DAY*864e5); return (t.getUTCMonth()+1)+"/"+t.getUTCDate(); }; return `${f(w)}〜${f(w+6*DAY)}`; };
-  const rzJudge=(ren,work)=>!work?"":ren/work>=RZ_GOAL?`<span class="pill ok">🟢 達成中（${pct(ren/work)}）</span>`
-    :`<span class="pill warn">🔴 ${pct(ren/work)}・60%まで あと ${hm(Math.ceil(RZ_GOAL*work-ren))}</span>`;
+  const mustOf=s=>winSum(s.rz,s.a,s.b,RZ_WIN);
+  // 週の計算：実績（終わった分）と見込み（実績＋計画）
+  function rzWeekCalc(w){
+    const a=w, b=w+7*DAY, rule=ruleOf(w);
+    const keys=[...new Set([...recs.map(r=>r.date),...Object.keys(sales.days)])].filter(k=>{ const di=dayNo(k); return di*DAY<b&&(di+2)*DAY>a; }).sort();
+    const shifts=keys.map(rzShift).filter(s=>s.state!=="none"&&ovl(s.a,s.b,a,b)>0);
+    const part=(rz,x,y)=>rule.type==="am"?{n:winSum(rz,a,b,RZ_AM),d:winSum([[x,y]],a,b,RZ_AM)}:{n:sumIv(rz,a,b),d:ovl(x,y,a,b)};
+    const act={n:0,d:0}, all={n:0,d:0};
+    shifts.forEach(s=>{ const p=part(s.rz,s.a,s.b); all.n+=p.n; all.d+=p.d;
+      if(s.act){ const q=part(s.act.rz,s.a,s.act.b); act.n+=q.n; act.d+=q.d; } });
+    return {w,rule,shifts,act,all};
+  }
+  const rate=o=>o.d?o.n/o.d:null;
+  // 目標に届くには、あと何分の連続配車が要るか（分母はそのまま）
+  const short=(o,r)=>o.d?Math.max(0,Math.ceil(r.pct/100*o.d-o.n)):0;
+
+  // 勤務の画面の小さなカード（この乗務の必須2時間と、今週）
   function renderRz(k){
     const el=$("rzCard"), z=rzSpan(k);
-    // 連続配車モードを一度も記録していなければ出さない
     if(!z||!Object.values(sales.days).some(hasRz)){ el.hidden=true; return; }
-    const w=weekOf(z.from), W=rzWeek(w), ren=sumIv(z.iv,z.from,z.to), work=z.to-z.from;
-    const weeks=[...new Set(Object.keys(sales.days).filter(kk=>hasRz(sales.days[kk])).map(kk=>{ const zz=rzSpan(kk); return zz?weekOf(zz.from):null; }).filter(x=>x!=null))].sort((a,b)=>b-a);
+    const s=rzShift(k), m=mustOf(s), mAct=s.act?winSum(s.act.rz,s.a,s.act.b,RZ_WIN):m, W=rzWeekCalc(weekOf(z.from)), r=W.rule;
+    const ra=rate(W.act), rp=rate(W.all), ok=v=>v!=null&&v>=r.pct/100;
     el.hidden=false;
-    el.innerHTML=`<div class="row"><span>連続配車</span><span class="total num">${work?pct(ren/work):"—"}<small style="font-size:14px;color:var(--muted)"> この勤務</small></span></div>
+    el.innerHTML=`<div class="row"><span>連続配車</span><button class="btn" id="rzOpen">連続配車の画面 ›</button></div>
       <div class="sumgrid">
-        <div><span class="h">この勤務の連続配車</span><span class="v num">${hm(ren)}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
-        <div><span class="h">勤務（出庫〜入庫）</span><span class="v num">${hm(work)}</span></div>
+        <div><span class="h">この乗務の連続配車</span><span class="v num">${hm(sumIv(z.iv,z.from,z.to))}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
+        <div><span class="h">必須（8〜10時・16〜20時）</span><span class="v num">${hm(mAct)} ${mAct>=RZ_MUST?"✅":"❌"}<small style="display:block;font-size:13px;color:var(--muted)">${mAct>=RZ_MUST?"2時間をクリア":`2時間まで あと ${hm(RZ_MUST-mAct)}`}</small></span></div>
       </div>
-      <div style="margin-top:8px">今週（${wkLabel(w)}）：連続配車 <b class="num">${hm(W.ren)}</b>／勤務 <span class="num">${hm(W.work)}</span>（${W.days}勤務）</div>
-      <div class="checks">${rzJudge(W.ren,W.work)}</div>
-      ${weeks.length?`<details><summary>週ごとの記録</summary><table class="cmpt"><tbody>${weeks.map(x=>{ const v=rzWeek(x); return `<tr><td class="num">${wkLabel(x)}</td><td class="num">${hm(v.ren)}／${hm(v.work)}</td><td class="num">${v.work?pct(v.ren/v.work):"—"} ${v.work&&v.ren/v.work>=RZ_GOAL?"🟢":"🔴"}</td></tr>`; }).join("")}</tbody></table></details>`:""}
-      <div class="src">週は月曜0:00〜日曜24:00（日をまたぐ勤務は週の境目で分けます）。達成率＝連続配車の時間÷勤務（出庫〜入庫）、目安60%以上。売上管理Excelの「週間配車管理」と同じ考え方です。</div>`;
+      <div style="margin-top:8px">今週（${wkLabel(W.w)}）の目標：<b>${ruleText(r)}</b></div>
+      <div class="checks"><span class="pill ${ok(ra)?"ok":"warn"}">実績 ${ra!=null?pct(ra):"—"}</span>${W.shifts.some(x=>x.state!=="done")?`<span class="pill ${ok(rp)?"ok":"warn"}">計画を含む見込み ${rp!=null?pct(rp):"—"}</span>`:""}</div>`;
+    $("rzOpen").onclick=()=>setView("rz");
+  }
+
+  // ===== 連続配車の画面 =====
+  let rzW=null, rzEd=null;
+  const stLabel={done:"実績",now:"勤務中",plan:"計画"};
+  function renderRzView(){
+    const z=rzCfg(); if(rzW==null) rzW=weekOf(nowAbsMin());
+    const W=rzWeekCalc(rzW), r=W.rule, ra=rate(W.act), rp=rate(W.all), goal=r.pct/100;
+    const bar=(v,cls)=>`<i class="${cls}" style="width:${Math.min(100,Math.max(0,(v||0)*100))}%"></i>`;
+    const sh=W.shifts.map(s=>{ const m=mustOf(s), ren=sumIv(s.rz,s.a,s.b), wk=s.b-s.a;
+      return `<tr><td class="num">${md(s.k)}（${dow(s.k)}）<br><small>${stLabel[s.state]}${s.mine?"・個別の計画":""}</small></td>
+        <td class="num">${hm(ren)}／${hm(wk)}</td>
+        <td class="num">${hm(m)} ${m>=RZ_MUST?"✅":"❌"}${m<RZ_MUST?`<br><small>あと ${hm(RZ_MUST-m)}</small>`:""}</td>
+        <td>${s.state!=="done"?`<button class="btn" data-plan="${s.k}">計画</button>`:""}</td></tr>`; }).join("");
+    // 記録のある週の一覧（新しい順・実績だけ）
+    const weeks=[...new Set(Object.keys(sales.days).filter(k=>hasRz(sales.days[k])).map(k=>{ const zz=rzSpan(k); return zz?weekOf(zz.from):null; }).filter(x=>x!=null))].sort((a,b)=>b-a);
+    $("sRzView").innerHTML=`
+    <section class="card">
+      <div class="period"><button class="iconbtn" id="rzPrev" aria-label="前の週">◀</button><h2 style="flex:1;text-align:center;margin:0;font-size:17px">${wkLabel(rzW)}</h2><button class="iconbtn" id="rzNext" aria-label="次の週">▶</button></div>
+      <div>この週の目標：<b>${ruleText(r)}</b> <button class="btn" id="rzRuleBtn">変える</button></div>
+      <div class="grp" id="rzRuleBox" hidden>
+        <div class="field"><label for="rzType">目標のしかた</label><select id="rzType"><option value="all">週の勤務時間（出庫〜入庫）の○%</option><option value="am">週の8〜10時に勤務していた時間の○%</option></select></div>
+        <div class="field"><label for="rzPct">目標（%）</label><input type="number" id="rzPct" inputmode="numeric" min="1" max="100" value="${r.pct}"></div>
+        <div class="btnrow"><button class="btn primary" id="rzRuleSave">この週から変える</button></div>
+        <small>この週から先の週がこの目標になります（前の週はそのまま）。</small>
+      </div>
+      <div class="row" style="margin-top:6px"><span>実績</span><span class="total num">${ra!=null?pct(ra):"—"}</span></div>
+      <div class="bar">${bar(ra,"a")}</div>
+      <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.act.n)}／${r.type==="am"?"8〜10時の勤務":"勤務"} ${hm(W.act.d)}</div>
+      <div class="row" style="margin-top:6px"><span>計画を含む見込み</span><span class="total num">${rp!=null?pct(rp):"—"}</span></div>
+      <div class="bar">${bar(rp,"p")}</div>
+      <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.all.n)}／${r.type==="am"?"8〜10時の勤務":"勤務"} ${hm(W.all.d)}</div>
+      <div class="checks">${rp==null?"":rp>=goal?`<span class="pill ok">🟢 計画どおりなら目標（${r.pct}%）に届きます</span>`:`<span class="pill warn">🔴 目標（${r.pct}%）まで、あと ${hm(short(W.all,r))} の連続配車が必要</span>`}</div>
+    </section>
+    <section class="card">
+      <h2>乗務ごと（必須：8〜10時・16〜20時で合わせて2時間）</h2>
+      <div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>出庫日</td><td>連続配車／勤務</td><td>必須2時間</td><td></td></tr></thead><tbody>${sh||`<tr><td colspan="4">この週の乗務がありません（点呼時間に予定を入れると、計画で見込みを出します）</td></tr>`}</tbody></table></div>
+      <div class="src">勤務中の乗務は、今までの実績とこれからの計画を足しています。計画は「基本の型」を使い、乗務ごとに変えることもできます。</div>
+      <div class="btnrow"><button class="btn" id="rzTplBtn">基本の型（毎回の計画）を直す</button></div>
+    </section>
+    <section class="card" id="rzEdCard" hidden></section>
+    ${weeks.length?`<details class="card"><summary>週ごとの実績</summary><table class="cmpt"><tbody>${weeks.map(x=>{ const v=rzWeekCalc(x), q=rate(v.act); return `<tr><td class="num">${wkLabel(x)}</td><td>${ruleText(v.rule)}</td><td class="num">${q!=null?pct(q):"—"} ${q!=null&&q>=v.rule.pct/100?"🟢":"🔴"}</td></tr>`; }).join("")}</tbody></table></details>`:""}`;
+    $("rzPrev").onclick=()=>{ rzW-=7*DAY; rzEd=null; renderRzView(); };
+    $("rzNext").onclick=()=>{ rzW+=7*DAY; rzEd=null; renderRzView(); };
+    $("rzRuleBtn").onclick=()=>{ $("rzRuleBox").hidden=!$("rzRuleBox").hidden; $("rzType").value=r.type; };
+    $("rzRuleSave").onclick=()=>{ const pc=+$("rzPct").value; if(!(pc>0&&pc<=100)) return; const from=absDate(rzW);
+      z.rules=z.rules.filter(x=>x.from<from).concat([{from,type:$("rzType").value,pct:pc}]); saveSales(); renderRzView(); };
+    $("rzTplBtn").onclick=()=>openRzEd("tpl");
+    document.querySelectorAll("#sRzView [data-plan]").forEach(bt=>bt.onclick=()=>openRzEd(bt.dataset.plan));
+    if(rzEd) edRender();
+  }
+
+  // 計画の編集：Excel「1日の計画」と同じ15分のマス。押すたびに 手上げ → 連続配車 → 休憩 → 手上げ
+  const inIv=(iv,m)=>iv.some(([x,y])=>m>=x&&m<y);
+  function openRzEd(key){
+    const z=rzCfg(), src=key==="tpl"?z.tpl:planOf(key), st={};
+    for(let m=Math.floor(src.out/15)*15;m<src.in;m+=15) st[m]=inIv(src.rz,m)?1:inIv(src.rest||[],m)?2:0;
+    rzEd={key,out:src.out,in:src.in,st};
+    edRender(); $("rzEdCard").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  const toIv=(st,v)=>{ const out=[]; Object.keys(st).map(Number).sort((a,b)=>a-b).forEach(m=>{ if(st[m]!==v) return; const l=out[out.length-1]; if(l&&l[1]===m) l[1]=m+15; else out.push([m,m+15]); }); return out; };
+  function edRender(){
+    const e=rzEd, el=$("rzEdCard"); if(!e||!el) return;
+    const h0=Math.floor(e.out/60)*60, h1=Math.ceil(e.in/60)*60, base=e.key==="tpl"?0:0;
+    let rows="";
+    for(let h=h0;h<h1;h+=60){
+      const hh=((h%DAY)+DAY)%DAY/60, win=RZ_WIN.some(([s,t])=>h%DAY>=s&&h%DAY<t);
+      rows+=`<span class="hl${win?" win":""}">${h>=DAY?"翌":""}${hh}時</span>`;
+      for(let q=0;q<4;q++){ const m=h+q*15, on=m+15>e.out&&m<e.in; const v=on?(e.st[m]||0):0;
+        rows+=`<button type="button" class="s${v}" data-m="${m}" ${on?"":"disabled"} aria-label="${hh}時${q*15}分"></button>`; }
+    }
+    const rz=toIv(e.st,1), sh={rz,a:e.out,b:e.in}, m=mustOf(sh), ren=sumIv(rz,e.out,e.in);
+    const t=v=>clock(((v%DAY)+DAY)%DAY);
+    el.hidden=false;
+    el.innerHTML=`<h2>${e.key==="tpl"?"基本の型（毎回の計画）":`${md(e.key)}（${dow(e.key)}）出庫の計画`}</h2>
+      <div class="pair"><div class="field"><label for="edOut">出庫</label><input type="time" id="edOut" value="${t(e.out)}"></div><div class="field"><label for="edIn">入庫</label><input type="time" id="edIn" value="${t(e.in)}"></div></div>
+      <div class="legend"><span><b style="background:var(--accent)"></b>連続配車</span><span><b style="background:var(--warn-soft);border:1px solid var(--warn)"></b>休憩</span><span><b style="background:var(--surface);border:1px solid var(--line)"></b>手上げ・営業</span><span style="color:var(--accent)">太字の時＝必須の時間帯</span></div>
+      <div class="rzgrid">${rows}</div>
+      <div class="checks"><span class="pill ${m>=RZ_MUST?"ok":"warn"}">必須（8〜10時・16〜20時）${hm(m)} ${m>=RZ_MUST?"✅":"❌ あと "+hm(RZ_MUST-m)}</span><span class="pill">連続配車 ${hm(ren)}／勤務 ${hm(e.in-e.out)}</span></div>
+      <div class="btnrow"><button class="btn primary" id="edSave">保存</button>${e.key!=="tpl"&&rzCfg().plans[e.key]?`<button class="btn" id="edReset">基本の型に戻す</button>`:""}<button class="btn" id="edClose">閉じる</button></div>
+      <small>マスを押すたびに、手上げ → 連続配車 → 休憩 → 手上げ と変わります。</small>`;
+    el.querySelectorAll(".rzgrid button[data-m]").forEach(bt=>bt.onclick=()=>{ const mm=+bt.dataset.m; e.st[mm]=((e.st[mm]||0)+1)%3; edRender(); });
+    const setT=(id,f)=>$(id).addEventListener("change",()=>{ const v=toMin($(id).value); if(v==null) return;
+      if(f==="out") e.out=v; else { let x=v; while(x<=e.out) x+=DAY; e.in=x; }
+      for(let mm=Math.floor(e.out/15)*15;mm<e.in;mm+=15) if(e.st[mm]==null) e.st[mm]=0; edRender(); });
+    setT("edOut","out"); setT("edIn","in");
+    $("edSave").onclick=()=>{ const z=rzCfg(), pl={out:e.out,in:e.in,rz:toIv(e.st,1).map(([x,y])=>[Math.max(x,e.out),Math.min(y,e.in)]).filter(([x,y])=>y>x),rest:toIv(e.st,2)};
+      if(e.key==="tpl") z.tpl=pl; else z.plans[e.key]=pl; saveSales(); rzEd=null; renderRzView(); };
+    if($("edReset")) $("edReset").onclick=()=>{ delete rzCfg().plans[e.key]; saveSales(); rzEd=null; renderRzView(); };
+    $("edClose").onclick=()=>{ rzEd=null; el.hidden=true; };
   }
 
   // ---- 集計（売上管理Excelの「集計」シートと同じ計算） ----
@@ -1937,11 +2064,11 @@ body.rtfull{overflow:hidden}
   }
 
   function setView(v){
-    sView=v==="month"?"month":v==="anal"?"anal":v==="flash"&&(isNakama()||isAdmin())?"flash":"day";
+    sView=v==="month"?"month":v==="anal"?"anal":v==="rz"?"rz":v==="flash"&&(isNakama()||isAdmin())?"flash":"day";
     try{ localStorage.setItem("tenko.sview",sView); }catch(e){}
     document.querySelectorAll("#sView button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===sView));
-    $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month"; $("sFlashView").hidden=sView!=="flash"; $("sAnalView").hidden=sView!=="anal";
-    if(sView==="month"){ mIdx=-1; renderMonth(); } else if(sView==="anal") renderAnal(); else if(sView==="flash") loadFlash(); else renderSales();
+    $("sDayView").hidden=sView!=="day"; $("sMonthView").hidden=sView!=="month"; $("sFlashView").hidden=sView!=="flash"; $("sAnalView").hidden=sView!=="anal"; $("sRzView").hidden=sView!=="rz";
+    if(sView==="month"){ mIdx=-1; renderMonth(); } else if(sView==="anal") renderAnal(); else if(sView==="rz"){ rzW=null; rzEd=null; renderRzView(); } else if(sView==="flash") loadFlash(); else renderSales();
     window.scrollTo(0,0);
   }
   document.querySelectorAll("#sView button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
