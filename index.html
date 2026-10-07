@@ -209,6 +209,7 @@ a.flink .st small{color:var(--accent);font-size:12.5px}
 .ridebtn .bigbtn{flex:1}
 .ridebtn .check{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;width:50px;text-align:center;padding-top:2px}
 .ridebtn .check input{width:22px;height:22px;margin:0}
+.ridebtn .check .vtext{writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px}
 .bigbtn{border:0;border-radius:14px;padding:18px 16px;font-size:26px;font-weight:700;background:var(--accent);color:var(--accent-ink);display:grid;gap:2px;text-align:center}
 .bigbtn small{font-size:15px;font-weight:400;opacity:.9}
 .bigbtn.off{background:var(--ok);color:#fff}
@@ -701,7 +702,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 16:38</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 16:51</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2475,7 +2476,7 @@ body.rtfull{overflow:hidden}
         <div class="ridebtn">
         ${open?`<button class="bigbtn off" id="bOff">降車<small>乗車 ${tm(open.on)} から ${hm(n-open.on)}</small></button>`
               :`<button class="bigbtn" id="bOn">乗車<small>押した時刻・場所・天気を記録します</small></button>`}
-        <label class="check"><input type="checkbox" id="bUnsure">押し忘れ</label>
+        <label class="check"><input type="checkbox" id="bUnsure"><span class="vtext">押し忘れ</span></label>
         </div>
         ${car().rz?`<button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>`:""}
         <div class="evbtns">
