@@ -712,7 +712,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 19:22</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-08 01:41</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2295,7 +2295,7 @@ body.rtfull{overflow:hidden}
   function flashRides(k){
     const d=sales.days[k]; if(!d) return [];
     return d.rides.filter(r=>!isEv(r.kind)&&r.kind!=="B空転"&&(+r.amt||0)>=flashMin&&r.on!=null)
-      .map(r=>({id:r.id,at:new Date(dayStart(k).getTime()+r.on*60000).toISOString(),amt:+r.amt,pay:r.pay||"",from:r.onAddr||"",to:r.offAddr||""}));
+      .map(r=>({id:r.id,at:new Date(dayStart(k).getTime()+r.on*60000).toISOString(),amt:+r.amt,pay:r.pay||"",from:r.onAddr||"",to:r.offAddr||"",kind:r.kind||""}));
   }
   let flashTimer=null;
   function queueFlash(k){
@@ -2344,10 +2344,10 @@ body.rtfull{overflow:hidden}
             :(x.from||x.to)?`https://www.google.com/maps/search/?api=1&query=${q(x.from||x.to)}`:"";
           return `<${map?`a href="${map}" target="_blank" rel="noopener"`:"div"} class="fl flink"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
             <div class="who">${esc(x.name||x.code)}${j.admin&&x.groupName?`<small>${esc(x.groupName)}</small>`:""}<small>${esc(x.from||"—")} → ${esc(x.to||"—")}</small></div>
-            <span class="st">${esc(x.pay||"")}${map?"<br><small>地図 ›</small>":""}</span></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、${yen(j.min||flashMin)}円以上の乗車はまだありません。</div>`);
+            <span class="st">${esc(x.kind||"")}${x.kind&&x.pay?"・":""}${esc(x.pay||"")}${map?"<br><small>地図 ›</small>":""}</span></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、${yen(j.min||flashMin)}円以上の乗車はまだありません。</div>`);
     };
     drawFlash=draw;
-    if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
+    if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目",kind:"配車"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目",kind:"手上げ"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
     b.textContent="読み込んでいます…";
     try{
       await flushFlash();
