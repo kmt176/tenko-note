@@ -660,7 +660,7 @@ body.rtfull{overflow:hidden}
         <div class="field"><label for="nPass">仲間の合言葉</label><input type="password" id="nPass" autocomplete="off"></div>
         <div class="field"><label for="nCode">社員コード</label><input type="text" id="nCode" inputmode="numeric" autocomplete="off"></div>
         <div class="field"><label for="nNick">速報に出す名前（空欄なら社員コード）</label><input type="text" id="nNick" maxlength="20" autocomplete="off"></div>
-        <div class="src">社員コードを入れると、あなたの1万円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。社員コードを入れなければ、見るだけになります。</div>
+        <div class="src" id="nFlashNote">社員コードを入れると、あなたの1万円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。社員コードを入れなければ、見るだけになります。</div>
         <div class="btnrow"><button class="btn primary" id="nSave">保存</button><button class="btn" id="nForget">消す</button></div>
         <div class="msg" id="nMsg" role="status"></div>
       </div>
@@ -680,6 +680,8 @@ body.rtfull{overflow:hidden}
           <div id="aGroups"></div>
           <div class="field"><label for="aLong">ロング判定の合言葉</label><input type="text" id="aLong" autocomplete="off"></div>
           <div class="src" id="aLongInfo"></div>
+          <div class="field"><label for="aFlashMin">仲間の速報に出す金額（円以上）</label><input type="number" id="aFlashMin" inputmode="numeric" min="0" step="100"></div>
+          <div class="src">この金額以上の乗車だけ、仲間の速報に名前付きで出ます（初期値 10,000円）。</div>
           <div class="btnrow"><button class="btn primary" id="aSave">保存</button><button class="btn" id="aReload">読み直す</button></div>
           <div class="msg" id="aSaveMsg" role="status"></div>
           <h3 style="margin-top:14px">車種ごとの設定</h3>
@@ -695,7 +697,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 14:08</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 14:53</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1265,7 +1267,7 @@ body.rtfull{overflow:hidden}
     try{
       const j=await checkNakama();
       cfg.nakama=!!(j.ok&&j.nakama); cfg.group=j.group||null; saveCfg(); applyRole();
-      m.textContent=cfg.nakama?(cfg.empCode?"保存しました。売上の「仲間の速報」が使えます。1万円以上の乗車は速報に出ます":"保存しました。売上の「仲間の速報」が見られます（社員コードがないので、あなたの乗車は出ません）"):"仲間の合言葉が違います";
+      m.textContent=cfg.nakama?(cfg.empCode?`保存しました。売上の「仲間の速報」が使えます。${yen(flashMin)}円以上の乗車は速報に出ます`:"保存しました。売上の「仲間の速報」が見られます（社員コードがないので、あなたの乗車は出ません）"):"仲間の合言葉が違います";
       if(cfg.nakama&&cfg.empCode) Object.keys(sales.days).forEach(queueFlash);
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
   };
@@ -1285,6 +1287,7 @@ body.rtfull{overflow:hidden}
     try{ const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"cars"})}); const j=await res.json();
       if(!j.ok) return; const before=JSON.stringify(carsCfg); carsCfg=j.cars||null;
       try{ localStorage.setItem("tenko.cars",JSON.stringify(carsCfg)); }catch(e){}
+      if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
       if(before!==JSON.stringify(carsCfg)){ applyCarConsts(); applyLongDefaults(); fillCarSel(); render(); if(!$("tabSales").hidden) setView(sView); }
     }catch(e){}
   }
@@ -1344,6 +1347,7 @@ body.rtfull{overflow:hidden}
       <span class="st">${g.pass?`直近3日の速報 ${g.flash}件・${g.people}人`:"使っていない"}</span></div>`).join("");
     $("aLong").value=j.longPass||"";
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
+    $("aFlashMin").value=j.flashMin||10000;
     $("adminBox").hidden=false; $("aForget").hidden=false;
     drawCars(j.cars!==undefined?j.cars:carsCfg);
   }
@@ -1363,11 +1367,13 @@ body.rtfull{overflow:hidden}
   $("aCarReset").onclick=()=>{ if(!carResetArmed){ carResetArmed=true; $("aCarReset").textContent="もう一度押すと初期値に戻します"; return; } carResetArmed=false; $("aCarReset").textContent="初期値に戻す"; saveCars(null,"初期値に戻しました"); };
   $("aSave").onclick=async()=>{
     const m=$("aSaveMsg"), groups=[...document.querySelectorAll("#aGroups .agrp")].map(r=>({name:r.querySelector('[data-a="name"]').value,pass:r.querySelector('[data-a="pass"]').value}));
+    const fmRaw=$("aFlashMin").value; if(fmRaw!==""&&(!isFinite(+fmRaw)||+fmRaw<0)){ m.textContent="仲間の速報に出す金額を正しい数字で入れてください"; return; }
     m.textContent="保存しています…";
     try{
-      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value});
+      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value,flashMin:fmRaw===""?10000:+fmRaw});
       if(!j.ok){ m.textContent=j.error; return; }
       drawAdmin(j); m.textContent="保存しました";
+      if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
       // 自分のスマホの合言葉が変わっていたら、入れ直す
       if(cfg.pass&&cfg.pass!==j.longPass){ cfg.pass=j.longPass; $("lPass").value=cfg.pass; }
       saveCfg();
@@ -2229,15 +2235,18 @@ body.rtfull{overflow:hidden}
   }
   document.querySelectorAll("#sView button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
 
-  // ---- 仲間の速報（1万円以上の乗車を、仲間の合言葉を持つ人どうしで見る） ----
-  const FLASH_MIN=10000, FLASH_DAYS=3;
+  // ---- 仲間の速報（1万円以上の乗車を、仲間の合言葉を持つ人どうしで見る。金額は管理者が変えられる） ----
+  const FLASH_DAYS=3;
+  let flashMin=10000; try{ const v=+localStorage.getItem("tenko.flashMin"); if(v>0) flashMin=v; }catch(e){}
+  function updateFlashNote(){ const el=$("nFlashNote"); if(el) el.textContent=`社員コードを入れると、あなたの${yen(flashMin)}円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。社員コードを入れなければ、見るだけになります。`; }
+  updateFlashNote();
   let flashQ={}; try{ flashQ=JSON.parse(localStorage.getItem("tenko.flashq")||"{}")||{}; }catch(e){}
   let flashSig={}; try{ flashSig=JSON.parse(localStorage.getItem("tenko.flashsig")||"{}")||{}; }catch(e){}
   const saveFlashState=()=>{ try{ localStorage.setItem("tenko.flashq",JSON.stringify(flashQ)); localStorage.setItem("tenko.flashsig",JSON.stringify(flashSig)); }catch(e){} };
   // 1勤務の、速報に出す乗車（1万円以上・B空転以外）
   function flashRides(k){
     const d=sales.days[k]; if(!d) return [];
-    return d.rides.filter(r=>!isEv(r.kind)&&r.kind!=="B空転"&&(+r.amt||0)>=FLASH_MIN&&r.on!=null)
+    return d.rides.filter(r=>!isEv(r.kind)&&r.kind!=="B空転"&&(+r.amt||0)>=flashMin&&r.on!=null)
       .map(r=>({id:r.id,at:new Date(dayStart(k).getTime()+r.on*60000).toISOString(),amt:+r.amt,pay:r.pay||"",from:r.onAddr||"",to:r.offAddr||""}));
   }
   let flashTimer=null;
@@ -2278,8 +2287,8 @@ body.rtfull{overflow:hidden}
         const cur=sel.value; sel.innerHTML=`<option value="">全グループ（${items.length}件）</option>`+gs.map(([id,n])=>`<option value="${esc(id)}">${esc(n)}（${items.filter(x=>x.group===id).length}件）</option>`).join("");
         sel.value=gs.some(([id])=>id===cur)?cur:""; sel.hidden=false;
         if(sel.value) items=items.filter(x=>x.group===sel.value);
-        $("fNote").textContent="管理者：全グループの、直近3日の1万円以上の乗車です（新しい順）。";
-      } else { sel.hidden=true; $("fNote").textContent=`${j.group?j.group.name+"の、":""}直近3日の1万円以上の乗車です（新しい順）。`; }
+        $("fNote").textContent=`管理者：全グループの、直近3日の${yen(j.min||flashMin)}円以上の乗車です（新しい順）。`;
+      } else { sel.hidden=true; $("fNote").textContent=`${j.group?j.group.name+"の、":""}直近3日の${yen(j.min||flashMin)}円以上の乗車です（新しい順）。`; }
       b.innerHTML=(cfg.empCode||!PROD?"":`<div class="note">社員コードが入っていないので、あなたの乗車は速報に出ません（メニューの「合言葉」で入れられます）。</div>`)+
         (items.map(x=>{ const t=new Date(x.at), dk=dKey(t);
           // タップで Googleマップ（乗車地→降車地の経路。片方しかなければその場所）
@@ -2287,7 +2296,7 @@ body.rtfull{overflow:hidden}
             :(x.from||x.to)?`https://www.google.com/maps/search/?api=1&query=${q(x.from||x.to)}`:"";
           return `<${map?`a href="${map}" target="_blank" rel="noopener"`:"div"} class="fl flink"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
             <div class="who">${esc(x.name||x.code)}${j.admin&&x.groupName?`<small>${esc(x.groupName)}</small>`:""}<small>${esc(x.from||"—")} → ${esc(x.to||"—")}</small></div>
-            <span class="st">${esc(x.pay||"")}${map?"<br><small>地図 ›</small>":""}</span></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、1万円以上の乗車はまだありません。</div>`);
+            <span class="st">${esc(x.pay||"")}${map?"<br><small>地図 ›</small>":""}</span></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、${yen(j.min||flashMin)}円以上の乗車はまだありません。</div>`);
     };
     drawFlash=draw;
     if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
