@@ -701,7 +701,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 15:36</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 16:06</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1590,7 +1590,7 @@ body.rtfull{overflow:hidden}
     ["⑭","外からドアをお開け",/外から|そとから/],
     ["⑮","ドアサービス（ドアの音 1回）",null]
   ];
-  let svOn=false, svRec=null, svHeard="", svBang=0, svOffAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0;
+  let svOn=false, svRec=null, svHeard="", svBang=0, svOffAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0, svDiag="", svErrCount=0;
   try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; }catch(e){}
   const SV_OFF_FROM=SV_ITEMS.findIndex(x=>x[0]==="⑩");   // ⑩からは降車接遇を押してから出す
   function svRender(){
@@ -1598,7 +1598,7 @@ body.rtfull{overflow:hidden}
     let n=0;
     $("svList").innerHTML=shown.map(([no,label,re])=>{ const ok=re?re.test(t):svBang>=1; if(ok) n++;
       return `<div class="${ok?"ok":""}"><span>${no}</span><span>${label}${!re?`（${svBang?"聞こえました":"まだ"}）`:""}</span></div>`; }).join("");
-    $("svStat").innerHTML=svOn?`${svPhase==="off"?"降車接遇":"乗車接遇"} 聞き取り中… <b>${n}／${shown.length}</b>${svOffAt?"・ドアの音を待っています":""}`:`止まっています${svHeard?`（前回 ${n}／${shown.length}）`:""}`;
+    $("svStat").innerHTML=(svOn?`${svPhase==="off"?"降車接遇":"乗車接遇"} 聞き取り中… <b>${n}／${shown.length}</b>${svOffAt?"・ドアの音を待っています":""}`:`止まっています${svHeard?`（前回 ${n}／${shown.length}）`:""}`)+(svDiag?`<div class="err">${esc(svDiag)}</div>`:"");
     $("svText").textContent=svHeard;
   }
   function svSpeech(){
@@ -1606,9 +1606,16 @@ body.rtfull{overflow:hidden}
     if(!SR){ $("svText").textContent="このブラウザでは音声認識が使えません"; return; }
     const r=new SR(); r.lang="ja-JP"; r.continuous=true; r.interimResults=true;
     let fixed="";
-    r.onresult=e=>{ let interim=""; for(let i=e.resultIndex;i<e.results.length;i++){ const x=e.results[i][0].transcript; if(e.results[i].isFinal) fixed+=x+" "; else interim+=x; } svHeard=(svBase0+fixed+interim); svRender(); };
+    r.onresult=e=>{ let interim=""; for(let i=e.resultIndex;i<e.results.length;i++){ const x=e.results[i][0].transcript; if(e.results[i].isFinal) fixed+=x+" "; else interim+=x; } svHeard=(svBase0+fixed+interim); svErrCount=0; svDiag=""; svRender(); };
     let svBase0=svHeard;
-    r.onerror=e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ $("svStat").textContent="マイクか音声認識が許可されていません（設定 → Safari（またはこのアプリ）→ マイク）"; svOn=false; } };
+    // 「not-allowed」以外のエラー（network・no-speechなど）は今までは黒塗りで何も出さず、何も起きていないように見えていた。
+    // 続けて起きたら、エラーの内容を画面に出す（iOS更新後に音声入力の設定が変わっていないか気づけるように）
+    r.onerror=e=>{
+      if(e.error==="not-allowed"||e.error==="service-not-allowed"){ $("svStat").textContent="マイクか音声認識が許可されていません（設定 → Safari（またはこのアプリ）→ マイク）"; svOn=false; return; }
+      svErrCount++;
+      if(svErrCount>=3) svDiag=`音声認識でエラーが続いています（${e.error}）。設定→一般→キーボード→音声入力 がオンか確認してください`;
+      svRender();
+    };
     r.onend=()=>{ if(svOn){ svHeard=svBase0+fixed; setTimeout(()=>{ if(svOn) svSpeech(); },200); } };   // 途中で止まったら続ける
     try{ r.start(); svRec=r; }catch(e){}
   }
@@ -1617,11 +1624,15 @@ body.rtfull{overflow:hidden}
       const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
       const ac=new (window.AudioContext||window.webkitAudioContext)(), src=ac.createMediaStreamSource(st), an=ac.createAnalyser(); an.fftSize=1024; src.connect(an);
       const buf=new Float32Array(an.fftSize); svAudio={st,ac};
+      const micStartAt=Date.now(); let sawSound=false;
       const loop=()=>{ an.getFloatTimeDomainData(buf); let pk=0; for(const v of buf) pk=Math.max(pk,Math.abs(v));
         svBase=svBase*0.97+pk*0.03; $("svLv").style.width=Math.min(100,pk/0.6*100)+"%";
+        if(pk>0.01) sawSound=true;
         const now=Date.now();
+        // 4秒たっても音がまったく取れていなければ、マイクのストリームが死んでいる可能性が高いので知らせる
+        if(!sawSound&&now-micStartAt>4000&&!svDiag){ svDiag="マイクの音がまったく取れていません。マイクの許可と、他のアプリでマイクを使っていないかを確認してください"; svRender(); }
         // 降車接遇を押してから3分の間に、感度の線を超える音が1回鳴ったら「バン」とする（ユーザー指定：1回）
-        if(svOffAt&&now-svOffAt<180000&&pk>svTh&&now-svOffAt>800){ svBang++; svLastBang=now; svRender(); }
+        if(svOffAt&&now-svOffAt<180000&&pk>svTh&&now-svOffAt>800){ svBang++; svLastBang=now; svDiag=""; svRender(); }
         if(svOffAt&&(now-svOffAt>=180000||svBang>=1)){ svStop(); return; }
         svRaf=requestAnimationFrame(loop); };
       loop();
@@ -1629,7 +1640,7 @@ body.rtfull{overflow:hidden}
   }
   // 乗車接遇＝①〜⑨、降車接遇＝⑩〜⑮とドアの音。どちらも押したところから聞き直す（降車接遇は乗車接遇を押していなくても使える）
   let svPhase="on";
-  function svBegin(phase){ svStop(); svPhase=phase; svOn=true; svHeard=""; svBang=0; svOffAt=phase==="off"?Date.now():null;
+  function svBegin(phase){ svStop(); svPhase=phase; svOn=true; svHeard=""; svBang=0; svDiag=""; svErrCount=0; svOffAt=phase==="off"?Date.now():null;
     svSpeech(); svMic(); $("svStop").disabled=false; svRender(); }
   const svStart=()=>svBegin("on");
   function svStop(){ svOn=false; try{ svRec&&svRec.stop(); }catch(e){} svRec=null; cancelAnimationFrame(svRaf);
