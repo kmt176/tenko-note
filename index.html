@@ -677,6 +677,13 @@ body.rtfull{overflow:hidden}
         <div class="msg" id="lCfgMsg" role="status"></div>
       </div>
       <div class="grp">
+        <h3>接遇チェック（試験）お試し用の合言葉</h3>
+        <div class="field"><label for="svtPass">お試し用の合言葉</label><input type="password" id="svtPass" autocomplete="off"></div>
+        <div class="src">接遇チェック（試験）だけを、管理者の合言葉を渡さずに試してもらうための合言葉です。管理の画面は開けません。</div>
+        <div class="btnrow"><button class="btn primary" id="svtSave">保存</button><button class="btn" id="svtForget">消す</button></div>
+        <div class="msg" id="svtMsg" role="status"></div>
+      </div>
+      <div class="grp">
         <h3>管理者</h3>
         <div class="field"><label for="aPass">管理者の合言葉</label><input type="password" id="aPass" autocomplete="off"></div>
         <div class="btnrow"><button class="btn primary" id="aOpen">管理の画面を開く</button><button class="btn" id="aForget" hidden>このスマホから管理者を外す</button></div>
@@ -688,6 +695,8 @@ body.rtfull{overflow:hidden}
           <div class="src" id="aLongInfo"></div>
           <div class="field"><label for="aFlashMin">仲間の速報に出す金額（円以上）</label><input type="number" id="aFlashMin" inputmode="numeric" min="0" step="100"></div>
           <div class="src">この金額以上の乗車だけ、仲間の速報に名前付きで出ます（初期値 10,000円）。</div>
+          <div class="field"><label for="aSvPass">接遇チェック お試し用の合言葉</label><input type="text" id="aSvPass" autocomplete="off" placeholder="空なら使わない"></div>
+          <div class="src">管理者の合言葉を渡さずに、接遇チェック（試験）だけを試してもらえます。空にすると使えなくなります。</div>
           <div class="btnrow"><button class="btn primary" id="aSave">保存</button><button class="btn" id="aReload">読み直す</button></div>
           <div class="msg" id="aSaveMsg" role="status"></div>
           <h3 style="margin-top:14px">車種ごとの設定</h3>
@@ -703,7 +712,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 16:57</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 19:22</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1246,6 +1255,12 @@ body.rtfull{overflow:hidden}
     const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"role",passcode:cfg.npass})});
     return await res.json();
   }
+  // 接遇チェック お試し用の合言葉（SV_PASSCODE）：管理の画面は開かず、接遇チェックだけ使える
+  const isSvTest=()=>!PROD||(!!cfg.svpass&&cfg.svtest===true);
+  async function checkSvTest(){
+    const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"role",passcode:cfg.svpass})});
+    return await res.json();
+  }
   async function checkPass(){
     const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"config",passcode:cfg.pass})});
     const j=await res.json();
@@ -1266,6 +1281,7 @@ body.rtfull{overflow:hidden}
   };
   $("lForget").onclick=()=>{ cfg.pass=""; cfg.member=false; saveCfg(); $("lPass").value=""; applyRole(); $("lCfgMsg").textContent="合言葉を消しました"; };
   $("nPass").value=cfg.npass||""; $("nCode").value=cfg.empCode||""; $("nNick").value=cfg.nick||"";
+  $("svtPass").value=cfg.svpass||"";
   $("nSave").onclick=async()=>{
     const m=$("nMsg");
     cfg.url=$("lUrl").value.trim()||cfg.url; cfg.npass=$("nPass").value.trim();
@@ -1356,6 +1372,7 @@ body.rtfull{overflow:hidden}
     $("aLong").value=j.longPass||"";
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("aFlashMin").value=j.flashMin||10000;
+    $("aSvPass").value=j.svPass||"";
     $("adminBox").hidden=false; $("aForget").hidden=false;
     drawCars(j.cars!==undefined?j.cars:carsCfg);
   }
@@ -1378,7 +1395,7 @@ body.rtfull{overflow:hidden}
     const fmRaw=$("aFlashMin").value; if(fmRaw!==""&&(!isFinite(+fmRaw)||+fmRaw<0)){ m.textContent="仲間の速報に出す金額を正しい数字で入れてください"; return; }
     m.textContent="保存しています…";
     try{
-      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value,flashMin:fmRaw===""?10000:+fmRaw});
+      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value,flashMin:fmRaw===""?10000:+fmRaw,svPass:$("aSvPass").value.trim()});
       if(!j.ok){ m.textContent=j.error; return; }
       drawAdmin(j); m.textContent="保存しました";
       if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
@@ -1389,9 +1406,21 @@ body.rtfull{overflow:hidden}
   };
   $("aForget").onclick=()=>{ cfg.apass=""; cfg.admin=false; saveCfg(); $("aPass").value=""; $("adminBox").hidden=true; $("aForget").hidden=true; applyRole(); $("aMsg").textContent="このスマホから管理者を外しました"; };
   $("nForget").onclick=()=>{ cfg.npass=""; cfg.nakama=false; saveCfg(); $("nPass").value=""; applyRole(); $("nMsg").textContent="仲間の合言葉を消しました"; };
+  $("svtSave").onclick=async()=>{
+    const m=$("svtMsg");
+    cfg.url=$("lUrl").value.trim()||cfg.url; cfg.svpass=$("svtPass").value.trim();
+    if(!cfg.svpass){ m.textContent="合言葉を入れてください"; return; }
+    m.textContent="確かめています…";
+    try{
+      const j=await checkSvTest();
+      cfg.svtest=!!(j.ok&&j.sv); saveCfg(); applyRole();
+      m.textContent=cfg.svtest?"保存しました。売上の画面で接遇チェックが使えます":"合言葉が違います";
+    }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
+  };
+  $("svtForget").onclick=()=>{ cfg.svpass=""; cfg.svtest=false; saveCfg(); $("svtPass").value=""; applyRole(); $("svtMsg").textContent="合言葉を消しました"; };
   // 一般の人には、ロング判定のボタンと使い方を出さない
-  // 接遇チェック（試験中）は、管理者の合言葉を入れたスマホだけに出す
-  const canSv=()=>!PROD||isAdmin();
+  // 接遇チェック（試験中）は、管理者の合言葉、または接遇お試し用の合言葉を入れたスマホだけに出す
+  const canSv=()=>!PROD||isAdmin()||isSvTest();
   function applyRole(){
     const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
     $("segLong").hidden=!mem;
