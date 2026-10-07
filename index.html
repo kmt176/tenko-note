@@ -288,6 +288,10 @@ body.rtfull{overflow:hidden}
 .cmpt tr.bad td{background:var(--bad-soft)}
 .cmpt tr.warn td{background:var(--warn-soft)}
 .cmpt small{display:block;color:var(--muted);font-weight:400}
+.histe{border-bottom:1px solid var(--line);padding-bottom:8px;font-size:14px;color:var(--ink)}
+.histe:last-child{border-bottom:none;padding-bottom:0}
+.histe ul{margin:4px 0 0;padding-left:18px}
+.histe li{margin:2px 0}
 .chip.rtbtn{background:var(--accent-soft);color:var(--accent)}
 .hwrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15.5px}
 .hwrow .btn{padding:4px 10px}
@@ -430,6 +434,7 @@ body.rtfull{overflow:hidden}
     <div class="geo" id="sStatus" role="status"></div>
     <div class="list" id="sList"></div>
     <details id="cmpBox" hidden><summary id="cmpSum">日報との比較</summary><div class="body" id="cmpBody"></div></details>
+    <details id="histBox" hidden><summary id="histSum">変更履歴</summary><div class="body" id="histBody"></div></details>
     <button class="add" id="sAdd">＋ 乗車を手で追加</button>
     <button class="btn" id="sImport">日報から取り込む（貼り付け）</button>
   </div>
@@ -690,7 +695,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-06 23:12</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 14:08</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -762,7 +767,7 @@ body.rtfull{overflow:hidden}
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
-      <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。乗車ボタンで記録した日は、「突き合わせる」（金額などは日報に合わせ、位置と天気は残し、押し忘れは日報から足す）か「置き換える」かを選べます。住所から位置と天気（9日以内）も自動で入ります。</dd>
+      <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文を貼り付けて、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。取り込む前にメーター照合の結果を確かめられます。乗車ボタンで記録した日は、「突き合わせる」（金額などは日報に合わせ、位置と天気は残し、押し忘れは日報から足す）か「置き換える」かを選べます。住所から位置と天気（9日以内）も自動で入ります。取り込みでどこが変わったかは、その勤務の画面の「変更履歴」で確かめられます。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
       <dt>過去の勤務</dt><dd>一番上の日付を押すと、勤務の一覧（売上つき）から選んで開けます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは、一番下の「勤務の修正」→「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは、同じ所の「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
@@ -2500,7 +2505,7 @@ body.rtfull{overflow:hidden}
         ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
       </div>
-      <div class="src">メーター照合：①＋⑦＋⑤−⑥−ETC自己負担−⑧ が、記録の合計（メーター日計）と同じならOK。納金額＝①−④＋⑤−⑥＋⑦−⑧。</div>`;    renderHw(d); renderRoute(k,d,s); renderCmp(k,d);
+      <div class="src">メーター照合：①＋⑦＋⑤−⑥−ETC自己負担−⑧ が、記録の合計（メーター日計）と同じならOK。納金額＝①−④＋⑤−⑥＋⑦−⑧。</div>`;    renderHw(d); renderRoute(k,d,s); renderCmp(k,d); renderHist(d);
     const canLock=st.total!=null&&(simple||st.meterOk);
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
@@ -2959,6 +2964,44 @@ ETC自己負担: 0
     const dd=ensureDay(p.date); dd.rides=dd.rides.filter(r=>r.kind!==RZ).concat(p.rides.filter(r=>r.kind===RZ)); syncRz(dd);
   }
   const rzSum=p=>{ const ms=p.rides.filter(r=>r.kind===RZ); return `連続配車 ${ms.length}回・${hm(ms.reduce((t,m)=>t+(m.off-m.on),0))}`; };
+  // 取り込み前（ボタンで記録した乗車）と取り込み後（日報）で、どこが変わったかを短い文にする
+  function rideDiffText(o,n){
+    const out=[];
+    if(o.kind!==n.kind) out.push(`内容：${esc(o.kind)}→${esc(n.kind)}`);
+    if(Math.abs((o.on||0)-(n.on||0))>=1) out.push(`乗車：${tm(o.on)}→${tm(n.on)}`);
+    if(o.off!=null&&n.off!=null&&Math.abs(o.off-n.off)>=1) out.push(`降車：${tm(o.off)}→${tm(n.off)}`);
+    if((+o.amt||0)!==(+n.amt||0)) out.push(`金額：${yen(o.amt||0)}→${yen(n.amt||0)}円`);
+    if((o.pay||"")!==(n.pay||"")) out.push(`決済：${esc(o.pay||"—")}→${esc(n.pay||"—")}`);
+    if((+o.etc||0)!==(+n.etc||0)) out.push(`ETC：${yen(o.etc||0)}→${yen(n.etc||0)}円`);
+    return out;
+  }
+  // 日報の乗車ごとに、ボタンで記録した乗車の中でいちばん近いものを探す（突き合わせ・履歴の比較で共通に使う）
+  function matchRides(oldRides,newRides){
+    const pool=oldRides.filter(r=>!isEv(r.kind)&&r.on!=null), used=new Set(), pairs=[], added=[];
+    newRides.filter(nr=>!isEv(nr.kind)).forEach(nr=>{
+      let best=null, bd=98;
+      pool.forEach(o=>{ if(used.has(o.id)) return; const dd=Math.abs(o.on-nr.on);
+        const inRide=nr.off!=null&&o.on>=nr.on&&o.on<=nr.off+5;
+        const score=dd<=10?dd:inRide?10+dd/100:99;
+        if(score<bd){ bd=score; best=o; } });
+      if(best){ used.add(best.id); pairs.push({old:best,new:nr}); } else added.push(nr);
+    });
+    return {pairs,added,leftover:pool.filter(o=>!used.has(o.id))};
+  }
+  // 取り込みの変更点を、その勤務の履歴に残す（最新20回まで）
+  function pushHist(d,mode,lines){
+    if(!lines.length) return;
+    d.importLog=(d.importLog||[]).concat([{at:new Date().toISOString(),mode,lines}]).slice(-20);
+  }
+  function renderHist(d){
+    const log=(d.importLog||[]).slice().reverse();
+    $("histBox").hidden=!log.length; if(!log.length) return;
+    $("histSum").textContent=`変更履歴（${log.length}回の取り込み）`;
+    $("histBody").innerHTML=log.map(e=>{
+      const t=new Date(e.at), ts=`${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+      return `<div class="histe"><b>${ts}</b><small>（${e.mode==="merge"?"突き合わせ":e.mode==="replace"?"置き換え":esc(e.mode)}）</small><ul>${e.lines.map(l=>`<li>${esc(l)}</li>`).join("")}</ul></div>`;
+    }).join("");
+  }
   $("iCheck").onclick=()=>{
     const blocks=splitDays($("iText").value); multi=null;
     if(blocks.length>1){
@@ -2988,7 +3031,8 @@ ETC自己負担: 0
   };
   $("iGo").onclick=()=>{
     if(multi){
-      multi.forEach(p=>{ if(p.rzOnly){ applyRz(p); return; } applyTenko(p); sales.days[p.date]={mode:"detail",rides:p.rides,simple:{},check:p.check,locked:false,importedAt:new Date().toISOString(),hw:{items:[]}}; syncRz(sales.days[p.date]); });
+      multi.forEach(p=>{ if(p.rzOnly){ applyRz(p); return; } applyTenko(p); sales.days[p.date]={mode:"detail",rides:p.rides,simple:{},check:p.check,locked:false,importedAt:new Date().toISOString(),hw:{items:[]}};
+        pushHist(sales.days[p.date],"replace",[`日報から新規に取り込みました（${p.rides.filter(r=>!isEv(r.kind)).length}件）`]); syncRz(sales.days[p.date]); });
       const n=multi.length, lastD=multi[multi.length-1].date; multi=null;
       saveSales(); render(); filled=false; sDay=lastD; closeImport(); $("iText").value=""; renderSales();
       $("sStatus").textContent=`${n}日分を取り込みました。上の日付を押すと、ほかの日を選べます`; return;
@@ -3000,20 +3044,15 @@ ETC自己負担: 0
     const hasOld=ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
     const modeEl=document.querySelector('input[name="iMode"]:checked'), mode=hasOld&&modeEl?modeEl.value:"replace";
     if(hasOld){ if(!guard(ex)) return; }
-    let note="";
+    let note="", histLines=[];
     if(hasOld&&mode==="merge"){
       // 突き合わせ：日報の乗車ごとに、乗車時刻が前後10分以内でいちばん近い、まだ使っていない記録を探す
-      const olds=ex.rides.filter(r=>!isEv(r.kind)&&r.on!=null), used=new Set(); let matched=0, added=0;
+      const mr=matchRides(ex.rides,parsed.rides);
       const merged=parsed.rides.map(nr=>{
         if(isEv(nr.kind)) return nr;   // 出庫・休憩・回送・入庫は日報のまま
-        let best=null, bd=98;
-        // 乗車時刻が前後10分以内、または乗車中〜降車5分後に押した記録（押し遅れ）を候補にして、いちばん近いもの
-        olds.forEach(o=>{ if(used.has(o.id)) return; const dd=Math.abs(o.on-nr.on);
-          const inRide=nr.off!=null&&o.on>=nr.on&&o.on<=nr.off+5;
-          const score=dd<=10?dd:inRide?10+dd/100:99;
-          if(score<bd){ bd=score; best=o; } });
-        if(!best){ added++; return nr; }
-        used.add(best.id); matched++;
+        const pr=mr.pairs.find(p=>p.new===nr);
+        if(!pr){ histLines.push(`＋ ${tm(nr.on)} ${esc(nr.kind)}${nr.amt?" "+yen(nr.amt)+"円":""}（日報のみ・追加）`); return nr; }
+        const best=pr.old, df=rideDiffText(best,nr); if(df.length) histLines.push(`${tm(best.on)} ${df.join("・")}`);
         // 日報の時刻・金額・決済などに合わせ、ボタンで記録した位置・住所・天気は残す
         // 日報には連続配車・乗り場の区別がないので、ボタンで「連続配車」「乗り場」にしていた乗車はそのまま残す
         return Object.assign({},nr,{id:best.id,kind:nr.kind==="配車"&&best.kind==="連続配車"?"連続配車":nr.kind==="手上げ"&&best.kind==="乗り場"?"乗り場":nr.kind,onPos:best.onPos||nr.onPos,offPos:best.offPos||nr.offPos,
@@ -3024,15 +3063,26 @@ ETC自己負担: 0
           btnOn:best.btnOn!=null?best.btnOn:best.on,btnOff:best.btnOff!=null?best.btnOff:best.off,
           btnOnPos:best.btnOnPos,btnOffPos:best.btnOffPos,btnOnAddr:best.btnOnAddr,btnOffAddr:best.btnOffAddr});
       });
-      const leftover=olds.filter(o=>!used.has(o.id)).map(o=>Object.assign({},o,{memo:((o.memo||"")+" 日報になし").trim()}));
+      const leftover=mr.leftover.map(o=>Object.assign({},o,{memo:((o.memo||"")+" 日報になし").trim()}));
+      leftover.forEach(o=>histLines.push(`－ ${tm(o.on)} ${esc(o.kind)}${o.amt?" "+yen(o.amt)+"円":""}（日報になし）`));
       parsed.rides=merged.concat(leftover);
-      note=`突き合わせました：組み合わせ ${matched}件・日報から追加 ${added}件${leftover.length?`・日報にない記録 ${leftover.length}件（メモに「日報になし」と付けました。確認してください）`:""}`;
+      note=`突き合わせました：組み合わせ ${mr.pairs.length}件・日報から追加 ${mr.added.length}件${leftover.length?`・日報にない記録 ${leftover.length}件（メモに「日報になし」と付けました。確認してください）`:""}`;
+    } else if(hasOld&&mode==="replace"){
+      // 置き換え：データは日報の内容にそのまま変わるが、何が変わったかは履歴に残す
+      const mr=matchRides(ex.rides,parsed.rides);
+      mr.pairs.forEach(({old:o,new:n})=>{ const df=rideDiffText(o,n); if(df.length) histLines.push(`${tm(o.on)} ${df.join("・")}`); });
+      mr.added.forEach(n=>histLines.push(`＋ ${tm(n.on)} ${esc(n.kind)}${n.amt?" "+yen(n.amt)+"円":""}（追加）`));
+      mr.leftover.forEach(o=>histLines.push(`－ ${tm(o.on)} ${esc(o.kind)}${o.amt?" "+yen(o.amt)+"円":""}（置き換えで消えました）`));
+      note="この日の記録を、日報の内容に置き換えました";
+    } else {
+      histLines.push(`日報から新規に取り込みました（${parsed.rides.filter(r=>!isEv(r.kind)).length}件）`);
     }
     // 連続配車モードの時間は日報にないので、日報の文に「連続配車:」がなければ、ボタンで記録したものを残す
     if(ex&&!parsed.rides.some(r=>r.kind===RZ)) parsed.rides=parsed.rides.concat(ex.rides.filter(r=>r.kind===RZ));
-    const oldHw=ex&&ex.hw, oldRoute=ex&&ex.route;   // メーター・距離控除・走行ルートは日報にないので、入れてあれば残す
-    sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:oldHw||{items:[]}};
+    const oldHw=ex&&ex.hw, oldRoute=ex&&ex.route, oldLog=ex&&ex.importLog;   // メーター・距離控除・走行ルート・変更履歴は日報にないので、入れてあれば残す
+    sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:oldHw||{items:[]},importLog:oldLog||[]};
     if(oldRoute) sales.days[parsed.date].route=oldRoute;
+    pushHist(sales.days[parsed.date],mode,histLines);
     syncRz(sales.days[parsed.date]);
     saveSales(); filled=false; sDay=parsed.date; queueFlash(parsed.date); closeImport(); $("iText").value=""; renderSales();
     $("sStatus").textContent=(note?note+"。":"取り込みました。")+"住所から位置と天気を調べています（9日より前の天気は取れません）";
