@@ -205,6 +205,10 @@ a.flink .st small{color:var(--accent);font-size:12.5px}
 
 /* 売上 */
 .ridebtns{display:grid;gap:10px}
+.ridebtn{display:flex;align-items:center;gap:10px}
+.ridebtn .bigbtn{flex:1}
+.ridebtn .check{flex:0 0 auto;font-size:13px;max-width:78px;text-align:center}
+.ridebtn .check input{width:20px;height:20px}
 .bigbtn{border:0;border-radius:14px;padding:18px 16px;font-size:26px;font-weight:700;background:var(--accent);color:var(--accent-ink);display:grid;gap:2px;text-align:center}
 .bigbtn small{font-size:15px;font-weight:400;opacity:.9}
 .bigbtn.off{background:var(--ok);color:#fff}
@@ -697,7 +701,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 14:53</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 15:26</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -761,7 +765,7 @@ body.rtfull{overflow:hidden}
     <h2>売上</h2>
     <p>売上は、<b>点呼時間に入れた勤務（出社日）ごと</b>に記録します。その日の<b>業務前点呼（実績）</b>を入れると、その勤務の売上を入力できるようになります（予定だけの日はまだ入力できません）。勤務中でないときは、直前の勤務が開きます。</p>
     <ol class="steps">
-      <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります</small></li>
+      <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります。その場で押せず、あとで(社内処理のあとなど)まとめて押すときは、右の「<b>押し忘れ</b>」にチェックを付けて押してください。時刻・場所は記録せず、あとで「日報から取り込む」を使ったときに日報の内容に差し替わります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき。JPNタクシーでサンキューチケットの配車だったときは「サンキューチケット」にチェックを入れると、営業分析で分けて見られます。天気はふだん自動で、直したいときだけ「天気を直す」を開きます</small></li>
       <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
       <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>開始は押した時刻の1分後で記録します（会社のシステムとのずれ対策で、1回ごとに1分少なく数えます）。モード中に乗車を押すと内容が「連続配車」になります。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（出庫〜入庫の60%、または8〜10時の80%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須（8〜10時・16〜20時で合わせて2時間）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
@@ -2455,8 +2459,11 @@ body.rtfull{overflow:hidden}
     if(act&&!simple){
       const n=nowMin(k);
       $("sNow").innerHTML=`<div class="ridebtns">
+        <div class="ridebtn">
         ${open?`<button class="bigbtn off" id="bOff">降車<small>乗車 ${tm(open.on)} から ${hm(n-open.on)}</small></button>`
               :`<button class="bigbtn" id="bOn">乗車<small>押した時刻・場所・天気を記録します</small></button>`}
+        <label class="check"><input type="checkbox" id="bUnsure">押し忘れ<small>時刻・位置は日報から</small></label>
+        </div>
         ${car().rz?`<button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>`:""}
         <div class="evbtns">
           <button class="btn" data-ev="出庫">出庫</button>
@@ -2476,7 +2483,7 @@ body.rtfull{overflow:hidden}
       return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
         <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
         ${addr.length?`<div class="sub">${addr.map(esc).join(" → ")}</div>`:""}
-        <div class="chips">${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
+        <div class="chips">${r.onUnsure||r.offUnsure?`<span class="chip warn">押し忘れ・日報待ち</span>`:""}${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
       </button>`;
     }).join("")||`<div class="geo">${act?"「乗車」を押すと、ここに記録が並びます":"この勤務の記録はありません"}</div>`;
 
@@ -2610,14 +2617,19 @@ body.rtfull{overflow:hidden}
   }
   function rideOn(){
     const k=sDay, d=ensureDay(k); if(!guard(d)) return;
+    const unsure=!!($("bUnsure")&&$("bUnsure").checked);
     const r={id:newId(),kind:kindNow(d,nowMin(k)),on:nowMin(k),off:null,pay:payNow(d)};
-    d.rides.push(r); saveSales(); $("sStatus").textContent="乗車を記録しました。位置と天気を調べています…"; renderSales();
+    if(unsure) r.onUnsure=true;
+    d.rides.push(r); saveSales();
+    if(unsure){ $("sStatus").textContent="乗車を記録しました（押し忘れ：時刻・位置は日報の取り込みで入れ直します）"; renderSales(); return; }
+    $("sStatus").textContent="乗車を記録しました。位置と天気を調べています…"; renderSales();
     capture(k,r.id,"on").then(()=>{ $("sStatus").textContent=""; });
   }
   function rideOff(){
     const k=sDay, d=ensureDay(k), r=d.rides.find(x=>!isEv(x.kind)&&x.on!=null&&x.off==null); if(!r||!guard(d)) return;
-    r.off=Math.max(r.on,nowMin(k)); saveSales(); renderSales();
-    capture(k,r.id,"off");
+    const unsure=!!($("bUnsure")&&$("bUnsure").checked);
+    r.off=Math.max(r.on,nowMin(k)); if(unsure) r.offUnsure=true; saveSales(); renderSales();
+    if(!unsure) capture(k,r.id,"off");
     openRide(r.id,true);   // 金額と決済をすぐ入れる
   }
   function evPress(kind){
@@ -2985,16 +2997,23 @@ ETC自己負担: 0
     return out;
   }
   // 日報の乗車ごとに、ボタンで記録した乗車の中でいちばん近いものを探す（突き合わせ・履歴の比較で共通に使う）
+  // 「押し忘れ」(onUnsure)の記録は時刻を信用できないので、まず時刻の近さで残りを組み合わせ、
+  // 余った分だけ「押し忘れ」どうしを順番（古い順）で日報の行に割り当てる
   function matchRides(oldRides,newRides){
     const pool=oldRides.filter(r=>!isEv(r.kind)&&r.on!=null), used=new Set(), pairs=[], added=[];
-    newRides.filter(nr=>!isEv(nr.kind)).forEach(nr=>{
+    const reliable=pool.filter(o=>!o.onUnsure), unsure=pool.filter(o=>o.onUnsure);
+    const newList=newRides.filter(nr=>!isEv(nr.kind));
+    newList.forEach(nr=>{
       let best=null, bd=98;
-      pool.forEach(o=>{ if(used.has(o.id)) return; const dd=Math.abs(o.on-nr.on);
+      reliable.forEach(o=>{ if(used.has(o.id)) return; const dd=Math.abs(o.on-nr.on);
         const inRide=nr.off!=null&&o.on>=nr.on&&o.on<=nr.off+5;
         const score=dd<=10?dd:inRide?10+dd/100:99;
         if(score<bd){ bd=score; best=o; } });
-      if(best){ used.add(best.id); pairs.push({old:best,new:nr}); } else added.push(nr);
+      if(best){ used.add(best.id); pairs.push({old:best,new:nr}); }
     });
+    const leftNew=newList.filter(nr=>!pairs.some(pr=>pr.new===nr)).sort((a,b)=>a.on-b.on);
+    const leftUnsure=unsure.filter(o=>!used.has(o.id)).sort((a,b)=>a.on-b.on);
+    leftNew.forEach((nr,i)=>{ const o=leftUnsure[i]; if(o){ used.add(o.id); pairs.push({old:o,new:nr}); } else added.push(nr); });
     return {pairs,added,leftover:pool.filter(o=>!used.has(o.id))};
   }
   // 取り込みの変更点を、その勤務の履歴に残す（最新20回まで）
