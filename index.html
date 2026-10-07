@@ -701,7 +701,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 15:26</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 15:36</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -855,6 +855,8 @@ body.rtfull{overflow:hidden}
       <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"><label class="check nextday"><input type="checkbox" id="rOnNext">翌日（出庫日の次の日）</label></div>
       <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
     </div>
+    <label class="check" id="rOnUnsureBox"><input type="checkbox" id="rOnUnsure">乗車の押し忘れ<br><small>その場で押せず、あとで（社内処理の後など）まとめて押した・時刻を直したときはチェックしてください。この乗車の時刻・場所はこのスマホの記録を使わず、「日報から取り込む」を使ったときに日報の内容に差し替えます（今、記録済みの位置は消します）</small></label>
+    <label class="check" id="rOffUnsureBox"><input type="checkbox" id="rOffUnsure">降車の押し忘れ<br><small>同じく、降車の時刻・場所を使わず、日報の取り込みで差し替えます</small></label>
     <div class="grp" id="rMoney">
       <div class="field"><label for="rAmt">金額（現収＋未収・円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"><small class="src">ETC・アプリ手配料（社内決済の200円）を含めた金額を入れます</small></div>
       <div class="field"><label for="rPay">決済</label>
@@ -2654,7 +2656,7 @@ body.rtfull{overflow:hidden}
     $("rOnNext").checked=r.on!=null&&r.on>=DAY; $("rOffNext").checked=r.off!=null&&r.off>=DAY;
     nextTouched={on:id!=null,off:id!=null};   // 新しく入れるときだけ、時刻から「翌日」を推測して付ける
     $("rAmt").value=fmtYen(r.amt); $("rPay").value=r.pay||"現金"; $("rEtc").value=fmtYen(r.etc); $("rMemo").value=r.memo||"";
-    $("rThanks").checked=!!r.thanks;
+    $("rThanks").checked=!!r.thanks; $("rOnUnsure").checked=!!r.onUnsure; $("rOffUnsure").checked=!!r.offUnsure;
     rInTouched=r.inhouse!=null; $("rInhouse").checked=r.inhouse!=null?r.inhouse:appAuto({kind:r.kind||"連続配車",pay:r.pay||"現金"}); rFareShown=r.fare; showFare();
     rWxSel=r.wxSel||""; markWx(); $("rWxBox").open=!!r.wxSel;
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
@@ -2667,6 +2669,7 @@ body.rtfull{overflow:hidden}
   function kindUI(){
     const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
     $("rMoney").hidden=ev; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k)||!(car().appFee>0); $("rThanksBox").hidden=!isHai(k)||!car().thanks;
+    $("rOnUnsureBox").hidden=ev; $("rOffUnsureBox").hidden=ev||point;
     $("rOnL").textContent=ev?(point?"時刻":"開始"):"乗車"; $("rOffL").textContent=ev?"終了":"降車";
   }
   function markWx(){ document.querySelectorAll("#rWx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===rWxSel)); }
@@ -3155,7 +3158,10 @@ ETC自己負担: 0
     else { Object.assign(r,{amt:numOf($("rAmt").value),pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:numOf($("rEtc").value),wxSel:rWxSel});
       // 自動の判定と同じなら持たない（あとで決済を変えたときに自動で付け直せるように）
       const auto=appAuto(r); if(isHai(r.kind)&&$("rInhouse").checked!==auto) r.inhouse=$("rInhouse").checked; else delete r.inhouse;
-      if(isHai(r.kind)&&car().thanks&&$("rThanks").checked) r.thanks=true; else delete r.thanks; }
+      if(isHai(r.kind)&&car().thanks&&$("rThanks").checked) r.thanks=true; else delete r.thanks;
+      // 押し忘れ：この乗車の時刻・場所は使わず、日報の取り込みで差し替える（今の位置・天気は消す）
+      if($("rOnUnsure").checked){ r.onUnsure=true; delete r.onPos; delete r.onTried; delete r.wx; } else delete r.onUnsure;
+      if(!$("rOffF").hidden){ if($("rOffUnsure").checked){ r.offUnsure=true; delete r.offPos; delete r.offTried; } else delete r.offUnsure; } }
     if(d.locked) d.editedAfterLock=new Date().toISOString();
     if(r.kind===RZ) syncRz(d);
     saveSales(); closeRide(); renderSales();
