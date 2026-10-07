@@ -157,6 +157,7 @@ input[type=text],input[type=url],input[type=number],input[type=password]{width:1
 .links a{display:flex;align-items:center;justify-content:center;text-align:center;min-height:48px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--accent);font-weight:700;font-size:15.5px;text-decoration:none}
 .check{align-items:flex-start}
 .check small{display:block;font-size:14px;color:var(--muted);font-weight:400}
+.check .chktext{display:block;flex:1}
 .navsteps{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
 .links a.main{grid-column:1/-1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:17px}
 .err{color:var(--bad);font-size:16px}
@@ -702,7 +703,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 16:51</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-07 16:57</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -856,15 +857,15 @@ body.rtfull{overflow:hidden}
       <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"><label class="check nextday"><input type="checkbox" id="rOnNext">翌日（出庫日の次の日）</label></div>
       <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
     </div>
-    <label class="check" id="rOnUnsureBox"><input type="checkbox" id="rOnUnsure">乗車の押し忘れ<br><small>その場で押せず、あとで（社内処理の後など）まとめて押した・時刻を直したときはチェックしてください。この乗車の時刻・場所はこのスマホの記録を使わず、「日報から取り込む」を使ったときに日報の内容に差し替えます（今、記録済みの位置は消します）</small></label>
-    <label class="check" id="rOffUnsureBox"><input type="checkbox" id="rOffUnsure">降車の押し忘れ<br><small>同じく、降車の時刻・場所を使わず、日報の取り込みで差し替えます</small></label>
+    <label class="check" id="rOnUnsureBox"><input type="checkbox" id="rOnUnsure"><span class="chktext">乗車の押し忘れ<br><small>その場で押せず、あとで（社内処理の後など）まとめて押した・時刻を直したときはチェックしてください。この乗車の時刻・場所はこのスマホの記録を使わず、「日報から取り込む」を使ったときに日報の内容に差し替えます（今、記録済みの位置は消します）</small></span></label>
+    <label class="check" id="rOffUnsureBox"><input type="checkbox" id="rOffUnsure"><span class="chktext">降車の押し忘れ<br><small>同じく、降車の時刻・場所を使わず、日報の取り込みで差し替えます</small></span></label>
     <div class="grp" id="rMoney">
       <div class="field"><label for="rAmt">金額（現収＋未収・円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"><small class="src">ETC・アプリ手配料（社内決済の200円）を含めた金額を入れます</small></div>
       <div class="field"><label for="rPay">決済</label>
         <select id="rPay"><option>現金</option><option>A:GOPAY</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
       <div class="field"><label for="rEtc">うちETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
-      <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks">サンキューチケット<br><small>高額になりやすい配車の目印です。乗務員にしか分からないので、降車後にチェックしてください。営業分析で分けて集計します</small></label>
-      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse">社内決済（アプリ手配料200円を含む）<br><small>配車・連続配車でGO Pay以外は自動でチェックが入ります。GO Payでも社内決済のときはチェックしてください</small></label>
+      <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks"><span class="chktext">サンキューチケット<br><small>高額になりやすい配車の目印です。乗務員にしか分からないので、降車後にチェックしてください。営業分析で分けて集計します</small></span></label>
+      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（アプリ手配料200円を含む）<br><small>配車・連続配車でGO Pay以外は自動でチェックが入ります。GO Payでも社内決済のときはチェックしてください</small></span></label>
       <div class="live" id="rFare"></div>
       <details id="rWxBox"><summary>天気を直す（ふだんは自動）</summary><div class="src">乗車の場所と時刻の天気を気象庁のアメダスから自動で記録します。場所が取れなかったとき・9日より前の取り込み・自動の判定を直したいときだけ選んでください。</div><div class="field"><div class="wxsel" id="rWx"><button type="button" data-w="">自動</button><button type="button" data-w="晴">晴</button><button type="button" data-w="曇">曇</button><button type="button" data-w="雨">雨</button><button type="button" data-w="雪">雪</button></div></div></details>
     </div>
