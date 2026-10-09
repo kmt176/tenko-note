@@ -730,7 +730,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 19:17</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 19:34</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2043,10 +2043,12 @@ body.rtfull{overflow:hidden}
     const el=$("rzCard"), z=rzSpan(k);
     if(!car().rz||!z||!Object.values(sales.days).some(hasRz)){ el.hidden=true; return; }
     const s=rzShift(k), m=mustOf(s), mAct=s.act?winSum(s.act.rz,s.a,s.act.b,RZ_WIN):m;
+    const ren=sumIv(z.iv,z.from,z.to), span=z.to-z.from;
     el.hidden=false;
     el.innerHTML=`<div class="row"><span>連続配車</span><button class="btn" id="rzOpen">連続配車の画面 ›</button></div>
       <div class="sumgrid">
-        <div><span class="h">この乗務の連続配車</span><span class="v num">${hm(sumIv(z.iv,z.from,z.to))}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
+        <div><span class="h">この乗務の連続配車</span><span class="v num">${hm(ren)}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
+        <div><span class="h">出庫〜入庫</span><span class="v num">${hm(span)}<small style="display:block;font-size:13px;color:var(--muted)">${span>0?pct(ren/span):"—"}</small></span></div>
         <div><span class="h">必須（8〜10時・16〜20時）</span><span class="v num">${hm(mAct)} ${mAct>=MUST()?"✅":"❌"}<small style="display:block;font-size:13px;color:var(--muted)">${mAct>=MUST()?"2時間をクリア":`2時間まで あと ${hm(MUST()-mAct)}`}</small></span></div>
       </div>`;
     $("rzOpen").onclick=()=>setView("rz");
