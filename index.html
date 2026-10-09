@@ -553,7 +553,7 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="sMonthView" hidden>
     <div class="period">
       <button class="iconbtn" id="mPrev" aria-label="前の月度">◀</button>
-      <h1 id="mTitle">月度</h1>
+      <div class="titlepick"><h1 id="mTitle">月度</h1><select id="mPick" aria-label="月度を選ぶ"></select></div>
       <button class="iconbtn" id="mNext" aria-label="次の月度">▶</button>
     </div>
     <div class="btnrow" id="mCsvRow" hidden><button class="btn" id="mCsv">この月度の乗車明細をCSVで書き出す</button></div>
@@ -733,7 +733,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 22:05</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 22:38</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2075,7 +2075,9 @@ body.rtfull{overflow:hidden}
     const weeks=[...new Set(Object.keys(sales.days).filter(k=>hasRz(sales.days[k])).map(k=>{ const zz=rzSpan(k); return zz?weekOf(zz.from):null; }).filter(x=>x!=null))].sort((a,b)=>b-a);
     $("sRzView").innerHTML=`
     <section class="card">
-      <div class="period"><button class="iconbtn" id="rzPrev" aria-label="前の週">◀</button><h2 style="flex:1;text-align:center;margin:0;font-size:17px">${wkLabel(rzW)}</h2><button class="iconbtn" id="rzNext" aria-label="次の週">▶</button></div>
+      <div class="period"><button class="iconbtn" id="rzPrev" aria-label="前の週">◀</button>
+        <div class="titlepick"><h2 style="margin:0;font-size:17px;text-align:center">${wkLabel(rzW)}<span class="dd">▾</span></h2><select id="rzPick" aria-label="週を選ぶ">${(weeks.includes(rzW)?weeks:[rzW,...weeks]).sort((a,b)=>b-a).map(w=>`<option value="${w}"${w===rzW?" selected":""}>${wkLabel(w)}</option>`).join("")}</select></div>
+        <button class="iconbtn" id="rzNext" aria-label="次の週">▶</button></div>
       <div>この週の目標：<b>${ruleText(r)}</b> ${car().rzRules&&car().rzRules.length?`<small>（管理者の設定）</small><button class="btn" id="rzRuleBtn" hidden>変える</button>`:`<button class="btn" id="rzRuleBtn">変える</button>`}</div>
       <div class="grp" id="rzRuleBox" hidden>
         <div class="field"><label for="rzType">目標のしかた</label><select id="rzType"><option value="all">週の出庫〜入庫の時間の○%</option><option value="am">週の8〜10時に勤務していた時間の○%</option></select></div>
@@ -2101,6 +2103,7 @@ body.rtfull{overflow:hidden}
     ${weeks.length?`<details class="card"><summary>週ごとの実績</summary><table class="cmpt"><tbody>${weeks.map(x=>{ const v=rzWeekCalc(x), q=rate(v.act); return `<tr><td class="num">${wkLabel(x)}</td><td>${ruleText(v.rule)}</td><td class="num">${q!=null?pct(q):"—"} ${q!=null&&q>=v.rule.pct/100?"🟢":"🔴"}</td></tr>`; }).join("")}</tbody></table></details>`:""}`;
     $("rzPrev").onclick=()=>{ rzW-=7*DAY; rzEd=null; renderRzView(); };
     $("rzNext").onclick=()=>{ rzW+=7*DAY; rzEd=null; renderRzView(); };
+    $("rzPick").addEventListener("change",()=>{ rzW=+$("rzPick").value; rzEd=null; renderRzView(); });
     $("rzRuleBtn").onclick=()=>{ $("rzRuleBox").hidden=!$("rzRuleBox").hidden; $("rzType").value=r.type; };
     $("rzRuleSave").onclick=()=>{ const pc=+$("rzPct").value; if(!(pc>0&&pc<=100)) return; const from=absDate(rzW);
       z.rules=z.rules.filter(x=>x.from<from).concat([{from,type:$("rzType").value,pct:pc}]); saveSales(); renderRzView(); };
@@ -2221,7 +2224,8 @@ body.rtfull{overflow:hidden}
     if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()||todayStr()));
     const P=PERIODS[mIdx], cf=salesCfg();
     $("mCsvRow").hidden=!isAdmin();
-    $("mTitle").innerHTML=`${P.m}月度<small>${md(P.start)}〜${md(P.end)}</small>`;
+    $("mTitle").innerHTML=`${P.m}月度<span class="dd">▾</span><small>${md(P.start)}〜${md(P.end)}</small>`;
+    fillMPick();
     const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end).sort();
     const rows=keys.map(shiftSales).filter(x=>x.has||recs.some(r=>r.date===x.k));
     const done=rows.filter(x=>x.has), tot=done.reduce((a,x)=>a+x.amt,0), cnt=done.reduce((a,x)=>a+x.cnt,0);
@@ -2300,6 +2304,13 @@ body.rtfull{overflow:hidden}
   };
   $("mPrev").onclick=()=>{ if(mIdx>0){ mIdx--; renderMonth(); } };
   $("mNext").onclick=()=>{ if(mIdx<PERIODS.length-1){ mIdx++; renderMonth(); } };
+  function fillMPick(){
+    if(document.activeElement===$("mPick")) return;
+    const list=PERIODS.map((p,i)=>({i,p,has:Object.keys(sales.days).some(k=>k>=p.start&&k<=p.end&&hasData(sales.days[k]))||recs.some(r=>r.date>=p.start&&r.date<=p.end)})).filter(x=>x.has||x.i===mIdx).reverse();
+    $("mPick").innerHTML=list.map(x=>`<option value="${x.i}">${x.p.y}年${x.p.m}月度</option>`).join("");
+    $("mPick").value=mIdx;
+  }
+  $("mPick").addEventListener("change",()=>{ mIdx=+$("mPick").value; renderMonth(); });
   $("mMax").addEventListener("change",()=>{ const v=+$("mMax").value; if(v>0){ sales.cfg=Object.assign(salesCfg(),{maxKm:v}); saveSales(); } renderMonth(); });
   $("mBonus").addEventListener("change",()=>{ const v=+$("mBonus").value; if($("mBonus").value!==""&&v>=0&&v<=100){ sales.cfg=Object.assign(salesCfg(),{bonus:v/100}); saveSales(); } renderMonth(); });
   ["mTax","mPay"].forEach(id=>$(id).addEventListener("change",()=>{
