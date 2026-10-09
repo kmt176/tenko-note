@@ -191,18 +191,20 @@ input,textarea,button{font-weight:700}
 .sum div{background:var(--sunk);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
 .sum .h{font-size:14px;color:var(--muted)}
 .sum .v{font-size:26px}
-.fl{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--line)}
+.fl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--line)}
 .fl .tm{font-size:24px}
 .fl .tm s{display:block;font-size:14px;color:var(--muted);font-weight:400}
 .fl .who{font-size:16px}
 .fl .who small{display:block;font-size:14px;color:var(--muted);font-weight:400}
+.fl .addr{grid-column:1/-1;font-size:14px;color:var(--muted)}
+.fl .tags{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .fl .st{font-size:14.5px;border-radius:999px;padding:2px 10px;background:var(--sunk)}
 .fl .st.late{background:var(--warn-soft);color:var(--warn)}
 .fl .st.bad{background:var(--bad-soft);color:var(--bad)}
 .fl .st.done{color:var(--muted)}
+.fl .tags small{color:var(--accent);font-size:12.5px}
 a.flink{color:inherit;text-decoration:none}
 a.flink:active{background:var(--sunk)}
-a.flink .st small{color:var(--accent);font-size:12.5px}
 
 /* 売上 */
 .ridebtns{display:grid;gap:10px}
@@ -730,7 +732,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 19:34</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 20:28</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2411,8 +2413,9 @@ body.rtfull{overflow:hidden}
           const q=enc, map=x.from&&x.to?`https://www.google.com/maps/dir/?api=1&origin=${q(x.from)}&destination=${q(x.to)}&travelmode=driving`
             :(x.from||x.to)?`https://www.google.com/maps/search/?api=1&query=${q(x.from||x.to)}`:"";
           return `<${map?`a href="${map}" target="_blank" rel="noopener"`:"div"} class="fl flink"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
-            <div class="who">${esc(x.name||x.code)}${j.admin&&x.groupName?`<small>${esc(x.groupName)}</small>`:""}<small>${esc(x.from||"—")} → ${esc(x.to||"—")}</small></div>
-            <span class="st">${esc(x.kind||"")}${x.kind&&x.pay?"・":""}${esc(x.pay||"")}${map?"<br><small>地図 ›</small>":""}</span></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、${yen(j.min||flashMin)}円以上の乗車はまだありません。</div>`);
+            <div class="who">${esc(x.name||x.code)}${j.admin&&x.groupName?`<small>${esc(x.groupName)}</small>`:""}</div>
+            <div class="addr">${esc(x.from||"—")} → ${esc(x.to||"—")}</div>
+            <div class="tags">${x.kind||x.pay?`<span class="st">${esc(x.kind||"")}${x.kind&&x.pay?"・":""}${esc(x.pay||"")}</span>`:""}${map?`<small>地図 ›</small>`:""}</div></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、${yen(j.min||flashMin)}円以上の乗車はまだありません。</div>`);
     };
     drawFlash=draw;
     if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目",kind:"配車"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目",kind:"手上げ"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
