@@ -733,7 +733,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 21:56</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 22:05</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -900,6 +900,7 @@ body.rtfull{overflow:hidden}
         <select id="rPay"><option>現金</option><option>A:GOPAY</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
       <div class="field"><label for="rEtc">うちETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
       <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks"><span class="chktext">サンキューチケット<br><small>高額になりやすい配車の目印です。乗務員にしか分からないので、降車後にチェックしてください。営業分析で分けて集計します</small></span></label>
+      <label class="check"><input type="checkbox" id="rRepeat"><span class="chktext">リピートユーザー<br><small>病院など、定期的に利用される方の目印です</small></span></label>
       <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（アプリ手配料200円を含む）<br><small>配車・連続配車でGO Pay以外は自動でチェックが入ります。GO Payでも社内決済のときはチェックしてください</small></span></label>
       <div class="live" id="rFare"></div>
       <details id="rWxBox"><summary>天気を直す（ふだんは自動）</summary><div class="src">乗車の場所と時刻の天気を気象庁のアメダスから自動で記録します。場所が取れなかったとき・9日より前の取り込み・自動の判定を直したいときだけ選んでください。</div><div class="field"><div class="wxsel" id="rWx"><button type="button" data-w="">自動</button><button type="button" data-w="晴">晴</button><button type="button" data-w="曇">曇</button><button type="button" data-w="雨">雨</button><button type="button" data-w="雪">雪</button></div></div></details>
@@ -2625,7 +2626,7 @@ body.rtfull{overflow:hidden}
       return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
         <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
         ${addr.length?`<div class="sub">${addr.map(esc).join(" → ")}</div>`:""}
-        <div class="chips">${r.onUnsure||r.offUnsure?`<span class="chip warn">押し忘れ・日報待ち</span>`:""}${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
+        <div class="chips">${r.onUnsure||r.offUnsure?`<span class="chip warn">押し忘れ・日報待ち</span>`:""}${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.repeat?`<span class="chip ok">リピート</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
       </button>`;
     }).join("")||`<div class="geo">${act?"「乗車」を押すと、ここに記録が並びます":"この勤務の記録はありません"}</div>`;
 
@@ -2801,7 +2802,7 @@ body.rtfull{overflow:hidden}
     $("rOnNext").checked=r.on!=null&&r.on>=DAY; $("rOffNext").checked=r.off!=null&&r.off>=DAY;
     nextTouched={on:id!=null,off:id!=null};   // 新しく入れるときだけ、時刻から「翌日」を推測して付ける
     $("rAmt").value=fmtYen(r.amt); $("rPay").value=r.pay||"現金"; $("rEtc").value=fmtYen(r.etc); $("rMemo").value=r.memo||"";
-    $("rThanks").checked=!!r.thanks; $("rOnUnsure").checked=!!r.onUnsure; $("rOffUnsure").checked=!!r.offUnsure;
+    $("rThanks").checked=!!r.thanks; $("rRepeat").checked=!!r.repeat; $("rOnUnsure").checked=!!r.onUnsure; $("rOffUnsure").checked=!!r.offUnsure;
     rInTouched=r.inhouse!=null; $("rInhouse").checked=r.inhouse!=null?r.inhouse:appAuto({kind:r.kind||"連続配車",pay:r.pay||"現金"}); rFareShown=r.fare; showFare();
     rWxSel=r.wxSel||""; markWx(); $("rWxBox").open=!!r.wxSel;
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
@@ -3305,6 +3306,7 @@ ETC自己負担: 0
       // 自動の判定と同じなら持たない（あとで決済を変えたときに自動で付け直せるように）
       const auto=appAuto(r); if(isHai(r.kind)&&$("rInhouse").checked!==auto) r.inhouse=$("rInhouse").checked; else delete r.inhouse;
       if(isHai(r.kind)&&car().thanks&&$("rThanks").checked) r.thanks=true; else delete r.thanks;
+      if($("rRepeat").checked) r.repeat=true; else delete r.repeat;
       // 押し忘れ：この乗車の時刻・場所は使わず、日報の取り込みで差し替える（今の位置・天気は消す）
       if($("rOnUnsure").checked){ r.onUnsure=true; delete r.onPos; delete r.onTried; delete r.wx; } else delete r.onUnsure;
       if(!$("rOffF").hidden){ if($("rOffUnsure").checked){ r.offUnsure=true; delete r.offPos; delete r.offTried; } else delete r.offUnsure; } }
