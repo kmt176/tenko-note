@@ -730,7 +730,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 17:58</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 18:26</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1973,11 +1973,14 @@ body.rtfull{overflow:hidden}
   const RZ_WIN=[[8*60,10*60],[16*60,20*60]], RZ_AM=[[8*60,10*60]], RZ_MUST=120;
   // 計画の型の初期値：Excel「1日の計画」の「10月度より（計画中）」（13:15〜17:00・17:15〜18:30 連続配車、17:00〜17:15・20:00〜21:00 休憩）
   const RZ_TPL={out:13*60+10,in:DAY+9*60+20,rz:[[13*60+15,17*60],[17*60+15,18*60+30]],rest:[[17*60,17*60+15],[20*60,21*60]]};
-  // 週の目標の初期値（ユーザー指定）：9月までは週の勤務時間の60%、10/5（月）の週からは8〜10時の80%
-  const RZ_RULES=[{from:"2026-01-05",type:"all",pct:60},{from:"2026-10-05",type:"am",pct:80}];
+  // 週の目標の初期値（ユーザー指定 2026-10-09）：週の勤務時間の60%（「8〜10時の80%」は2026-10-05〜10-09だけ初期値にしていたが、廃止）
+  const RZ_RULES=[{from:"2026-01-05",type:"all",pct:60}];
   function rzCfg(){ const z=sales.rz=sales.rz||{};
-    // 前の版の初期値（60%だけ）のままなら、新しい初期値にする
-    if(!z.rules||(z.rules.length===1&&z.rules[0].from==="2026-01-05"&&z.rules[0].type==="all"&&z.rules[0].pct===60)) z.rules=JSON.parse(JSON.stringify(RZ_RULES)); if(!z.tpl) z.tpl=JSON.parse(JSON.stringify(RZ_TPL)); if(!z.plans) z.plans={}; return z; }
+    // 前の版の初期値（60%だけ、または60%＋8〜10時80%）のままなら、新しい初期値（60%だけ）にする。自分で「変える」から変えた人はそのまま
+    const isOldDefault=rs=>!rs||(rs.length===1&&rs[0].from==="2026-01-05"&&rs[0].type==="all"&&rs[0].pct===60)
+      ||(rs.length===2&&rs[0].from==="2026-01-05"&&rs[0].type==="all"&&rs[0].pct===60&&rs[1].from==="2026-10-05"&&rs[1].type==="am"&&rs[1].pct===80);
+    if(isOldDefault(z.rules)) z.rules=JSON.parse(JSON.stringify(RZ_RULES));
+    if(!z.tpl) z.tpl=JSON.parse(JSON.stringify(RZ_TPL)); if(!z.plans) z.plans={}; return z; }
   const ovl=(a,b,c,d)=>Math.max(0,Math.min(b,d)-Math.max(a,c));
   const sumIv=(iv,a,b)=>iv.reduce((t,[x,y])=>t+ovl(x,y,a,b),0);
   // 区間 iv のうち、[a,b] の中で、毎日の時間帯 wins（8〜10時など）に入る長さ
