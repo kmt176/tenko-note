@@ -435,9 +435,8 @@ body.rtfull{overflow:hidden}
   </div>
 
   <div class="wrap" id="sDetail">
+    <div id="sNow"></div>
     <section class="card" id="svCard" hidden>
-      <div class="infohead"><h2>接遇チェック（試験）</h2></div>
-      <div class="src">乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。</div>
       <div class="btnrow"><button class="btn primary" id="svStart">乗車接遇</button><button class="btn primary" id="svOff">降車接遇</button><button class="btn danger" id="svStop" disabled>止める</button></div>
       <div id="svStat" class="geo">止まっています</div>
       <div id="svList" class="svlist"></div>
@@ -447,8 +446,9 @@ body.rtfull{overflow:hidden}
         <div class="src">今の音の大きさが棒で出ます。降車接遇を押したあと、縦線（赤）を超える音が1回鳴ると「バン」と数えて終わります。</div>
       </details>
       <details><summary>聞き取った文字（確認用・保存しません）</summary><div id="svText" class="src" style="white-space:pre-wrap"></div></details>
+      <div class="infohead"><h2 id="svTitleText">接遇チェック（試験）</h2></div>
+      <div class="src" id="svDescText">乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。</div>
     </section>
-    <div id="sNow"></div>
     <div class="geo" id="sStatus" role="status"></div>
     <div class="list" id="sList"></div>
     <details id="cmpBox" hidden><summary id="cmpSum">日報との比較</summary><div class="body" id="cmpBody"></div></details>
@@ -710,6 +710,9 @@ body.rtfull{overflow:hidden}
           <div class="src">この金額以上の乗車だけ、仲間の速報に名前付きで出ます（初期値 10,000円）。</div>
           <div class="field"><label for="aSvPass">接遇チェック お試し用の合言葉</label><input type="text" id="aSvPass" autocomplete="off" placeholder="空なら使わない"></div>
           <div class="src">管理者の合言葉を渡さずに、接遇チェック（試験）だけを試してもらえます。空にすると使えなくなります。</div>
+          <div class="field"><label for="aSvTitle">接遇チェックの見出し</label><input type="text" id="aSvTitle" autocomplete="off" placeholder="接遇チェック（試験）"></div>
+          <div class="field"><label for="aSvDesc">接遇チェックの説明文</label><textarea id="aSvDesc" rows="4" placeholder="乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。…"></textarea></div>
+          <div class="src">見出し・説明文を空にすると、もとの文言に戻ります。全員のアプリに反映されます。</div>
           <div class="btnrow"><button class="btn primary" id="aSave">保存</button><button class="btn" id="aReload">読み直す</button></div>
           <div class="msg" id="aSaveMsg" role="status"></div>
           <h3 style="margin-top:14px">車種ごとの設定</h3>
@@ -733,7 +736,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 23:15</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 23:55</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1430,6 +1433,8 @@ body.rtfull{overflow:hidden}
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("aFlashMin").value=j.flashMin||10000;
     $("aSvPass").value=j.svPass||"";
+    $("aSvTitle").value=j.svTitle||""; $("aSvDesc").value=j.svDesc||"";
+    cfg.svTitle=j.svTitle||""; cfg.svDesc=j.svDesc||""; saveCfg(); applySvText();
     $("aSchInfo").textContent=`登録されている社員コード：${j.scheduleCodes||0}件`;
     $("adminBox").hidden=false; $("aForget").hidden=false;
     drawCars(j.cars!==undefined?j.cars:carsCfg);
@@ -1462,7 +1467,7 @@ body.rtfull{overflow:hidden}
     const fmRaw=$("aFlashMin").value; if(fmRaw!==""&&(!isFinite(+fmRaw)||+fmRaw<0)){ m.textContent="仲間の速報に出す金額を正しい数字で入れてください"; return; }
     m.textContent="保存しています…";
     try{
-      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value,flashMin:fmRaw===""?10000:+fmRaw,svPass:$("aSvPass").value.trim()});
+      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value,flashMin:fmRaw===""?10000:+fmRaw,svPass:$("aSvPass").value.trim(),svTitle:$("aSvTitle").value.trim(),svDesc:$("aSvDesc").value.trim()});
       if(!j.ok){ m.textContent=j.error; return; }
       drawAdmin(j); m.textContent="保存しました";
       if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
@@ -1480,7 +1485,7 @@ body.rtfull{overflow:hidden}
     m.textContent="確かめています…";
     try{
       const j=await checkSvTest();
-      cfg.svtest=!!(j.ok&&j.sv); saveCfg(); applyRole();
+      cfg.svtest=!!(j.ok&&j.sv); if(j.ok){ cfg.svTitle=j.svTitle||""; cfg.svDesc=j.svDesc||""; } saveCfg(); applyRole(); applySvText();
       m.textContent=cfg.svtest?"保存しました。売上の画面で接遇チェックが使えます":"合言葉が違います";
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
   };
@@ -1488,6 +1493,12 @@ body.rtfull{overflow:hidden}
   // 一般の人には、ロング判定のボタンと使い方を出さない
   // 接遇チェック（試験中）は、管理者の合言葉、または接遇お試し用の合言葉を入れたスマホだけに出す
   const canSv=()=>!PROD||isAdmin()||isSvTest();
+  const SV_DESC_DEFAULT=`乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。`;
+  // 接遇チェックの見出し・説明文（管理者が変えられる）。管理者の合言葉、またはお試し用の合言葉で確かめたときに受け取る
+  function applySvText(){
+    $("svTitleText").textContent=cfg.svTitle||"接遇チェック（試験）";
+    $("svDescText").innerHTML=cfg.svDesc?esc(cfg.svDesc).replace(/\n/g,"<br>"):SV_DESC_DEFAULT;
+  }
   function applyRole(){
     const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
     $("segLong").hidden=!mem;
@@ -3362,6 +3373,7 @@ ETC自己負担: 0
   let startTab=0, startSub="long"; try{ const v=localStorage.getItem("tenko.tab"); if(v!==null) startTab=+v; startSub=localStorage.getItem("tenko.sub")||"long"; }catch(e){}
   showTab([0,1,2,3].includes(startTab)?startTab:1);
   applyRole();
+  applySvText();
   showSub(startSub);
   // 合言葉が保存されていれば、まだ正しいか裏で確かめる（変わっていたらロング判定を隠す）
   if(PROD&&cfg.npass&&cfg.url) checkNakama().then(j=>{
