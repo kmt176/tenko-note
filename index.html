@@ -556,6 +556,7 @@ body.rtfull{overflow:hidden}
       <h1 id="mTitle">月度</h1>
       <button class="iconbtn" id="mNext" aria-label="次の月度">▶</button>
     </div>
+    <div class="btnrow" id="mCsvRow" hidden><button class="btn" id="mCsv">この月度の乗車明細をCSVで書き出す</button></div>
     <section class="card" id="mGoal"></section>
     <section class="meter" id="mSum"></section>
     <section class="card" id="mHourCard" hidden>
@@ -732,7 +733,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 21:34</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 21:56</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2218,6 +2219,7 @@ body.rtfull{overflow:hidden}
   function renderMonth(){
     if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()||todayStr()));
     const P=PERIODS[mIdx], cf=salesCfg();
+    $("mCsvRow").hidden=!isAdmin();
     $("mTitle").innerHTML=`${P.m}月度<small>${md(P.start)}〜${md(P.end)}</small>`;
     const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end).sort();
     const rows=keys.map(shiftSales).filter(x=>x.has||recs.some(r=>r.date===x.k));
@@ -2272,6 +2274,29 @@ body.rtfull{overflow:hidden}
     if(document.activeElement!==$("mMax")) $("mMax").value=cf.maxKm;
   }
   $("mList").addEventListener("click",e=>{ const b=e.target.closest("[data-k]"); if(!b) return; sDay=b.dataset.k; setView("day"); });
+  // CSV書き出し（管理者だけ。この月度の乗車明細を日ごとにまとめて出す）
+  function monthCsvRows(){
+    const P=PERIODS[mIdx];
+    const keys=Object.keys(sales.days).filter(k=>k>=P.start&&k<=P.end).sort();
+    const rows=[["出庫日","No","内容","乗車時刻","降車時刻","金額","決済","ETC","社内決済","乗車地","降車地","メモ","営業分","待ち分","営業分単価","実単価"]];
+    keys.forEach(k=>{
+      const d=sales.days[k]; if(!d||d.mode==="simple"||!d.rides||!d.rides.length) return;
+      dayCalc(d).rows.forEach(r=>{
+        if(isEv(r.kind)) return;
+        const fare=fareOf(r), eig=r._eig, wait=r._wait, inh=r.inhouse!=null?r.inhouse:appAuto(r);
+        rows.push([k,r._no,r.kind,tm(r.on),r.off!=null?tm(r.off):"",r.amt||"",r.pay||"",r.etc||"",inh?"1":"",r.onAddr||"",r.offAddr||"",r.memo||"",
+          eig!=null?eig:"",wait!=null?wait:"",eig>0?Math.round(fare/eig):"",(eig!=null&&wait!=null&&eig+wait>0)?Math.round(fare/(eig+wait)):""]);
+      });
+    });
+    return rows;
+  }
+  const toCsv=rows=>rows.map(r=>r.map(v=>{ const s=String(v??""); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(",")).join("\r\n");
+  $("mCsv").onclick=async()=>{
+    const P=PERIODS[mIdx], csv="﻿"+toCsv(monthCsvRows()), name=`乗車明細_${P.y}-${String(P.m).padStart(2,"0")}.csv`;
+    const file=new File([csv],name,{type:"text/csv"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file]}); return; }catch(e){} }
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download=name; a.click();
+  };
   $("mPrev").onclick=()=>{ if(mIdx>0){ mIdx--; renderMonth(); } };
   $("mNext").onclick=()=>{ if(mIdx<PERIODS.length-1){ mIdx++; renderMonth(); } };
   $("mMax").addEventListener("change",()=>{ const v=+$("mMax").value; if(v>0){ sales.cfg=Object.assign(salesCfg(),{maxKm:v}); saveSales(); } renderMonth(); });
