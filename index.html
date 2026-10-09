@@ -351,6 +351,15 @@ body.rtfull{overflow:hidden}
 
   <button class="add" id="addBtn">＋ 勤務を追加</button>
 
+  <section class="card" id="schedCard">
+    <h2>会社の予定表から計画を入れる</h2>
+    <div class="field"><label for="schCode">社員コード</label><input type="text" id="schCode" inputmode="numeric" autocomplete="off"></div>
+    <div class="field"><label for="schOut">出庫時刻</label><input type="time" id="schOut"></div>
+    <div class="src">出庫時刻から、業務前点呼の計画（10分前）と業務後点呼の計画（19時間50分後）を自動で計算します。出庫時刻はいつでも直せます（直しても、すでに作った計画はそのままです）。</div>
+    <div class="btnrow"><button class="btn primary" id="schSync">予定表から計画を入れる</button></div>
+    <div class="msg" id="schMsg" role="status"></div>
+  </section>
+
   <details>
     <summary>チェックしているルール</summary>
     <div class="body">
@@ -704,6 +713,14 @@ body.rtfull{overflow:hidden}
           <div style="overflow-x:auto"><table class="cartbl" id="aCars"></table></div>
           <div class="btnrow"><button class="btn primary" id="aCarSave">車種の設定を保存</button><button class="btn" id="aCarReset">初期値に戻す</button></div>
           <div class="msg" id="aCarMsg" role="status"></div>
+          <h3 style="margin-top:14px">勤務予定表（会社の計画の取り込み・試験）</h3>
+          <div class="src" id="aSchInfo"></div>
+          <div class="field"><label for="aSchText">貼り付け（1行に1人、「コード: 日付,日付,…」の形。YYYY-MM-DDで）</label>
+            <textarea id="aSchText" rows="4" placeholder="2768: 2026-09-26,2026-09-28,2026-10-01
+2778: 2026-09-28,2026-09-30,2026-10-02"></textarea></div>
+          <div class="src">すでにあるコードには、貼り付けた日付が追加されます（上書きではなく合体。重複は無視）。</div>
+          <div class="btnrow"><button class="btn primary" id="aSchSave">予定表を取り込む</button></div>
+          <div class="msg" id="aSchMsg" role="status"></div>
         </div>
       </div>
     </div>
@@ -712,7 +729,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-08 10:44</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 17:16</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1230,6 +1247,32 @@ body.rtfull{overflow:hidden}
   const saveCfg=()=>{ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} };
   $("lUrl").value=cfg.url||""; $("lPass").value=cfg.pass||"";
 
+  // ===== 会社の予定表から計画を入れる =====
+  $("schCode").value=cfg.empCode||""; $("schOut").value=cfg.shutsuko||"";
+  async function syncSchedule(silent){
+    const m=$("schMsg"), code=(cfg.empCode||"").trim(), out=cfg.shutsuko;
+    if(!code||!out||!cfg.url) return;
+    if(!silent) m.textContent="調べています…";
+    try{
+      const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"schedule",code})});
+      const j=await res.json();
+      if(!j.ok){ if(!silent) m.textContent=j.error||"予定表が見つかりませんでした"; return; }
+      const outMin=toMin(out), pb=clock(((outMin-10)%1440+1440)%1440), pa=clock((outMin+1190)%1440);
+      let added=0;
+      (j.dates||[]).forEach(d=>{
+        if(recs.some(r=>r.date===d)) return;
+        recs.push({id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),date:d,pb,pa,ab:"",aa:""});
+        added++;
+      });
+      if(added){ save(); render(); }
+      if(!silent) m.textContent=added?`${added}日分の計画を追加しました`:"追加する日はありませんでした（すでに全部入っています、または予定表にまだ登録されていません）";
+    }catch(e){ if(!silent) m.textContent="通信できませんでした。電波を確認してください"; }
+  }
+  $("schCode").addEventListener("change",()=>{ cfg.empCode=$("schCode").value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); saveCfg(); });
+  $("schOut").addEventListener("change",()=>{ cfg.shutsuko=$("schOut").value; saveCfg(); });
+  $("schSync").onclick=()=>syncSchedule(false);
+  if(cfg.empCode&&cfg.shutsuko) syncSchedule(true);
+
   // 入力欄の初期値と、スマホに覚えておく値
   // 自分で変えていない欄は、車種の設定（管理者が決めた初期値）を入れる
   function applyLongDefaults(){ const c=car();
@@ -1373,6 +1416,7 @@ body.rtfull{overflow:hidden}
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("aFlashMin").value=j.flashMin||10000;
     $("aSvPass").value=j.svPass||"";
+    $("aSchInfo").textContent=`登録されている社員コード：${j.scheduleCodes||0}件`;
     $("adminBox").hidden=false; $("aForget").hidden=false;
     drawCars(j.cars!==undefined?j.cars:carsCfg);
   }
@@ -1388,6 +1432,15 @@ body.rtfull{overflow:hidden}
   $("aOpen").onclick=()=>{ cfg.url=$("lUrl").value.trim()||cfg.url; cfg.apass=$("aPass").value.trim(); if(!cfg.apass){ $("aMsg").textContent="管理者の合言葉を入れてください"; return; } openAdmin(); };
   $("aReload").onclick=openAdmin;
   $("aCarSave").onclick=()=>{ const {cars,err}=readCars(); if(err){ $("aCarMsg").textContent=err; return; } saveCars(cars,"保存しました。全員のアプリに、次に開いたときから反映されます"); };
+  $("aSchSave").onclick=async()=>{
+    const m=$("aSchMsg"), text=$("aSchText").value;
+    if(!text.trim()){ m.textContent="貼り付ける内容を入れてください"; return; }
+    m.textContent="取り込んでいます…";
+    try{ const j=await post({action:"admin",op:"saveSchedule",adminPass:cfg.apass,text});
+      if(!j.ok){ m.textContent=j.error||"取り込めませんでした"; return; }
+      drawAdmin(j); $("aSchText").value=""; m.textContent="取り込みました";
+    }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度押してください"; }
+  };
   let carResetArmed=false;
   $("aCarReset").onclick=()=>{ if(!carResetArmed){ carResetArmed=true; $("aCarReset").textContent="もう一度押すと初期値に戻します"; return; } carResetArmed=false; $("aCarReset").textContent="初期値に戻す"; saveCars(null,"初期値に戻しました"); };
   $("aSave").onclick=async()=>{
@@ -2917,7 +2970,8 @@ body.rtfull{overflow:hidden}
 総営収: 数字
 アプリ手配料金: 数字
 ETC合計: 数字（日報のETC料金の「合計」）
-ETC会社負担: 数字（納金明細書・高速道路利用明細があれば会社負担分の合計。なければETC料金の「迎車」と「空車」の合計）
+ETC会社負担: 数字（高速道路利用明細（ETC利用明細）が添付されているときだけ、次のルールで計算する。無いときは空欄にする（「迎車」と「空車」のETC合計をそのまま使わない。会社負担ではない分まで含んでしまうため）。
+　ルール：実車（お客様を乗せている区間）のETCは全額会社負担。迎車・空車・回送のETCは、首都高速以外の高速道路（幹線道路）は実際の金額（1,000円が上限。例えば700円なら700円）が会社負担。首都高速は、同じ移動で幹線道路も続けて使っている（乗り継いでいる）ときだけ500円を会社負担に追加する。首都高速だけを使った区間（幹線道路を使っていない）は、会社負担には含めない（自己負担）。）
 ETC自己負担: 0
 伝達事項: 納金明細書の伝達事項に書いてあれば、その文（なければ空欄）
 日計表の現収: 数字（日報の「現収」）
