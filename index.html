@@ -730,7 +730,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 18:26</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 18:39</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1976,10 +1976,12 @@ body.rtfull{overflow:hidden}
   // 週の目標の初期値（ユーザー指定 2026-10-09）：週の勤務時間の60%（「8〜10時の80%」は2026-10-05〜10-09だけ初期値にしていたが、廃止）
   const RZ_RULES=[{from:"2026-01-05",type:"all",pct:60}];
   function rzCfg(){ const z=sales.rz=sales.rz||{};
-    // 前の版の初期値（60%だけ、または60%＋8〜10時80%）のままなら、新しい初期値（60%だけ）にする。自分で「変える」から変えた人はそのまま
-    const isOldDefault=rs=>!rs||(rs.length===1&&rs[0].from==="2026-01-05"&&rs[0].type==="all"&&rs[0].pct===60)
-      ||(rs.length===2&&rs[0].from==="2026-01-05"&&rs[0].type==="all"&&rs[0].pct===60&&rs[1].from==="2026-10-05"&&rs[1].type==="am"&&rs[1].pct===80);
-    if(isOldDefault(z.rules)) z.rules=JSON.parse(JSON.stringify(RZ_RULES));
+    if(!z.rules) z.rules=JSON.parse(JSON.stringify(RZ_RULES));
+    // 2026-10-05に自動で入れていた「8〜10時の80%」は廃止したので、その自動設定の名残があれば消す（自分で「変える」から別の値に変えた分は残す）
+    const before=JSON.stringify(z.rules);
+    z.rules=z.rules.filter(x=>!(x.from==="2026-10-05"&&x.type==="am"&&x.pct===80));
+    if(!z.rules.length) z.rules=JSON.parse(JSON.stringify(RZ_RULES));
+    if(JSON.stringify(z.rules)!==before) saveSales();
     if(!z.tpl) z.tpl=JSON.parse(JSON.stringify(RZ_TPL)); if(!z.plans) z.plans={}; return z; }
   const ovl=(a,b,c,d)=>Math.max(0,Math.min(b,d)-Math.max(a,c));
   const sumIv=(iv,a,b)=>iv.reduce((t,[x,y])=>t+ovl(x,y,a,b),0);
