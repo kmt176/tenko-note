@@ -354,8 +354,9 @@ body.rtfull{overflow:hidden}
   <section class="card" id="schedCard">
     <h2>会社の予定表から計画を入れる</h2>
     <div class="field"><label for="schCode">社員コード</label><input type="text" id="schCode" inputmode="numeric" autocomplete="off"></div>
+    <div class="btnrow" id="schCodeChangeRow" hidden><button class="btn" id="schCodeChange">社員コードを変更する</button></div>
     <div class="field"><label for="schOut">出庫時刻</label><input type="time" id="schOut"></div>
-    <div class="src">出庫時刻から、業務前点呼の計画（10分前）と業務後点呼の計画（19時間50分後）を自動で計算します。出庫時刻はいつでも直せます（直しても、すでに作った計画はそのままです）。</div>
+    <div class="src">出庫時刻から、業務前点呼の計画（10分前）と業務後点呼の計画（19時間50分後）を自動で計算します。出庫時刻はいつでも直せます（直しても、すでに作った計画はそのままです）。社員コードは、まちがえて他の人の予定が入らないよう、一度入れると固定されます。</div>
     <div class="btnrow"><button class="btn primary" id="schSync">予定表から計画を入れる</button></div>
     <div class="msg" id="schMsg" role="status"></div>
   </section>
@@ -729,7 +730,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 17:16</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 17:45</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1249,6 +1250,15 @@ body.rtfull{overflow:hidden}
 
   // ===== 会社の予定表から計画を入れる =====
   $("schCode").value=cfg.empCode||""; $("schOut").value=cfg.shutsuko||"";
+  // 社員コードは、まちがえて別の人の予定を入れてしまわないよう、一度入れたら固定する（「社員コードを変更する」を2回押すと外せる）
+  function applySchLock(){ const locked=!!cfg.empCode; $("schCode").readOnly=locked; $("schCodeChangeRow").hidden=!locked; }
+  applySchLock();
+  let schChangeArmed=false;
+  $("schCodeChange").onclick=()=>{
+    if(!schChangeArmed){ schChangeArmed=true; $("schCodeChange").textContent="もう一度押すと変更できます"; return; }
+    schChangeArmed=false; $("schCodeChange").textContent="社員コードを変更する";
+    cfg.empCode=""; saveCfg(); $("schCode").value=""; applySchLock(); $("schMsg").textContent="社員コードを消しました。新しいコードを入れてください"; $("schCode").focus();
+  };
   async function syncSchedule(silent){
     const m=$("schMsg"), code=(cfg.empCode||"").trim(), out=cfg.shutsuko;
     if(!code||!out||!cfg.url) return;
@@ -1268,7 +1278,7 @@ body.rtfull{overflow:hidden}
       if(!silent) m.textContent=added?`${added}日分の計画を追加しました`:"追加する日はありませんでした（すでに全部入っています、または予定表にまだ登録されていません）";
     }catch(e){ if(!silent) m.textContent="通信できませんでした。電波を確認してください"; }
   }
-  $("schCode").addEventListener("change",()=>{ cfg.empCode=$("schCode").value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); saveCfg(); });
+  $("schCode").addEventListener("change",()=>{ cfg.empCode=$("schCode").value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); saveCfg(); applySchLock(); });
   $("schOut").addEventListener("change",()=>{ cfg.shutsuko=$("schOut").value; saveCfg(); });
   $("schSync").onclick=()=>syncSchedule(false);
   if(cfg.empCode&&cfg.shutsuko) syncSchedule(true);
