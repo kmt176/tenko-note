@@ -736,7 +736,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-09 23:55</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-10 00:05</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1683,7 +1683,7 @@ body.rtfull{overflow:hidden}
   // ===== 接遇チェック（試験）：音声認識で唱和の言葉を、マイクの音量でドアの「バン」を拾う。何も保存しない =====
   const SV_ITEMS=[
     ["①","ご乗車ください（乗車時の挨拶）",/どうぞ|乗車くださ|じょうしゃくださ/],
-    ["②","ドアをお閉め・お足元",/お?閉め|おしめ|足元|あしもと/],
+    ["②","ドアをお閉め・お足元（ドアサービスの音でもOK）",/お?閉め|おしめ|足元|あしもと/,true],
     ["③","挨拶（おはようございます／こんにちは／こんばんは）",/おはよう|こんにちは|こんにちわ|今日は|こんばんは|こんばんわ|今晩は/],
     ["③","どちらまで",/どちらまで|何方まで/],
     ["④","かしこまりました",/かしこまりました|畏まりました/],
@@ -1699,13 +1699,13 @@ body.rtfull{overflow:hidden}
     ["⑭","外からドアをお開け",/外から|そとから/],
     ["⑮","ドアサービス（ドアの音 1回）",null]
   ];
-  let svOn=false, svRec=null, svHeard="", svBang=0, svOffAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0, svDiag="", svErrCount=0;
+  let svOn=false, svRec=null, svHeard="", svBang=0, svOffAt=null, svOnAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0, svDiag="", svErrCount=0;
   try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; }catch(e){}
   const SV_OFF_FROM=SV_ITEMS.findIndex(x=>x[0]==="⑩");   // ⑩からは降車接遇を押してから出す
   function svRender(){
     const t=svHeard.replace(/\s/g,""), shown=svPhase==="off"?SV_ITEMS.slice(SV_OFF_FROM):SV_ITEMS.slice(0,SV_OFF_FROM);
     let n=0;
-    $("svList").innerHTML=shown.map(([no,label,re])=>{ const ok=re?re.test(t):svBang>=1; if(ok) n++;
+    $("svList").innerHTML=shown.map(([no,label,re,orBang])=>{ const ok=re?(re.test(t)||(orBang&&svBang>=1)):svBang>=1; if(ok) n++;
       return `<div class="${ok?"ok":""}"><span>${no}</span><span>${label}${!re?`（${svBang?"聞こえました":"まだ"}）`:""}</span></div>`; }).join("");
     $("svStat").innerHTML=(svOn?`${svPhase==="off"?"降車接遇":"乗車接遇"} 聞き取り中… <b>${n}／${shown.length}</b>${svOffAt?"・ドアの音を待っています":""}`:`止まっています${svHeard?`（前回 ${n}／${shown.length}）`:""}`)+(svDiag?`<div class="err">${esc(svDiag)}</div>`:"");
     $("svText").textContent=svHeard;
@@ -1743,13 +1743,15 @@ body.rtfull{overflow:hidden}
         // 降車接遇を押してから3分の間に、感度の線を超える音が1回鳴ったら「バン」とする（ユーザー指定：1回）
         if(svOffAt&&now-svOffAt<180000&&pk>svTh&&now-svOffAt>800){ svBang++; svLastBang=now; svDiag=""; svRender(); }
         if(svOffAt&&(now-svOffAt>=180000||svBang>=1)){ svStop(); return; }
+        // 乗車接遇でも、ドアサービス（自動ドア）の音が1回鳴れば②の代わりとして拾う（止めない。③〜⑨はそのまま聞き続ける）
+        if(svOnAt&&svBang<1&&now-svOnAt<180000&&pk>svTh&&now-svOnAt>800){ svBang++; svLastBang=now; svDiag=""; svRender(); }
         svRaf=requestAnimationFrame(loop); };
       loop();
     }catch(e){ $("svStat").textContent="マイクが使えません（"+e.message+"）"; }
   }
   // 乗車接遇＝①〜⑨、降車接遇＝⑩〜⑮とドアの音。どちらも押したところから聞き直す（降車接遇は乗車接遇を押していなくても使える）
   let svPhase="on";
-  function svBegin(phase){ svStop(); svPhase=phase; svOn=true; svHeard=""; svBang=0; svDiag=""; svErrCount=0; svOffAt=phase==="off"?Date.now():null;
+  function svBegin(phase){ svStop(); svPhase=phase; svOn=true; svHeard=""; svBang=0; svDiag=""; svErrCount=0; svOffAt=phase==="off"?Date.now():null; svOnAt=phase==="on"?Date.now():null;
     svSpeech(); svMic(); $("svStop").disabled=false; svRender(); }
   const svStart=()=>svBegin("on");
   function svStop(){ svOn=false; try{ svRec&&svRec.stop(); }catch(e){} svRec=null; cancelAnimationFrame(svRaf);
