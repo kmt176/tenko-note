@@ -749,7 +749,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:20</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:27</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1752,8 +1752,8 @@ body.rtfull{overflow:hidden}
     ["⑮","料金は<b>タブレット</b>を確認お願いします。",/タブレット/],
     ["⑯","ありがとうございました。<b>領収書</b>でございます。",/領収書/],
     ["⑰","<b>外からドアを</b>開けいたしますのでお待ちくださいませ。",/外から|そとから/],
-    ["⑱","ドアを開けてもよろしいでしょうか。足元にお気をつけくださいませ。<br>（ドアサービスの音でもOK）",null],
-    ["⑲","ありがとうございました。また日本交通をご利用くださいませ。<br>（ドアサービスの音でもOK）",null]
+    ["⑱","<b>ドアを開け</b>てもよろしいでしょうか。足元にお気をつけくださいませ。<br>（ドアサービスの音でもOK）",/ドアを開け/,true],
+    ["⑲","ありがとうございました。また<b>日本交通</b>をご利用くださいませ。<br>（ドアサービスの音でもOK）",/日本交通/,true]
   ];
   let svOn=false, svRec=null, svHeard="", svMatchText="", svMatchTimer=null, svBang=0, svOffAt=null, svOnAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0, svDiag="", svErrCount=0;
   try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; }catch(e){}
