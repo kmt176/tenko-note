@@ -749,7 +749,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:27</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:33</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1441,7 +1441,8 @@ body.rtfull{overflow:hidden}
     $("aGroups").innerHTML=j.groups.map((g,i)=>`<div class="agrp" data-i="${i}"><span class="num">${i+1}</span>
       <input type="text" data-a="name" value="${esc(g.name)}" maxlength="20" aria-label="グループ${i+1}の名前">
       <input type="text" data-a="pass" value="${esc(g.pass)}" maxlength="50" placeholder="合言葉（空なら使わない）" aria-label="グループ${i+1}の合言葉">
-      <span class="st">${g.pass?`直近3日の速報 ${g.flash}件・${g.people}人`:"使っていない"}</span></div>`).join("");
+      <span class="st">${g.pass?`直近3日の速報 ${g.flash}件・${g.people}人`:"使っていない"}</span>
+      <label class="check" style="grid-column:2/-1"><input type="checkbox" data-a="csv" ${g.csv?"checked":""}><span class="vtext">このグループのメンバーに、月度のCSV出力を許可する</span></label></div>`).join("");
     $("aLong").value=j.longPass||"";
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("aFlashMin").value=j.flashMin||10000;
@@ -1516,7 +1517,7 @@ body.rtfull{overflow:hidden}
   let carResetArmed=false;
   $("aCarReset").onclick=()=>{ if(!carResetArmed){ carResetArmed=true; $("aCarReset").textContent="もう一度押すと初期値に戻します"; return; } carResetArmed=false; $("aCarReset").textContent="初期値に戻す"; saveCars(null,"初期値に戻しました"); };
   $("aSave").onclick=async()=>{
-    const m=$("aSaveMsg"), groups=[...document.querySelectorAll("#aGroups .agrp")].map(r=>({name:r.querySelector('[data-a="name"]').value,pass:r.querySelector('[data-a="pass"]').value}));
+    const m=$("aSaveMsg"), groups=[...document.querySelectorAll("#aGroups .agrp")].map(r=>({name:r.querySelector('[data-a="name"]').value,pass:r.querySelector('[data-a="pass"]').value,csv:r.querySelector('[data-a="csv"]').checked}));
     const fmRaw=$("aFlashMin").value; if(fmRaw!==""&&(!isFinite(+fmRaw)||+fmRaw<0)){ m.textContent="仲間の速報に出す金額を正しい数字で入れてください"; return; }
     m.textContent="保存しています…";
     try{
@@ -2299,7 +2300,7 @@ body.rtfull{overflow:hidden}
   function renderMonth(){
     if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()||todayStr()));
     const P=PERIODS[mIdx], cf=salesCfg();
-    $("mCsvRow").hidden=!isAdmin();
+    $("mCsvRow").hidden=!(isAdmin()||(isNakama()&&cfg.group&&cfg.group.csv));
     $("mTitle").innerHTML=`${P.m}月度<span class="dd">▾</span><small>${md(P.start)}〜${md(P.end)}</small>`;
     fillMPick();
     const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end).sort();
