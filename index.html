@@ -749,7 +749,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 21:26</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 21:32</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1788,6 +1788,7 @@ body.rtfull{overflow:hidden}
     try{
       const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
       const ac=new (window.AudioContext||window.webkitAudioContext)(), src=ac.createMediaStreamSource(st), an=ac.createAnalyser(); an.fftSize=1024; src.connect(an);
+      if(ac.state==="suspended") ac.resume().catch(()=>{});   // 一時停止のままだと、許可が出ていても音量が常にゼロになる
       const buf=new Float32Array(an.fftSize); svAudio={st,ac};
       const micStartAt=Date.now(); let sawSound=false;
       const loop=()=>{ an.getFloatTimeDomainData(buf); let pk=0; for(const v of buf) pk=Math.max(pk,Math.abs(v));
