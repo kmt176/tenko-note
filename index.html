@@ -749,7 +749,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:00</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:20</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1736,9 +1736,9 @@ body.rtfull{overflow:hidden}
   // ===== 接遇チェック（試験）：音声認識で唱和の言葉を、マイクの音量でドアの「バン」を拾う。何も保存しない =====
   const SV_ITEMS=[
     ["①","ありがとうございます！ どうぞ<b>ご乗車</b>くださいませ。（ドアサービスの音でもOK）",/乗車|じょうしゃ|どうぞ/,true],
-    ["②","<b>ドアを</b>お閉めいたします。お足元にお気をつけくださいませ。（ドアサービスの音でもOK）",/ドアを|お?閉め|おしめ|足元|あしもと/,true],
+    ["②","<b>ドアを</b>お閉めいたします。お足元にお気をつけくださいませ。<br>（ドアサービスの音でもOK）",/ドアを|お?閉め|おしめ|足元|あしもと/,true],
     ["③","挨拶（<b>おはようございます</b>／<b>こんにちは</b>／<b>こんばんは</b>）のいずれか",/おはよう|こんにちは|こんにちわ|今日は|こんばんは|こんばんわ|今晩は/],
-    ["④","<b>どちらまで</b>お送り致しますか？（降車地設定済みなら「<b>降車地</b>」）",/どちらまで|何方まで|降車地/],
+    ["④","<b>どちらまで</b>お送り致しますか？<br>（降車地設定済みなら「<b>降車地</b>」）",/どちらまで|何方まで|降車地/],
     ["⑤","○○ですね。<b>かしこまりました。</b>",/かしこまりました|畏まりました/],
     ["⑥","よろしければ、<b>ご希望のコース</b>を申し付けくださいませ。",/コース/],
     ["⑦","はい、かしこまりました<b>○○を通って</b>お送りさせて頂きます。",/通って|とおって/],
@@ -1752,8 +1752,8 @@ body.rtfull{overflow:hidden}
     ["⑮","料金は<b>タブレット</b>を確認お願いします。",/タブレット/],
     ["⑯","ありがとうございました。<b>領収書</b>でございます。",/領収書/],
     ["⑰","<b>外からドアを</b>開けいたしますのでお待ちくださいませ。",/外から|そとから/],
-    ["⑱","ドアを開けてもよろしいでしょうか。足元にお気をつけくださいませ。（ドアサービスの音でもOK）",null],
-    ["⑲","ありがとうございました。また日本交通をご利用くださいませ。（ドアサービスの音でもOK）",null]
+    ["⑱","ドアを開けてもよろしいでしょうか。足元にお気をつけくださいませ。<br>（ドアサービスの音でもOK）",null],
+    ["⑲","ありがとうございました。また日本交通をご利用くださいませ。<br>（ドアサービスの音でもOK）",null]
   ];
   let svOn=false, svRec=null, svHeard="", svMatchText="", svMatchTimer=null, svBang=0, svOffAt=null, svOnAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0, svDiag="", svErrCount=0;
   try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; }catch(e){}
@@ -1810,8 +1810,12 @@ body.rtfull{overflow:hidden}
   }
   // 乗車接遇＝①〜⑨、降車接遇＝⑩〜⑮とドアの音。どちらも押したところから聞き直す（降車接遇は乗車接遇を押していなくても使える）
   let svPhase="on";
-  function svBegin(phase){ svStop(); svPhase=phase; svOn=true; svHeard=""; svMatchText=""; clearTimeout(svMatchTimer); svBang=0; svDiag=""; svErrCount=0; svOffAt=phase==="off"?Date.now():null; svOnAt=phase==="on"?Date.now():null;
-    svSpeech(); svMic(); $("svStop").disabled=false; svRender(); }
+  function svBegin(phase){
+    const hadAudio=!!svAudio;   // 乗車接遇→降車接遇のように続けて押したときは、前のマイクが完全に終わる前に次が始まり、音が全く拾えなくなることがある
+    svStop(); svPhase=phase; svOn=true; svHeard=""; svMatchText=""; clearTimeout(svMatchTimer); svBang=0; svDiag=""; svErrCount=0; svOffAt=phase==="off"?Date.now():null; svOnAt=phase==="on"?Date.now():null;
+    svSpeech(); $("svStop").disabled=false; svRender();
+    if(hadAudio) setTimeout(svMic,300); else svMic();   // 前のマイクが使われていたときは、少し待ってから次のマイクを開く
+  }
   const svStart=()=>svBegin("on");
   function svStop(){ svOn=false; try{ svRec&&svRec.stop(); }catch(e){} svRec=null; cancelAnimationFrame(svRaf);
     if(svAudio){ svAudio.st.getTracks().forEach(t=>t.stop()); try{ svAudio.ac.close(); }catch(e){} svAudio=null; }
