@@ -758,7 +758,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 23:45</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 23:52</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3112,7 +3112,7 @@ body.rtfull{overflow:hidden}
     const y=Math.sin(toRad(b[1]-a[1]))*Math.cos(toRad(b[0])), x=Math.cos(toRad(a[0]))*Math.sin(toRad(b[0]))-Math.sin(toRad(a[0]))*Math.cos(toRad(b[0]))*Math.cos(toRad(b[1]-a[1]));
     return (toDeg(Math.atan2(y,x))+360)%360; };
   const triIcon=(deg,busy)=>L.divIcon({className:"",html:`<div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:15px solid ${busy?ROUTE_PINK:ROUTE_EMPTY};transform:rotate(${deg}deg);transform-origin:50% 60%"></div>`,iconSize:[16,16],iconAnchor:[8,10]});
-  let rtPlayRaf=0, rtPlayMarker=null, rtPlayPts=null, rtPlayIsBusy=null, rtPlayStart=0, rtFullLines=[], rtTraceLayer=null;
+  let rtPlayRaf=0, rtPlayMarker=null, rtPlayPts=null, rtPlayIsBusy=null, rtPlayStart=0, rtFullLines=[], rtTraceLayer=null, rtCursor=0;
   let rtSpeed=1; try{ const v=+localStorage.getItem("tenko.rtspeed"); if(v>0) rtSpeed=v; }catch(e){}
   const RT_BASE_MS=8000;   // 速さ1倍のときの、勤務全体の再生時間のめやす（点の数に関わらず一定）
   function stopPlay(){
@@ -3124,14 +3124,19 @@ body.rtfull{overflow:hidden}
   }
   function rtFrame(){
     if(!rtPlayPts) return;
-    const N=rtPlayPts.length, dur=RT_BASE_MS/rtSpeed, t=Math.min(1,(Date.now()-rtPlayStart)/dur);
-    const pos=t*(N-1), i0=Math.floor(pos), i1=Math.min(N-1,i0+1), f=pos-i0;
-    const a=rtPlayPts[i0], b=rtPlayPts[i1];
-    const lat=a[0]+(b[0]-a[0])*f, lng=a[1]+(b[1]-a[1])*f, min=a[2]+(b[2]-a[2])*f;
-    rtPlayMarker.setLatLng([lat,lng]); rtPlayMarker.setIcon(triIcon(bearingDeg(a,b),rtPlayIsBusy(min)));
+    const N=rtPlayPts.length, t0=rtPlayPts[0][2], t1=rtPlayPts[N-1][2];
+    const dur=RT_BASE_MS/rtSpeed, t=Math.min(1,(Date.now()-rtPlayStart)/dur);
+    const curMin=t0+t*(t1-t0);
+    // 実際の時刻（記録の分）で進める。タイムラインは間隔が一定ではない（長く止まっていた間は点が少ない）ので、
+    // 点の順番（添字）だけで進めると、間隔が長い区間を一瞬で飛び越えて見えてしまう
+    while(rtCursor<N-2&&rtPlayPts[rtCursor+1][2]<curMin) rtCursor++;
+    const a=rtPlayPts[rtCursor], b=rtPlayPts[Math.min(N-1,rtCursor+1)];
+    const span=(b[2]-a[2])||1, f=Math.min(1,Math.max(0,(curMin-a[2])/span));
+    const lat=a[0]+(b[0]-a[0])*f, lng=a[1]+(b[1]-a[1])*f;
+    rtPlayMarker.setLatLng([lat,lng]); rtPlayMarker.setIcon(triIcon(bearingDeg(a,b),rtPlayIsBusy(curMin)));
     // 進んだ分（これまでの点＋今の位置）だけを、実車・空車で色分けして描き直す
     rtTraceLayer.clearLayers();
-    const soFar=rtPlayPts.slice(0,i0+1).concat([[lat,lng,min]]);
+    const soFar=rtPlayPts.slice(0,rtCursor+1).concat([[lat,lng,curMin]]);
     routeBusyRuns(soFar,rtPlayIsBusy).forEach(run=>{ if(run.pts.length>=2) L.polyline(run.pts.map(p=>[p[0],p[1]]),{color:run.busy?ROUTE_PINK:ROUTE_EMPTY,weight:4,opacity:.85}).addTo(rtTraceLayer); });
     if(t>=1){ stopPlay(); return; }
     rtPlayRaf=requestAnimationFrame(rtFrame);
@@ -3140,6 +3145,7 @@ body.rtfull{overflow:hidden}
     if(rtPlayPts){ stopPlay(); return; }
     if(!pts||pts.length<2) return;
     rtPlayIsBusy=isBusyOf(d);
+    rtCursor=0;
     rtFullLines.forEach(l=>{ if(rtLayer&&rtLayer.hasLayer(l)) rtLayer.removeLayer(l); });   // 再生中は全体の線を隠す
     rtTraceLayer=L.layerGroup().addTo(rtLayer);
     rtPlayPts=pts; rtPlayStart=Date.now();
