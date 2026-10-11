@@ -520,10 +520,10 @@ body.rtfull{overflow:hidden}
     <button class="btn" id="rtFull" hidden>全画面で見る</button>
     <button class="btn" id="rtPlay" hidden>再生</button>
     <div class="seg" id="rtSpeed" role="tablist" aria-label="再生の速さ" hidden>
+      <button role="tab" data-sp="0.1" aria-selected="false">0.1倍</button>
+      <button role="tab" data-sp="0.25" aria-selected="false">0.25倍</button>
       <button role="tab" data-sp="0.5" aria-selected="false">0.5倍</button>
       <button role="tab" data-sp="1" aria-selected="true">1倍</button>
-      <button role="tab" data-sp="2" aria-selected="false">2倍</button>
-      <button role="tab" data-sp="4" aria-selected="false">4倍</button>
     </div>
     <div id="rtMap" hidden></div>
     <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
@@ -758,7 +758,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 23:33</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 23:45</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3098,9 +3098,7 @@ body.rtfull{overflow:hidden}
   }
   $("rtFull").onclick=()=>setRtFull(!document.body.classList.contains("rtfull"));
   // 実車（乗車〜降車の間）・空車で、ひとつながりの区間ごとに分ける（色分け表示用。切れ目の点は両方に入れてつなげて見せる）
-  function routeBusyRuns(d,pts){
-    const rides=d.rides.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null);
-    const isBusy=min=>rides.some(x=>min>=x.on&&min<=x.off);
+  function routeBusyRuns(pts,isBusy){
     const runs=[];
     pts.forEach(p=>{
       const b=isBusy(p[2]);
@@ -3109,36 +3107,54 @@ body.rtfull{overflow:hidden}
     });
     return runs;
   }
+  const isBusyOf=d=>{ const rides=d.rides.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null); return min=>rides.some(x=>min>=x.on&&min<=x.off); };
   const bearingDeg=(a,b)=>{ const toRad=x=>x*Math.PI/180, toDeg=x=>x*180/Math.PI;
     const y=Math.sin(toRad(b[1]-a[1]))*Math.cos(toRad(b[0])), x=Math.cos(toRad(a[0]))*Math.sin(toRad(b[0]))-Math.sin(toRad(a[0]))*Math.cos(toRad(b[0]))*Math.cos(toRad(b[1]-a[1]));
     return (toDeg(Math.atan2(y,x))+360)%360; };
   const triIcon=(deg,busy)=>L.divIcon({className:"",html:`<div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:15px solid ${busy?ROUTE_PINK:ROUTE_EMPTY};transform:rotate(${deg}deg);transform-origin:50% 60%"></div>`,iconSize:[16,16],iconAnchor:[8,10]});
-  let rtPlayTimer=null, rtPlayMarker=null, rtPlayI=0, rtPlayPts=null, rtPlayIsBusy=null;
+  let rtPlayRaf=0, rtPlayMarker=null, rtPlayPts=null, rtPlayIsBusy=null, rtPlayStart=0, rtFullLines=[], rtTraceLayer=null;
   let rtSpeed=1; try{ const v=+localStorage.getItem("tenko.rtspeed"); if(v>0) rtSpeed=v; }catch(e){}
-  function stopPlay(){ clearInterval(rtPlayTimer); rtPlayTimer=null; if(rtPlayMarker&&rtLayer){ rtLayer.removeLayer(rtPlayMarker); } rtPlayMarker=null; rtPlayPts=null; if($("rtPlay")) $("rtPlay").textContent="再生"; }
-  function runPlayTimer(){
-    clearInterval(rtPlayTimer);
-    const stepMs=Math.max(15,Math.min(300,8000/rtPlayPts.length)/rtSpeed);   // 全体をだいたい8秒くらいで流す（速さで割る）
-    rtPlayTimer=setInterval(()=>{
-      rtPlayI++;
-      if(rtPlayI>=rtPlayPts.length){ stopPlay(); return; }
-      rtPlayMarker.setLatLng([rtPlayPts[rtPlayI][0],rtPlayPts[rtPlayI][1]]); rtPlayMarker.setIcon(triIcon(bearingDeg(rtPlayPts[rtPlayI-1],rtPlayPts[rtPlayI]),rtPlayIsBusy(rtPlayPts[rtPlayI][2])));
-    },stepMs);
+  const RT_BASE_MS=8000;   // 速さ1倍のときの、勤務全体の再生時間のめやす（点の数に関わらず一定）
+  function stopPlay(){
+    cancelAnimationFrame(rtPlayRaf); rtPlayRaf=0;
+    if(rtPlayMarker&&rtLayer) rtLayer.removeLayer(rtPlayMarker); rtPlayMarker=null; rtPlayPts=null;
+    if(rtTraceLayer&&rtLayer) rtLayer.removeLayer(rtTraceLayer); rtTraceLayer=null;
+    if(rtLayer) rtFullLines.forEach(l=>{ if(!rtLayer.hasLayer(l)) l.addTo(rtLayer); });   // 止めたら、もとの全体の線を出し直す
+    if($("rtPlay")) $("rtPlay").textContent="再生";
+  }
+  function rtFrame(){
+    if(!rtPlayPts) return;
+    const N=rtPlayPts.length, dur=RT_BASE_MS/rtSpeed, t=Math.min(1,(Date.now()-rtPlayStart)/dur);
+    const pos=t*(N-1), i0=Math.floor(pos), i1=Math.min(N-1,i0+1), f=pos-i0;
+    const a=rtPlayPts[i0], b=rtPlayPts[i1];
+    const lat=a[0]+(b[0]-a[0])*f, lng=a[1]+(b[1]-a[1])*f, min=a[2]+(b[2]-a[2])*f;
+    rtPlayMarker.setLatLng([lat,lng]); rtPlayMarker.setIcon(triIcon(bearingDeg(a,b),rtPlayIsBusy(min)));
+    // 進んだ分（これまでの点＋今の位置）だけを、実車・空車で色分けして描き直す
+    rtTraceLayer.clearLayers();
+    const soFar=rtPlayPts.slice(0,i0+1).concat([[lat,lng,min]]);
+    routeBusyRuns(soFar,rtPlayIsBusy).forEach(run=>{ if(run.pts.length>=2) L.polyline(run.pts.map(p=>[p[0],p[1]]),{color:run.busy?ROUTE_PINK:ROUTE_EMPTY,weight:4,opacity:.85}).addTo(rtTraceLayer); });
+    if(t>=1){ stopPlay(); return; }
+    rtPlayRaf=requestAnimationFrame(rtFrame);
   }
   function playRoute(d,pts){
-    if(rtPlayTimer){ stopPlay(); return; }
+    if(rtPlayPts){ stopPlay(); return; }
     if(!pts||pts.length<2) return;
-    const rides=d.rides.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null);
-    rtPlayIsBusy=min=>rides.some(x=>min>=x.on&&min<=x.off);
-    rtPlayPts=pts; rtPlayI=0;
+    rtPlayIsBusy=isBusyOf(d);
+    rtFullLines.forEach(l=>{ if(rtLayer&&rtLayer.hasLayer(l)) rtLayer.removeLayer(l); });   // 再生中は全体の線を隠す
+    rtTraceLayer=L.layerGroup().addTo(rtLayer);
+    rtPlayPts=pts; rtPlayStart=Date.now();
     rtPlayMarker=L.marker([pts[0][0],pts[0][1]],{icon:triIcon(bearingDeg(pts[0],pts[1]),rtPlayIsBusy(pts[0][2]))}).addTo(rtLayer);
     $("rtPlay").textContent="止める";
-    runPlayTimer();
+    rtPlayRaf=requestAnimationFrame(rtFrame);
   }
   $("rtPlay").onclick=()=>{ const d=sales.days[sDay]; if(d&&d.route) playRoute(d,d.route.pts); };
-  function setRtSpeed(v){ rtSpeed=v; try{ localStorage.setItem("tenko.rtspeed",v); }catch(e){}
+  function setRtSpeed(v){
+    if(rtPlayPts){   // 再生中に速さを変えても、今の位置から続きが再生されるようにする
+      const oldDur=RT_BASE_MS/rtSpeed, t=Math.min(1,(Date.now()-rtPlayStart)/oldDur);
+      rtSpeed=v; rtPlayStart=Date.now()-t*(RT_BASE_MS/rtSpeed);
+    } else rtSpeed=v;
+    try{ localStorage.setItem("tenko.rtspeed",v); }catch(e){}
     document.querySelectorAll("#rtSpeed button").forEach(b=>b.setAttribute("aria-selected",+b.dataset.sp===v));
-    if(rtPlayTimer&&rtPlayPts) runPlayTimer();   // 再生中に速さを変えたら、今の位置からすぐ反映する
   }
   document.querySelectorAll("#rtSpeed button").forEach(b=>{ b.setAttribute("aria-selected",+b.dataset.sp===rtSpeed); b.onclick=()=>setRtSpeed(+b.dataset.sp); });
   function renderRoute(k,d,s){
@@ -3179,8 +3195,9 @@ body.rtfull{overflow:hidden}
         setTimeout(()=>{ rtMapObj.invalidateSize(); rtMapObj.fitBounds(L.latLngBounds(line),{padding:[30,30],maxZoom:16}); },60);
         return;
       }
-      // 実車（お客様あり）はピンク、空車は黒で塗り分ける
-      routeBusyRuns(d,r.pts).forEach(run=>{ if(run.pts.length>=2) L.polyline(run.pts.map(p=>[p[0],p[1]]),{color:run.busy?ROUTE_PINK:ROUTE_EMPTY,weight:4,opacity:.85}).addTo(rtLayer); });
+      // 実車（お客様あり）はピンク、空車は黒で塗り分ける（再生中はいったん隠して、進んだ分だけ描き直す）
+      rtFullLines=routeBusyRuns(r.pts,isBusyOf(d)).filter(run=>run.pts.length>=2)
+        .map(run=>L.polyline(run.pts.map(p=>[p[0],p[1]]),{color:run.busy?ROUTE_PINK:ROUTE_EMPTY,weight:4,opacity:.85}).addTo(rtLayer));
       L.circleMarker(line[0],{radius:7,color:"#2C7A4B",fillOpacity:1}).bindTooltip("出庫側").addTo(rtLayer);
       L.circleMarker(line[line.length-1],{radius:7,color:"#B3342A",fillOpacity:1}).bindTooltip("入庫側").addTo(rtLayer);
       s.rows.filter(x=>!isEv(x.kind)&&x.onPos).forEach(x=>{
