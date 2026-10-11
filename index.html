@@ -288,6 +288,7 @@ table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(
 body.rtfull #rtMap{position:fixed!important;inset:0;height:100vh;height:100dvh;border-radius:0;border:0;z-index:1000}
 body.rtfull #rtFull{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:1001;margin:0;background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3);font-weight:700}
 body.rtfull #rtPlay{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:1001;margin:0;background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3);font-weight:700}
+body.rtfull #rtSpeed{position:fixed;top:calc(env(safe-area-inset-top,0px) + 54px);left:10px;z-index:1001;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 body.rtfull{overflow:hidden}
 .rtno{background:var(--accent);color:var(--accent-ink);border-radius:999px;font:700 12px var(--num);padding:2px 6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .rtno.big{background:var(--bad);color:#fff}
@@ -518,6 +519,12 @@ body.rtfull{overflow:hidden}
     <select id="rtSel" class="fgsel" hidden aria-label="表示する乗車"></select>
     <button class="btn" id="rtFull" hidden>全画面で見る</button>
     <button class="btn" id="rtPlay" hidden>再生</button>
+    <div class="seg" id="rtSpeed" role="tablist" aria-label="再生の速さ" hidden>
+      <button role="tab" data-sp="0.5" aria-selected="false">0.5倍</button>
+      <button role="tab" data-sp="1" aria-selected="true">1倍</button>
+      <button role="tab" data-sp="2" aria-selected="false">2倍</button>
+      <button role="tab" data-sp="4" aria-selected="false">4倍</button>
+    </div>
     <div id="rtMap" hidden></div>
     <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
   </section>
@@ -751,7 +758,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 23:08</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 23:33</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3106,23 +3113,34 @@ body.rtfull{overflow:hidden}
     const y=Math.sin(toRad(b[1]-a[1]))*Math.cos(toRad(b[0])), x=Math.cos(toRad(a[0]))*Math.sin(toRad(b[0]))-Math.sin(toRad(a[0]))*Math.cos(toRad(b[0]))*Math.cos(toRad(b[1]-a[1]));
     return (toDeg(Math.atan2(y,x))+360)%360; };
   const triIcon=(deg,busy)=>L.divIcon({className:"",html:`<div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:15px solid ${busy?ROUTE_PINK:ROUTE_EMPTY};transform:rotate(${deg}deg);transform-origin:50% 60%"></div>`,iconSize:[16,16],iconAnchor:[8,10]});
-  let rtPlayTimer=null, rtPlayMarker=null;
-  function stopPlay(){ clearInterval(rtPlayTimer); rtPlayTimer=null; if(rtPlayMarker&&rtLayer){ rtLayer.removeLayer(rtPlayMarker); } rtPlayMarker=null; if($("rtPlay")) $("rtPlay").textContent="再生"; }
+  let rtPlayTimer=null, rtPlayMarker=null, rtPlayI=0, rtPlayPts=null, rtPlayIsBusy=null;
+  let rtSpeed=1; try{ const v=+localStorage.getItem("tenko.rtspeed"); if(v>0) rtSpeed=v; }catch(e){}
+  function stopPlay(){ clearInterval(rtPlayTimer); rtPlayTimer=null; if(rtPlayMarker&&rtLayer){ rtLayer.removeLayer(rtPlayMarker); } rtPlayMarker=null; rtPlayPts=null; if($("rtPlay")) $("rtPlay").textContent="再生"; }
+  function runPlayTimer(){
+    clearInterval(rtPlayTimer);
+    const stepMs=Math.max(15,Math.min(300,8000/rtPlayPts.length)/rtSpeed);   // 全体をだいたい8秒くらいで流す（速さで割る）
+    rtPlayTimer=setInterval(()=>{
+      rtPlayI++;
+      if(rtPlayI>=rtPlayPts.length){ stopPlay(); return; }
+      rtPlayMarker.setLatLng([rtPlayPts[rtPlayI][0],rtPlayPts[rtPlayI][1]]); rtPlayMarker.setIcon(triIcon(bearingDeg(rtPlayPts[rtPlayI-1],rtPlayPts[rtPlayI]),rtPlayIsBusy(rtPlayPts[rtPlayI][2])));
+    },stepMs);
+  }
   function playRoute(d,pts){
     if(rtPlayTimer){ stopPlay(); return; }
     if(!pts||pts.length<2) return;
-    const rides=d.rides.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null), isBusy=min=>rides.some(x=>min>=x.on&&min<=x.off);
-    let i=0;
-    const stepMs=Math.max(30,Math.min(300,8000/pts.length));   // 全体をだいたい8秒くらいで流す
-    rtPlayMarker=L.marker([pts[0][0],pts[0][1]],{icon:triIcon(bearingDeg(pts[0],pts[1]),isBusy(pts[0][2]))}).addTo(rtLayer);
+    const rides=d.rides.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null);
+    rtPlayIsBusy=min=>rides.some(x=>min>=x.on&&min<=x.off);
+    rtPlayPts=pts; rtPlayI=0;
+    rtPlayMarker=L.marker([pts[0][0],pts[0][1]],{icon:triIcon(bearingDeg(pts[0],pts[1]),rtPlayIsBusy(pts[0][2]))}).addTo(rtLayer);
     $("rtPlay").textContent="止める";
-    rtPlayTimer=setInterval(()=>{
-      i++;
-      if(i>=pts.length){ stopPlay(); return; }
-      rtPlayMarker.setLatLng([pts[i][0],pts[i][1]]); rtPlayMarker.setIcon(triIcon(bearingDeg(pts[i-1],pts[i]),isBusy(pts[i][2])));
-    },stepMs);
+    runPlayTimer();
   }
   $("rtPlay").onclick=()=>{ const d=sales.days[sDay]; if(d&&d.route) playRoute(d,d.route.pts); };
+  function setRtSpeed(v){ rtSpeed=v; try{ localStorage.setItem("tenko.rtspeed",v); }catch(e){}
+    document.querySelectorAll("#rtSpeed button").forEach(b=>b.setAttribute("aria-selected",+b.dataset.sp===v));
+    if(rtPlayTimer&&rtPlayPts) runPlayTimer();   // 再生中に速さを変えたら、今の位置からすぐ反映する
+  }
+  document.querySelectorAll("#rtSpeed button").forEach(b=>{ b.setAttribute("aria-selected",+b.dataset.sp===rtSpeed); b.onclick=()=>setRtSpeed(+b.dataset.sp); });
   function renderRoute(k,d,s){
     stopPlay();
     const r=d.route; $("rtDel").hidden=!r; $("rtMap").hidden=!r; $("rtFull").hidden=!r; if(!r) setRtFull(false);
@@ -3132,7 +3150,7 @@ body.rtfull{overflow:hidden}
     const rides=s.rows.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null&&x.off>x.on);
     const sel=rides.find(x=>x.id===rtSelId)||null; if(!sel) rtSelId="";
     $("rtSel").hidden=!rides.length;
-    $("rtPlay").hidden=!(!sel&&r.pts.length>=2);
+    $("rtPlay").hidden=$("rtSpeed").hidden=!(!sel&&r.pts.length>=2);
     $("rtSel").innerHTML=`<option value="">全体を表示</option>`+rides.map(x=>`<option value="${x.id}"${x.id===rtSelId?" selected":""}>No.${x._no} ${tm(x.on)}→${tm(x.off)} ${esc(x.kind)}${x.amt?" "+yen(x.amt)+"円":""}</option>`).join("");
     const seg=sel?r.pts.filter(p=>p[2]>=sel.on-1&&p[2]<=sel.off+1):r.pts;
     let segKm=0; for(let i=1;i<seg.length;i++) segKm+=distM(seg[i-1],seg[i]);
