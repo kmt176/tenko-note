@@ -516,6 +516,7 @@ body.rtfull{overflow:hidden}
     </div>
     <select id="rtSel" class="fgsel" hidden aria-label="表示する乗車"></select>
     <button class="btn" id="rtFull" hidden>全画面で見る</button>
+    <button class="btn" id="rtPlay" hidden>再生</button>
     <div id="rtMap" hidden></div>
     <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
   </section>
@@ -749,7 +750,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:33</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 22:52</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3081,13 +3082,48 @@ body.rtfull{overflow:hidden}
     });
     return leafletP;
   }
-  const ROUTE_PINK="#5B1A8C";   // 走行ルートの線の色（ユーザー指定：濃い紫）
+  const ROUTE_PINK="#5B1A8C";   // 走行ルートの線の色（ユーザー指定：濃い紫）。実車の区間に使う。空車は黒
+  const ROUTE_EMPTY="#222";
   function setRtFull(on){
     document.body.classList.toggle("rtfull",on); $("rtFull").textContent=on?"閉じる":"全画面で見る";
     if(typeof rtMapObj!=="undefined"&&rtMapObj) setTimeout(()=>rtMapObj.invalidateSize(),80);
   }
   $("rtFull").onclick=()=>setRtFull(!document.body.classList.contains("rtfull"));
+  // 実車（乗車〜降車の間）・空車で、ひとつながりの区間ごとに分ける（色分け表示用。切れ目の点は両方に入れてつなげて見せる）
+  function routeBusyRuns(d,pts){
+    const rides=d.rides.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null);
+    const isBusy=min=>rides.some(x=>min>=x.on&&min<=x.off);
+    const runs=[];
+    pts.forEach(p=>{
+      const b=isBusy(p[2]);
+      if(!runs.length||runs[runs.length-1].busy!==b){ if(runs.length) runs[runs.length-1].pts.push(p); runs.push({busy:b,pts:[p]}); }
+      else runs[runs.length-1].pts.push(p);
+    });
+    return runs;
+  }
+  const bearingDeg=(a,b)=>{ const toRad=x=>x*Math.PI/180, toDeg=x=>x*180/Math.PI;
+    const y=Math.sin(toRad(b[1]-a[1]))*Math.cos(toRad(b[0])), x=Math.cos(toRad(a[0]))*Math.sin(toRad(b[0]))-Math.sin(toRad(a[0]))*Math.cos(toRad(b[0]))*Math.cos(toRad(b[1]-a[1]));
+    return (toDeg(Math.atan2(y,x))+360)%360; };
+  const triIcon=(deg,busy)=>L.divIcon({className:"",html:`<div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:15px solid ${busy?ROUTE_PINK:ROUTE_EMPTY};transform:rotate(${deg}deg);transform-origin:50% 60%"></div>`,iconSize:[16,16],iconAnchor:[8,10]});
+  let rtPlayTimer=null, rtPlayMarker=null;
+  function stopPlay(){ clearInterval(rtPlayTimer); rtPlayTimer=null; if(rtPlayMarker&&rtLayer){ rtLayer.removeLayer(rtPlayMarker); } rtPlayMarker=null; if($("rtPlay")) $("rtPlay").textContent="再生"; }
+  function playRoute(d,pts){
+    if(rtPlayTimer){ stopPlay(); return; }
+    if(!pts||pts.length<2) return;
+    const rides=d.rides.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null), isBusy=min=>rides.some(x=>min>=x.on&&min<=x.off);
+    let i=0;
+    const stepMs=Math.max(30,Math.min(300,8000/pts.length));   // 全体をだいたい8秒くらいで流す
+    rtPlayMarker=L.marker([pts[0][0],pts[0][1]],{icon:triIcon(bearingDeg(pts[0],pts[1]),isBusy(pts[0][2]))}).addTo(rtLayer);
+    $("rtPlay").textContent="止める";
+    rtPlayTimer=setInterval(()=>{
+      i++;
+      if(i>=pts.length){ stopPlay(); return; }
+      rtPlayMarker.setLatLng([pts[i][0],pts[i][1]]); rtPlayMarker.setIcon(triIcon(bearingDeg(pts[i-1],pts[i]),isBusy(pts[i][2])));
+    },stepMs);
+  }
+  $("rtPlay").onclick=()=>{ const d=sales.days[sDay]; if(d&&d.route) playRoute(d,d.route.pts); };
   function renderRoute(k,d,s){
+    stopPlay();
     const r=d.route; $("rtDel").hidden=!r; $("rtMap").hidden=!r; $("rtFull").hidden=!r; if(!r) setRtFull(false);
     if(!r){ if(!/読み込んで|入れました|ありませんでした|err/.test($("rtInfo").innerHTML)) $("rtInfo").textContent="この勤務のルートはまだありません。"; return; }
     // 表示の選択：全体か、1つの乗車（乗車〜降車の間）だけ
@@ -3095,11 +3131,12 @@ body.rtfull{overflow:hidden}
     const rides=s.rows.filter(x=>!isEv(x.kind)&&x.on!=null&&x.off!=null&&x.off>x.on);
     const sel=rides.find(x=>x.id===rtSelId)||null; if(!sel) rtSelId="";
     $("rtSel").hidden=!rides.length;
+    $("rtPlay").hidden=!(!sel&&r.pts.length>=2);
     $("rtSel").innerHTML=`<option value="">全体を表示</option>`+rides.map(x=>`<option value="${x.id}"${x.id===rtSelId?" selected":""}>No.${x._no} ${tm(x.on)}→${tm(x.off)} ${esc(x.kind)}${x.amt?" "+yen(x.amt)+"円":""}</option>`).join("");
     const seg=sel?r.pts.filter(p=>p[2]>=sel.on-1&&p[2]<=sel.off+1):r.pts;
     let segKm=0; for(let i=1;i<seg.length;i++) segKm+=distM(seg[i-1],seg[i]);
     $("rtInfo").innerHTML=sel?`<b>No.${sel._no}</b> ${tm(sel.on)}→${tm(sel.off)}　${esc(sel.onAddr||"")}${sel.offAddr?" → "+esc(sel.offAddr):""}<br>この区間 約${r1(segKm/1000)}km（記録 ${seg.length}点）${seg.length<2?"：この間の記録がほとんどありません":""}`:
-      `タイムラインの距離 約${r.km}km（位置は約1分ごとなので、実際より少し短く出ます）・記録 ${r.pts.length}点。地図の番号を押すと乗車の内容が出ます。1つの乗車だけ見るときは、上の選択か、乗車の一覧の「ルート ›」を押します`;
+      `タイムラインの距離 約${r.km}km（位置は約1分ごとなので、実際より少し短く出ます）・記録 ${r.pts.length}点。<span style="color:${ROUTE_PINK}">■</span>実車・<span style="color:${ROUTE_EMPTY}">■</span>空車で色分けしています。「再生」で三角が進行方向を向いて動きます。地図の番号を押すと乗車の内容が出ます。1つの乗車だけ見るときは、上の選択か、乗車の一覧の「ルート ›」を押します`;
     const key=k+"|"+r.at+"|"+s.rows.length+"|"+s.total+"|"+rtSelId;
     if(key===rtKey&&rtMapObj) return; rtKey=key;
     loadLeaflet().then(()=>{
@@ -3123,7 +3160,8 @@ body.rtfull{overflow:hidden}
         setTimeout(()=>{ rtMapObj.invalidateSize(); rtMapObj.fitBounds(L.latLngBounds(line),{padding:[30,30],maxZoom:16}); },60);
         return;
       }
-      L.polyline(line,{color:ROUTE_PINK,weight:4,opacity:.85}).addTo(rtLayer);
+      // 実車（お客様あり）はピンク、空車は黒で塗り分ける
+      routeBusyRuns(d,r.pts).forEach(run=>{ if(run.pts.length>=2) L.polyline(run.pts.map(p=>[p[0],p[1]]),{color:run.busy?ROUTE_PINK:ROUTE_EMPTY,weight:4,opacity:.85}).addTo(rtLayer); });
       L.circleMarker(line[0],{radius:7,color:"#2C7A4B",fillOpacity:1}).bindTooltip("出庫側").addTo(rtLayer);
       L.circleMarker(line[line.length-1],{radius:7,color:"#B3342A",fillOpacity:1}).bindTooltip("入庫側").addTo(rtLayer);
       s.rows.filter(x=>!isEv(x.kind)&&x.onPos).forEach(x=>{
