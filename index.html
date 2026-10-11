@@ -728,6 +728,19 @@ body.rtfull{overflow:hidden}
           <div class="src">すでにあるコードには、貼り付けた日付が追加されます（上書きではなく合体。重複は無視）。</div>
           <div class="btnrow"><button class="btn primary" id="aSchSave">予定表を取り込む</button></div>
           <div class="msg" id="aSchMsg" role="status"></div>
+          <h3 style="margin-top:14px">全員のデータ（管理者のみ・社員コード登録済みの人だけが対象）</h3>
+          <div class="src">仲間の速報と同じく、社員コードと仲間の合言葉を入れている人だけが対象です。金額のしきい値や3日の期限はなく、すべての乗車をCSVで書き出せます。</div>
+          <div class="pair">
+            <div class="field"><label for="aFullCode">社員コード（空なら全員）</label><input type="text" id="aFullCode" inputmode="numeric" autocomplete="off"></div>
+            <div class="field"><label for="aFullMonth">年月</label><input type="month" id="aFullMonth"></div>
+          </div>
+          <div class="btnrow"><button class="btn primary" id="aFullCsv">CSVで書き出す</button></div>
+          <div class="msg" id="aFullMsg" role="status"></div>
+          <h3 style="margin-top:14px">点呼時間（今、出勤中の人・管理者のみ）</h3>
+          <div class="src">社員コードと仲間の合言葉を入れている人だけが対象です。業務前点呼〜業務後点呼の間にいる人を「出勤中」として出します（15分おきに自動で更新）。</div>
+          <div class="btnrow"><button class="btn" id="aShiftReload">読み直す</button></div>
+          <div class="msg" id="aShiftMsg" role="status"></div>
+          <div id="aShiftList"></div>
         </div>
       </div>
     </div>
@@ -736,7 +749,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-10 10:59</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-11 20:04</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -982,7 +995,7 @@ body.rtfull{overflow:hidden}
 
   // 試作版は保存が空なら例のデータで始める。本番は空から始める
   function load(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(Array.isArray(v)&&(PROD||v.length)) return v; }catch(e){} return PROD?[]:SAMPLE.map(r=>({...r})); }
-  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(recs)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(recs)); }catch(e){} if(typeof queueShift==="function") queueShift(); }
 
   const $=id=>document.getElementById(id);
   const toMin=t=>{ if(!t) return null; const [h,m]=t.split(":").map(Number); return h*60+m; };
@@ -1445,6 +1458,7 @@ body.rtfull{overflow:hidden}
       const j=await post({action:"admin",op:"get",adminPass:cfg.apass});
       if(!j.ok){ cfg.admin=false; saveCfg(); applyRole(); $("adminBox").hidden=true; m.textContent=j.error||"管理者の合言葉が違います"; return; }
       cfg.admin=true; saveCfg(); applyRole(); drawAdmin(j); m.textContent="管理の画面を開きました。売上の「仲間の速報」で全グループが見られます";
+      loadShiftAdmin(); if(!shiftPollTimer) shiftPollTimer=setInterval(loadShiftAdmin,15*60*1000);
     }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
   }
   $("aPass").value=cfg.apass||"";
@@ -1460,6 +1474,45 @@ body.rtfull{overflow:hidden}
       drawAdmin(j); $("aSchText").value=""; m.textContent="取り込みました";
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度押してください"; }
   };
+  $("aFullMonth").value=(()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); })();
+  $("aFullCsv").onclick=async()=>{
+    const m=$("aFullMsg"), code=$("aFullCode").value.trim(), month=$("aFullMonth").value;
+    if(!month){ m.textContent="年月を選んでください"; return; }
+    m.textContent="取得しています…";
+    try{
+      const j=await post({action:"fullGet",adminPass:cfg.apass,code,month});
+      if(!j.ok){ m.textContent=j.error||"取得できませんでした"; return; }
+      if(!j.items.length){ m.textContent="データがありませんでした"; return; }
+      const rows=[["社員コード","名前","乗車日時","出庫日","内容","金額","決済","乗車地","降車地","車種","乗車位置の種類","降車位置の種類","押し忘れ"]];
+      j.items.forEach(x=>rows.push([x.code,x.name,x.at,x.date,x.kind,x.amt,x.pay,x.from,x.to,x.car,x.onSrc,x.offSrc,x.unsure]));
+      const csv="﻿"+toCsv(rows), name=`全員データ_${month}${code?"_"+code:""}.csv`;
+      const file=new File([csv],name,{type:"text/csv"});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file]}); m.textContent="書き出しました"; return; }catch(e){} }
+      const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download=name; a.click();
+      m.textContent="書き出しました";
+    }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
+  };
+  let shiftPollTimer=null;
+  async function loadShiftAdmin(){
+    const m=$("aShiftMsg"); m.textContent="確かめています…";
+    try{
+      const j=await post({action:"shiftGet",adminPass:cfg.apass});
+      if(!j.ok){ m.textContent=j.error||"取得できませんでした"; return; }
+      const n=nowAbsMin();
+      const rows=j.items.map(x=>{
+        const b=toMin(x.actOut||x.planOut), a=toMin(x.actIn||x.planIn);
+        let active=false;
+        if(b!=null&&a!=null){ const start=dayNo(x.date)*DAY+b, dur=((a-b)%DAY+DAY)%DAY; active=start<=n&&n<=start+dur; }
+        return {...x,active};
+      }).sort((p,q)=>(q.active-p.active)||(p.code<q.code?-1:1));
+      $("aShiftList").innerHTML=rows.length?rows.map(x=>`<div class="agrp"><span class="num">${x.active?"●":"－"}</span>
+        <span>${esc(x.name||x.code)}（${esc(x.code)}）</span>
+        <span class="st">${esc(x.date)} 出庫${esc(x.actOut||x.planOut||"？")}〜入庫${esc(x.actIn||x.planIn||"？")}${x.active?"・出勤中":""}</span></div>`).join("")
+        :`<div class="src">登録されている人がいません</div>`;
+      m.textContent=`${rows.filter(x=>x.active).length}人が出勤中（${rows.length}人登録）`;
+    }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
+  }
+  $("aShiftReload").onclick=loadShiftAdmin;
   let carResetArmed=false;
   $("aCarReset").onclick=()=>{ if(!carResetArmed){ carResetArmed=true; $("aCarReset").textContent="もう一度押すと初期値に戻します"; return; } carResetArmed=false; $("aCarReset").textContent="初期値に戻す"; saveCars(null,"初期値に戻しました"); };
   $("aSave").onclick=async()=>{
@@ -1476,7 +1529,7 @@ body.rtfull{overflow:hidden}
       saveCfg();
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
   };
-  $("aForget").onclick=()=>{ cfg.apass=""; cfg.admin=false; saveCfg(); $("aPass").value=""; $("adminBox").hidden=true; $("aForget").hidden=true; applyRole(); $("aMsg").textContent="このスマホから管理者を外しました"; };
+  $("aForget").onclick=()=>{ cfg.apass=""; cfg.admin=false; saveCfg(); $("aPass").value=""; $("adminBox").hidden=true; $("aForget").hidden=true; applyRole(); $("aMsg").textContent="このスマホから管理者を外しました"; clearInterval(shiftPollTimer); shiftPollTimer=null; };
   $("nForget").onclick=()=>{ cfg.npass=""; cfg.nakama=false; saveCfg(); $("nPass").value=""; applyRole(); $("nMsg").textContent="仲間の合言葉を消しました"; };
   $("svtSave").onclick=async()=>{
     const m=$("svtMsg");
@@ -2409,13 +2462,22 @@ body.rtfull{overflow:hidden}
   updateFlashNote();
   let flashQ={}; try{ flashQ=JSON.parse(localStorage.getItem("tenko.flashq")||"{}")||{}; }catch(e){}
   let flashSig={}; try{ flashSig=JSON.parse(localStorage.getItem("tenko.flashsig")||"{}")||{}; }catch(e){}
-  const saveFlashState=()=>{ try{ localStorage.setItem("tenko.flashq",JSON.stringify(flashQ)); localStorage.setItem("tenko.flashsig",JSON.stringify(flashSig)); }catch(e){} };
+  let fullSig={}; try{ fullSig=JSON.parse(localStorage.getItem("tenko.fullsig")||"{}")||{}; }catch(e){}
+  const saveFlashState=()=>{ try{ localStorage.setItem("tenko.flashq",JSON.stringify(flashQ)); localStorage.setItem("tenko.flashsig",JSON.stringify(flashSig)); localStorage.setItem("tenko.fullsig",JSON.stringify(fullSig)); }catch(e){} };
   // 1勤務の、速報に出す乗車（1万円以上・B空転以外）
+  const srcOf=p=>!p?"":p.from==="addr"?"住所":p.from==="route"?"ルート":"GPS";
   function flashRides(k){
     const d=sales.days[k]; if(!d) return [];
-    const srcOf=p=>!p?"":p.from==="addr"?"住所":p.from==="route"?"ルート":"GPS";
     return d.rides.filter(r=>!isEv(r.kind)&&r.kind!=="B空転"&&(+r.amt||0)>=flashMin&&r.on!=null)
       .map(r=>({id:r.id,at:new Date(dayStart(k).getTime()+r.on*60000).toISOString(),amt:+r.amt,pay:r.pay||"",from:r.onAddr||"",to:r.offAddr||"",kind:r.kind||"",
+        onLat:r.onPos?r.onPos.lat:null,onLng:r.onPos?r.onPos.lng:null,offLat:r.offPos?r.offPos.lat:null,offLng:r.offPos?r.offPos.lng:null,car:carOf(carType).name||carType,
+        onSrc:srcOf(r.onPos),offSrc:srcOf(r.offPos),unsure:(r.onUnsure||r.offUnsure)?"押し忘れ":""}));
+  }
+  // 1勤務の、全部の乗車（金額のしきい値なし。管理者だけが見られる「全データ」用）
+  function allRides(k){
+    const d=sales.days[k]; if(!d) return [];
+    return d.rides.filter(r=>!isEv(r.kind)&&r.kind!=="B空転"&&r.on!=null)
+      .map(r=>({id:r.id,at:new Date(dayStart(k).getTime()+r.on*60000).toISOString(),amt:+r.amt||0,pay:r.pay||"",from:r.onAddr||"",to:r.offAddr||"",kind:r.kind||"",
         onLat:r.onPos?r.onPos.lat:null,onLng:r.onPos?r.onPos.lng:null,offLat:r.offPos?r.offPos.lat:null,offLng:r.offPos?r.offPos.lng:null,car:carOf(carType).name||carType,
         onSrc:srcOf(r.onPos),offSrc:srcOf(r.offPos),unsure:(r.onUnsure||r.offUnsure)?"押し忘れ":""}));
   }
@@ -2429,15 +2491,40 @@ body.rtfull{overflow:hidden}
   async function flushFlash(){
     if(!PROD||!cfg.url||!cfg.npass||!isNakama()||!cfg.empCode) return;
     for(const k of Object.keys(flashQ)){
-      const rides=flashRides(k), name=cfg.nick||cfg.empCode, sig=JSON.stringify([cfg.empCode,name,rides]);
-      if(flashSig[k]===sig){ delete flashQ[k]; continue; }   // 前に送った内容と同じなら送らない
+      const name=cfg.nick||cfg.empCode;
+      const rides=flashRides(k), sig=JSON.stringify([cfg.empCode,name,rides]);
+      const all=allRides(k), fsig=JSON.stringify([cfg.empCode,name,all]);
       try{
-        const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"flashSync",passcode:cfg.npass,code:cfg.empCode,name,date:k,rides})});
-        const j=await res.json(); if(!j.ok) throw new Error(j.error);
-        flashSig[k]=sig; delete flashQ[k];
+        if(flashSig[k]!==sig){
+          const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"flashSync",passcode:cfg.npass,code:cfg.empCode,name,date:k,rides})});
+          const j=await res.json(); if(!j.ok) throw new Error(j.error);
+          flashSig[k]=sig;
+        }
+        if(fullSig[k]!==fsig){
+          const res2=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"fullSync",passcode:cfg.npass,code:cfg.empCode,name,date:k,rides:all})});
+          const j2=await res2.json(); if(!j2.ok) throw new Error(j2.error);
+          fullSig[k]=fsig;
+        }
+        delete flashQ[k];
       }catch(e){ break; }   // 電波がないときは、次に開いたときに送り直す
     }
     saveFlashState();
+  }
+  // 点呼時間（今、出勤中かどうか。管理者だけが見られる）
+  let shiftTimer=null;
+  function queueShift(){
+    if(!isNakama()||!cfg.empCode) return;
+    clearTimeout(shiftTimer); shiftTimer=setTimeout(flushShift,2500);
+  }
+  async function flushShift(){
+    if(!PROD||!cfg.url||!cfg.npass||!isNakama()||!cfg.empCode) return;
+    const k=shiftNow(); if(!k) return;
+    const r=recs.find(x=>x.date===k); if(!r) return;
+    const name=cfg.nick||cfg.empCode;
+    try{
+      const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"shiftSync",passcode:cfg.npass,code:cfg.empCode,name,date:k,planOut:r.pb||"",actOut:r.ab||"",planIn:r.pa||"",actIn:r.aa||""})});
+      await res.json();
+    }catch(e){}
   }
   // Apps Script がエラー画面（HTML）を返したときも、中身の文を見せる（iPhoneの英語のエラーにしない）
   async function readJson(res){
