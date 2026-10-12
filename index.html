@@ -758,7 +758,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 00:02</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 09:00</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3175,8 +3175,10 @@ body.rtfull{overflow:hidden}
     $("rtSel").innerHTML=`<option value="">全体を表示</option>`+rides.map(x=>`<option value="${x.id}"${x.id===rtSelId?" selected":""}>No.${x._no} ${tm(x.on)}→${tm(x.off)} ${esc(x.kind)}${x.amt?" "+yen(x.amt)+"円":""}</option>`).join("");
     const seg=sel?r.pts.filter(p=>p[2]>=sel.on-1&&p[2]<=sel.off+1):r.pts;
     let segKm=0; for(let i=1;i<seg.length;i++) segKm+=distM(seg[i-1],seg[i]);
+    // 記録の一番大きいすき間（分とkm）。再生で急に飛ぶように見える場所の目あすになる
+    let gapMin=0, gapKm=0; for(let i=1;i<r.pts.length;i++){ const dm=r.pts[i][2]-r.pts[i-1][2]; if(dm>gapMin){ gapMin=dm; gapKm=distM(r.pts[i-1],r.pts[i])/1000; } }
     $("rtInfo").innerHTML=sel?`<b>No.${sel._no}</b> ${tm(sel.on)}→${tm(sel.off)}　${esc(sel.onAddr||"")}${sel.offAddr?" → "+esc(sel.offAddr):""}<br>この区間 約${r1(segKm/1000)}km（記録 ${seg.length}点）${seg.length<2?"：この間の記録がほとんどありません":""}`:
-      `タイムラインの距離 約${r.km}km（位置は約1分ごとなので、実際より少し短く出ます）・記録 ${r.pts.length}点。<span style="color:${ROUTE_PINK}">■</span>実車・<span style="color:${ROUTE_EMPTY}">■</span>空車で色分けしています。「再生」で三角が進行方向を向いて動きます。地図の番号を押すと乗車の内容が出ます。1つの乗車だけ見るときは、上の選択か、乗車の一覧の「ルート ›」を押します`;
+      `タイムラインの距離 約${r.km}km（位置は約1分ごとなので、実際より少し短く出ます）・記録 ${r.pts.length}点・一番大きい記録のすき間 ${gapMin}分（約${r1(gapKm)}km）。<span style="color:${ROUTE_PINK}">■</span>実車・<span style="color:${ROUTE_EMPTY}">■</span>空車で色分けしています。「再生」で三角が進行方向を向いて動きます。地図の番号を押すと乗車の内容が出ます。1つの乗車だけ見るときは、上の選択か、乗車の一覧の「ルート ›」を押します`;
     const key=k+"|"+r.at+"|"+s.rows.length+"|"+s.total+"|"+rtSelId;
     if(key===rtKey&&rtMapObj) return; rtKey=key;
     loadLeaflet().then(()=>{
