@@ -605,6 +605,7 @@ body.rtfull{overflow:hidden}
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>休憩場</h2><button class="btn" id="restReload">更新</button></div>
       <div class="src">合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
+      <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button></div>
       <div id="restMap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
       <div class="field"><label for="restCode">社員コード</label><input type="text" id="restCode" inputmode="numeric" autocomplete="off"></div>
@@ -772,7 +773,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 11:01</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 11:11</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1770,11 +1771,24 @@ body.rtfull{overflow:hidden}
     }
   }
   $("restPickClear").onclick=()=>{ restPick=null; renderRestPick(); $("restMsg").textContent="選択を取り消しました。今いる場所に追加します"; };
+  let restItems=[];
+  $("restNearest").onclick=async()=>{
+    const m=$("restMsg");
+    if(!restItems.length){ m.textContent="休憩場がまだ登録されていません"; return; }
+    m.textContent="今の場所を調べています…";
+    const pos=await getPos();
+    if(!pos){ m.textContent="場所が取れませんでした。位置情報の許可を確認してください"; return; }
+    let best=null, bestD=Infinity;
+    restItems.forEach(x=>{ const dm=distM([pos.lat,pos.lng],[x.lat,x.lng]); if(dm<bestD){ bestD=dm; best=x; } });
+    m.textContent=`一番近い休憩場（約${bestD>=1000?r1(bestD/1000)+"km":Math.round(bestD)+"m"}・${esc(best.note||"メモなし")}）をGoogleマップで開きます`;
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${best.lat},${best.lng}&travelmode=driving`,"_blank","noopener");
+  };
   async function loadRest(){
     const m=$("restMsg"); m.textContent="読み込んでいます…";
     try{
       const j=await post({action:"restGet"});
       if(!j.ok){ m.textContent=j.error||"読み込めませんでした"; return; }
+      restItems=j.items;
       m.textContent=`${j.items.length}件`;
       $("restMap").hidden=false;
       await loadLeaflet();
@@ -1788,7 +1802,7 @@ body.rtfull{overflow:hidden}
       const myCode=$("restCode").value.trim();
       j.items.forEach(x=>{ const mine=myCode&&x.code===myCode;
         const gmap=`https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`;
-        L.marker([x.lat,x.lng]).bindPopup(`${esc(x.note||"休憩場")}<br><small>${esc(x.code)}</small><br><a href="${gmap}" target="_blank" rel="noopener">Googleマップで開く</a>${mine?`<br><a href="#" data-restdel="${esc(x.key)}">これを消す</a>`:""}`).addTo(restLayer); });
+        L.marker([x.lat,x.lng]).bindPopup(`${esc(x.note||"休憩場")}<br><small>${esc(x.code)}</small><div style="margin-top:8px"><a href="${gmap}" target="_blank" rel="noopener">Googleマップで開く</a></div>${mine?`<div style="margin-top:8px"><a href="#" data-restdel="${esc(x.key)}">これを消す</a></div>`:""}`).addTo(restLayer); });
       if(j.items.length) setTimeout(()=>{ restMapObj.invalidateSize(); restMapObj.fitBounds(L.latLngBounds(j.items.map(x=>[x.lat,x.lng])),{padding:[20,20],maxZoom:16}); },60);
       else{ restMapObj.setView([35.68,139.76],11); setTimeout(()=>restMapObj.invalidateSize(),60); getPos().then(p=>{ if(p&&!restPick) restMapObj.setView([p.lat,p.lng],15); }); }
       renderRestPick();
@@ -1798,6 +1812,7 @@ body.rtfull{overflow:hidden}
     const a=e.target.closest("[data-restdel]"); if(!a) return; e.preventDefault();
     const m=$("restMsg"), key=a.dataset.restdel, code=$("restCode").value.trim();
     if(!code){ m.textContent="社員コードを入れてください"; return; }
+    if(!confirm("この休憩場を消しますか？")) return;
     m.textContent="消しています…";
     try{
       const j=await post({action:"restDel",key,code});
