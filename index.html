@@ -771,7 +771,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 10:47</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 10:56</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1773,10 +1773,24 @@ body.rtfull{overflow:hidden}
       if(!restMapObj){ restMapObj=L.map("restMap",{zoomControl:true,attributionControl:true});
         L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(restMapObj); }
       if(restLayer) restLayer.remove(); restLayer=L.layerGroup().addTo(restMapObj);
-      j.items.forEach(x=>{ L.marker([x.lat,x.lng]).bindPopup(`${esc(x.note||"休憩場")}<br><small>${esc(x.code)}</small>`).addTo(restLayer); });
+      const myCode=$("restCode").value.trim();
+      j.items.forEach(x=>{ const mine=myCode&&x.code===myCode;
+        const gmap=`https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`;
+        L.marker([x.lat,x.lng]).bindPopup(`${esc(x.note||"休憩場")}<br><small>${esc(x.code)}</small><br><a href="${gmap}" target="_blank" rel="noopener">Googleマップで開く</a>${mine?`<br><a href="#" data-restdel="${esc(x.key)}">これを消す</a>`:""}`).addTo(restLayer); });
       setTimeout(()=>{ restMapObj.invalidateSize(); restMapObj.fitBounds(L.latLngBounds(j.items.map(x=>[x.lat,x.lng])),{padding:[20,20],maxZoom:16}); },60);
     }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
   }
+  $("restMap").addEventListener("click",async e=>{
+    const a=e.target.closest("[data-restdel]"); if(!a) return; e.preventDefault();
+    const m=$("restMsg"), key=a.dataset.restdel, code=$("restCode").value.trim();
+    if(!code){ m.textContent="社員コードを入れてください"; return; }
+    m.textContent="消しています…";
+    try{
+      const j=await post({action:"restDel",key,code});
+      if(!j.ok){ m.textContent=j.error||"消せませんでした"; return; }
+      m.textContent="消しました"; loadRest();
+    }catch(e2){ m.textContent="通信できませんでした。電波を確認してください"; }
+  });
   $("restReload").onclick=loadRest;
   $("restAdd").onclick=async()=>{
     const m=$("restMsg"), code=$("restCode").value.trim();
