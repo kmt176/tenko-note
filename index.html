@@ -758,7 +758,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 09:00</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 09:47</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3098,11 +3098,16 @@ body.rtfull{overflow:hidden}
   }
   $("rtFull").onclick=()=>setRtFull(!document.body.classList.contains("rtfull"));
   // 実車（乗車〜降車の間）・空車で、ひとつながりの区間ごとに分ける（色分け表示用。切れ目の点は両方に入れてつなげて見せる）
+  // 記録が15分以上とだえた所は、線でつながず切る（タイムラインに無い区間を、あったかのように直線でつながないため）
+  const RT_GAP_MIN=15;
   function routeBusyRuns(pts,isBusy){
     const runs=[];
-    pts.forEach(p=>{
-      const b=isBusy(p[2]);
-      if(!runs.length||runs[runs.length-1].busy!==b){ if(runs.length) runs[runs.length-1].pts.push(p); runs.push({busy:b,pts:[p]}); }
+    pts.forEach((p,i)=>{
+      const b=isBusy(p[2]), bigGap=i>0&&(p[2]-pts[i-1][2])>RT_GAP_MIN;
+      if(!runs.length||runs[runs.length-1].busy!==b||bigGap){
+        if(runs.length&&!bigGap) runs[runs.length-1].pts.push(p);
+        runs.push({busy:b,pts:[p]});
+      }
       else runs[runs.length-1].pts.push(p);
     });
     return runs;
@@ -3132,10 +3137,12 @@ body.rtfull{overflow:hidden}
     while(rtCursor<N-2&&rtPlayPts[rtCursor+1][2]<curMin) rtCursor++;
     const a=rtPlayPts[rtCursor], b=rtPlayPts[Math.min(N-1,rtCursor+1)];
     const span=(b[2]-a[2])||1, f=Math.min(1,Math.max(0,(curMin-a[2])/span));
-    const lat=a[0]+(b[0]-a[0])*f, lng=a[1]+(b[1]-a[1])*f, busyNow=rtPlayIsBusy(curMin);
+    const lat=a[0]+(b[0]-a[0])*f, lng=a[1]+(b[1]-a[1])*f, busyNow=rtPlayIsBusy(curMin), bigGap=span>RT_GAP_MIN;
     rtPlayMarker.setLatLng([lat,lng]); rtPlayMarker.setIcon(triIcon(bearingDeg(a,b),busyNow));
     // 線は毎回ぜんぶ描き直さず、今の点を1つ足すだけにする（勤務が長いと、毎回描き直す方式は遅くなって、かえって飛んで見える）
-    if(!rtTraceLine||rtTraceBusy!==busyNow){ rtTraceLine=L.polyline([[lat,lng]],{color:busyNow?ROUTE_PINK:ROUTE_EMPTY,weight:4,opacity:.85}).addTo(rtTraceLayer); rtTraceBusy=busyNow; }
+    // 記録が15分以上とだえた所は線をつながない（大きく飛んだように見える原因そのもの。知ったかぶりで直線を引かない）
+    if(bigGap){ rtTraceLine=null; }
+    else if(!rtTraceLine||rtTraceBusy!==busyNow){ rtTraceLine=L.polyline([[lat,lng]],{color:busyNow?ROUTE_PINK:ROUTE_EMPTY,weight:4,opacity:.85}).addTo(rtTraceLayer); rtTraceBusy=busyNow; }
     else rtTraceLine.addLatLng([lat,lng]);
     if(t>=1){ stopPlay(); return; }
     rtPlayRaf=requestAnimationFrame(rtFrame);
