@@ -619,6 +619,12 @@ body.rtfull{overflow:hidden}
       <div class="btnrow"><button class="btn primary" id="restAdd">この場所を休憩場として追加</button></div>
       <div class="msg" id="restMsg" role="status"></div>
     </section>
+    <section class="card">
+      <h2>専用乗り場の不足お知らせ（確認用）</h2>
+      <div class="src">現地に行かなくても、今の空車状況を確認できます。不足中の場所があれば、上の帯を試しに表示します。</div>
+      <div class="btnrow"><button class="btn" id="taxiTestBtn">今の状況を確認・テスト表示</button></div>
+      <div class="msg" id="taxiTestMsg" role="status"></div>
+    </section>
   </div>
 
   <div class="wrap" id="subWx" hidden>
@@ -779,7 +785,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 19:19</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 19:23</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3704,6 +3710,15 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     }
   }
   if(PROD){ setTimeout(taxiCheck,8000); setInterval(taxiCheck,3*60*1000); }
+  // 現地に行かなくても確認できる、テスト用のボタン（距離・30分の間隔は見ない）
+  $("taxiTestBtn").onclick=async()=>{
+    const m=$("taxiTestMsg"); m.textContent="確認しています…";
+    let j; try{ j=await post({action:"taxiStatus"}); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return; }
+    if(!j||!j.ok){ m.textContent=(j&&j.error)||"取得できませんでした"; return; }
+    const show=j.items.find(x=>x.ok&&x.red)||j.items.find(x=>x.ok);
+    if(show){ $("taxiBannerText").textContent=`${show.name}が不足中です（待機 ${show.count}台／目安 ${show.threshold}台）`; $("taxiBanner").hidden=false; }
+    m.textContent="今の状況："+j.items.map(x=>x.ok?`${x.name} ${x.red?"🔴不足":"🔵充足"}（${x.count}/${x.threshold}台）`:`${x.name} 取得できず`).join("／");
+  };
 
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
