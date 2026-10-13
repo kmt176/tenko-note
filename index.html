@@ -786,7 +786,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 20:54</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 21:53</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3234,7 +3234,7 @@ body.rtfull{overflow:hidden}
     const y=Math.sin(toRad(b[1]-a[1]))*Math.cos(toRad(b[0])), x=Math.cos(toRad(a[0]))*Math.sin(toRad(b[0]))-Math.sin(toRad(a[0]))*Math.cos(toRad(b[0]))*Math.cos(toRad(b[1]-a[1]));
     return (toDeg(Math.atan2(y,x))+360)%360; };
   const triIcon=(deg,busy)=>L.divIcon({className:"",html:`<div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:15px solid ${busy?ROUTE_PINK:ROUTE_EMPTY};transform:rotate(${deg}deg);transform-origin:50% 60%"></div>`,iconSize:[16,16],iconAnchor:[8,10]});
-  let rtPlayRaf=0, rtPlayMarker=null, rtPlayPts=null, rtPlayIsBusy=null, rtPlayStart=0, rtFullLines=[], rtTraceLayer=null, rtCursor=0, rtTraceLine=null, rtTraceBusy=null, rtPlayVCum=null;
+  let rtPlayRaf=0, rtPlayMarker=null, rtPlayPts=null, rtPlayIsBusy=null, rtPlayElapsed=0, rtPlayLastTick=0, rtFullLines=[], rtTraceLayer=null, rtCursor=0, rtTraceLine=null, rtTraceBusy=null, rtPlayVCum=null;
   let rtSpeed=1; try{ const v=+localStorage.getItem("tenko.rtspeed"); if(v>0) rtSpeed=v; }catch(e){}
   const RT_BASE_MS=8000;   // 速さ1倍のときの、勤務全体の再生時間のめやす（点の数に関わらず一定）
   // 1つの記録のすき間が使う「見かけの時間」は、どんなに長くても5分までとして扱う。こうしないと、長い休憩などの
@@ -3254,8 +3254,11 @@ body.rtfull{overflow:hidden}
   }
   function rtFrame(){
     if(!rtPlayPts) return;
+    // 画面が一瞬止まる／バックグラウンドになるなどで1コマが大きく空いたときは、その分を経過時間に数えない
+    // （数えてしまうと、そこで一気に最後まで進んでしまい、特に0.1倍のような長い再生で起きやすい）
+    const now=Date.now(), delta=Math.min(now-rtPlayLastTick,100); rtPlayLastTick=now; rtPlayElapsed+=delta;
     const N=rtPlayPts.length, vcum=rtPlayVCum, VT=vcum[N-1];
-    const dur=RT_BASE_MS/rtSpeed, t=Math.min(1,(Date.now()-rtPlayStart)/dur);
+    const dur=RT_BASE_MS/rtSpeed, t=Math.min(1,rtPlayElapsed/dur);
     const curV=t*VT;
     // 見かけの時間（すき間は5分までで数える）で進める
     while(rtCursor<N-2&&vcum[rtCursor+1]<curV) rtCursor++;
@@ -3279,7 +3282,7 @@ body.rtfull{overflow:hidden}
     rtCursor=0; rtTraceLine=null; rtTraceBusy=null; rtPlayVCum=buildVCum(pts);
     rtFullLines.forEach(l=>{ if(rtLayer&&rtLayer.hasLayer(l)) rtLayer.removeLayer(l); });   // 再生中は全体の線を隠す
     rtTraceLayer=L.layerGroup().addTo(rtLayer);
-    rtPlayPts=pts; rtPlayStart=Date.now();
+    rtPlayPts=pts; rtPlayElapsed=0; rtPlayLastTick=Date.now();
     rtPlayMarker=L.marker([pts[0][0],pts[0][1]],{icon:triIcon(bearingDeg(pts[0],pts[1]),rtPlayIsBusy(pts[0][2]))}).addTo(rtLayer);
     $("rtPlay").textContent="止める";
     rtPlayRaf=requestAnimationFrame(rtFrame);
@@ -3287,8 +3290,8 @@ body.rtfull{overflow:hidden}
   $("rtPlay").onclick=()=>{ const d=sales.days[sDay]; if(d&&d.route) playRoute(d,d.route.pts); };
   function setRtSpeed(v){
     if(rtPlayPts){   // 再生中に速さを変えても、今の位置から続きが再生されるようにする
-      const oldDur=RT_BASE_MS/rtSpeed, t=Math.min(1,(Date.now()-rtPlayStart)/oldDur);
-      rtSpeed=v; rtPlayStart=Date.now()-t*(RT_BASE_MS/rtSpeed);
+      const oldDur=RT_BASE_MS/rtSpeed, t=Math.min(1,rtPlayElapsed/oldDur);
+      rtSpeed=v; rtPlayElapsed=t*(RT_BASE_MS/rtSpeed);
     } else rtSpeed=v;
     try{ localStorage.setItem("tenko.rtspeed",v); }catch(e){}
     document.querySelectorAll("#rtSpeed button").forEach(b=>b.setAttribute("aria-selected",+b.dataset.sp===v));
