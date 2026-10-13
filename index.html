@@ -480,8 +480,8 @@ body.rtfull{overflow:hidden}
     <h2 id="ckTitle">納金明細書</h2>
     <table class="nkt" id="nkTable"><tbody>
       <tr><th>売　上　額　①</th><td><input type="text" class="yenin" id="ck_total" data-ck="total" aria-label="売上額①（日報の総営収）" inputmode="numeric" autocomplete="off"></td></tr>
-      <tr class="nk-d"><th>日計表合計②</th><td class="num" id="nk_card"></td></tr>
-      <tr class="nk-d"><th>その他未収③</th><td class="num" id="nk_other"></td></tr>
+      <tr class="nk-d"><th>日計表合計②</th><td><input type="text" class="yenin" id="ck_card" data-ck="card" aria-label="日計表合計②" inputmode="numeric" autocomplete="off"></td></tr>
+      <tr class="nk-d"><th>その他未収③</th><td><input type="text" class="yenin" id="ck_other" data-ck="other" aria-label="その他未収③" inputmode="numeric" autocomplete="off"></td></tr>
       <tr class="nk-d"><th>未収計④<small>（②＋③）</small></th><td class="num" id="nk_mishu"></td></tr>
       <tr class="nk-d"><th>アプリ手配料金⑦</th><td><input type="text" class="yenin" id="ck_app" data-ck="app" aria-label="アプリ手配料金⑦" inputmode="numeric" autocomplete="off"></td></tr>
       <tr class="nk-d"><th>ＥＴＣ合計⑤</th><td><input type="text" class="yenin" id="ck_etc" data-ck="etc" aria-label="ETC合計⑤" inputmode="numeric" autocomplete="off"></td></tr>
@@ -786,7 +786,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 20:04</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 20:54</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2380,7 +2380,8 @@ body.rtfull{overflow:hidden}
   const PAYS=[...CARD,"現金","B空転",...OTHER];
   function settle(d,s){
     const c=d.check||{}, num=v=>v==null||v===""?null:+v, by=k=>s.byPay[k]||0;
-    const card=CARD.reduce((a,k)=>a+by(k),0), other=OTHER.reduce((a,k)=>a+by(k),0), mishu=card+other, bku=s.bku, cash=by("現金");
+    const cardCalc=CARD.reduce((a,k)=>a+by(k),0), otherCalc=OTHER.reduce((a,k)=>a+by(k),0);
+    const card=num(c.card)??cardCalc, other=num(c.other)??otherCalc, mishu=card+other, bku=s.bku, cash=by("現金");
     const app=num(c.app)??s.app, etc=num(c.etc)??s.etc, etcCo=num(c.etcCo)??0, etcSelf=num(c.etcSelf)??0;
     const total=num(c.total)??(d.mode==="simple"?num(d.simple&&d.simple.amt):null);
     const meter=s.total, meterCalc=total==null?null:total+app+etc-etcCo-etcSelf-bku;
@@ -2894,14 +2895,14 @@ body.rtfull{overflow:hidden}
         if(dd.locked&&!guard(dd)){ renderSales(); return; }
         dd.check[f]=f==="note"?e.target.value:numOf(e.target.value); saveSales(); renderSales(); });
     }
-    // 空欄のアプリ手配料金・ETCは、乗車の記録から出した値を薄く表示して、その値で計算する
-    const auto={app:s.app,etc:s.etc,etcCo:0};
-    ["total","app","etc","etcCo","genshu","mishu","etcSelf","note"].forEach(f=>setVal("ck_"+f,d.check[f]));
-    ["app","etc","etcCo"].forEach(f=>{ $("ck_"+f).placeholder=simple?"":yen(auto[f])+"（記録から）"; });
+    // 空欄のアプリ手配料金・ETC・日計表合計・その他未収は、乗車の記録から出した値を薄く表示して、その値で計算する
+    const auto={app:s.app,etc:s.etc,etcCo:0,card:CARD.reduce((a,k)=>a+(s.byPay[k]||0),0),other:OTHER.reduce((a,k)=>a+(s.byPay[k]||0),0)};
+    ["total","app","etc","etcCo","card","other","genshu","mishu","etcSelf","note"].forEach(f=>setVal("ck_"+f,d.check[f]));
+    ["app","etc","etcCo","card","other"].forEach(f=>{ $("ck_"+f).placeholder=simple?"":yen(auto[f])+"（記録から）"; });
     $("ck_total").placeholder="日報の総営収";
     document.querySelectorAll("#nkTable .nk-d").forEach(tr=>tr.hidden=simple);
     $("ckCheck").hidden=simple;
-    $("nk_card").textContent=yen(st.card); $("nk_other").textContent=yen(st.other); $("nk_mishu").textContent=yen(st.mishu);
+    $("nk_mishu").textContent=yen(st.mishu);
     $("nk_bku").textContent=st.bku?yen(st.bku):""; $("nk_cash").textContent=st.nokin==null?"":yen(st.nokin);
     $("ckResult").innerHTML=simple?`<div class="geo">簡易入力では決済の内訳がないため、納金額と照合は出しません。売上額①を入れれば鍵をかけられます。</div>`:
       st.total==null?`<div class="geo">売上額①（日報の総営収）を入れると、納金額と照合の結果を出します。</div>`:
