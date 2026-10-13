@@ -773,7 +773,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-12 11:43</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 17:47</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2893,7 +2893,7 @@ body.rtfull{overflow:hidden}
     $("ckResult").innerHTML=simple?`<div class="geo">簡易入力では決済の内訳がないため、納金額と照合は出しません。売上額①を入れれば鍵をかけられます。</div>`:
       st.total==null?`<div class="geo">売上額①（日報の総営収）を入れると、納金額と照合の結果を出します。</div>`:
       `<div class="checks">
-        ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／明細書から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>`}
+        ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／明細書から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>${!st.etcSelf&&st.etc?`<small class="err">ETC自己負担が0のままになっていませんか？高速道路利用明細の「納金分」の入力漏れがないか確認してください。</small>`:""}`}
         ${st.genOk==null?"":`<span class="pill ${st.genOk?"ok":"warn"}">日計表の現収 ${st.genOk?"OK":"要確認"}（現金＋B空転 ${yen(st.cash+st.bku)}円）</span>`}
         ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
@@ -3527,7 +3527,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
     const exists=dayHas(ex);
     $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${s.count}回・記録の合計 ${yen(s.total)}円・総営収 ${st.total!=null?yen(st.total)+"円":"なし"}<br>
-      ${st.total==null?"":st.meterOk?`<span class="pill ok">メーター照合 OK</span>`:`<span class="pill bad">メーター照合 NG（差 ${yen(s.total-st.meterCalc)}円）：読み取りを確かめてください</span>`}
+      ${st.total==null?"":st.meterOk?`<span class="pill ok">メーター照合 OK</span>`:`<span class="pill bad">メーター照合 NG（差 ${yen(s.total-st.meterCalc)}円）：読み取りを確かめてください</span>${!st.etcSelf&&st.etc?`<br><small class="err">ETC自己負担が0のままになっていませんか？</small>`:""}`}
       ${st.nokin!=null?`<br>納金 ${yen(st.nokin)}円${st.genOk===false?`（日報の現収と合いません）`:""}`:""}
       ${exists?`<div class="grp" style="margin-top:6px"><b>この日にはもう記録があります（乗車 ${ex.rides.filter(r=>!isEv(r.kind)).length}件）。取り込み方を選んでください。</b>
         <label class="check"><input type="radio" name="iMode" value="merge" checked>突き合わせる（おすすめ）<br><small>時刻の近い乗車を組み合わせ、金額・決済などは日報に合わせて、ボタンで記録した位置と天気は残します。押し忘れた乗車は日報から足します</small></label>
