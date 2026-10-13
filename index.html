@@ -336,8 +336,14 @@ body.rtfull{overflow:hidden}
 .mrow .a{font-size:19px;text-align:right}
 .mrow .s{grid-column:2/4;font-size:13.5px;color:var(--muted);font-weight:400}
 .wxsel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.taxibanner{position:fixed;top:0;left:0;right:0;z-index:2000;background:var(--accent);color:#fff;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.taxibanner button{background:transparent;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;flex:none}
 </style>
 
+<div id="taxiBanner" class="taxibanner" hidden role="status">
+  <span id="taxiBannerText"></span>
+  <button type="button" id="taxiBannerClose" aria-label="閉じる">×</button>
+</div>
 <div class="wrap" id="tabTenko">
   <div class="note" id="demoNote">試作版です。あなたのExcel（点呼時間_）の10月度の時刻を例として入れてあります。入力は、このスマホの中だけに保存されます。</div>
 
@@ -773,7 +779,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 17:47</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-13 19:15</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -3668,6 +3674,36 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("sPrev").onclick=()=>moveDay(-1); $("sNext").onclick=()=>moveDay(1);
   // 乗車中は、経過時間の表示を1分ごとに更新する
   setInterval(()=>{ if(!$("tabSales").hidden&&!$("sDayView").hidden&&$("rSheet").hidden) renderSales(); },60000);
+
+  // ===== 専用乗り場（森ビル）の空車不足お知らせ。5km圏内に入ったら確認し、不足中なら帯で知らせる =====
+  const TAXI_SPOTS=[
+    {id:"roppongi_mori",name:"六本木ヒルズ森タワー1F",lat:35.660206,lng:139.729202},
+    {id:"toranomon_st",name:"虎ノ門ヒルズステーションタワー1F",lat:35.667068,lng:139.747330},
+    {id:"azabudai_morijp",name:"麻布台ヒルズ森JPタワーB1",lat:35.662197,lng:139.741791}
+  ];
+  $("taxiBannerClose").onclick=()=>{ $("taxiBanner").hidden=true; };
+  async function taxiCheck(){
+    if(!PROD||!cfg.url) return;
+    const near=TAXI_SPOTS.filter(s=>pos&&distM([pos.lat,pos.lng],[s.lat,s.lng])<=5000);
+    let list=near;
+    if(!list.length){
+      const p=await getPos(); if(!p) return;
+      list=TAXI_SPOTS.filter(s=>distM([p.lat,p.lng],[s.lat,s.lng])<=5000);
+    }
+    if(!list.length) return;
+    let j; try{ j=await post({action:"taxiStatus"}); }catch(e){ return; }
+    if(!j||!j.ok) return;
+    for(const s of list){
+      const x=j.items.find(y=>y.id===s.id); if(!x||!x.ok||!x.red) continue;
+      const key="tenko.taxiSeen."+s.id; let last=0; try{ last=+localStorage.getItem(key)||0; }catch(e){}
+      if(Date.now()-last<30*60*1000) continue;   // 同じ場所は30分あけてから
+      try{ localStorage.setItem(key,String(Date.now())); }catch(e){}
+      $("taxiBannerText").textContent=`${x.name}が不足中です（待機 ${x.count}台／目安 ${x.threshold}台）`;
+      $("taxiBanner").hidden=false;
+      break;   // 一度に1件だけ
+    }
+  }
+  if(PROD){ setTimeout(taxiCheck,8000); setInterval(taxiCheck,3*60*1000); }
 
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
