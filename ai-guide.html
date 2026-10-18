@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIで日報を読み込む手順</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --muted:#52514e;
+    --line:#e1e0d9; --accent:#1D6A80; --accent-soft:#D9EBF0; --accent-ink:#ffffff;
+    --warn:#9A6212; --warn-soft:#F6EAD3;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:where(:not([data-theme="light"])){
+      color-scheme:dark;
+      --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --muted:#c3c2b7;
+      --line:#2c2c2a; --accent:#5FB3CC; --accent-soft:#17323A; --accent-ink:#0B1A1F;
+      --warn:#E3AE5B; --warn-soft:#352812;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.7}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-size:21px;margin:4px 0 6px}
+  .lead{font-size:14px;color:var(--muted);margin:0 0 20px}
+  .backlink{display:inline-block;font-size:13px;color:var(--muted);text-decoration:none;margin-bottom:10px}
+  section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 18px;margin-bottom:16px}
+  section h2{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:14px;font-weight:700;flex:0 0 auto}
+  p{margin:8px 0;font-size:15px}
+  ul,ol{margin:8px 0;padding-left:1.3em}
+  li{margin:6px 0;font-size:15px}
+  .note{font-size:13.5px;color:var(--muted);background:var(--bg);border-radius:8px;padding:8px 10px;margin-top:10px}
+  .warn{font-size:13.5px;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:8px 10px;margin-top:10px}
+  a.btn{display:inline-block;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px;font-size:15px;margin-top:6px}
+  .photos{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .photos span{background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700}
+  code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="https://kmt176.github.io/tenko-note/">‹ 点呼ノートに戻る</a>
+  <h1>AIで日報を読み込む手順</h1>
+  <p class="lead">スマホで撮った日報の写真を、無料のAI（Claude）に読み取ってもらい、点呼ノートに取り込むやり方です。一度だけ準備すれば、あとは毎日、写真を送るだけで使えます。</p>
+
+  <section>
+    <h2><span class="num">1</span>準備① 無料のアカウントを作る（すでに持っている人は飛ばしてOK）</h2>
+    <p>スマホのブラウザ（SafariやChrome）で、次のリンクを開きます。</p>
+    <a class="btn" href="https://claude.ai" target="_blank" rel="noopener">claude.ai を開く</a>
+    <p>画面の案内に沿って、メールアドレスかGoogleアカウントで登録します（無料です。お金はかかりません）。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>準備② 「プロジェクト」を作る</h2>
+    <p>ログインしたら、画面の中に「プロジェクト」という項目があります。そこから新しいプロジェクトを作ります（名前は何でもよいです。例：「日報読み込み」）。</p>
+    <div class="note">「プロジェクト」は、毎回同じ指示を覚えておいてくれる、専用の作業スペースのようなものです。一度作れば、次からは中に入って写真を送るだけで済みます。</div>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>準備③ 読み取り方の指示を登録する</h2>
+    <p>点呼ノートのアプリで、<b>売上 →「日報から取り込む（貼り付け）」→「AIへの頼み方をコピー」</b>を押します。長い文章がコピーされます。</p>
+    <p>さっき作ったプロジェクトの「指示」「カスタム指示」のような欄（プロジェクトの設定の中にあります）に、コピーした文章をそのまま貼り付けて保存します。</p>
+    <div class="note">この指示文は、点呼ノートの機能が増えると内容が変わることがあります。数か月に1回くらい、同じ手順でコピーし直して、指示欄を新しいものに貼り替えてください。</div>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>毎日の使い方：写真を送る</h2>
+    <p>勤務が終わったら、作ったプロジェクトを開いて、新しい会話を始めます。次の写真を撮って送ってください。</p>
+    <div class="photos"><span>日報 1/2</span><span>日報 2/2</span><span>納金明細書</span><span>日計（レシート）</span></div>
+    <p>高速道路を使った日は、ETCの利用明細の写真も一緒に送ってください（なければ送らなくて大丈夫です）。</p>
+    <div class="warn">氏名の欄は、隠してから撮っても大丈夫です（隠しても読み取りに支障はありません）。</div>
+    <p>写真を送るだけで、AIが指示どおりの形で文章（またはファイル）を作ってくれます。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span>点呼ノートに取り込む</h2>
+    <p>AIが作った内容を、点呼ノートの「日報から取り込む」画面に戻します。</p>
+    <ul>
+      <li>AIが<b>ファイル（.txt）</b>を作ってくれた場合：そのファイルを保存して、「ファイルから読み込む」で選びます。</li>
+      <li>AIが<b>文章</b>をそのまま返してきた場合：その文章を全部コピーして、貼り付け欄に貼り付けます。</li>
+    </ul>
+    <p>「確かめる」を押すと、メーター照合（金額が合っているか）の結果が出ます。問題なければ「取り込む」を押して完了です。</p>
+    <div class="note">すでにボタンで記録した乗車がある日は、「突き合わせる」（おすすめ）か「置き換える」かを選べます。迷ったら「突き合わせる」を選んでください。</div>
+  </section>
+
+  <section>
+    <h2>うまくいかないときは</h2>
+    <ul>
+      <li>金額が合わない・エラーが出る → 写真が暗い・斜めになっていないか確認して、撮り直してみてください。</li>
+      <li>AIが指示と違う形式で返してくる → 新しい会話ではなく、同じプロジェクトの中で送っているか確認してください（指示はプロジェクトの中でだけ効きます）。</li>
+      <li>それでも直らない → 遠慮なく聞いてください。</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>
