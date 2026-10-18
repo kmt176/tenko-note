@@ -719,6 +719,11 @@ body.rtfull{overflow:hidden}
         <div class="field"><label for="carSel">乗っている車種</label><select id="carSel"></select></div>
         <div class="src">車種によって、選べる内容・決済や計算の初期値が変わります（管理者が決めます）。</div>
       </div>
+      <div class="grp">
+        <h3>画面に出す機能</h3>
+        <div class="src">使わない機能のチェックを外すと、画面に出なくなります。記録や計算、データはそのまま残るので、あとでチェックを付ければ元に戻ります。このスマホだけの設定です。</div>
+        <div id="offBox"></div>
+      </div>
       <div>休憩場・専用乗り場は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると使える機能が増えます。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
       <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div class="grp">
@@ -796,7 +801,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 02:48</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 08:35</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -806,7 +811,7 @@ body.rtfull{overflow:hidden}
     <h2>はじめに（最初の1回）</h2>
     <ol class="steps">
       <li><b>ホーム画面に追加</b>します。<br><small>iPhone：共有ボタン →「ホーム画面に追加」／Android：︙ →「ホーム画面に追加」</small></li>
-      <li>メニューの一番下の設定で、<b>乗っている車種</b>（JPNタクシー／アルファード）を選びます。<small>車種によって、選べる内容・決済や計算の初期値が変わります</small></li>
+      <li>メニューの一番下の設定で、<b>乗っている車種</b>（JPNタクシー／アルファード）を選びます。<small>車種によって、選べる内容・決済や計算の初期値が変わります。使わない機能（連続配車・走行ルートなど）は、同じ所の「画面に出す機能」でチェックを外すと画面に出なくなります（データは消えません）</small></li>
       <li><b>ホーム画面のアイコンから開きます。</b>以降もいつもアイコンから開いてください。<br><small>iPhoneは、ブラウザとアイコンで保存場所が別になります。<b>ホーム画面のアイコンを削除すると、データが消えることがあります。</b>表示が古いときは、アイコンを消さずに、この画面右上の「更新」を押してください</small></li>
       <li>点呼時間の「＋ 勤務を追加」で、<b>その月度の出社日と、計画の業務前点呼・業務後点呼</b>を入れておきます。<small>1か月分まとめて入れておくと便利です</small></li>
       <li>勤務の日は、<b>業務前点呼の実績を入れてから</b>売上を入力します。<small>実績を入れるまで、その日の売上は入力できません</small></li>
@@ -1033,7 +1038,12 @@ body.rtfull{overflow:hidden}
   let carsCfg=null; try{ carsCfg=JSON.parse(localStorage.getItem("tenko.cars")||"null"); }catch(e){}
   let carType="jpn"; try{ carType=localStorage.getItem("tenko.car")||"jpn"; }catch(e){} if(!CAR_DEF[carType]) carType="jpn";
   const carOf=t=>Object.assign({},CAR_DEF[t]||CAR_DEF.jpn,(carsCfg&&carsCfg[t])||{});
-  const car=()=>carOf(carType);
+  // 自分で画面に出さないと決めた機能（記録・計算・データはそのまま。表示だけ止める）
+  let offCfg={}; try{ offCfg=JSON.parse(localStorage.getItem("tenko.off")||"{}")||{}; }catch(e){}
+  const car=()=>{ const c=carOf(carType);
+    if(offCfg.rz){ c.rz=false; c.kinds=c.kinds.filter(k=>k!=="連続配車"); }
+    if(offCfg.thanks) c.thanks=false;
+    return c; };
   const hm2m=v=>{ const m=/^(\d{1,2}):(\d{2})$/.exec(String(v||"").trim()); return m?+m[1]*60+ +m[2]:null; };
   const m2hm=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
   function applyCarConsts(){ const c=car(); NOKIN=hm2m(c.nokin)??10*60+30; KIKO=hm2m(c.kiko)??10*60+10; REP=(+c.rep>0?+c.rep:21)*60; }
@@ -1427,6 +1437,15 @@ body.rtfull{overflow:hidden}
     render(); if(!$("tabSales").hidden) setView(sView); renderLinks(); }
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
+  // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true]];
+  function renderOffBox(){ const el=$("offBox"); if(!el) return;
+    el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
+    el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
+      try{ localStorage.setItem("tenko.off",JSON.stringify(offCfg)); }catch(e){}
+      if(b.dataset.off==="taxi"&&!b.checked) $("taxiBanner").hidden=true;
+      render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); }); }
+  renderOffBox();
   // 売上の上の切り替えは出さない（管理者も、メニューの設定で車種を選んだときだけ変わる。ユーザー指定）
   function renderCarSeg(){ const el=$("carSeg"); if(!el) return; el.hidden=true; return;
     el.innerHTML=CAR_TYPES.map(t=>`<button role="tab" data-car="${t}" aria-selected="${t===carType}">${escC(carOf(t).name)}</button>`).join("");
@@ -2876,7 +2895,7 @@ body.rtfull{overflow:hidden}
       $("sTitle").innerHTML=sDay?`${md(sDay)}（${dow(sDay)}）<span class="dd">▾</span><small>${plan?"勤務予定（業務前点呼の実績がまだ）":"点呼時間に勤務がありません"}</small>`:`売上<small>点呼時間に勤務がありません</small>`;
       return;
     }
-    $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=false; $("rtCard").hidden=false;
+    $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=!!offCfg.hw; $("rtCard").hidden=!!offCfg.route;
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
     fillPick();
     $("sMove").hidden=$("sDelDay").hidden=$("sFix").hidden=!hasData(d);
@@ -2938,7 +2957,7 @@ body.rtfull{overflow:hidden}
       return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
         <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
         ${addr.length?`<div class="sub">${addr.map(esc).join(" → ")}</div>`:""}
-        <div class="chips">${r.onUnsure||r.offUnsure?`<span class="chip warn">押し忘れ・日報待ち</span>`:""}${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.repeat?`<span class="chip ok">リピート</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(payLabel(r.pay))}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
+        <div class="chips">${r.onUnsure||r.offUnsure?`<span class="chip warn">押し忘れ・日報待ち</span>`:""}${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.repeat?`<span class="chip ok">リピート</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(payLabel(r.pay))}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&!offCfg.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
       </button>`;
     }).join("")||`<div class="geo">${act?"「乗車」を押すと、ここに記録が並びます":"この勤務の記録はありません"}</div>`;
 
@@ -3146,7 +3165,7 @@ body.rtfull{overflow:hidden}
   }
   function kindUI(){
     const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
-    $("rMoney").hidden=ev; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k)||!(car().appFee>0); $("rThanksBox").hidden=!isHai(k)||!car().thanks;
+    $("rMoney").hidden=ev; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k)||!(car().appFee>0)||!!offCfg.inhouse; $("rThanksBox").hidden=!isHai(k)||!car().thanks;
     $("rOnUnsureBox").hidden=ev; $("rOffUnsureBox").hidden=ev||point;
     $("rOnL").textContent=ev?(point?"時刻":"開始"):"乗車"; $("rOffL").textContent=ev?"終了":"降車";
   }
@@ -3782,7 +3801,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   ];
   $("taxiBannerClose").onclick=()=>{ $("taxiBanner").hidden=true; };
   async function taxiCheck(){
-    if(!PROD||!cfg.url) return;
+    if(!PROD||!cfg.url||offCfg.taxi) return;
     const near=TAXI_SPOTS.filter(s=>pos&&distM([pos.lat,pos.lng],[s.lat,s.lng])<=5000);
     let list=near;
     if(!list.length){
