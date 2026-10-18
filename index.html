@@ -719,14 +719,14 @@ body.rtfull{overflow:hidden}
         <div class="field"><label for="carSel">乗っている車種</label><select id="carSel"></select></div>
         <div class="src">車種によって、選べる内容・決済や計算の初期値が変わります（管理者が決めます）。</div>
       </div>
-      <div>天気・電車・到着便は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると使える機能が増えます。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
+      <div>休憩場・専用乗り場は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると使える機能が増えます。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
       <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div class="grp">
         <h3>仲間の合言葉（仲間の速報）<span id="nGroup" class="src"></span></h3>
         <div class="field"><label for="nPass">仲間の合言葉</label><input type="password" id="nPass" autocomplete="off"></div>
         <div class="field"><label for="nCode">社員コード</label><input type="text" id="nCode" inputmode="numeric" autocomplete="off"></div>
         <div class="field"><label for="nNick">速報に出す名前（空欄なら社員コード）</label><input type="text" id="nNick" maxlength="20" autocomplete="off"></div>
-        <div class="src" id="nFlashNote">社員コードを入れると、あなたの1万円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。社員コードを入れなければ、見るだけになります。</div>
+        <div class="src" id="nFlashNote">社員コードを入れると、あなたの1万円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。また、乗車の記録（全件）と点呼の時刻が、管理者のスプレッドシートにも送られます（見られるのは管理者だけです）。社員コードを入れなければ、見るだけで、何も送られません。</div>
         <div class="btnrow"><button class="btn primary" id="nSave">保存</button><button class="btn" id="nForget">消す</button></div>
         <div class="msg" id="nMsg" role="status"></div>
       </div>
@@ -796,10 +796,10 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 02:11</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 02:44</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
-    <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
+    <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
   <section class="card help">
@@ -807,10 +807,10 @@ body.rtfull{overflow:hidden}
     <ol class="steps">
       <li><b>ホーム画面に追加</b>します。<br><small>iPhone：共有ボタン →「ホーム画面に追加」／Android：︙ →「ホーム画面に追加」</small></li>
       <li>メニューの一番下の設定で、<b>乗っている車種</b>（JPNタクシー／アルファード）を選びます。<small>車種によって、選べる内容・決済や計算の初期値が変わります</small></li>
-      <li><b>ホーム画面のアイコンから開きます。</b>以降もいつもアイコンから開いてください。<br><small>iPhoneは、ブラウザとアイコンで保存場所が別になります</small></li>
+      <li><b>ホーム画面のアイコンから開きます。</b>以降もいつもアイコンから開いてください。<br><small>iPhoneは、ブラウザとアイコンで保存場所が別になります。<b>ホーム画面のアイコンを削除すると、データが消えることがあります。</b>表示が古いときは、アイコンを消さずに、この画面右上の「更新」を押してください</small></li>
       <li>点呼時間の「＋ 勤務を追加」で、<b>その月度の出社日と、計画の業務前点呼・業務後点呼</b>を入れておきます。<small>1か月分まとめて入れておくと便利です</small></li>
       <li>勤務の日は、<b>業務前点呼の実績を入れてから</b>売上を入力します。<small>実績を入れるまで、その日の売上は入力できません</small></li>
-      <li>これで準備はおしまいです。<b>合言葉は不要です。</b>点呼時間・売上・天気・電車・到着便が使えます。</li>
+      <li>これで準備はおしまいです。<b>合言葉は不要です。</b>点呼時間・売上・休憩場・専用乗り場が使えます。</li>
     </ol>
   </section>
 
@@ -863,13 +863,13 @@ body.rtfull{overflow:hidden}
     <ol class="steps">
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります。その場で押せず、あとで(社内処理のあとなど)まとめて押すときは、右の「<b>押し忘れ</b>」にチェックを付けて押してください。時刻・場所は記録せず、あとで「日報から取り込む」を使ったときに日報の内容に差し替わります</small></li>
       <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき。JPNタクシーでサンキューチケットの配車だったときは「サンキューチケット」にチェックを入れると、営業分析で分けて見られます。天気はふだん自動で、直したいときだけ「天気を直す」を開きます</small></li>
-      <li>出庫・休憩・回送・入庫も、ボタンで記録できます（休憩・回送はもう一度押すと終了）。</li>
-      <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>開始は押した時刻の1分後で記録します（会社のシステムとのずれ対策で、1回ごとに1分少なく数えます）。連続配車中に「回送」「休憩」を始めると、連続配車はその1分前に自動で終了します。モード中に乗車を押すと内容が「連続配車」になります。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（出庫〜入庫の○%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須・コアタイム（朝6〜10時90分 または 夕方16〜20時2時間、どちらか）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
-      <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。GO Payでも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
+      <li>勤務の始めは、大きなボタンが「<b>会社を出た時間</b>」になっています。会社を出るときに押すと出庫を記録し、ボタンが「乗車」に変わります。休憩・回送・入庫は、その下の小さなボタンで記録します（休憩・回送はもう一度押すと終了）。</li>
+      <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>開始は押した時刻の1分後で記録します（会社のシステムとのずれ対策で、1回ごとに1分少なく数えます）。連続配車中に「回送」「休憩」を始めると、連続配車はその1分前に自動で終了します。モード中に乗車を押すと内容が「連続配車」になります。<b>コアタイム（朝6〜10時・夕方16〜20時）の間は、どの画面を見ていても、下のボタンの列のすぐ上に連続配車のボタンが出ます</b>（必須がまだ未達なら薄いピンク、達成していれば薄い青）。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（出庫〜入庫の○%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須・コアタイム（朝6〜10時90分 または 夕方16〜20時2時間、どちらか）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
+      <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。ネット/QR（A）でも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
     </ol>
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
-      <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文（またはファイル）を取り込んで、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。AIがファイル（.txt）を作れるときは、そのファイルを保存して「ファイルから読み込む」で選べます。作れないときは、書き出された文を貼り付けてください。取り込む前にメーター照合の結果を確かめられます。乗車ボタンで記録した日は、「突き合わせる」（金額などは日報に合わせ、位置と天気は残し、押し忘れは日報から足す）か「置き換える」かを選べます。住所から位置と天気（9日以内）も自動で入ります。取り込みでどこが変わったかは、その勤務の画面の「変更履歴」で確かめられます。</dd>
+      <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文（またはファイル）を取り込んで、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。はじめての方は、取り込み画面の「<b>はじめての方へ：やり方をくわしく見る</b>」に、無料のClaudeでの準備から順に書いてあります。AIがファイル（.txt）を作れるときは、そのファイルを保存して「ファイルから読み込む」で選べます。作れないときは、書き出された文を貼り付けてください。取り込む前にメーター照合の結果を確かめられます。乗車ボタンで記録した日は、「突き合わせる」（金額などは日報に合わせ、位置と天気は残し、押し忘れは日報から足す）か「置き換える」かを選べます。住所から位置と天気（9日以内）も自動で入ります。取り込みでどこが変わったかは、その勤務の画面の「変更履歴」で確かめられます。</dd>
       <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
       <dt>過去の勤務</dt><dd>一番上の日付を押すと、勤務の一覧（売上つき）から選んで開けます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは、一番下の「勤務の修正」→「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは、同じ所の「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
@@ -882,24 +882,24 @@ body.rtfull{overflow:hidden}
         </ol>
         <small>ルートはこのスマホの中だけに保存し、どこにも送りません。書き出したファイルには全期間の移動の記録が入っているので、読み込んだあとは人に渡さず、要らなければ消してください。距離は約1分ごとの位置から出すので、メーターより少し短く出ます。</small></dd>
       <dt>月度の集計</dt><dd>上の「月度の集計」で、月度（締め日ごと）の税抜営収・概算給与・賞与積立（6月度と12月度は半年分の賞与見込みも）・時間帯別の売上・決済別・納金の合計と、勤務ごとの一覧を見られます。率は一番下の「計算の設定」で変えられます。いちばん上に<b>目標（税抜営収）</b>を入れると、残りの勤務（点呼時間の今日以降の予定）で1勤務いくら必要かと、今のペースの見込みを出します。</dd>
-      <dt>営業分析</dt><dd>上の「営業分析」で、曜日別・時間帯×曜日・乗車の多い場所・降ろしたあと次が早い場所・営業のしかた別（連続配車／配車／手上げ／乗り場）・天気別の傾向を見られます。期間は「この月度」「直近3か月」「全部」から選べます。金額はETC・アプリ手配料を除いたメーター料金の税抜です。</dd>
+      <dt>営業分析</dt><dd>上の「営業分析」で、1時間あたりの売上（休憩・回送を除いた時間で計算。1勤務あたりの回送・休憩の平均も）、日ごとの内訳（プルダウンで日を選ぶ）、曜日別・時間帯×曜日・乗車の多い場所・降ろしたあと次が早い場所・営業のしかた別（連続配車／配車／手上げ／乗り場）・乗車時間の長さ別・天気別の傾向と、1万円以上の乗車の一覧を見られます。期間は「この月度」「直近3か月」「全部」から選べます。金額はETC・アプリ手配料を除いたメーター料金の税抜です。</dd>
       <dt>過去の分をまとめて取り込む</dt><dd>「日報から取り込む」には、何日分でも続けて貼り付けられます（「出庫日:」ごとに1日）。「業務前点呼: 12:56」「業務後点呼: 08:48」の行があれば、点呼時間にその日の勤務がなくても作って取り込みます。すでに記録がある日は取り込みません。</dd>
     </dl>
-    <p><small>営業（分）・待ち（分）・アプリ料（配車でGOPAY以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中だけに保存されます。</small></p>
+    <p><small>営業（分）・待ち（分）・アプリ料（配車でネット/QR以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中に保存されます（仲間の合言葉と社員コードを入れた場合は、下の「仲間の速報」も見てください）。</small></p>
   </section>
 
   <section class="card help">
     <h2>仲間の速報（グループ）</h2>
     <p>同じグループの仲間どうしで、1万円以上の乗車を見られます（仲間の合言葉が必要です）。<b>グループを作りたいときは、代表になる方が紹介者（管理者）に連絡してください。合言葉を作成します。</b></p>
+    <p><small><b>仲間の合言葉と社員コードを入れた場合</b>は、1万円以上の乗車が同じグループの仲間に表示されるほか、<b>乗車の記録（全件）と点呼の時刻が、管理者のスプレッドシートにも送られます</b>（見られるのは管理者だけです）。社員コードを入れなければ、どこにも送られません。</small></p>
   </section>
 
   <section class="card help">
-    <h2>天気・電車・到着便</h2>
-    <p>「メニュー」の上のボタンで切り替えます。合言葉なしで使えます。開くたびに新しい情報を読み込みます（「更新」でも読み込めます）。</p>
+    <h2>休憩場・専用乗り場</h2>
+    <p>「メニュー」の上のボタンで切り替えます。どちらも合言葉なしで使えます。</p>
     <dl class="explain">
-      <dt>天気</dt><dd>気象庁の東京地方の予報です。降水確率50%以上の時間帯に色が付きます。雨雲の動きは下のボタンから見られます。</dd>
-      <dt>電車</dt><dd>東京メトロ・都営の運行情報です。乱れのある路線を上に出します。JR・東武・西武は公式サイトを開きます。</dd>
-      <dt>到着便</dt><dd>羽田・成田に着くJAL・ANAの便です。これから60分に着く便の数、15分以上の遅れ、23時以降（電車が少ない時間）の便が分かります。</dd>
+      <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd>
+      <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（5km以内）にいるときに台数が足りないと、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
     </dl>
   </section>
 
@@ -907,7 +907,8 @@ body.rtfull{overflow:hidden}
     <h2>注意</h2>
     <ul>
       <li><b>操作は必ず停車中に</b>行ってください。</li>
-      <li>データはこのスマホの中だけに保存されます。他の人からは見えません。</li>
+      <li>データはこのスマホの中に保存されます。合言葉と社員コードを入れていなければ、他の人からは見えません（入れた場合は「仲間の速報」の説明を見てください）。</li>
+      <li><b>ホーム画面のアイコンを削除すると、データが消えることがあります。</b>アイコンは消さないでください。</li>
       <li>機種変更に備えて、月1回「バックアップ・機種変更」でデータをコピーしてください。バックアップの文字は暗号化されます。パスワードを付けた場合、忘れると復元できません。</li>
       <li>スマホには画面ロック（パスコード・指紋・顔認証）を設定してください。</li>
       <li class="member-only">ロング判定の行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、ロング判定の画面のボタンから首都高・NEXCOの公式サイトで確認してください。</li>
@@ -963,11 +964,11 @@ body.rtfull{overflow:hidden}
     <div class="grp" id="rMoney">
       <div class="field"><label for="rAmt">金額（現収＋未収・円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"><small class="src">ETC・アプリ手配料（社内決済の200円）を含めた金額を入れます</small></div>
       <div class="field"><label for="rPay">決済</label>
-        <select id="rPay"><option>現金</option><option>A:GOPAY</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
+        <select id="rPay"><option>現金</option><option value="A:GOPAY">A:ネット/QR</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
       <div class="field"><label for="rEtc">うちETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
       <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks"><span class="chktext">サンキューチケット<br><small>高額になりやすい配車の目印です。乗務員にしか分からないので、降車後にチェックしてください。営業分析で分けて集計します</small></span></label>
       <label class="check"><input type="checkbox" id="rRepeat"><span class="chktext">リピートユーザー<br><small>病院など、定期的に利用される方の目印です</small></span></label>
-      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（アプリ手配料200円を含む）<br><small>配車・連続配車でGO Pay以外は自動でチェックが入ります。GO Payでも社内決済のときはチェックしてください</small></span></label>
+      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（アプリ手配料200円を含む）<br><small>配車・連続配車でネット/QR以外は自動でチェックが入ります。ネット/QRでも社内決済のときはチェックしてください</small></span></label>
       <div class="live" id="rFare"></div>
       <details id="rWxBox"><summary>天気を直す（ふだんは自動）</summary><div class="src">乗車の場所と時刻の天気を気象庁のアメダスから自動で記録します。場所が取れなかったとき・9日より前の取り込み・自動の判定を直したいときだけ選んでください。</div><div class="field"><div class="wxsel" id="rWx"><button type="button" data-w="">自動</button><button type="button" data-w="晴">晴</button><button type="button" data-w="曇">曇</button><button type="button" data-w="雨">雨</button><button type="button" data-w="雪">雪</button></div></div></details>
     </div>
@@ -1023,6 +1024,8 @@ body.rtfull{overflow:hidden}
   // 乗務員は自分の車種を1回選ぶ。管理者が保存した値は Apps Script から読み込み、なければ下の初期値を使う
   const ALL_KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転"];
   const ALL_PAYS=["現金","A:GOPAY","C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy","T:チケット","福祉券","B空転"];
+  // 画面に出す決済の名前。保存する値は「A:GOPAY」のまま（過去の記録・計算・日報の取り込みと合わせるため）
+  const payLabel=p=>p==="A:GOPAY"?"A:ネット/QR":p;
   const CAR_BASE={kinds:ALL_KINDS,pays:ALL_PAYS,appFee:200,thanks:true,rz:true,rzMustAm:90,rzMustPm:120,rzRules:null,tax:0.9,pay:0.62,bonus:0.1,maxKm:362,nokin:"10:30",kiko:"10:10",rep:21,margin:30,stay:3,viaMin:5,vias:DEFAULT_VIAS};
   // アルファードはGO専用：内容は配車だけ、決済はGO Payだけ、アプリ手配料なし、連続配車なし、給与の率0.44（ユーザーの比較表）
   const CAR_DEF={jpn:Object.assign({},CAR_BASE,{name:"JPNタクシー"}),alp:Object.assign({},CAR_BASE,{name:"アルファード（GO PREMIUM）",kinds:["配車"],pays:["A:GOPAY"],appFee:0,thanks:false,rz:false,pay:0.44})};
@@ -1453,7 +1456,7 @@ body.rtfull{overflow:hidden}
   function drawCars(cars){
     const tb=$("aCars"); if(!tb) return;
     const cell=(t,it)=>{ const c=Object.assign({},CAR_DEF[t],(cars&&cars[t])||{}), [k,,ty,opts]=it, id=`ac_${t}_${k}`, v=c[k];
-      if(ty==="multi") return opts.map(o=>`<label class="check"><input type="checkbox" data-car="${t}" data-k="${k}" value="${esc(o)}" ${(v||[]).includes(o)?"checked":""}>${esc(o)}</label>`).join("");
+      if(ty==="multi") return opts.map(o=>`<label class="check"><input type="checkbox" data-car="${t}" data-k="${k}" value="${esc(o)}" ${(v||[]).includes(o)?"checked":""}>${esc(payLabel(o))}</label>`).join("");
       if(ty==="bool") return `<label class="check"><input type="checkbox" data-car="${t}" data-k="${k}" ${v?"checked":""}>使う</label>`;
       if(ty==="rules") return `<textarea data-car="${t}" data-k="${k}" rows="3">${esc(rulesTxt(v&&v.length?v:(t==="jpn"?RZ_RULES:[])))}</textarea>`;
       if(ty==="lines") return `<textarea data-car="${t}" data-k="${k}" rows="2">${esc((v||[]).join("\n"))}</textarea>`;
@@ -1829,7 +1832,9 @@ body.rtfull{overflow:hidden}
       const myCode=$("restCode").value.trim();
       j.items.forEach(x=>{ const mine=myCode&&x.code===myCode;
         const gmap=`https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`;
-        L.marker([x.lat,x.lng]).bindPopup(`${esc(x.note||"休憩場")}<br><small>${esc(x.code)}</small><div style="margin-top:8px"><a href="${gmap}" target="_blank" rel="noopener">Googleマップで開く</a></div>${mine?`<div style="margin-top:8px"><a href="#" data-restdel="${esc(x.key)}">これを消す</a></div>`:""}`).addTo(restLayer); });
+        // 誰が書いたか（社員コード）は管理者にだけ見せる。自分の分は「あなたが追加」と出す
+        const who=isAdmin()?`<br><small>${esc(x.code)}</small>`:mine?`<br><small>あなたが追加</small>`:"";
+        L.marker([x.lat,x.lng]).bindPopup(`${esc(x.note||"休憩場")}${who}<div style="margin-top:8px"><a href="${gmap}" target="_blank" rel="noopener">Googleマップで開く</a></div>${mine?`<div style="margin-top:8px"><a href="#" data-restdel="${esc(x.key)}">これを消す</a></div>`:""}`).addTo(restLayer); });
       if(j.items.length) setTimeout(()=>{ restMapObj.invalidateSize(); restMapObj.fitBounds(L.latLngBounds(j.items.map(x=>[x.lat,x.lng])),{padding:[20,20],maxZoom:16}); },60);
       else{ restMapObj.setView([35.68,139.76],11); setTimeout(()=>restMapObj.invalidateSize(),60); getPos().then(p=>{ if(p&&!restPick) restMapObj.setView([p.lat,p.lng],15); }); }
       renderRestPick();
@@ -2477,7 +2482,7 @@ body.rtfull{overflow:hidden}
         <div><span class="h">納金の合計</span><span class="v num">${yen(nokin)}</span></div>
         <div><span class="h">照合済み</span><span class="v num">${locked}／${done.length}</span></div>
       </div>
-      ${Object.keys(pay).length?`<div class="legend">${PAYS.filter(p=>pay[p]).map(p=>`<span>${esc(p)} <span class="num">${yen(pay[p])}</span></span>`).join("")}</div>`:""}${bonusRow}`;
+      ${Object.keys(pay).length?`<div class="legend">${PAYS.filter(p=>pay[p]).map(p=>`<span>${esc(payLabel(p))} <span class="num">${yen(pay[p])}</span></span>`).join("")}</div>`:""}${bonusRow}`;
     // 時間帯別：詳細入力の勤務だけで、1勤務あたりの平均と合計
     const hd=done.filter(x=>x.d.mode!=="simple"&&x.d.rides.some(r=>!isEv(r.kind)));
     const hs=Array(24).fill(0); hd.forEach(x=>hourly(x.d).forEach((v,h)=>hs[h]+=v));
@@ -2654,7 +2659,7 @@ body.rtfull{overflow:hidden}
   // ---- 仲間の速報（1万円以上の乗車を、仲間の合言葉を持つ人どうしで見る。金額は管理者が変えられる） ----
   const FLASH_DAYS=3;
   let flashMin=10000; try{ const v=+localStorage.getItem("tenko.flashMin"); if(v>0) flashMin=v; }catch(e){}
-  function updateFlashNote(){ const el=$("nFlashNote"); if(el) el.textContent=`社員コードを入れると、あなたの${yen(flashMin)}円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。社員コードを入れなければ、見るだけになります。`; }
+  function updateFlashNote(){ const el=$("nFlashNote"); if(el) el.textContent=`社員コードを入れると、あなたの${yen(flashMin)}円以上の乗車（時刻・金額・決済・乗車地と降車地の〇〇町〇丁目まで）が、この名前で仲間の速報に出ます（直近3日分）。また、乗車の記録（全件）と点呼の時刻が、管理者のスプレッドシートにも送られます（見られるのは管理者だけです）。社員コードを入れなければ、見るだけで、何も送られません。`; }
   updateFlashNote();
   let flashQ={}; try{ flashQ=JSON.parse(localStorage.getItem("tenko.flashq")||"{}")||{}; }catch(e){}
   let flashSig={}; try{ flashSig=JSON.parse(localStorage.getItem("tenko.flashsig")||"{}")||{}; }catch(e){}
@@ -2750,7 +2755,7 @@ body.rtfull{overflow:hidden}
           return `<${map?`a href="${map}" target="_blank" rel="noopener"`:"div"} class="fl flink"><div class="tm num">${yen(x.amt)}<s>${(t.getMonth()+1)}/${t.getDate()}（${DOW[t.getDay()]}） ${clock(t.getHours()*60+t.getMinutes())}</s></div>
             <div class="who">${esc(x.name||x.code)}${j.admin&&x.groupName?`<small>${esc(x.groupName)}</small>`:""}</div>
             <div class="addr">${esc(x.from||"—")} → ${esc(x.to||"—")}</div>
-            <div class="tags">${x.kind||x.pay?`<span class="st">${esc(x.kind||"")}${x.kind&&x.pay?"・":""}${esc(x.pay||"")}</span>`:""}${map?`<small>地図 ›</small>`:""}</div></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、${yen(j.min||flashMin)}円以上の乗車はまだありません。</div>`);
+            <div class="tags">${x.kind||x.pay?`<span class="st">${esc(x.kind||"")}${x.kind&&x.pay?"・":""}${esc(payLabel(x.pay||""))}</span>`:""}${map?`<small>地図 ›</small>`:""}</div></${map?"a":"div"}>`; }).join("")||`<div class="geo">直近3日に、${yen(j.min||flashMin)}円以上の乗車はまだありません。</div>`);
     };
     drawFlash=draw;
     if(!PROD&&!cfg.url){ const n=Date.now(); draw({items:[{name:"例：こまつ",at:new Date(n-36e5).toISOString(),amt:16170,pay:"C:ｸﾚｼﾞｯﾄ",from:"新宿区新宿三丁目",to:"富士見市鶴馬一丁目",kind:"配車"},{name:"例：002999",at:new Date(n-9e6).toISOString(),amt:10690,pay:"A:GOPAY",from:"千代田区丸の内二丁目",to:"大田区羽田空港三丁目",kind:"手上げ"}]}); b.insertAdjacentHTML("afterbegin",`<span class="res"><span class="tag">例の表示です</span></span>`); return; }
@@ -2897,7 +2902,7 @@ body.rtfull{overflow:hidden}
          <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?yen(t.net/(t.work/60)):"—"}</span></div>
          <div><span class="h">時給（給与＋賞与）</span><span class="v num">${t?yen(t.net*salesCfg().pay/(t.work/60)):"—"}<small style="display:block;font-size:13px;color:var(--muted)">休憩・回送を除く</small></span></div>`)(workOf(k))}
       </div>
-      ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(p)} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
+      ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(payLabel(p))} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
 
     renderRz(k);
 
@@ -2933,7 +2938,7 @@ body.rtfull{overflow:hidden}
       return `<button class="ride${r.off==null?" open":""}" data-id="${r.id}">
         <div class="top"><span class="no num">${r._no}</span><span class="tm num">${tm(r.on)}→${r.off!=null?tm(r.off):"乗車中"}</span><span>${esc(r.kind)}</span><span class="amt num">${r.amt?yen(r.amt)+"円":""}</span></div>
         ${addr.length?`<div class="sub">${addr.map(esc).join(" → ")}</div>`:""}
-        <div class="chips">${r.onUnsure||r.offUnsure?`<span class="chip warn">押し忘れ・日報待ち</span>`:""}${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.repeat?`<span class="chip ok">リピート</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(r.pay)}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
+        <div class="chips">${r.onUnsure||r.offUnsure?`<span class="chip warn">押し忘れ・日報待ち</span>`:""}${r.thanks?`<span class="chip ok">サンキュー</span>`:""}${r.repeat?`<span class="chip ok">リピート</span>`:""}${r.pay&&r.amt?`<span class="chip">${esc(payLabel(r.pay))}</span>`:""}${r._eig!=null?`<span class="chip">営業 ${r._eig}分</span>`:""}${r._wait!=null?`<span class="chip">待ち ${r._wait}分</span>`:""}${(f=>f>0&&r._eig>0?`<span class="chip">営業分単価 ${yen(f/r._eig)}円</span>${r._wait!=null&&r._wait>=0?`<span class="chip">実単価 ${yen(f/(r._eig+r._wait))}円</span>`:""}`:"")((+r.amt||0)-(+r.etc||0)-(r._app||0))}${wxText(r)?`<span class="chip">${esc(wxText(r))}</span>`:""}${r.memo?`<span class="chip">${esc(r.memo)}</span>`:""}${d.route&&r.on!=null&&r.off!=null&&r.off>r.on?`<span class="chip rtbtn" data-rt="${r.id}" role="button">ルート ›</span>`:""}</div>
       </button>`;
     }).join("")||`<div class="geo">${act?"「乗車」を押すと、ここに記録が並びます":"この勤務の記録はありません"}</div>`;
 
@@ -2944,7 +2949,7 @@ body.rtfull{overflow:hidden}
 
     // 納金明細書（紙と同じ並び）と、日計表との照合（売上管理Excelの「集計」シートと同じ計算）
     $("ckPay").innerHTML=simple?"":`<table class="paytbl"><tbody>
-      ${PAYS.filter(p=>s.byPay[p]).map(p=>`<tr><td>${esc(p)}</td><td class="n">${s.cntPay[p]}回</td><td class="n">${yen(s.byPay[p])}</td></tr>`).join("")}
+      ${PAYS.filter(p=>s.byPay[p]).map(p=>`<tr><td>${esc(payLabel(p))}</td><td class="n">${s.cntPay[p]}回</td><td class="n">${yen(s.byPay[p])}</td></tr>`).join("")}
       ${s.bku?`<tr><td>B空転（合計に入れない）</td><td class="n">${s.nbku}回</td><td class="n">${yen(s.bku)}</td></tr>`:""}
       <tr class="tot"><td>メーター日計（合計）</td><td class="n">${s.count}回</td><td class="n">${yen(s.total)}</td></tr></tbody></table>`;
     if(!$("ckTitle").dataset.built){
@@ -3052,7 +3057,7 @@ body.rtfull{overflow:hidden}
   }
   const payNow=d=>{ const ps=car().pays, p0=lastOf(d,"pay","A:GOPAY"); return ps.includes(p0)?p0:ps[0]; };
   // 入力画面の「内容」「決済」は、車種で使うものだけを出す（今の記録の値は残す）
-  function fillOpts(id,list,cur){ const L=[...list]; if(cur&&!L.includes(cur)) L.push(cur); $(id).innerHTML=L.map(v=>`<option>${esc(v)}</option>`).join(""); }
+  function fillOpts(id,list,cur){ const L=[...list]; if(cur&&!L.includes(cur)) L.push(cur); $(id).innerHTML=L.map(v=>`<option value="${esc(v)}">${esc(payLabel(v))}</option>`).join(""); }
   function kindNow0(d,at){
     const ms=d.rides.filter(r=>r.kind===RZ&&r.on!=null);
     if(!ms.length) return lastOf(d,"kind","連続配車");
@@ -3425,7 +3430,7 @@ body.rtfull{overflow:hidden}
       s.rows.filter(x=>!isEv(x.kind)&&x.onPos).forEach(x=>{
         const big=(+x.amt||0)>=10000;
         L.marker([x.onPos.lat,x.onPos.lng],{icon:L.divIcon({className:"",html:`<span class="rtno${big?" big":""}">${x._no}</span>`,iconSize:null})})
-          .bindPopup(`No.${x._no} ${tm(x.on)}→${x.off!=null?tm(x.off):""}<br>${esc(x.kind)} ${x.amt?yen(x.amt)+"円 "+esc(x.pay||""):""}<br>${esc(x.onAddr||"")}${x.offAddr?" → "+esc(x.offAddr):""}${x.off!=null&&x.off>x.on?`<br><a href="#" data-rtpick="${x.id}">この乗車のルートだけ見る ›</a>`:""}`).addTo(rtLayer);
+          .bindPopup(`No.${x._no} ${tm(x.on)}→${x.off!=null?tm(x.off):""}<br>${esc(x.kind)} ${x.amt?yen(x.amt)+"円 "+esc(payLabel(x.pay||"")):""}<br>${esc(x.onAddr||"")}${x.offAddr?" → "+esc(x.offAddr):""}${x.off!=null&&x.off>x.on?`<br><a href="#" data-rtpick="${x.id}">この乗車のルートだけ見る ›</a>`:""}`).addTo(rtLayer);
       });
       setTimeout(()=>{ rtMapObj.invalidateSize(); rtMapObj.fitBounds(L.latLngBounds(line),{padding:[16,16]}); },60);
     }).catch(e=>{ $("rtInfo").innerHTML=`<span class="err">${esc(e.message)}</span>`; });
@@ -3463,7 +3468,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
 ・乗車地・降車地：日報のとおり（例：板橋区上板橋2）。
 ・メモ：備考の文字（例：SA#）。
 ・数字にカンマは付けない。値に「,」を入れない。`;
-  const PAY_ALIAS={"ﾈ":"A:GOPAY","ネット":"A:GOPAY","GO":"A:GOPAY","GOPAY":"A:GOPAY","C":"C:ｸﾚｼﾞｯﾄ","クレジット":"C:ｸﾚｼﾞｯﾄ","K":"K:交通系IC","Q":"Q:QUICPay","I":"I:iD","W":"W:WAON","ﾅ":"ﾅ:nanaco","ｴ":"ｴ:Wdy","T":"T:チケット","現収":"現金"};
+  const PAY_ALIAS={"ﾈ":"A:GOPAY","ネット":"A:GOPAY","GO":"A:GOPAY","GOPAY":"A:GOPAY","A:ネット/QR":"A:GOPAY","ネット/QR":"A:GOPAY","C":"C:ｸﾚｼﾞｯﾄ","クレジット":"C:ｸﾚｼﾞｯﾄ","K":"K:交通系IC","Q":"Q:QUICPay","I":"I:iD","W":"W:WAON","ﾅ":"ﾅ:nanaco","ｴ":"ｴ:Wdy","T":"T:チケット","現収":"現金"};
   const KIND_ALIAS={"出":"出庫","入":"入庫","回":"回送","休":"休憩","迎車":"配車","流し":"手上げ","キャンセル":"CAN"};
   const HEAD_KEYS={"総営収":"total","アプリ手配料金":"app","ETC合計":"etc","ETC会社負担":"etcCo","ETC自己負担":"etcSelf","日計表の現収":"genshu","日計表の未収":"mishu"};
   const KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転",...EVENTS];
