@@ -791,8 +791,8 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-18 23:41</span></div>
-    <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-18 23:57</span><button class="btn" id="appReload">更新</button></div>
+    <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
@@ -1956,6 +1956,8 @@ body.rtfull{overflow:hidden}
   $("tb2").onclick=()=>{ showTab(2); showSub(curSub); };
   document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.onclick=()=>showSub(b.dataset.sub));
   document.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>loadInfo(b.dataset.reload,true));
+  // キャッシュを飛ばして新しい版を読み込み直す（ホーム画面に保存したアイコンは特に前の内容を覚えやすいため）。保存データは消えない
+  $("appReload").onclick=()=>{ location.href=location.pathname+"?r="+Date.now(); };
   document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{
     airport=b.dataset.ap;
     document.querySelectorAll("[data-ap]").forEach(x=>x.setAttribute("aria-selected",x===b));
