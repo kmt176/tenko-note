@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>専用乗り場 時間帯の傾向</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6; /* 六本木ヒルズ */
+    --series-2:       #eb6834; /* 虎ノ門ヒルズ */
+    --series-3:       #1baf7a; /* 麻布台ヒルズ */
+    --crit:           #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #f0efec;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --series-3:       #199e70;
+      --crit:           #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --crit:           #e66767;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background: var(--page);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+  }
+  .viz-root { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 19px; font-weight: 700; margin: 0 0 4px; }
+  .sub { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 4px; }
+  .note { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin: 0 0 20px; }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 16px 10px;
+    margin-bottom: 18px;
+  }
+  .card h2 { font-size: 15px; font-weight: 700; margin: 0 0 2px; }
+  .card .desc { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 10px; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin: 2px 0 10px; }
+  .legend .item { display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-secondary); }
+  .legend .sw { width:10px; height:10px; border-radius:2px; flex:0 0 auto; }
+  svg { display:block; width:100%; height:auto; overflow: visible; }
+  .gridline { stroke: var(--grid); stroke-width:1; }
+  .axisline { stroke: var(--axis); stroke-width:1; }
+  .axislabel { fill: var(--text-muted); font-size:10px; }
+  .line { fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+  .enddot { stroke: var(--surface-1); stroke-width:2; }
+  .endlabel { font-size:11px; font-weight:600; }
+  .hoverline { stroke: var(--text-muted); stroke-width:1; stroke-dasharray:2,3; pointer-events:none; }
+  .tooltip {
+    position:absolute; pointer-events:none; background:var(--surface-1);
+    border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+    font-size:12px; color:var(--text-primary); box-shadow:0 4px 14px rgba(0,0,0,.12);
+    min-width:150px; line-height:1.6; opacity:0; transition:opacity .08s;
+  }
+  .tooltip .t-h { font-weight:700; margin-bottom:3px; color:var(--text-primary); }
+  .tooltip .t-row { display:flex; justify-content:space-between; gap:10px; }
+  .tooltip .t-n { color:var(--text-muted); font-size:11px; margin-top:3px; }
+  .chartwrap { position:relative; }
+  .togglebtn {
+    font-size:12px; color: var(--text-secondary); background:none; border:1px solid var(--border);
+    border-radius:7px; padding:5px 10px; cursor:pointer; margin-top:4px;
+  }
+  table.dtable { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+  table.dtable caption { text-align:left; font-size:12px; color:var(--text-secondary); margin-bottom:6px; }
+  table.dtable th, table.dtable td { padding:5px 6px; text-align:right; border-bottom:1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  table.dtable th:first-child, table.dtable td:first-child { text-align:left; }
+  table.dtable thead th { color:var(--text-secondary); font-weight:600; }
+  .hidden { display:none; }
+  #loadMsg { font-size:13px; color:var(--text-secondary); padding:30px 0; text-align:center; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>専用乗り場 時間帯の傾向</h1>
+  <p class="sub">六本木ヒルズ森タワー・虎ノ門ヒルズステーションタワー・麻布台ヒルズ森JPタワーの3か所、1分おきの記録を時間帯（0〜23時）ごとに平均したものです。開くたびに最新のログで計算し直します。</p>
+  <p class="note" id="periodNote">記録件数：読み込み中…</p>
+  <div id="loadMsg">読み込んでいます…</div>
+
+  <div id="charts" class="hidden">
+    <div class="card">
+      <h2>時間帯別・平均駐車台数</h2>
+      <p class="desc">各時間に実際に停まっていたタクシーの台数の平均。多いほど「乗り場に余裕がある」時間帯です。</p>
+      <div class="legend" id="legend1"></div>
+      <div class="chartwrap">
+        <svg id="chartTaxi" viewBox="0 0 700 260" role="img" aria-label="時間帯別の平均駐車台数"></svg>
+        <div class="tooltip" id="tipTaxi"></div>
+      </div>
+      <button class="togglebtn" id="toggleTable1" aria-expanded="false">表で見る</button>
+      <div id="tableWrap1" class="hidden"></div>
+    </div>
+
+    <div class="card">
+      <h2>時間帯別・不足率</h2>
+      <p class="desc">本家の基準台数を下回っていた（赤表示になった）割合。100%に近いほど、その時間はいつも不足気味ということです。</p>
+      <div class="legend" id="legend2"></div>
+      <div class="chartwrap">
+        <svg id="chartShort" viewBox="0 0 700 260" role="img" aria-label="時間帯別の不足率"></svg>
+        <div class="tooltip" id="tipShort"></div>
+      </div>
+      <button class="togglebtn" id="toggleTable2" aria-expanded="false">表で見る</button>
+      <div id="tableWrap2" class="hidden"></div>
+    </div>
+
+    <div class="card" id="cardPerson">
+      <h2>時間帯別・待ち人数</h2>
+      <p class="desc">乗り場で待っている人数の平均。記録を始めたばかりの時間帯は「—」になります。</p>
+      <div class="legend" id="legend3"></div>
+      <div class="chartwrap">
+        <svg id="chartPerson" viewBox="0 0 700 260" role="img" aria-label="時間帯別の待ち人数"></svg>
+        <div class="tooltip" id="tipPerson"></div>
+      </div>
+      <button class="togglebtn" id="toggleTable3" aria-expanded="false">表で見る</button>
+      <div id="tableWrap3" class="hidden"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SPOTS = [
+  {id:"roppongi_mori", short:"六本木ヒルズ", color:"var(--series-1)"},
+  {id:"toranomon_st",  short:"虎ノ門ヒルズ", color:"var(--series-2)"},
+  {id:"azabudai_morijp", short:"麻布台ヒルズ", color:"var(--series-3)"}
+];
+
+function buildLegend(el){
+  el.innerHTML = SPOTS.map(s=>`<span class="item"><span class="sw" style="background:${s.color}"></span>${s.short}</span>`).join("");
+}
+
+const W=700, H=260, PAD_L=30, PAD_R=54, PAD_T=12, PAD_B=24;
+const plotW = W-PAD_L-PAD_R, plotH = H-PAD_T-PAD_B;
+function xOf(h){ return PAD_L + (h/23)*plotW; }
+
+function drawChart(DATA, svgEl, tipEl, key, opts){
+  const maxV = opts.max, fmt = opts.fmt, unit = opts.unit;
+  function yOf(v){ return PAD_T + plotH - (v/maxV)*plotH; }
+  let svg = `<g>`;
+  const ticks = opts.ticks;
+  ticks.forEach(t=>{
+    const y = yOf(t);
+    svg += `<line class="gridline" x1="${PAD_L}" x2="${W-PAD_R}" y1="${y}" y2="${y}"/>`;
+    svg += `<text class="axislabel" x="${PAD_L-6}" y="${y+3}" text-anchor="end">${fmt(t)}</text>`;
+  });
+  svg += `<line class="axisline" x1="${PAD_L}" x2="${W-PAD_R}" y1="${PAD_T+plotH}" y2="${PAD_T+plotH}"/>`;
+  [0,6,12,18,23].forEach(h=>{
+    svg += `<text class="axislabel" x="${xOf(h)}" y="${H-6}" text-anchor="middle">${h}時</text>`;
+  });
+  SPOTS.forEach(s=>{
+    const hrs = DATA[s.id].hours;
+    const pts = hrs.filter(h=>h[key]!=null).map(h=>`${xOf(h.h)},${yOf(h[key])}`);
+    if(!pts.length) return;
+    svg += `<polyline class="line" points="${pts.join(" ")}" style="stroke:${s.color}"/>`;
+    const last = hrs.filter(h=>h[key]!=null).slice(-1)[0];
+    svg += `<circle class="enddot" cx="${xOf(last.h)}" cy="${yOf(last[key])}" r="4" style="fill:${s.color}"/>`;
+    svg += `<text class="endlabel" x="${xOf(last.h)+7}" y="${yOf(last[key])+4}" style="fill:${s.color}">${s.short}</text>`;
+  });
+  for(let h=0; h<=23; h++){
+    svg += `<rect x="${xOf(h)-(plotW/23)/2}" y="${PAD_T}" width="${plotW/23}" height="${plotH}" fill="transparent" data-h="${h}"/>`;
+  }
+  svg += `</g>`;
+  svgEl.innerHTML = svg;
+
+  let hoverLine = null;
+  svgEl.querySelectorAll("rect[data-h]").forEach(rect=>{
+    rect.addEventListener("mouseenter", onHover);
+    rect.addEventListener("mousemove", onHover);
+    rect.addEventListener("mouseleave", onLeave);
+    rect.addEventListener("touchstart", onHover, {passive:true});
+  });
+  function onHover(e){
+    const h = +e.target.dataset.h;
+    if(hoverLine) hoverLine.remove();
+    const ln = document.createElementNS("http://www.w3.org/2000/svg","line");
+    ln.setAttribute("class","hoverline");
+    ln.setAttribute("x1", xOf(h)); ln.setAttribute("x2", xOf(h));
+    ln.setAttribute("y1", PAD_T); ln.setAttribute("y2", PAD_T+plotH);
+    svgEl.appendChild(ln); hoverLine = ln;
+
+    let rowsHtml = "";
+    let n = null;
+    SPOTS.forEach(s=>{
+      const row = DATA[s.id].hours[h];
+      if(row[key]!=null){
+        rowsHtml += `<div class="t-row"><span>${s.short}</span><span style="color:${s.color};font-weight:600">${fmt(row[key])}${unit}</span></div>`;
+      }
+      n = row.n;
+    });
+    tipEl.innerHTML = `<div class="t-h">${h}時台</div>${rowsHtml || "<div>記録なし</div>"}<div class="t-n">サンプル数 ${n}件</div>`;
+    tipEl.style.opacity = 1;
+    const rectEl = svgEl.getBoundingClientRect();
+    const scale = rectEl.width / W;
+    let left = xOf(h)*scale + 10;
+    if(left + 160 > rectEl.width) left = xOf(h)*scale - 170;
+    tipEl.style.left = left + "px";
+    const vals = SPOTS.map(s=>DATA[s.id].hours[h][key]).filter(v=>v!=null);
+    tipEl.style.top = (yOf(vals.length?Math.max(...vals):0)*scale - 10) + "px";
+  }
+  function onLeave(){ if(hoverLine){ hoverLine.remove(); hoverLine=null; } tipEl.style.opacity = 0; }
+}
+
+function buildTable(DATA, wrapId, key, unit, fmt){
+  const wrap = document.getElementById(wrapId);
+  let html = `<table class="dtable"><caption>時間ごとの値（3地点）</caption><thead><tr><th>時</th>`;
+  SPOTS.forEach(s=> html += `<th>${s.short}</th>`);
+  html += `<th>サンプル数</th></tr></thead><tbody>`;
+  for(let h=0; h<=23; h++){
+    html += `<tr><td>${h}時</td>`;
+    SPOTS.forEach(s=>{
+      const row = DATA[s.id].hours[h];
+      html += `<td>${row[key]!=null? fmt(row[key])+unit : "—"}</td>`;
+    });
+    html += `<td>${DATA[SPOTS[0].id].hours[h].n}</td></tr>`;
+  }
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+}
+
+function wireToggle(btnId, wrapId){
+  document.getElementById(btnId).addEventListener("click", function(){
+    const w = document.getElementById(wrapId);
+    const show = w.classList.contains("hidden");
+    w.classList.toggle("hidden");
+    this.setAttribute("aria-expanded", show);
+    this.textContent = show ? "表を閉じる" : "表で見る";
+  });
+}
+
+function render(res){
+  if(!res || !res.ok){
+    document.getElementById("loadMsg").textContent = "読み込めませんでした: " + (res && res.error || "不明なエラー");
+    return;
+  }
+  const DATA = res.items;
+  document.getElementById("loadMsg").classList.add("hidden");
+  document.getElementById("charts").classList.remove("hidden");
+  document.getElementById("periodNote").textContent =
+    `記録件数：${res.rows}件（最新 ${new Date(res.updatedAt).toLocaleString("ja-JP")} 時点で計算）。記録の日数が少ないうちは参考値として見てください。`;
+
+  buildLegend(document.getElementById("legend1"));
+  buildLegend(document.getElementById("legend2"));
+  buildLegend(document.getElementById("legend3"));
+
+  drawChart(DATA, document.getElementById("chartTaxi"), document.getElementById("tipTaxi"), "avg_taxi", {max:7, ticks:[0,2,4,6], fmt:v=>v, unit:"台"});
+  drawChart(DATA, document.getElementById("chartShort"), document.getElementById("tipShort"), "short_rate", {max:100, ticks:[0,25,50,75,100], fmt:v=>v, unit:"%"});
+  drawChart(DATA, document.getElementById("chartPerson"), document.getElementById("tipPerson"), "avg_person", {max:5, ticks:[0,1,2,3,4,5], fmt:v=>v, unit:"人"});
+
+  buildTable(DATA, "tableWrap1","avg_taxi","台",v=>v);
+  buildTable(DATA, "tableWrap2","short_rate","%",v=>v);
+  buildTable(DATA, "tableWrap3","avg_person","人",v=>v);
+
+  wireToggle("toggleTable1","tableWrap1");
+  wireToggle("toggleTable2","tableWrap2");
+  wireToggle("toggleTable3","tableWrap3");
+}
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzaCheINzPr7VXonUOs9CnwTCXCbRy0XqeMmaNw1vlNagiPqg_LyUDEQvrZA5axfnHPQQ/exec";
+let loadDone = false;
+setTimeout(function(){
+  if(loadDone) return;
+  document.getElementById("loadMsg").innerHTML = "20秒経っても読み込めませんでした。電波の良い場所でページを再読み込みしてください。";
+}, 20000);
+fetch(SCRIPT_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"taxiLogHourly"})})
+  .then(function(res){ return res.json(); })
+  .then(function(res){ loadDone = true; render(res); })
+  .catch(function(err){ loadDone = true; document.getElementById("loadMsg").textContent = "読み込めませんでした: " + err; });
+</script>
+</body>
+</html>
