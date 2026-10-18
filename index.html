@@ -237,6 +237,8 @@ a.flink:active{background:var(--sunk)}
 .rzbtn{display:grid;gap:2px;text-align:center;padding:12px 10px;font-size:19px;font-weight:700;border:2px solid var(--accent);color:var(--accent);background:var(--surface)}
 .rzbtn small{font-size:13.5px;font-weight:400;color:var(--muted)}
 .rzbtn.on{background:var(--accent-soft);border-color:var(--accent)}
+.rzfloat{position:fixed;left:10px;right:10px;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:4}
+.rzfloat .rzbtn{width:100%;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .ride{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px;text-align:left;width:100%}
 .ride.open{border-color:var(--ok);border-width:2px}
 .ride .top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -791,7 +793,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 00:30</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 00:37</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -909,6 +911,7 @@ body.rtfull{overflow:hidden}
   </section>
 </div>
 
+<div class="rzfloat" id="rzFloat" hidden></div>
 <nav class="tabbar" role="tablist" aria-label="画面の切り替え">
   <button role="tab" id="tb0" aria-selected="false" aria-controls="tabHelp" class="tb-help">使い方</button>
   <button role="tab" id="tb1" aria-selected="true" aria-controls="tabTenko">点呼時間</button>
@@ -3044,7 +3047,18 @@ body.rtfull{overflow:hidden}
       if(rzOpen) rzOpen.off=Math.max(rzOpen.on,now-1);
     }
     if(kind===RZ) syncRz(d);
-    saveSales(); renderSales();
+    saveSales(); renderSales(); renderRzFloat();
+  }
+  // コアタイム（朝6〜10時・夕方16〜20時）の間、画面下のバーの上に連続配車ボタンを浮かせて出す（どのタブを見ていても押せるように）
+  function inCoreTime(){ const now=new Date(), m=now.getHours()*60+now.getMinutes(); return RZ_WIN.some(([a,b])=>m>=a&&m<b); }
+  function renderRzFloat(){
+    const el=$("rzFloat"); if(!el) return;
+    const k=shiftNow();
+    if(!car().rz||!k||getDay(k).mode==="simple"||!inCoreTime()){ el.hidden=true; return; }
+    const d=getDay(k), open=d.rides.find(r=>r.kind===RZ&&r.on!=null&&r.off==null), n=nowMin(k);
+    el.hidden=false;
+    el.innerHTML=`<button class="btn rzbtn${open?" on":""}" id="rzFloatBtn">${open?`連続配車 終了<small>${tm(open.on)} から ${hm(n-open.on)}</small>`:"連続配車 開始<small>コアタイム中です</small>"}</button>`;
+    $("rzFloatBtn").onclick=()=>{ sDay=k; evPress(RZ); };
   }
 
   // 1件の入力・修正
@@ -3695,6 +3709,9 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("sPrev").onclick=()=>moveDay(-1); $("sNext").onclick=()=>moveDay(1);
   // 乗車中は、経過時間の表示を1分ごとに更新する
   setInterval(()=>{ if(!$("tabSales").hidden&&!$("sDayView").hidden&&$("rSheet").hidden) renderSales(); },60000);
+  // 連続配車の浮かせたボタンは、どのタブを見ていてもコアタイムの出入りに合わせて1分ごとに出し引きする
+  setInterval(renderRzFloat,60000);
+  renderRzFloat();
 
   // ===== 専用乗り場（森ビル）の空車不足お知らせ。5km圏内に入ったら確認し、不足中なら帯で知らせる =====
   const TAXI_SPOTS=[
