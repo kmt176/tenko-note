@@ -795,7 +795,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 01:00</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 01:06</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2562,6 +2562,10 @@ body.rtfull{overflow:hidden}
     const perH=(fare,min)=>min>0?fare*cf.tax/(min/60):0;
     let html=`<div class="src" style="margin:4px 2px 8px">${xs.length}勤務（${md(xs[0].k)}〜${md(xs[xs.length-1].k)}）。金額はETC・アプリ手配料を除いたメーター料金の税抜です。${xs.length<20?"勤務が少ないうちは、参考程度に見てください。":""}</div>`;
 
+    // 1時間あたりの売上（休憩・回送を除いた時間で、この期間の合計から計算）
+    { let tWork=0,tNet=0; xs.forEach(x=>{ const t=workOf(x.k); if(t){ tWork+=t.work; tNet+=t.net; } });
+      html+=card("1時間あたりの売上",`<div class="row"><span>この期間の平均</span><span class="total num">${tWork?yen(tNet/(tWork/60)):"—"}<small style="font-size:14px;color:var(--muted)"> 円/時</small></span></div>`,"税抜営収÷（出庫〜入庫のうち休憩・回送を除いた時間）。この期間に記録した勤務をまとめて計算しています。"); }
+
     // 曜日別（出庫した曜日）：1勤務の平均（税抜営収）と時間あたり
     const byD={}; xs.forEach(x=>{ const w=dow(x.k), t=workOf(x.k); const o=byD[w]=byD[w]||{n:0,net:0,work:0,wnet:0}; o.n++; o.net+=x.amt*cf.tax; if(t){ o.work+=t.work; o.wnet+=t.net; } });
     html+=card("曜日別",bars([..."月火水木金土日"].filter(w=>byD[w]).map(w=>{ const o=byD[w]; return {k:w,v:o.net/o.n,vt:yen(o.net/o.n),sub:`${o.n}回・時間あたり ${o.work?yen(o.wnet/(o.work/60)):"—"}`}; })),"出庫した曜日ごとの、1勤務あたりの税抜営収（右は回数と時間あたり）。");
@@ -2594,11 +2598,23 @@ body.rtfull{overflow:hidden}
       if(any) html+=card("サンキューチケット",bars(Object.keys(th).filter(k=>th[k].n).map(k=>{ const o=th[k]; return {k,v:o.f*cf.tax/o.n,vt:yen(o.f*cf.tax/o.n),sub:`${o.n}回・時間あたり ${yen(perH(o.f,o.m))}`}; })),"配車（連続配車を含む）を、サンキューチケットとそれ以外に分けた1回の平均（メーター料金の税抜）。右は回数と時間あたり。"); }
     html+=card("営業のしかた別",bars(["連続配車","配車","手上げ","乗り場"].filter(k=>byK[k]).map(k=>{ const o=byK[k]; return {k,v:perH(o.f,o.m),vt:yen(perH(o.f,o.m)),sub:`${o.n}回・平均 ${yen(o.f*cf.tax/o.n)}`}; })),"時間あたり（税抜）＝売上÷（待ち＋営業の時間）。右は回数と1回の平均。");
 
+    // 乗車時間の長さ別：短い乗車と長い乗車、どちらが時間あたり良いか
+    { const LB=[[0,10],[10,20],[20,30],[30,45],[45,Infinity]], lenLabel=(a,b)=>b===Infinity?`${a}分〜`:`${a}〜${b}分`;
+      const byLen=LB.map(([lo,hi])=>({lo,hi,n:0,f:0,m:0}));
+      xs.forEach(x=>dayCalc(x.d).rows.forEach(r=>{ if(!isRide(r)||r._eig==null) return;
+        const o=byLen.find(o=>r._eig>=o.lo&&r._eig<o.hi); if(o){ o.n++; o.f+=fareOf(r); o.m+=r._eig+Math.max(0,r._wait||0); } }));
+      html+=card("乗車時間の長さ別",bars(byLen.filter(o=>o.n).map(o=>({k:lenLabel(o.lo,o.hi),v:perH(o.f,o.m),vt:yen(perH(o.f,o.m)),sub:`${o.n}回・平均 ${yen(o.f*cf.tax/o.n)}`}))),"乗車時間（乗せてから降ろすまで）の長さごとの時間あたり（税抜）。右は回数と1回の平均運賃。"); }
+
     // 天気別：記録した天気（10分か1時間の降水がある、または雨を選んだ）
     const wx={雨:{n:0,f:0,m:0},雨以外:{n:0,f:0,m:0}}; let wxn=0;
     xs.forEach(x=>dayCalc(x.d).rows.forEach(r=>{ if(!isRide(r)||r._eig==null) return; if(!r.wx&&!r.wxSel) return; wxn++;
       const rain=/雨|雪/.test(r.wxSel||"")||(r.wx&&((+r.wx.p10||0)>0||(+r.wx.p1h||0)>0)); const o=wx[rain?"雨":"雨以外"]; o.n++; o.f+=fareOf(r); o.m+=r._eig+Math.max(0,r._wait||0); }));
     html+=card("天気別",wxn?bars(["雨","雨以外"].filter(k=>wx[k].n).map(k=>{ const o=wx[k]; return {k,v:perH(o.f,o.m),vt:yen(perH(o.f,o.m)),sub:`${o.n}回`}; })):`<div class="geo">天気を記録した乗車がまだありません</div>`,"乗車のときの天気（気象庁アメダス、または自分で選んだ天気）ごとの時間あたり（税抜）。");
+
+    // 長距離（1万円以上）が出た条件：いつ・どこから・どんな内容だったかを一覧で見る
+    { const longs=[]; xs.forEach(x=>dayCalc(x.d).rows.forEach(r=>{ if(isRide(r)&&+r.amt>=10000) longs.push({k:x.k,r}); }));
+      longs.sort((a,b)=>a.k!==b.k?(a.k<b.k?1:-1):b.r.on-a.r.on);
+      html+=card("長距離（1万円以上）が出た条件",longs.length?`<div style="overflow-x:auto"><table class="cmpt"><tbody>${longs.slice(0,30).map(({k,r})=>`<tr><td class="num">${md(k)}（${dow(k)}）</td><td class="num">${tm(r.on)}</td><td>${esc(r.kind)}</td><td class="num">${yen(r.amt)}円</td><td>${esc(r.onAddr||r.nOnAddr||"")}${r.offAddr||r.nOffAddr?" → "+esc(r.offAddr||r.nOffAddr):""}</td></tr>`).join("")}</tbody></table></div>${longs.length>30?`<div class="src">他${longs.length-30}件（新しい順の上位だけ表示しています）</div>`:""}`:`<div class="geo">この期間に1万円以上の乗車はまだありません</div>`,"1万円以上になった乗車の一覧（新しい順）。時間帯・場所・内容（配車／手上げ／乗り場など）から、出やすい条件を見つけてください。"); }
     B.innerHTML=html;
   }
 
