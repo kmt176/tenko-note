@@ -795,8 +795,9 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 00:50</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 01:00</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
+    <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
 
@@ -1963,6 +1964,8 @@ body.rtfull{overflow:hidden}
   document.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>loadInfo(b.dataset.reload,true));
   // キャッシュを飛ばして新しい版を読み込み直す（ホーム画面に保存したアイコンは特に前の内容を覚えやすいため）。保存データは消えない
   $("appReload").onclick=()=>{ location.href=location.pathname+"?r="+Date.now(); };
+  // アプリが乗車・降車などの記録に使っている時刻をそのまま表示する（スマホの時計とのズレを確かめる用）
+  setInterval(()=>{ const el=$("appClock"); if(el&&!$("tabHelp").hidden){ const d=new Date(); el.textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0"); } },1000);
   document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{
     airport=b.dataset.ap;
     document.querySelectorAll("[data-ap]").forEach(x=>x.setAttribute("aria-selected",x===b));
@@ -2295,7 +2298,8 @@ body.rtfull{overflow:hidden}
         <div class="titlepick"><h2 style="margin:0;font-size:17px;text-align:center">${wkLabel(rzW)}<span class="dd">▾</span></h2><select id="rzPick" aria-label="週を選ぶ">${(weeks.includes(rzW)?weeks:[rzW,...weeks]).sort((a,b)=>b-a).map(w=>`<option value="${w}"${w===rzW?" selected":""}>${wkLabel(w)}</option>`).join("")}</select></div>
         <button class="iconbtn" id="rzNext" aria-label="次の週">▶</button></div>
       <div>この週の目標：<b>${ruleText(r)}</b> ${car().rzRules&&car().rzRules.length?`<small>（管理者の設定）</small><button class="btn" id="rzRuleBtn" hidden>変える</button>`:`<button class="btn" id="rzRuleBtn">変える</button>`}</div>
-      <div class="btnrow"><button class="btn" id="rzFloatTestBtn">${rzFloatTest?"コアタイム以外でのテスト表示をやめる":"コアタイム以外でも、浮かせたボタンをテスト表示する"}</button></div>
+      <div class="btnrow"><button class="btn" id="rzFloatTestBtn">${rzFloatTest?"コアタイム以外でのテスト表示をやめる":"コアタイム以外でも、浮かせたボタンをテスト表示する"}</button>
+      <button class="btn" id="rzDoneTestBtn">${rzDoneTest?"達成済みの色のテストをやめる":"達成済みの色（薄い青）を試す"}</button></div>
       <div class="grp" id="rzRuleBox" hidden>
         <div class="field"><label for="rzType">目標のしかた</label><select id="rzType"><option value="all">週の出庫〜入庫の時間の○%</option><option value="am">週の8〜10時に勤務していた時間の○%</option></select></div>
         <div class="field"><label for="rzPct">目標（%）</label><input type="number" id="rzPct" inputmode="numeric" min="1" max="100" value="${r.pct}"></div>
@@ -2323,6 +2327,7 @@ body.rtfull{overflow:hidden}
     $("rzPick").addEventListener("change",()=>{ rzW=+$("rzPick").value; rzEd=null; renderRzView(); });
     $("rzRuleBtn").onclick=()=>{ $("rzRuleBox").hidden=!$("rzRuleBox").hidden; $("rzType").value=r.type; };
     $("rzFloatTestBtn").onclick=()=>{ rzFloatTest=!rzFloatTest; renderRzView(); renderRzFloat(); };
+    $("rzDoneTestBtn").onclick=()=>{ rzDoneTest=!rzDoneTest; renderRzView(); renderRzFloat(); };
     $("rzRuleSave").onclick=()=>{ const pc=+$("rzPct").value; if(!(pc>0&&pc<=100)) return; const from=absDate(rzW);
       z.rules=z.rules.filter(x=>x.from<from).concat([{from,type:$("rzType").value,pct:pc}]); saveSales(); renderRzView(); };
     $("rzTplBtn").onclick=()=>openRzEd("tpl");
@@ -3055,6 +3060,7 @@ body.rtfull{overflow:hidden}
   }
   // コアタイム（朝6〜10時・夕方16〜20時）の間、画面下のバーの上に連続配車ボタンを浮かせて出す（どのタブを見ていても押せるように）
   let rzFloatTest=false;   // 連続配車の浮かせたボタンを、コアタイム以外でも確認用に出す（保存されない・画面を開き直すと元に戻る）
+  let rzDoneTest=false;    // 浮かせたボタンを、達成済みの色（薄い青）で確認用に出す（保存されない・画面を開き直すと元に戻る）
   function inCoreTime(){ if(rzFloatTest) return true; const now=new Date(), m=now.getHours()*60+now.getMinutes(); return RZ_WIN.some(([a,b])=>m>=a&&m<b); }
   function renderRzFloat(){
     const el=$("rzFloat"); if(!el) return;
@@ -3064,7 +3070,7 @@ body.rtfull{overflow:hidden}
     const s=rzShift(k);
     const mActAm=s.state==="none"?0:s.act?winSum(s.act.rz,s.a,s.act.b,RZ_WIN_AM):mustOfAm(s);
     const mActPm=s.state==="none"?0:s.act?winSum(s.act.rz,s.a,s.act.b,RZ_WIN_PM):mustOfPm(s);
-    const done=mActAm>=MUST_AM()||mActPm>=MUST_PM();
+    const done=rzDoneTest||mActAm>=MUST_AM()||mActPm>=MUST_PM();
     el.hidden=false;
     el.innerHTML=`<button class="btn rzbtn ${done?"rzdone":"rzneed"}${open?" on":""}" id="rzFloatBtn">${open?`連続配車 終了<small>${tm(open.on)} から ${hm(n-open.on)}</small>`:`連続配車 開始<small>コアタイム中・必須${done?"達成済み":"まだ未達"}</small>`}</button>`;
     $("rzFloatBtn").onclick=()=>{ sDay=k; evPress(RZ); };
