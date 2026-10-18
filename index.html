@@ -791,7 +791,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 00:14</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 00:30</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -2857,21 +2857,21 @@ body.rtfull{overflow:hidden}
     const open=d.rides.find(r=>!isEv(r.kind)&&r.on!=null&&r.off==null);
     const evOpen=kd=>d.rides.find(r=>r.kind===kd&&r.on!=null&&r.off==null);
     if(act&&!simple){
-      const n=nowMin(k);
+      const n=nowMin(k), hasOut=d.rides.some(r=>r.kind==="出庫"&&r.on!=null);
       $("sNow").innerHTML=`<div class="ridebtns">
         <div class="ridebtn">
         ${open?`<button class="bigbtn off" id="bOff">降車<small>乗車 ${tm(open.on)} から ${hm(n-open.on)}</small></button>`
+              :!hasOut?`<button class="bigbtn" id="bOut">会社を出た時間<small>押すと記録します。次から「乗車」に変わります</small></button>`
               :`<button class="bigbtn" id="bOn">乗車<small>押した時刻・場所・天気を記録します</small></button>`}
         <label class="check"><input type="checkbox" id="bUnsure"><span class="vtext">押し忘れ</span></label>
         </div>
         ${car().rz?`<button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>`:""}
         <div class="evbtns">
-          <button class="btn" data-ev="出庫">出庫</button>
           <button class="btn${evOpen("回送")?" on":""}" data-ev="回送">${evOpen("回送")?"回送終了":"回送"}</button>
           <button class="btn${evOpen("休憩")?" on":""}" data-ev="休憩">${evOpen("休憩")?"休憩終了":"休憩"}</button>
           <button class="btn" data-ev="入庫">入庫</button>
         </div></div>`;
-      if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff; if($("bRz")) $("bRz").onclick=()=>evPress(RZ);
+      if($("bOut")) $("bOut").onclick=()=>evPress("出庫"); if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff; if($("bRz")) $("bRz").onclick=()=>evPress(RZ);
       document.querySelectorAll("#sNow [data-ev]").forEach(b=>b.onclick=()=>evPress(b.dataset.ev));
     } else $("sNow").innerHTML=act||simple||k===activeDay()||!activeDay()?"":`<button class="btn" id="bToday">${shiftNow()?"今の勤務":"直前の勤務"}（${md(activeDay())}出庫）に戻る</button>`;
     if($("bToday")) $("bToday").onclick=()=>renderSales(true);
