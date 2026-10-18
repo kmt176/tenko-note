@@ -104,10 +104,13 @@
   table.dtable thead th { color:var(--text-secondary); font-weight:600; }
   .hidden { display:none; }
   #loadMsg { font-size:13px; color:var(--text-secondary); padding:30px 0; text-align:center; }
+  .backlink { display:inline-block; font-size:13px; color:var(--text-secondary); text-decoration:none; margin-bottom:10px; }
+  .backlink:active { opacity:0.6; }
 </style>
 </head>
 <body>
 <div class="viz-root">
+  <a class="backlink" href="https://kmt176.github.io/tenko-note/">‹ 点呼ノートに戻る</a>
   <h1>専用乗り場 時間帯の傾向</h1>
   <p class="sub">六本木ヒルズ森タワー・虎ノ門ヒルズステーションタワー・麻布台ヒルズ森JPタワーの3か所、1分おきの記録を時間帯（0〜23時）ごとに平均したものです。開くたびに最新のログで計算し直します。</p>
   <p class="note" id="periodNote">記録件数：読み込み中…</p>
