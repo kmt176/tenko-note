@@ -795,7 +795,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 01:06</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 01:16</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2562,9 +2562,13 @@ body.rtfull{overflow:hidden}
     const perH=(fare,min)=>min>0?fare*cf.tax/(min/60):0;
     let html=`<div class="src" style="margin:4px 2px 8px">${xs.length}勤務（${md(xs[0].k)}〜${md(xs[xs.length-1].k)}）。金額はETC・アプリ手配料を除いたメーター料金の税抜です。${xs.length<20?"勤務が少ないうちは、参考程度に見てください。":""}</div>`;
 
-    // 1時間あたりの売上（休憩・回送を除いた時間で、この期間の合計から計算）
-    { let tWork=0,tNet=0; xs.forEach(x=>{ const t=workOf(x.k); if(t){ tWork+=t.work; tNet+=t.net; } });
-      html+=card("1時間あたりの売上",`<div class="row"><span>この期間の平均</span><span class="total num">${tWork?yen(tNet/(tWork/60)):"—"}<small style="font-size:14px;color:var(--muted)"> 円/時</small></span></div>`,"税抜営収÷（出庫〜入庫のうち休憩・回送を除いた時間）。この期間に記録した勤務をまとめて計算しています。"); }
+    // 1時間あたりの売上（休憩・回送を除いた時間で、この期間の合計から計算）。回送・休憩そのものの合計時間も合わせて見る
+    { let tWork=0,tNet=0,tKaiso=0,tKyukei=0;
+      xs.forEach(x=>{ const t=workOf(x.k); if(t){ tWork+=t.work; tNet+=t.net; }
+        x.d.rides.forEach(r=>{ if(r.on==null||r.off==null||r.off<=r.on) return; if(r.kind==="回送") tKaiso+=r.off-r.on; else if(r.kind==="休憩") tKyukei+=r.off-r.on; }); });
+      html+=card("1時間あたりの売上",`<div class="row"><span>この期間の平均</span><span class="total num">${tWork?yen(tNet/(tWork/60)):"—"}<small style="font-size:14px;color:var(--muted)"> 円/時</small></span></div>
+        <div class="sumgrid" style="margin-top:8px"><div><span class="h">回送時間（合計）</span><span class="v num">${hm(tKaiso)}</span></div><div><span class="h">休憩時間（合計）</span><span class="v num">${hm(tKyukei)}</span></div></div>`,
+        "税抜営収÷（出庫〜入庫のうち休憩・回送を除いた時間）。この期間に記録した勤務をまとめて計算しています。回送・休憩の時間はこの計算には含めていません。"); }
 
     // 曜日別（出庫した曜日）：1勤務の平均（税抜営収）と時間あたり
     const byD={}; xs.forEach(x=>{ const w=dow(x.k), t=workOf(x.k); const o=byD[w]=byD[w]||{n:0,net:0,work:0,wnet:0}; o.n++; o.net+=x.amt*cf.tax; if(t){ o.work+=t.work; o.wnet+=t.net; } });
