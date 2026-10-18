@@ -796,7 +796,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 02:44</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 02:48</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -862,7 +862,7 @@ body.rtfull{overflow:hidden}
     <p>売上は、<b>点呼時間に入れた勤務（出社日）ごと</b>に記録します。その日の<b>業務前点呼（実績）</b>を入れると、その勤務の売上を入力できるようになります（予定だけの日はまだ入力できません）。勤務中でないときは、直前の勤務が開きます。</p>
     <ol class="steps">
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります。その場で押せず、あとで(社内処理のあとなど)まとめて押すときは、右の「<b>押し忘れ</b>」にチェックを付けて押してください。時刻・場所は記録せず、あとで「日報から取り込む」を使ったときに日報の内容に差し替わります</small></li>
-      <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき。JPNタクシーでサンキューチケットの配車だったときは「サンキューチケット」にチェックを入れると、営業分析で分けて見られます。天気はふだん自動で、直したいときだけ「天気を直す」を開きます</small></li>
+      <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています（連続配車モード中は、決済はネット/QRが入ります）。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき。JPNタクシーでサンキューチケットの配車だったときは「サンキューチケット」にチェックを入れると、営業分析で分けて見られます。天気はふだん自動で、直したいときだけ「天気を直す」を開きます</small></li>
       <li>勤務の始めは、大きなボタンが「<b>会社を出た時間</b>」になっています。会社を出るときに押すと出庫を記録し、ボタンが「乗車」に変わります。休憩・回送・入庫は、その下の小さなボタンで記録します（休憩・回送はもう一度押すと終了）。</li>
       <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>開始は押した時刻の1分後で記録します（会社のシステムとのずれ対策で、1回ごとに1分少なく数えます）。連続配車中に「回送」「休憩」を始めると、連続配車はその1分前に自動で終了します。モード中に乗車を押すと内容が「連続配車」になります。<b>コアタイム（朝6〜10時・夕方16〜20時）の間は、どの画面を見ていても、下のボタンの列のすぐ上に連続配車のボタンが出ます</b>（必須がまだ未達なら薄いピンク、達成していれば薄い青）。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（出庫〜入庫の○%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須・コアタイム（朝6〜10時90分 または 夕方16〜20時2時間、どちらか）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
       <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。ネット/QR（A）でも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
@@ -3055,7 +3055,10 @@ body.rtfull{overflow:hidden}
     const ks=car().kinds; if(ks.length===1) return ks[0];
     const k0=kindNow0(d,at); return ks.includes(k0)?k0:ks[0];
   }
-  const payNow=d=>{ const ps=car().pays, p0=lastOf(d,"pay","A:GOPAY"); return ps.includes(p0)?p0:ps[0]; };
+  // 連続配車モードがオンの時間か（開始〜終了の間、または終了がまだ）
+  const rzOnAt=(d,at)=>d.rides.some(m=>m.kind===RZ&&m.on!=null&&at>=m.on&&(m.off==null||at<=m.off));
+  // 決済の初期値：前の乗車と同じ。ただし連続配車モードがオンの間はネット/QR（ユーザー指定）
+  const payNow=(d,at)=>{ const ps=car().pays; if(at!=null&&rzOnAt(d,at)&&ps.includes("A:GOPAY")) return "A:GOPAY"; const p0=lastOf(d,"pay","A:GOPAY"); return ps.includes(p0)?p0:ps[0]; };
   // 入力画面の「内容」「決済」は、車種で使うものだけを出す（今の記録の値は残す）
   function fillOpts(id,list,cur){ const L=[...list]; if(cur&&!L.includes(cur)) L.push(cur); $(id).innerHTML=L.map(v=>`<option value="${esc(v)}">${esc(payLabel(v))}</option>`).join(""); }
   function kindNow0(d,at){
@@ -3073,7 +3076,7 @@ body.rtfull{overflow:hidden}
   function rideOn(){
     const k=sDay, d=ensureDay(k); if(!guard(d)) return;
     const unsure=!!($("bUnsure")&&$("bUnsure").checked);
-    const r={id:newId(),kind:kindNow(d,nowMin(k)),on:nowMin(k),off:null,pay:payNow(d)};
+    const r={id:newId(),kind:kindNow(d,nowMin(k)),on:nowMin(k),off:null,pay:payNow(d,nowMin(k))};
     if(unsure) r.onUnsure=true;
     d.rides.push(r); saveSales();
     if(unsure){ $("sStatus").textContent="乗車を記録しました（押し忘れ：時刻・位置は日報の取り込みで入れ直します）"; renderSales(); return; }
@@ -3123,7 +3126,7 @@ body.rtfull{overflow:hidden}
   function openRide(id,afterOff){
     const k=sDay, d=getDay(k);
     rEdit=id; rDelArmed=false; $("rDel").textContent="削除";
-    const r=id?d.rides.find(x=>x.id===id):{kind:kindNow(d,nowMin(k)),pay:payNow(d)};
+    const r=id?d.rides.find(x=>x.id===id):{kind:kindNow(d,nowMin(k)),pay:payNow(d,nowMin(k))};
     fillOpts("rKind",[...car().kinds,"出庫","入庫","休憩","回送",...(car().rz?[RZ]:[])],r.kind); fillOpts("rPay",car().pays,r.pay);
     $("rPay").closest(".field").hidden=car().pays.length===1&&(!r.pay||r.pay===car().pays[0]);
     $("rTitle").textContent=id?(afterOff?"降車：金額を入れてください":"記録を直す"):"乗車を手で追加";
