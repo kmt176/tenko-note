@@ -598,11 +598,12 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabLong" hidden>
   <div class="seg" role="tablist" aria-label="メニュー">
     <button role="tab" data-sub="long" id="segLong" aria-selected="true">ロング判定</button>
-    <button role="tab" data-sub="wx" aria-selected="false">天気</button>
-    <button role="tab" data-sub="rail" aria-selected="false">電車</button>
-    <button role="tab" data-sub="fl" aria-selected="false">到着便</button>
+    <button role="tab" data-sub="wx" aria-selected="false" hidden>天気</button>
+    <button role="tab" data-sub="rail" aria-selected="false" hidden>電車</button>
+    <button role="tab" data-sub="fl" aria-selected="false" hidden>到着便</button>
     <button role="tab" data-sub="sv" aria-selected="false" id="segSv" hidden>接遇</button>
     <button role="tab" data-sub="rest" aria-selected="false">休憩場</button>
+    <button role="tab" data-sub="taxi" aria-selected="false">専用乗り場</button>
   </div>
 
   <div class="wrap" id="subSv" hidden></div>
@@ -619,12 +620,16 @@ body.rtfull{overflow:hidden}
       <div class="btnrow"><button class="btn primary" id="restAdd">この場所を休憩場として追加</button></div>
       <div class="msg" id="restMsg" role="status"></div>
     </section>
+  </div>
+
+  <div class="wrap" id="subTaxi" hidden>
     <section class="card">
       <h2>専用乗り場の不足お知らせ（確認用）</h2>
       <div class="src">現地に行かなくても、今の空車状況を確認できます。不足中の場所があれば、上の帯を試しに表示します。</div>
       <div class="btnrow"><button class="btn" id="taxiTestBtn">今の状況を確認・テスト表示</button></div>
       <div class="msg" id="taxiTestMsg" role="status"></div>
       <div class="src"><a href="https://taxi-dashboard.nihon-kotsu.co.jp/?key=gauctw9p44w2" target="_blank" rel="noopener">本家のダッシュボードを見る（10月分）</a></div>
+      <div class="src"><a href="https://kmt176.github.io/tenko-note/taxilog.html" target="_blank" rel="noopener">時間帯ごとの傾向（グラフ）を見る</a></div>
     </section>
   </div>
 
@@ -786,7 +791,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-14 10:58</span></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-18 23:41</span></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です（新しい版をアップロードしたあと、アプリを閉じて開き直すと変わります）。</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。営業に役立つ天気・電車の運行情報・空港の到着便も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
   </section>
@@ -1757,14 +1762,15 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
   function showSub(s){
     if(!SUBS[s]) s="long";
-    if(s==="long"&&!isMember()) s="wx";
-    if(s==="sv"&&!canSv()) s="wx";
+    if(s==="wx"||s==="rail"||s==="fl") s="rest";   // 天気・電車・到着便はいったん非表示にしたので、古い保存値が残っていても休憩場へ
+    if(s==="long"&&!isMember()) s="rest";
+    if(s==="sv"&&!canSv()) s="rest";
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
     document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sub===s));
