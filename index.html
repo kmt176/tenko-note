@@ -798,11 +798,19 @@ body.rtfull{overflow:hidden}
       </div>
     </div>
   </details>
+
+  <section class="card" id="shareCard" style="margin-top:18px">
+    <h2>このアプリを紹介する</h2>
+    <div class="src">仲間に点呼ノートを紹介するときに使ってください。無料で、アプリストアからのインストールも要りません。</div>
+    <div class="field"><input type="text" id="shareUrl" readonly value="https://kmt176.github.io/tenko-note/" aria-label="紹介用のURL"></div>
+    <div class="btnrow"><button class="btn" id="shareCopy">URLをコピー</button><a class="btn primary" id="shareLine" target="_blank" rel="noopener" style="text-decoration:none">LINEで送る</a><button class="btn" id="shareMore" hidden>ほかのアプリで送る</button></div>
+    <div class="msg" id="shareMsg" role="status"></div>
+  </section>
 </div>
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 09:39</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 09:54</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1439,7 +1447,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。仕様上おすすめしません：乗車の位置・天気、連続配車の時間、押し忘れの照合などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>canSv()]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>canSv()]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -1992,6 +2000,12 @@ body.rtfull{overflow:hidden}
   document.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>loadInfo(b.dataset.reload,true));
   // キャッシュを飛ばして新しい版を読み込み直す（ホーム画面に保存したアイコンは特に前の内容を覚えやすいため）。保存データは消えない
   $("appReload").onclick=()=>{ location.href=location.pathname+"?r="+Date.now(); };
+  // メニューの「このアプリを紹介する」：URLのコピー・LINEで送る・スマホの共有
+  { const url="https://kmt176.github.io/tenko-note/";
+    const text=`タクシー乗務員向けの無料のスマホ用ツール「点呼ノート」です（有志が作った非公式のツールで、会社のものではありません）。点呼時間のチェックや売上の記録ができます。アプリストアからのインストールは不要です。\n${url}`;
+    $("shareLine").href="https://line.me/R/share?text="+encodeURIComponent(text);
+    $("shareCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(url); }catch(e){ $("shareUrl").select(); document.execCommand("copy"); } $("shareMsg").textContent="URLをコピーしました"; };
+    if(navigator.share){ $("shareMore").hidden=false; $("shareMore").onclick=()=>navigator.share({title:"点呼ノート",text:text.replace(url,"").trim(),url}).catch(()=>{}); } }
   // アプリが乗車・降車などの記録に使っている時刻をそのまま表示する（スマホの時計とのズレを確かめる用）
   setInterval(()=>{ const el=$("appClock"); if(el&&!$("tabHelp").hidden){ const d=new Date(); el.textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0"); } },1000);
   document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{
@@ -2933,7 +2947,11 @@ body.rtfull{overflow:hidden}
     const open=d.rides.find(r=>!isEv(r.kind)&&r.on!=null&&r.off==null);
     const evOpen=kd=>d.rides.find(r=>r.kind===kd&&r.on!=null&&r.off==null);
     if(act&&!simple&&offCfg.buttons){
-      $("sNow").innerHTML=`<div class="src">乗車・降車などのボタンは、メニューの設定「画面に出す機能」で外しています。記録は「日報から取り込む」で入れてください。</div>`;
+      // ボタンを外していても「会社を出た時間」（出庫）だけは出す（ユーザー指定）
+      const hasOut=d.rides.some(r=>r.kind==="出庫"&&r.on!=null), out=d.rides.find(r=>r.kind==="出庫"&&r.on!=null);
+      $("sNow").innerHTML=`<div class="ridebtns">${!hasOut?`<button class="bigbtn" id="bOut">会社を出た時間<small>押すと出庫の時刻を記録します</small></button>`:`<div class="src">会社を出た時間：<b class="num">${tm(out.on)}</b></div>`}
+        <div class="src">乗車・降車などのボタンは、メニューの設定「画面に出す機能」で外しています。乗車の記録は「日報から取り込む」で入れてください。</div></div>`;
+      if($("bOut")) $("bOut").onclick=()=>evPress("出庫");
     } else if(act&&!simple){
       const n=nowMin(k), hasOut=d.rides.some(r=>r.kind==="出庫"&&r.on!=null);
       $("sNow").innerHTML=`<div class="ridebtns">
@@ -3709,6 +3727,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     }
     // 連続配車モードの時間は日報にないので、日報の文に「連続配車:」がなければ、ボタンで記録したものを残す
     if(ex&&!parsed.rides.some(r=>r.kind===RZ)) parsed.rides=parsed.rides.concat(ex.rides.filter(r=>r.kind===RZ));
+    // AIが日報の「出」の行を書き落としたときは、ボタンで記録した出庫を残す（出庫が消えると空車時間・連続配車の計算がずれるため）
+    if(ex&&!parsed.rides.some(r=>r.kind==="出庫")) parsed.rides=ex.rides.filter(r=>r.kind==="出庫"&&r.on!=null).concat(parsed.rides);
     const oldHw=ex&&ex.hw, oldRoute=ex&&ex.route, oldLog=ex&&ex.importLog;   // メーター・距離控除・走行ルート・変更履歴は日報にないので、入れてあれば残す
     sales.days[parsed.date]={mode:"detail",rides:parsed.rides,simple:{},check:parsed.check,locked:false,importedAt:new Date().toISOString(),hw:oldHw||{items:[]},importLog:oldLog||[]};
     if(oldRoute) sales.days[parsed.date].route=oldRoute;
@@ -3757,7 +3777,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     else { Object.assign(r,{amt:numOf($("rAmt").value),pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:numOf($("rEtc").value),wxSel:rWxSel});
       // 自動の判定と同じなら持たない（あとで決済を変えたときに自動で付け直せるように）
       const auto=appAuto(r); if(isHai(r.kind)&&$("rInhouse").checked!==auto) r.inhouse=$("rInhouse").checked; else delete r.inhouse;
-      if(isHai(r.kind)&&car().thanks&&$("rThanks").checked) r.thanks=true; else delete r.thanks;
+      // サンキューのチェックを出していないとき（車種や「画面に出す機能」で外したとき）は、前の印をそのまま残す
+      if(car().thanks){ if(isHai(r.kind)&&$("rThanks").checked) r.thanks=true; else delete r.thanks; }
       if($("rRepeat").checked) r.repeat=true; else delete r.repeat;
       // 押し忘れ：この乗車の時刻・場所は使わず、日報の取り込みで差し替える（今の位置・天気は消す）
       if($("rOnUnsure").checked){ r.onUnsure=true; delete r.onPos; delete r.onTried; delete r.wx; } else delete r.onUnsure;
