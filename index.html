@@ -618,7 +618,7 @@ body.rtfull{overflow:hidden}
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>休憩場</h2><button class="btn" id="restReload">更新</button></div>
       <div class="src">合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
-      <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button></div>
+      <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button><button class="btn" id="restMe">現在地</button></div>
       <div id="restMap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
       <div class="field"><label for="restCode">社員コード</label><input type="text" id="restCode" inputmode="numeric" autocomplete="off"></div>
@@ -813,7 +813,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 10:27</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 10:31</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -915,7 +915,7 @@ body.rtfull{overflow:hidden}
     <h2>休憩場・専用乗り場</h2>
     <p>「メニュー」の上のボタンで切り替えます。どちらも合言葉なしで使えます。</p>
     <dl class="explain">
-      <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd>
+      <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。「現在地」を押すと、地図が今いる場所に移り、赤い丸で示します。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd>
       <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（5km以内）にいるときに台数が足りないと、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
     </dl>
   </section>
@@ -1844,6 +1844,19 @@ body.rtfull{overflow:hidden}
     restItems.forEach(x=>{ const dm=distM([pos.lat,pos.lng],[x.lat,x.lng]); if(dm<bestD){ bestD=dm; best=x; } });
     m.textContent=`一番近い休憩場（約${bestD>=1000?r1(bestD/1000)+"km":Math.round(bestD)+"m"}・${esc(best.note||"メモなし")}）をGoogleマップで開きます`;
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${best.lat},${best.lng}&travelmode=driving`,"_blank","noopener");
+  };
+  // 現在地：地図を今いる場所に合わせて、赤い丸の印（今ここ）を出す
+  let restMeMarker=null;
+  $("restMe").onclick=async()=>{
+    const m=$("restMsg");
+    if(!restMapObj){ m.textContent="地図を読み込んでから押してください（上の「更新」）"; return; }
+    m.textContent="今の場所を調べています…";
+    const pos=await getPos();
+    if(!pos){ m.textContent="場所が取れませんでした。位置情報の許可を確認してください"; return; }
+    if(restMeMarker) restMapObj.removeLayer(restMeMarker);
+    restMeMarker=L.circleMarker([pos.lat,pos.lng],{radius:9,color:"#fff",weight:3,fillColor:"#D23C2F",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(restMapObj);
+    restMapObj.setView([pos.lat,pos.lng],Math.max(restMapObj.getZoom(),15));
+    m.textContent="地図を今いる場所に合わせました（赤い丸が今いる場所です）";
   };
   async function loadRest(){
     const m=$("restMsg"); m.textContent="読み込んでいます…";
