@@ -442,11 +442,6 @@ body.rtfull{overflow:hidden}
     <div class="btnrow"><button class="btn primary" id="sGoTenko">点呼時間を開く</button></div>
   </section>
 
-  <div class="seg" role="tablist" aria-label="入力のしかた" id="sModeSeg">
-    <button role="tab" data-mode="detail" aria-selected="true">詳細入力</button>
-    <button role="tab" data-mode="simple" aria-selected="false">簡易入力</button>
-  </div>
-
   <div class="wrap" id="sDetail">
     <div id="sNow"></div>
     <section class="card" id="svCard" hidden>
@@ -540,7 +535,13 @@ body.rtfull{overflow:hidden}
     <div class="src">iPhone：Googleマップ → 右上のプロフィール → 設定 →「位置情報とプライバシー」→「タイムライン データをエクスポート」→「ファイルに保存」。そのファイルを選ぶと、ファイルに入っている勤務の分がまとめて入ります。ルートはこのスマホの中だけに保存され、どこにも送りません。地図：国土地理院（地理院タイル）。</div>
   </section>
   <details id="sFix" hidden>
-    <summary>勤務の修正</summary>
+    <summary>勤務の修正（入力のしかた・日付の変更など）</summary>
+    <h3 style="margin:4px 0 6px;font-size:15px">入力のしかた（通常は「詳細入力」）</h3>
+    <div class="seg" role="tablist" aria-label="入力のしかた" id="sModeSeg">
+      <button role="tab" data-mode="detail" aria-selected="true">詳細入力</button>
+      <button role="tab" data-mode="simple" aria-selected="false">簡易入力</button>
+    </div>
+    <div class="src" style="margin-bottom:12px">通常は「詳細入力」のままにしてください。乗車ボタンでも日報の取り込みでも、1回ごとの記録は詳細入力です。簡易入力は、売上・回数・営業時間だけを入れる方法で、納金明細書・照合・営業分析は出ません。</div>
     <div class="src">点呼の実績を違う日に入れたまま記録したときなどに使います。</div>
     <div class="btnrow"><button class="btn" id="sMove">この勤務の日付を変える</button><button class="btn danger" id="sDelDay">この勤務の売上を消す</button></div>
     <div class="grp" id="sMoveBox" hidden>
@@ -576,7 +577,7 @@ body.rtfull{overflow:hidden}
       <div class="titlepick"><h1 id="mTitle">月度</h1><select id="mPick" aria-label="月度を選ぶ"></select></div>
       <button class="iconbtn" id="mNext" aria-label="次の月度">▶</button>
     </div>
-    <div class="btnrow" id="mCsvRow" hidden><button class="btn" id="mCsv">この月度の乗車明細をCSVで書き出す</button></div>
+    <div class="btnrow" id="mCsvRow" hidden><button class="btn" id="mCsv">この月度の乗車明細をExcel用（CSV）で書き出す</button></div>
     <section class="card" id="mGoal"></section>
     <section class="meter" id="mSum"></section>
     <section class="card" id="mHourCard" hidden>
@@ -801,7 +802,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 08:35</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 09:39</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -875,7 +876,7 @@ body.rtfull{overflow:hidden}
     <dl class="explain">
       <dt>後から直す</dt><dd>一覧の記録を押すと、時刻・金額・決済などを直せます。押し忘れは「＋ 乗車を手で追加」で足せます。照合済みの勤務は、直す前に確認が出ます。</dd>
       <dt>日報から取り込む</dt><dd>日報の写真を自分のAI（Claude・Geminiなど）に読ませ、書き出された文（またはファイル）を取り込んで、1勤務分をまとめて入れます。「AIへの頼み方をコピー」を押して、写真と一緒にAIに送ってください。はじめての方は、取り込み画面の「<b>はじめての方へ：やり方をくわしく見る</b>」に、無料のClaudeでの準備から順に書いてあります。AIがファイル（.txt）を作れるときは、そのファイルを保存して「ファイルから読み込む」で選べます。作れないときは、書き出された文を貼り付けてください。取り込む前にメーター照合の結果を確かめられます。乗車ボタンで記録した日は、「突き合わせる」（金額などは日報に合わせ、位置と天気は残し、押し忘れは日報から足す）か「置き換える」かを選べます。住所から位置と天気（9日以内）も自動で入ります。取り込みでどこが変わったかは、その勤務の画面の「変更履歴」で確かめられます。</dd>
-      <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。</dd>
+      <dt>簡易入力</dt><dd>売上・回数・営業時間だけを入れる方法です。売上の一番下の「勤務の修正」で切り替えます（通常は詳細入力のままにしてください）。</dd>
       <dt>過去の勤務</dt><dd>一番上の日付を押すと、勤務の一覧（売上つき）から選んで開けます（◀ ▶ でも移れます）。時刻ごとに「翌日」のチェックで、出庫日の次の日かどうかを決めます（出庫より前の時刻は自動でチェックが付きます）。違う日に入れてしまったときは、一番下の「勤務の修正」→「この勤務の日付を変える」でまとめて移せます。勤務の売上をまるごと消すときは、同じ所の「この勤務の売上を消す」を2回押します。</dd>
       <dt>走行距離</dt><dd>「走行距離（高速道路の距離控除）」に出庫メーターと帰庫メーターを入れると、走行距離を出して上限（基本362km＋距離控除）と比べます。上限以上なら赤で「距離オーバー・報告が必要」と出ます。距離控除は高速道路・利用IC・片道／往復を選び、1回目を入れると2回目、3回目の欄が出ます。メーターは手で入れます（日報からは取り込みません）。基本上限は「月度の集計」の「計算の設定」で変えられます。</dd>
       <dt>走行ルート（Googleマップのタイムライン）</dt><dd>実際に走った道と乗車の地点（番号。1万円以上は赤）を、勤務ごとに地図で見られます。
@@ -1438,14 +1439,14 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。仕様上おすすめしません：乗車の位置・天気、連続配車の時間、押し忘れの照合などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>canSv()]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
       try{ localStorage.setItem("tenko.off",JSON.stringify(offCfg)); }catch(e){}
       if(b.dataset.off==="taxi"&&!b.checked) $("taxiBanner").hidden=true;
       render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); }); }
-  renderOffBox();
+  // 最初の表示は applyRole() の中で行う（接遇が出せるかは合言葉で決まるため）
   // 売上の上の切り替えは出さない（管理者も、メニューの設定で車種を選んだときだけ変わる。ユーザー指定）
   function renderCarSeg(){ const el=$("carSeg"); if(!el) return; el.hidden=true; return;
     el.innerHTML=CAR_TYPES.map(t=>`<button role="tab" data-car="${t}" aria-selected="${t===carType}">${escC(carOf(t).name)}</button>`).join("");
@@ -1514,7 +1515,7 @@ body.rtfull{overflow:hidden}
       <input type="text" data-a="name" value="${esc(g.name)}" maxlength="20" aria-label="グループ${i+1}の名前">
       <input type="text" data-a="pass" value="${esc(g.pass)}" maxlength="50" placeholder="合言葉（空なら使わない）" aria-label="グループ${i+1}の合言葉">
       <span class="st">${g.pass?`直近3日の速報 ${g.flash}件・${g.people}人`:"使っていない"}</span>
-      <label class="check" style="grid-column:2/-1"><input type="checkbox" data-a="csv" ${g.csv?"checked":""}><span class="vtext">このグループのメンバーに、月度のCSV出力を許可する</span></label></div>`).join("");
+      <label class="check" style="grid-column:2/-1"><input type="checkbox" data-a="csv" ${g.csv?"checked":""}><span class="vtext">このグループのメンバーに、月度の乗車明細のExcel用（CSV）出力を許可する（自分の記録だけ）</span></label></div>`).join("");
     $("aLong").value=j.longPass||"";
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("aFlashMin").value=j.flashMin||10000;
@@ -1634,6 +1635,7 @@ body.rtfull{overflow:hidden}
     $("nGroup").textContent=isNakama()&&cfg.group?"　"+cfg.group.name:"";
     if(typeof setView==="function"){ const can=isNakama()||isAdmin(); $("sViewFlash").hidden=!can; if(!can&&sView==="flash") setView("day"); }
     if(!mem&&curSub==="long") showSub("wx");
+    renderOffBox();
   }
 
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -2898,11 +2900,11 @@ body.rtfull{overflow:hidden}
     $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=!!offCfg.hw; $("rtCard").hidden=!!offCfg.route;
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
     fillPick();
-    $("sMove").hidden=$("sDelDay").hidden=$("sFix").hidden=!hasData(d);
+    $("sMove").hidden=$("sDelDay").hidden=!hasData(d); $("sFix").hidden=false;   // 入力のしかたの切り替えがあるので、勤務があればいつも出す
     { const hasR=!simple&&d.rides.some(r=>!isEv(r.kind)&&+r.amt>0); $("sHour").hidden=!hasR; if(hasR) $("sHourBody").innerHTML=hourBars(hourly(d)); }
     if(delDayArmed!==k){ delDayArmed=null; $("sDelDay").textContent="この勤務の売上を消す"; }
     $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<span class="dd">▾</span><small>${act?"今の勤務":k===activeDay()?"直前の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
-    document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
+    document.querySelectorAll("#sModeSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===d.mode));
     $("sDetail").hidden=simple; $("sSimple").hidden=!simple;
 
     // 合計
@@ -2925,12 +2927,14 @@ body.rtfull{overflow:hidden}
 
     renderRz(k);
 
-    $("svCard").hidden=!(!simple&&canSv());   // 試験中はいつでも確認できるよう、今の勤務かどうかは問わない
+    $("svCard").hidden=!(!simple&&canSv())||!!offCfg.sv;   // 試験中はいつでも確認できるよう、今の勤務かどうかは問わない
 
     // 乗車・降車ボタン（今の勤務のときだけ）
     const open=d.rides.find(r=>!isEv(r.kind)&&r.on!=null&&r.off==null);
     const evOpen=kd=>d.rides.find(r=>r.kind===kd&&r.on!=null&&r.off==null);
-    if(act&&!simple){
+    if(act&&!simple&&offCfg.buttons){
+      $("sNow").innerHTML=`<div class="src">乗車・降車などのボタンは、メニューの設定「画面に出す機能」で外しています。記録は「日報から取り込む」で入れてください。</div>`;
+    } else if(act&&!simple){
       const n=nowMin(k), hasOut=d.rides.some(r=>r.kind==="出庫"&&r.on!=null);
       $("sNow").innerHTML=`<div class="ridebtns">
         <div class="ridebtn">
@@ -3130,7 +3134,7 @@ body.rtfull{overflow:hidden}
   function renderRzFloat(){
     const el=$("rzFloat"); if(!el) return;
     const k=shiftNow();
-    if(!car().rz||!k||getDay(k).mode==="simple"||!inCoreTime()){ el.hidden=true; return; }
+    if(!car().rz||offCfg.buttons||!k||getDay(k).mode==="simple"||!inCoreTime()){ el.hidden=true; return; }
     const d=getDay(k), open=d.rides.find(r=>r.kind===RZ&&r.on!=null&&r.off==null), n=nowMin(k);
     const s=rzShift(k);
     const mActAm=s.state==="none"?0:s.act?winSum(s.act.rz,s.a,s.act.b,RZ_WIN_AM):mustOfAm(s);
@@ -3776,7 +3780,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     if(rt){ e.preventDefault(); e.stopPropagation(); rtSelId=rt.dataset.rt; rtKey=""; renderSales(); $("rtCard").scrollIntoView({behavior:"smooth",block:"start"}); return; }
     const b=e.target.closest("[data-id]"); if(b) openRide(b.dataset.id,false); });
   $("sAdd").onclick=()=>openRide(null,false);
-  document.querySelectorAll("#sDayView > .seg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#sModeSeg button").forEach(b=>b.onclick=()=>{
     const d=ensureDay(sDay); if(d.mode===b.dataset.mode) return; if(!guard(d)) return;
     d.mode=b.dataset.mode; saveSales(); renderSales();
   });
