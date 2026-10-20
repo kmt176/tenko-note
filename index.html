@@ -745,13 +745,6 @@ body.rtfull{overflow:hidden}
         <div class="btnrow"><button class="btn primary" id="lSave">保存</button><button class="btn" id="lForget">消す</button></div>
         <div class="msg" id="lCfgMsg" role="status"></div>
       </div>
-      <div class="grp" hidden><!-- 接遇チェックを全員に出すようにしたので、お試し用の合言葉は使わない（2026-10-21） -->
-        <h3>接遇チェック（試験）お試し用の合言葉</h3>
-        <div class="field"><label for="svtPass">お試し用の合言葉</label><input type="password" id="svtPass" autocomplete="off"></div>
-        <div class="src">接遇チェック（試験）だけを、管理者の合言葉を渡さずに試してもらうための合言葉です。管理の画面は開けません。</div>
-        <div class="btnrow"><button class="btn primary" id="svtSave">保存</button><button class="btn" id="svtForget">消す</button></div>
-        <div class="msg" id="svtMsg" role="status"></div>
-      </div>
       <div class="grp">
         <h3>管理者</h3>
         <div class="field"><label for="aPass">管理者の合言葉</label><input type="password" id="aPass" autocomplete="off"></div>
@@ -764,8 +757,6 @@ body.rtfull{overflow:hidden}
           <div class="src" id="aLongInfo"></div>
           <div class="field"><label for="aFlashMin">仲間の速報に出す金額（円以上）</label><input type="number" id="aFlashMin" inputmode="numeric" min="0" step="100"></div>
           <div class="src">この金額以上の乗車だけ、仲間の速報に名前付きで出ます（初期値 10,000円）。</div>
-          <div class="field"><label for="aSvPass">接遇チェック お試し用の合言葉</label><input type="text" id="aSvPass" autocomplete="off" placeholder="空なら使わない"></div>
-          <div class="src">接遇チェックは全員に出るようになったので、今は使っていません（空のままでかまいません）。</div>
           <div class="field"><label for="aSvTitle">接遇チェックの見出し</label><input type="text" id="aSvTitle" autocomplete="off" placeholder="接遇チェック（試験）"></div>
           <div class="field"><label for="aSvDesc">接遇チェックの説明文</label><textarea id="aSvDesc" rows="4" placeholder="乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。…"></textarea></div>
           <div class="src">見出し・説明文を空にすると、もとの文言に戻ります。全員のアプリに反映されます。</div>
@@ -823,7 +814,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 00:09</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 07:20</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1349,6 +1340,7 @@ body.rtfull{overflow:hidden}
   // ===== ロング判定 =====
   const CFG_KEY="tenko.cfg";
   let cfg={}; try{ cfg=JSON.parse(localStorage.getItem(CFG_KEY)||"{}")||{}; }catch(e){}
+  delete cfg.svpass; delete cfg.svtest;   // 接遇お試し用の合言葉はやめた（2026-10-21）。前に入れた人の分を消す
   if(SCRIPT_URL){ cfg.url=SCRIPT_URL; $("lUrl").closest(".field").hidden=true; }
   if(PROD){ $("demoNote").hidden=true; $("sampleBtn").hidden=true; }
   const saveCfg=()=>{ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} };
@@ -1414,12 +1406,6 @@ body.rtfull{overflow:hidden}
     const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"role",passcode:cfg.npass})});
     return await res.json();
   }
-  // 接遇チェック お試し用の合言葉（SV_PASSCODE）：管理の画面は開かず、接遇チェックだけ使える
-  const isSvTest=()=>!PROD||(!!cfg.svpass&&cfg.svtest===true);
-  async function checkSvTest(){
-    const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"role",passcode:cfg.svpass})});
-    return await res.json();
-  }
   async function checkPass(){
     const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"config",passcode:cfg.pass})});
     const j=await res.json();
@@ -1440,7 +1426,6 @@ body.rtfull{overflow:hidden}
   };
   $("lForget").onclick=()=>{ cfg.pass=""; cfg.member=false; saveCfg(); $("lPass").value=""; applyRole(); $("lCfgMsg").textContent="合言葉を消しました"; };
   $("nPass").value=cfg.npass||""; $("nCode").value=cfg.empCode||""; $("nNick").value=cfg.nick||"";
-  $("svtPass").value=cfg.svpass||"";
   $("nSave").onclick=async()=>{
     const m=$("nMsg");
     cfg.url=$("lUrl").value.trim()||cfg.url; cfg.npass=$("nPass").value.trim();
@@ -1461,7 +1446,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>canSv()]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -1543,7 +1528,7 @@ body.rtfull{overflow:hidden}
     $("aLong").value=j.longPass||"";
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("aFlashMin").value=j.flashMin||10000;
-    $("aSvPass").value=j.svPass||"";
+
     $("aSvTitle").value=j.svTitle||""; $("aSvDesc").value=j.svDesc||"";
     cfg.svTitle=j.svTitle||""; cfg.svDesc=j.svDesc||""; saveCfg(); applySvText();
     $("aSchInfo").textContent=`登録されている社員コード：${j.scheduleCodes||0}件`;
@@ -1618,7 +1603,7 @@ body.rtfull{overflow:hidden}
     const fmRaw=$("aFlashMin").value; if(fmRaw!==""&&(!isFinite(+fmRaw)||+fmRaw<0)){ m.textContent="仲間の速報に出す金額を正しい数字で入れてください"; return; }
     m.textContent="保存しています…";
     try{
-      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value,flashMin:fmRaw===""?10000:+fmRaw,svPass:$("aSvPass").value.trim(),svTitle:$("aSvTitle").value.trim(),svDesc:$("aSvDesc").value.trim()});
+      const j=await post({action:"admin",op:"save",adminPass:cfg.apass,groups,longPass:$("aLong").value,flashMin:fmRaw===""?10000:+fmRaw,svTitle:$("aSvTitle").value.trim(),svDesc:$("aSvDesc").value.trim()});
       if(!j.ok){ m.textContent=j.error; return; }
       drawAdmin(j); m.textContent="保存しました";
       if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
@@ -1629,23 +1614,9 @@ body.rtfull{overflow:hidden}
   };
   $("aForget").onclick=()=>{ cfg.apass=""; cfg.admin=false; saveCfg(); $("aPass").value=""; $("adminBox").hidden=true; $("aForget").hidden=true; applyRole(); $("aMsg").textContent="このスマホから管理者を外しました"; clearInterval(shiftPollTimer); shiftPollTimer=null; };
   $("nForget").onclick=()=>{ cfg.npass=""; cfg.nakama=false; saveCfg(); $("nPass").value=""; applyRole(); $("nMsg").textContent="仲間の合言葉を消しました"; };
-  $("svtSave").onclick=async()=>{
-    const m=$("svtMsg");
-    cfg.url=$("lUrl").value.trim()||cfg.url; cfg.svpass=$("svtPass").value.trim();
-    if(!cfg.svpass){ m.textContent="合言葉を入れてください"; return; }
-    m.textContent="確かめています…";
-    try{
-      const j=await checkSvTest();
-      cfg.svtest=!!(j.ok&&j.sv); if(j.ok){ cfg.svTitle=j.svTitle||""; cfg.svDesc=j.svDesc||""; } saveCfg(); applyRole(); applySvText();
-      m.textContent=cfg.svtest?"保存しました。売上の画面で接遇チェックが使えます":"合言葉が違います";
-    }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度「保存」を押してください"; }
-  };
-  $("svtForget").onclick=()=>{ cfg.svpass=""; cfg.svtest=false; saveCfg(); $("svtPass").value=""; applyRole(); $("svtMsg").textContent="合言葉を消しました"; };
   // 一般の人には、ロング判定のボタンと使い方を出さない
-  // 接遇チェックは全員に出す（ユーザー指定 2026-10-21。前は管理者・お試し用の合言葉の人だけ）。出したくない人は「画面に出す機能」で外す
-  const canSv=()=>true;
   const SV_DESC_DEFAULT=`乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。`;
-  // 接遇チェックの見出し・説明文（管理者が変えられる）。管理者の合言葉、またはお試し用の合言葉で確かめたときに受け取る
+  // 接遇チェックの見出し・説明文（管理者が変えられる）。アプリを開いたときに「cars」で全員が受け取る
   function applySvText(){
     $("svTitleText").textContent=cfg.svTitle||"接遇チェック（試験）";
     $("svDescText").innerHTML=cfg.svDesc?esc(cfg.svDesc).replace(/\n/g,"<br>"):SV_DESC_DEFAULT;
@@ -1826,7 +1797,7 @@ body.rtfull{overflow:hidden}
     if(!SUBS[s]) s="long";
     if(s==="wx"||s==="rail"||s==="fl") s="rest";   // 天気・電車・到着便はいったん非表示にしたので、古い保存値が残っていても休憩場へ
     if(s==="long"&&!isMember()) s="rest";
-    if(s==="sv"&&!canSv()) s="rest";
+
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
     document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sub===s));
@@ -2995,7 +2966,7 @@ body.rtfull{overflow:hidden}
 
     renderRz(k);
 
-    $("svCard").hidden=!(!simple&&canSv())||!!offCfg.sv;   // 試験中はいつでも確認できるよう、今の勤務かどうかは問わない
+    $("svCard").hidden=simple||!!offCfg.sv;   // 接遇チェックは全員に出す（2026-10-21）。出したくない人は「画面に出す機能」で外す。今の勤務かどうかは問わない
 
     // 乗車・降車ボタン（今の勤務のときだけ）
     const open=d.rides.find(r=>!isEv(r.kind)&&r.on!=null&&r.off==null);
