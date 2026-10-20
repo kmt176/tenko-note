@@ -795,7 +795,7 @@ body.rtfull{overflow:hidden}
 
   <section class="card" id="payDiffCard" hidden>
     <h2>月次 売上差額チェック（管理者のみ）</h2>
-    <div class="src">給与明細の総営収と、アプリの総営収の差を月度ごとに見ます。給与明細の総営収と障害者割引の補填額を入れてください（このスマホの中だけに保存。バックアップにも入ります）。補填額が空のときは、備考「S」の乗車から出した目安（1件ごとに合計金額の約1/9）を黒字で出し、その値で計算します。正確な額は日報の「公的割引」の差引×10円です。</div>
+    <div class="src">給与明細の総営収と、アプリの総営収の差を月度ごとに見ます。給与明細の総営収と障害者割引の補填額を入れてください（このスマホの中だけに保存。バックアップにも入ります）。補填額が空のときは、日報から取り込んだ「公的割引」（差引×10円＝障害者割引の正確な額）の合計を黒字で出し、その値で計算します。公的割引を取り込んでいない勤務がある月度（2026年10月21日より前の取り込み）は、日報の公的割引の合計を手で入れてください。</div>
     <div style="overflow-x:auto"><table class="cartbl" id="pdTbl"></table></div>
     <div class="src">差額＝給与明細の総営収−アプリの総営収。補填を除いた差額＝差額−障害者割引の補填額。</div>
   </section>
@@ -814,7 +814,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 07:20</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 08:03</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2461,20 +2461,20 @@ body.rtfull{overflow:hidden}
     const card=$("payDiffCard"); if(!card) return;
     card.hidden=!isAdmin(); if(card.hidden) return;
     const pc=sales.payChk||{};
-    const sOf=rows=>rows.filter(r=>r.memo&&/S/.test(r.memo)&&String(r.memo).length<=12&&+r.amt>0)
-      .reduce((a,r)=>a+Math.round(Math.max(0,(+r.amt||0)-(+r.etc||0)-(r._app||0))/9/10)*10,0);
+    // 補填額：手で入れた額があればそれ。なければ取り込んだ日報の「公的割引」（差引×10円）の合計。公的割引のない勤務があるときは出さない
     const rows=[];
-    PERIODS.forEach((P,i)=>{ const keys=Object.keys(sales.days).filter(k=>k>=P.start&&k<=P.end);
-      const done=keys.map(shiftSales).filter(x=>x.has); if(!done.length&&!pc[P.y+"-"+P.m]) return;
-      const app=done.reduce((a,x)=>a+x.amt,0), est=done.reduce((a,x)=>a+sOf(x.s.rows),0);
-      const v=pc[P.y+"-"+P.m]||{}; rows.push({P,app,est,v,id:P.y+"-"+P.m}); });
+    PERIODS.forEach(P=>{ const id=P.y+"-"+P.m, keys=Object.keys(sales.days).filter(k=>k>=P.start&&k<=P.end);
+      const done=keys.map(shiftSales).filter(x=>x.has); if(!done.length&&!pc[id]) return;
+      const app=done.reduce((a,x)=>a+x.amt,0), miss=done.filter(x=>(x.d.check||{}).koteki==null).length;
+      const auto=miss?null:done.reduce((a,x)=>a+x.d.check.koteki*10,0);
+      rows.push({P,app,auto,miss,v:pc[id]||{},id}); });
     rows.reverse();
     const cell=(id,f,v,ph)=>`<input type="text" class="yenin" inputmode="numeric" autocomplete="off" data-pd="${id}" data-f="${f}" value="${v!=null?fmtYen(v):""}" placeholder="${ph}">`;
     $("pdTbl").innerHTML=`<thead><tr><td>月度</td><td>アプリの総営収</td><td>給与明細の総営収</td><td>障害者割引の補填額</td><td>差額</td><td>補填を除いた差額</td></tr></thead><tbody>`+
-      (rows.map(({P,app,est,v,id})=>{ const sh=v.sh!=null?v.sh:est, diff=v.pay!=null?v.pay-app:null;
+      (rows.map(({P,app,auto,miss,v,id})=>{ const sh=v.sh!=null?v.sh:auto, diff=v.pay!=null?v.pay-app:null;
         return `<tr><td>${P.m}月度<br><small>${md(P.start)}〜${md(P.end)}</small></td><td class="num">${yen(app)}</td>
-          <td>${cell(id,"pay",v.pay,"")}</td><td>${cell(id,"sh",v.sh,est?yen(est)+"（目安）":"")}</td>
-          <td class="num">${diff==null?"—":yen(diff)}</td><td class="num">${diff==null?"—":yen(diff-sh)}</td></tr>`; }).join("")||`<tr><td colspan="6">売上の記録がまだありません</td></tr>`)+`</tbody>`;
+          <td>${cell(id,"pay",v.pay,"")}</td><td>${cell(id,"sh",v.sh,auto!=null?yen(auto)+"（日報から）":"")}${v.sh==null&&miss?`<small style="display:block;color:var(--muted)">公的割引が入っていない勤務が${miss}回あります。日報の公的割引（差引×10円）の合計を入れてください</small>`:""}</td>
+          <td class="num">${diff==null?"—":yen(diff)}</td><td class="num">${diff==null||sh==null?"—":yen(diff-sh)}</td></tr>`; }).join("")||`<tr><td colspan="6">売上の記録がまだありません</td></tr>`)+`</tbody>`;
     $("pdTbl").querySelectorAll("[data-pd]").forEach(el=>el.onchange=()=>{
       const p=sales.payChk=sales.payChk||{}, o=p[el.dataset.pd]=p[el.dataset.pd]||{}, n=numOf(el.value);
       if(el.value.trim()===""||n==null) delete o[el.dataset.f]; else o[el.dataset.f]=n;
@@ -3521,6 +3521,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
 伝達事項: 納金明細書の伝達事項に書いてあれば、その文（なければ空欄）
 日計表の現収: 数字（日報の「現収」）
 日計表の未収: 数字（日報の「未収」）
+公的割引: 数字（日報の上の「計数」の表で、「公的割引」の列の「差引」の行の数字をそのまま。0なら0）
 ---
 内容,乗車,降車,金額,決済,ETC,乗車地,降車地,メモ,合計金額
 （明細を上から順に1行ずつ）
@@ -3539,7 +3540,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
 ・数字にカンマは付けない。値に「,」を入れない。`;
   const PAY_ALIAS={"ﾈ":"A:GOPAY","ネット":"A:GOPAY","GO":"A:GOPAY","GOPAY":"A:GOPAY","A:ネット/QR":"A:GOPAY","ネット/QR":"A:GOPAY","C":"C:ｸﾚｼﾞｯﾄ","クレジット":"C:ｸﾚｼﾞｯﾄ","K":"K:交通系IC","Q":"Q:QUICPay","I":"I:iD","W":"W:WAON","ﾅ":"ﾅ:nanaco","ｴ":"ｴ:Wdy","T":"T:チケット","現収":"現金"};
   const KIND_ALIAS={"出":"出庫","入":"入庫","回":"回送","休":"休憩","迎車":"配車","流し":"手上げ","キャンセル":"CAN"};
-  const HEAD_KEYS={"総営収":"total","アプリ手配料金":"app","ETC合計":"etc","ETC会社負担":"etcCo","ETC自己負担":"etcSelf","日計表の現収":"genshu","日計表の未収":"mishu"};
+  const HEAD_KEYS={"総営収":"total","アプリ手配料金":"app","ETC合計":"etc","ETC会社負担":"etcCo","ETC自己負担":"etcSelf","日計表の現収":"genshu","日計表の未収":"mishu","公的割引":"koteki"};   // 公的割引＝日報の差引（10円単位）。障害者割引の額＝この数字×10円
   const KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転",...EVENTS];
   let parsed=null;
   function parseNippo(text){
