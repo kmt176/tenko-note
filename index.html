@@ -226,6 +226,7 @@ a.flink:active{background:var(--sunk)}
 .cartbl tr.sec td{background:var(--accent-soft);font-weight:700}
 .cartbl input[type=number],.cartbl input[type=time],.cartbl input[type=text]{width:100%;min-height:36px;font-size:15px;padding:4px}
 .cartbl textarea{width:100%;font-size:13px;min-height:52px}
+#pdTbl input::placeholder{color:var(--ink);opacity:1}
 .cartbl .check{font-size:13px;gap:4px;margin:1px 0}
 .cartbl .check input{width:18px;height:18px}
 .rzgrid{display:grid;grid-template-columns:3.4em repeat(4,1fr);gap:3px;margin:6px 0}
@@ -744,7 +745,7 @@ body.rtfull{overflow:hidden}
         <div class="btnrow"><button class="btn primary" id="lSave">保存</button><button class="btn" id="lForget">消す</button></div>
         <div class="msg" id="lCfgMsg" role="status"></div>
       </div>
-      <div class="grp">
+      <div class="grp" hidden><!-- 接遇チェックを全員に出すようにしたので、お試し用の合言葉は使わない（2026-10-21） -->
         <h3>接遇チェック（試験）お試し用の合言葉</h3>
         <div class="field"><label for="svtPass">お試し用の合言葉</label><input type="password" id="svtPass" autocomplete="off"></div>
         <div class="src">接遇チェック（試験）だけを、管理者の合言葉を渡さずに試してもらうための合言葉です。管理の画面は開けません。</div>
@@ -764,7 +765,7 @@ body.rtfull{overflow:hidden}
           <div class="field"><label for="aFlashMin">仲間の速報に出す金額（円以上）</label><input type="number" id="aFlashMin" inputmode="numeric" min="0" step="100"></div>
           <div class="src">この金額以上の乗車だけ、仲間の速報に名前付きで出ます（初期値 10,000円）。</div>
           <div class="field"><label for="aSvPass">接遇チェック お試し用の合言葉</label><input type="text" id="aSvPass" autocomplete="off" placeholder="空なら使わない"></div>
-          <div class="src">管理者の合言葉を渡さずに、接遇チェック（試験）だけを試してもらえます。空にすると使えなくなります。</div>
+          <div class="src">接遇チェックは全員に出るようになったので、今は使っていません（空のままでかまいません）。</div>
           <div class="field"><label for="aSvTitle">接遇チェックの見出し</label><input type="text" id="aSvTitle" autocomplete="off" placeholder="接遇チェック（試験）"></div>
           <div class="field"><label for="aSvDesc">接遇チェックの説明文</label><textarea id="aSvDesc" rows="4" placeholder="乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。…"></textarea></div>
           <div class="src">見出し・説明文を空にすると、もとの文言に戻ります。全員のアプリに反映されます。</div>
@@ -801,6 +802,13 @@ body.rtfull{overflow:hidden}
     </div>
   </details>
 
+  <section class="card" id="payDiffCard" hidden>
+    <h2>月次 売上差額チェック（管理者のみ）</h2>
+    <div class="src">給与明細の総営収と、アプリの総営収の差を月度ごとに見ます。給与明細の総営収と障害者割引の補填額を入れてください（このスマホの中だけに保存。バックアップにも入ります）。補填額が空のときは、備考「S」の乗車から出した目安（1件ごとに合計金額の約1/9）を黒字で出し、その値で計算します。正確な額は日報の「公的割引」の差引×10円です。</div>
+    <div style="overflow-x:auto"><table class="cartbl" id="pdTbl"></table></div>
+    <div class="src">差額＝給与明細の総営収−アプリの総営収。補填を除いた差額＝差額−障害者割引の補填額。</div>
+  </section>
+
   <section class="card" id="shareCard" style="margin-top:18px">
     <h2>このアプリを紹介する</h2>
     <div class="src">仲間に点呼ノートを紹介するときに使ってください。無料で、アプリストアからのインストールも要りません。</div>
@@ -815,7 +823,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-19 10:34</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 00:09</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1334,6 +1342,7 @@ body.rtfull{overflow:hidden}
     try{ localStorage.setItem("tenko.tab",String(n)); }catch(e){}
     window.scrollTo(0,0);
     if(n===3&&typeof setView==="function"){ sDay=null; setView(sView); }
+    if(n===2&&typeof renderPayDiff==="function") renderPayDiff();
   }
   $("tb0").onclick=()=>showTab(0); $("tb1").onclick=()=>showTab(1); $("tb2").onclick=()=>showTab(2); $("tb3").onclick=()=>showTab(3);
 
@@ -1471,6 +1480,8 @@ body.rtfull{overflow:hidden}
       if(!j.ok) return; const before=JSON.stringify(carsCfg); carsCfg=j.cars||null;
       try{ localStorage.setItem("tenko.cars",JSON.stringify(carsCfg)); }catch(e){}
       if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
+      // 接遇チェックの見出し・説明文（全員に出すので、ここで受け取る。古いサーバーでは項目がないので変えない）
+      if(j.svTitle!=null&&(cfg.svTitle!==j.svTitle||cfg.svDesc!==(j.svDesc||""))){ cfg.svTitle=j.svTitle; cfg.svDesc=j.svDesc||""; saveCfg(); applySvText(); }
       if(before!==JSON.stringify(carsCfg)){ applyCarConsts(); applyLongDefaults(); fillCarSel(); render(); if(!$("tabSales").hidden) setView(sView); }
     }catch(e){}
   }
@@ -1631,8 +1642,8 @@ body.rtfull{overflow:hidden}
   };
   $("svtForget").onclick=()=>{ cfg.svpass=""; cfg.svtest=false; saveCfg(); $("svtPass").value=""; applyRole(); $("svtMsg").textContent="合言葉を消しました"; };
   // 一般の人には、ロング判定のボタンと使い方を出さない
-  // 接遇チェック（試験中）は、管理者の合言葉、または接遇お試し用の合言葉を入れたスマホだけに出す
-  const canSv=()=>!PROD||isAdmin()||isSvTest();
+  // 接遇チェックは全員に出す（ユーザー指定 2026-10-21。前は管理者・お試し用の合言葉の人だけ）。出したくない人は「画面に出す機能」で外す
+  const canSv=()=>true;
   const SV_DESC_DEFAULT=`乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。`;
   // 接遇チェックの見出し・説明文（管理者が変えられる）。管理者の合言葉、またはお試し用の合言葉で確かめたときに受け取る
   function applySvText(){
@@ -1648,7 +1659,7 @@ body.rtfull{overflow:hidden}
     $("nGroup").textContent=isNakama()&&cfg.group?"　"+cfg.group.name:"";
     if(typeof setView==="function"){ const can=isNakama()||isAdmin(); $("sViewFlash").hidden=!can; if(!can&&sView==="flash") setView("day"); }
     if(!mem&&curSub==="long") showSub("wx");
-    renderOffBox();
+    renderOffBox(); renderPayDiff();
   }
 
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -2474,6 +2485,31 @@ body.rtfull{overflow:hidden}
       genOk:gen==null?null:cash+bku===gen, misOk:mis==null?null:mishu===mis, sumOk:gen==null||mis==null?null:meter+bku===gen+mis};   // B空転は日計表の現収に入るので足して比べる
   }
   // 1勤務の売上（月度の合計用）：総営収があればそれ、なければ記録から見込み（アプリ料・ETCを引く）
+  // 月次 売上差額チェック（管理者のみ）。入れた値は sales.payChk に月度ごとに保存（バックアップに入る）
+  function renderPayDiff(){
+    const card=$("payDiffCard"); if(!card) return;
+    card.hidden=!isAdmin(); if(card.hidden) return;
+    const pc=sales.payChk||{};
+    const sOf=rows=>rows.filter(r=>r.memo&&/S/.test(r.memo)&&String(r.memo).length<=12&&+r.amt>0)
+      .reduce((a,r)=>a+Math.round(Math.max(0,(+r.amt||0)-(+r.etc||0)-(r._app||0))/9/10)*10,0);
+    const rows=[];
+    PERIODS.forEach((P,i)=>{ const keys=Object.keys(sales.days).filter(k=>k>=P.start&&k<=P.end);
+      const done=keys.map(shiftSales).filter(x=>x.has); if(!done.length&&!pc[P.y+"-"+P.m]) return;
+      const app=done.reduce((a,x)=>a+x.amt,0), est=done.reduce((a,x)=>a+sOf(x.s.rows),0);
+      const v=pc[P.y+"-"+P.m]||{}; rows.push({P,app,est,v,id:P.y+"-"+P.m}); });
+    rows.reverse();
+    const cell=(id,f,v,ph)=>`<input type="text" class="yenin" inputmode="numeric" autocomplete="off" data-pd="${id}" data-f="${f}" value="${v!=null?fmtYen(v):""}" placeholder="${ph}">`;
+    $("pdTbl").innerHTML=`<thead><tr><td>月度</td><td>アプリの総営収</td><td>給与明細の総営収</td><td>障害者割引の補填額</td><td>差額</td><td>補填を除いた差額</td></tr></thead><tbody>`+
+      (rows.map(({P,app,est,v,id})=>{ const sh=v.sh!=null?v.sh:est, diff=v.pay!=null?v.pay-app:null;
+        return `<tr><td>${P.m}月度<br><small>${md(P.start)}〜${md(P.end)}</small></td><td class="num">${yen(app)}</td>
+          <td>${cell(id,"pay",v.pay,"")}</td><td>${cell(id,"sh",v.sh,est?yen(est)+"（目安）":"")}</td>
+          <td class="num">${diff==null?"—":yen(diff)}</td><td class="num">${diff==null?"—":yen(diff-sh)}</td></tr>`; }).join("")||`<tr><td colspan="6">売上の記録がまだありません</td></tr>`)+`</tbody>`;
+    $("pdTbl").querySelectorAll("[data-pd]").forEach(el=>el.onchange=()=>{
+      const p=sales.payChk=sales.payChk||{}, o=p[el.dataset.pd]=p[el.dataset.pd]||{}, n=numOf(el.value);
+      if(el.value.trim()===""||n==null) delete o[el.dataset.f]; else o[el.dataset.f]=n;
+      if(!Object.keys(o).length) delete p[el.dataset.pd];
+      saveSales(); renderPayDiff(); });
+  }
   function shiftSales(k){
     const d=getDay(k), s=dayCalc(d), st=settle(d,s);
     const has=d.rides.some(r=>!isEv(r.kind))||(d.mode==="simple"&&d.simple.amt!=null)||st.total!=null;
