@@ -815,7 +815,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 09:22</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 09:54</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2471,13 +2471,13 @@ body.rtfull{overflow:hidden}
       const done=ks.filter(k=>k>=start&&k<=end).map(shiftSales).filter(x=>x.has); if(!done.length&&!pc[id]) return;
       const gross=done.reduce((a,x)=>a+x.amt,0);
       const app=Math.round(done.reduce((a,x)=>a+(x.est?x.amt:x.amt-(x.st.etc||0)-(x.st.app||0))/1.1,0));
-      const miss=done.filter(x=>(x.d.check||{}).koteki==null).length, auto=miss?null:done.reduce((a,x)=>a+x.d.check.koteki*10,0);
-      rows.push({P:{m,start,end},app,gross,auto,miss,v:pc[id]||{},id}); });    rows.reverse();
+      const missK=done.filter(x=>(x.d.check||{}).koteki==null).map(x=>x.k), miss=missK.length, auto=miss?null:done.reduce((a,x)=>a+x.d.check.koteki*10,0);
+      rows.push({P:{m,start,end},app,gross,auto,miss,missK,v:pc[id]||{},id}); });    rows.reverse();
     const cell=(id,f,v,ph)=>`<input type="text" class="yenin" inputmode="numeric" autocomplete="off" data-pd="${id}" data-f="${f}" value="${v!=null?fmtYen(v):""}" placeholder="${ph}">`;
     $("pdTbl").innerHTML=`<thead><tr><td>給与</td><td>アプリの総営収<br><small>税抜・ETCとアプリ手配料を除く</small></td><td>給与明細の総営収（税抜）</td><td>障害者割引の補填額</td><td>差額</td><td>補填を除いた差額</td></tr></thead><tbody>`+
-      (rows.map(({P,app,gross,auto,miss,v,id})=>{ const sh=v.sh!=null?v.sh:auto, diff=v.pay!=null?v.pay-app:null;
+      (rows.map(({P,app,gross,auto,miss,missK,v,id})=>{ const sh=v.sh!=null?v.sh:auto, diff=v.pay!=null?v.pay-app:null;
         return `<tr><td>${P.m}月分<br><small>${md(P.start)}〜${md(P.end)}出庫</small></td><td class="num">${yen(app)}<small style="display:block;color:var(--muted)">税込みの総営収 ${yen(gross)}</small></td>
-          <td>${cell(id,"pay",v.pay,"")}</td><td>${cell(id,"sh",v.sh,auto!=null?yen(auto)+"（日報から）":"")}${v.sh==null&&miss?`<small style="display:block;color:var(--muted)">公的割引が入っていない勤務が${miss}回あります。日報の公的割引（差引×10円）の合計を入れてください</small>`:""}</td>
+          <td>${cell(id,"pay",v.pay,"")}</td><td>${cell(id,"sh",v.sh,auto!=null?yen(auto)+"（日報から）":"")}${v.sh==null&&miss?`<small style="display:block;color:var(--muted)">公的割引が入っていない勤務：${missK.map(k=>`${md(k)}（${dow(k)}）`).join("、")}。その日の売上の画面（照合の欄）で公的割引を入れるか、この欄に月の合計を入れてください</small>`:""}</td>
           <td class="num">${diff==null?"—":yen(diff)}</td><td class="num">${diff==null||sh==null?"—":yen(diff-sh)}</td></tr>`; }).join("")||`<tr><td colspan="6">売上の記録がまだありません</td></tr>`)+`</tbody>`;
     $("pdTbl").querySelectorAll("[data-pd]").forEach(el=>el.onchange=()=>{
       const p=sales.payChk=sales.payChk||{}, o=p[el.dataset.pd]=p[el.dataset.pd]||{}, n=numOf(el.value);
