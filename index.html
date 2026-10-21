@@ -651,6 +651,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="taxi" aria-selected="false">専用乗り場</button>
     <button role="tab" data-sub="event" aria-selected="false">イベント</button>
     <button role="tab" data-sub="train" aria-selected="false">電車が止まったら</button>
+    <button role="tab" data-sub="cmp" aria-selected="false" id="segCmp" hidden>乗務員比較（試験）</button>
   </div>
 
   <div class="wrap" id="subSv" hidden></div>
@@ -687,6 +688,32 @@ body.rtfull{overflow:hidden}
       <div class="src">CSVの列は「地点名,緯度,経度,住所,電話番号,メモ」です（カーナビタイムのMy地点プラスと同じ形式なので、同じファイルを両方に使えます）。メモに「10/21 18:30開始 終了は21時前後見込み 集客見込み 約3,000人」のように書くと、開始・終了見込み・集客見込みを読み取ります。日付がないときは、読み込んだ日のイベントとして扱います。</div>
       <input type="file" id="evFile" accept=".csv,text/csv,text/plain" hidden>
       <div class="btnrow"><button class="btn primary" id="evPick">CSVファイルを選ぶ</button><button class="btn" id="evClear">自分で読み込んだ分を消す</button></div>
+    </section>
+  </div>
+
+  <div class="wrap" id="subCmp" hidden>
+    <section class="card">
+      <h2>乗務員比較分析（試験・管理者のみ）</h2>
+      <div class="src">社員コードと仲間の合言葉を入れている乗務員の記録を比べます。名前は出さず、1日の平均の売上が高い順に「Aさん、Bさん…」と出します（自分は「自分」）。出庫・入庫の時刻はデータにないので、1日の流れは「最初の乗車〜最後の降車」で表します。</div>
+      <div class="pair"><div class="field"><label for="cmpMonth">月</label><input type="month" id="cmpMonth"></div><div class="field" style="align-self:end"><button class="btn primary" id="cmpLoad">読み込む</button></div></div>
+      <div class="msg" id="cmpMsg" role="status"></div>
+      <div class="seg" role="tablist" aria-label="分析" id="cmpSeg" hidden><button role="tab" data-cmp="1" aria-selected="true">①同じ時間帯</button><button role="tab" data-cmp="2" aria-selected="false">②上位の1日</button><button role="tab" data-cmp="3" aria-selected="false">③取り方の比率</button></div>
+      <div id="cmpP1" hidden>
+        <div class="pair"><div class="field"><label for="cmpDow">曜日</label><select id="cmpDow"><option value="">すべて</option><option value="1">月</option><option value="2">火</option><option value="3">水</option><option value="4">木</option><option value="5">金</option><option value="6">土</option><option value="0">日</option></select></div>
+          <div class="field"><label for="cmpHour">時間帯（乗車した時刻）</label><select id="cmpHour"></select></div></div>
+        <label class="check"><input type="checkbox" id="cmpOff">降車地も出す（白い丸）</label>
+        <div id="cmpMapWrap" class="mapwrap"><div id="cmpMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+          <div class="evmapbtns"><button class="btn" id="cmpFullBtn">全画面</button></div></div>
+        <div id="cmpLegend"></div>
+      </div>
+      <div id="cmpP2" hidden>
+        <div class="field"><label for="cmpDate">日付（出庫日）</label><select id="cmpDate"></select></div>
+        <div class="seg" role="tablist" aria-label="乗務員" id="cmpWho"></div>
+        <div id="cmpMap2Wrap" class="mapwrap"><div id="cmpMap2" class="bigmap" style="height:360px;border-radius:10px;border:1px solid var(--line)"></div>
+          <div class="evmapbtns"><button class="btn" id="cmpFull2Btn">全画面</button></div></div>
+        <div id="cmpFlow"></div>
+      </div>
+      <div id="cmpP3" hidden><div style="overflow-x:auto"><table class="cmpt" id="cmpRatio"></table></div><div class="src">割合は回数の割合。平均単価は金額（ETC・アプリ手配料を含む）÷回数。「1日平均」は勤務した日の売上の平均。</div></div>
     </section>
   </div>
 
@@ -889,7 +916,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 22:18</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 23:27</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1704,7 +1731,8 @@ body.rtfull{overflow:hidden}
   }
   function applyRole(){
     const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
-    $("segLong").hidden=!mem;
+    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin();   // 乗務員比較（試験）は管理者だけ
+    if(!isAdmin()&&typeof curSub!=="undefined"&&curSub==="cmp") showSub("rest");
     $("segSv").hidden=true; if(typeof curSub!=="undefined"&&curSub==="sv") showSub("wx");   // 接遇は売上 → 勤務 の中に移した
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
     $("cfgSum").textContent="合言葉（"+[isNakama()&&PROD?"仲間 設定済み":"仲間の速報",mem&&PROD?"ロング判定 設定済み":"ロング判定"].join("・")+"）";
@@ -1870,7 +1898,7 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -1878,6 +1906,7 @@ body.rtfull{overflow:hidden}
     if(!SUBS[s]) s="long";
     if(s==="wx"||s==="rail"||s==="fl") s="rest";   // 天気・電車・到着便はいったん非表示にしたので、古い保存値が残っていても休憩場へ
     if(s==="long"&&!isMember()) s="rest";
+    if(s==="cmp"&&!isAdmin()) s="rest";
 
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
@@ -1887,6 +1916,7 @@ body.rtfull{overflow:hidden}
     if(s==="rest"&&!$("tabLong").hidden&&typeof loadRest==="function") loadRest();
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function") renderTrainTab(true);
+    if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
   }
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
   $("restCode").value=cfg.empCode||"";
@@ -2115,6 +2145,90 @@ body.rtfull{overflow:hidden}
       w.classList.toggle("evfull",on); $(btn).textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":"";
       const m=getMap(); setTimeout(()=>m&&m.invalidateSize(),80); setTimeout(()=>m&&m.invalidateSize(),400); }; }
   setupFull("evFullBtn","evMapWrap",()=>evMap); setupFull("trFullBtn","trMapWrap",()=>trMap);
+
+  // ===== 乗務員比較分析（試験・管理者のみ）。「全員のデータ」（fullGet）を使う。名前は出さず、1日平均の売上が高い順に Aさん・Bさん… =====
+  let cmpData=null, cmpCrew=[], cmpMap=null, cmpLayer=null, cmpMap2=null, cmpLayer2=null, cmpTab="1", cmpWhoCode=null;
+  const CMP_COLORS=["#D23C2F","#E8742A","#E0A100","#3E9B4F","#2F8FB0","#6B6FB8","#9A6FB0","#8A8F8E"];
+  const cmpColor=i=>CMP_COLORS[Math.min(i,CMP_COLORS.length-1)];
+  const cmpArea=a=>String(a||"").replace(/[0-9０-９\-－丁目番地号]+.*$/,"")||"（住所なし）";   // 「港区六本木7」→「港区六本木」
+  (()=>{ const h=$("cmpHour"); for(let i=0;i<24;i+=2) h.insertAdjacentHTML("beforeend",`<option value="${i}">${i}〜${i+2}時</option>`); h.value="18";
+    const n=new Date(); $("cmpMonth").value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); })();
+  function cmpOpen(){ if(!cmpData) $("cmpMsg").textContent="月を選んで「読み込む」を押してください"; else cmpRender(); }
+  $("cmpLoad").onclick=async()=>{
+    const m=$("cmpMsg"); if(!isAdmin()){ m.textContent="管理者だけが使えます"; return; }
+    m.textContent="読み込んでいます…";
+    try{ const j=await post({action:"fullGet",adminPass:cfg.apass,month:$("cmpMonth").value}); if(!j.ok){ m.textContent=j.error||"読み込めませんでした"; return; }
+      const items=(j.items||[]).filter(x=>x.kind!=="CAN"&&+x.amt>0);
+      if(!items.length){ m.textContent="この月のデータがありません"; return; }
+      // 乗務員ごと：勤務日（出庫日）ごとの売上の合計から、1日平均を出して順位を付ける
+      const by={}; items.forEach(x=>{ const c=by[x.code]=by[x.code]||{code:x.code,days:{},n:0,amt:0}; c.days[x.date]=(c.days[x.date]||0)+(+x.amt); c.n++; c.amt+=+x.amt; });
+      cmpCrew=Object.values(by).map(c=>Object.assign(c,{nd:Object.keys(c.days).length,avg:c.amt/Math.max(1,Object.keys(c.days).length)})).sort((a,b)=>b.avg-a.avg);
+      let k=0; cmpCrew.forEach((c,i)=>{ c.rank=i; c.label=c.code===String(cfg.empCode||"")?"自分":String.fromCharCode(65+(k++))+"さん"; });
+      cmpData=items; m.textContent=`${items.length}件の乗車（${cmpCrew.length}人）を読み込みました`;
+      const ds=[...new Set(items.map(x=>x.date))].sort().reverse(); $("cmpDate").innerHTML=ds.map(d=>`<option value="${d}">${md(d)}（${dow(d)}）</option>`).join("");
+      $("cmpSeg").hidden=false; cmpRender();
+    }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
+  };
+  const crewOf=code=>cmpCrew.find(c=>c.code===code);
+  $("cmpSeg").querySelectorAll("[data-cmp]").forEach(b=>b.onclick=()=>{ cmpTab=b.dataset.cmp; cmpRender(); });
+  ["cmpDow","cmpHour","cmpOff"].forEach(id=>$(id).addEventListener("change",()=>cmpRender()));
+  $("cmpDate").addEventListener("change",()=>{ cmpWhoCode=null; cmpRender(); });
+  async function cmpMapInit(id,old){ await loadLeaflet(); if(old) return old; const m=L.map(id,{zoomControl:true,attributionControl:true});
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
+    m.setView([35.68,139.74],11); addAreaMask(m); return m; }
+  async function cmpRender(){
+    if(!cmpData) return;
+    $("cmpSeg").querySelectorAll("[data-cmp]").forEach(b=>b.setAttribute("aria-selected",b.dataset.cmp===cmpTab));
+    ["1","2","3"].forEach(t=>$("cmpP"+t).hidden=t!==cmpTab);
+    const tm2=iso=>{ const d=new Date(iso); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
+    if(cmpTab==="1"){
+      // 分析1：曜日と時間帯で、乗車地（と降車地）を乗務員ごとの色で地図に出す。売上の高い人ほど目立つ色・大きい丸
+      cmpMap=await cmpMapInit("cmpMap",cmpMap); setTimeout(()=>cmpMap.invalidateSize(),60);
+      if(cmpLayer) cmpLayer.remove(); cmpLayer=L.layerGroup().addTo(cmpMap);
+      const dw=$("cmpDow").value, h0=+$("cmpHour").value, off=$("cmpOff").checked;
+      const xs=cmpData.filter(x=>{ const d=new Date(x.at); return (dw===""||d.getDay()===+dw)&&d.getHours()>=h0&&d.getHours()<h0+2; });
+      const pts=[], cnt={};
+      xs.slice().sort((a,b)=>crewOf(b.code).rank-crewOf(a.code).rank).forEach(x=>{ const c=crewOf(x.code), col=cmpColor(c.rank), r=c.rank<3?9:6; cnt[x.code]=(cnt[x.code]||0)+1;
+        const pop=`<b>${esc(c.label)}</b>（1日平均 ${yen(c.avg)}円）<br>${md(x.date)} ${tm2(x.at)} ${esc(x.kind)} ${yen(x.amt)}円<br>${esc(x.from||"")} → ${esc(x.to||"")}`;
+        if(x.onLat&&x.onLng){ L.circleMarker([+x.onLat,+x.onLng],{radius:r,color:c.label==="自分"?"#2F6FD6":"#fff",weight:c.label==="自分"?3:1.5,fillColor:col,fillOpacity:.9,bubblingMouseEvents:false}).bindPopup(pop).addTo(cmpLayer); pts.push([+x.onLat,+x.onLng]); }
+        if(off&&x.offLat&&x.offLng){ L.circleMarker([+x.offLat,+x.offLng],{radius:r-2,color:col,weight:2,fillColor:"#fff",fillOpacity:.9,bubblingMouseEvents:false}).bindPopup(pop).addTo(cmpLayer); } });
+      if(pts.length>1) cmpMap.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:15});
+      $("cmpLegend").innerHTML=`<div class="src">${dw===""?"すべての曜日":"日月火水木金土"[+dw]+"曜日"}・${h0}〜${h0+2}時の乗車 ${xs.length}件（位置のない乗車は地図に出ません）</div>`+
+        cmpCrew.map(c=>`<div class="row" style="margin-top:4px"><span><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${cmpColor(c.rank)};vertical-align:middle;margin-right:6px${c.label==="自分"?";box-shadow:0 0 0 2px #2F6FD6":""}"></span><b>${esc(c.label)}</b> <small>1日平均 ${yen(c.avg)}円・${c.nd}日</small></span><span class="num">${cnt[c.code]||0}件</span></div>`).join("");
+    }
+    if(cmpTab==="2"){
+      // 分析2：日付を選び、売上の高い順に乗務員を選んで、最初の乗車〜最後の降車を時系列で
+      const day=$("cmpDate").value, xs=cmpData.filter(x=>x.date===day);
+      const tot={}; xs.forEach(x=>tot[x.code]=(tot[x.code]||0)+(+x.amt));
+      const order=Object.keys(tot).sort((a,b)=>tot[b]-tot[a]); if(!cmpWhoCode||!order.includes(cmpWhoCode)) cmpWhoCode=order[0];
+      const me=String(cfg.empCode||"");
+      $("cmpWho").innerHTML=order.slice(0,6).map((c,i)=>`<button role="tab" data-who="${c}" aria-selected="${c===cmpWhoCode}">${i+1}位 ${esc(crewOf(c).label)}<br><small>${yen(tot[c])}円</small></button>`).join("")+
+        (me&&order.indexOf(me)>=6?`<button role="tab" data-who="${me}" aria-selected="${me===cmpWhoCode}">自分<br><small>${yen(tot[me])}円</small></button>`:"");
+      $("cmpWho").querySelectorAll("[data-who]").forEach(b=>b.onclick=()=>{ cmpWhoCode=b.dataset.who; cmpRender(); });
+      const rs=xs.filter(x=>x.code===cmpWhoCode).sort((a,b)=>a.at<b.at?-1:1), c=crewOf(cmpWhoCode);
+      cmpMap2=await cmpMapInit("cmpMap2",cmpMap2); setTimeout(()=>cmpMap2.invalidateSize(),60);
+      if(cmpLayer2) cmpLayer2.remove(); cmpLayer2=L.layerGroup().addTo(cmpMap2);
+      if(!c||!rs.length){ $("cmpFlow").innerHTML=`<div class="geo">この日の記録がありません</div>`; return; }
+      const path=[]; rs.forEach((x,i)=>{ if(x.onLat&&x.onLng){ path.push([+x.onLat,+x.onLng]); L.marker([+x.onLat,+x.onLng],{icon:L.divIcon({className:"",html:`<div style="background:${cmpColor(c.rank)};color:#fff;border:2px solid #fff;border-radius:50%;width:24px;height:24px;line-height:20px;text-align:center;font-size:12px;font-weight:700">${i+1}</div>`,iconSize:[24,24],iconAnchor:[12,12]})}).bindPopup(`${i+1}. ${tm2(x.at)} ${esc(x.kind)} ${yen(x.amt)}円<br>${esc(x.from||"")} → ${esc(x.to||"")}`).addTo(cmpLayer2); }
+        if(x.offLat&&x.offLng) path.push([+x.offLat,+x.offLng]); });
+      if(path.length>1){ L.polyline(path,{color:cmpColor(c.rank),weight:3,opacity:.7,dashArray:"6 6"}).addTo(cmpLayer2); cmpMap2.fitBounds(L.latLngBounds(path),{padding:[30,30],maxZoom:15}); }
+      // 時間帯ごとに、どのエリアで乗せたか（乗車した順＝昼の出庫から翌朝の順に並べる）
+      const byH={}; rs.forEach(x=>{ const h=new Date(x.at).getHours(); (byH[h]=byH[h]||[]).push(x); });
+      const first=rs[0], last=rs[rs.length-1];
+      $("cmpFlow").innerHTML=`<div class="src">${esc(c.label)}：${md(day)}の売上 ${yen(tot[cmpWhoCode])}円・${rs.length}回・${tm2(first.at)}〜${tm2(last.offAt||last.at)}（最初の乗車〜最後の降車）</div>
+        <table class="cmpt"><thead><tr><td>時間帯</td><td>乗せたエリア</td><td>回数・売上</td></tr></thead><tbody>${[...new Set(rs.map(x=>new Date(x.at).getHours()))].map(h=>{ const g=byH[h]; return `<tr><td class="num">${h}時台</td><td>${[...new Set(g.map(x=>cmpArea(x.from)))].map(esc).join("、")}</td><td class="num">${g.length}回 ${yen(g.reduce((a,x)=>a+(+x.amt),0))}円</td></tr>`; }).join("")}</tbody></table>
+        <details><summary>乗車ごと（${rs.length}回）</summary><table class="cmpt"><tbody>${rs.map((x,i)=>`<tr><td class="num">${i+1}</td><td class="num">${tm2(x.at)}</td><td>${esc(x.kind)}</td><td>${esc(cmpArea(x.from))}→${esc(cmpArea(x.to))}</td><td class="num">${yen(x.amt)}</td></tr>`).join("")}</tbody></table></details>`;
+    }
+    if(cmpTab==="3"){
+      // 分析3：乗務員ごとの、手上げ・配車・乗り場の割合と平均単価。自分と上位の人を並べる
+      const K=["手上げ","配車","乗り場"], st={};
+      cmpData.forEach(x=>{ const s=st[x.code]=st[x.code]||{n:0}; const k=K.includes(x.kind)?x.kind:"その他"; s[k]=s[k]||{n:0,a:0}; s[k].n++; s[k].a+=+x.amt; s.n++; });
+      const show=cmpCrew.filter(c=>c.rank<5||c.label==="自分");
+      $("cmpRatio").innerHTML=`<thead><tr><td>乗務員</td><td>1日平均</td>${K.map(k=>`<td>${k}<br><small>割合・平均単価</small></td>`).join("")}<td>その他</td></tr></thead><tbody>${show.map(c=>{ const s=st[c.code]; const cell=k=>{ const v=s[k]; return v?`${pct(v.n/s.n)}<br><small>${yen(v.a/v.n)}円</small>`:"—"; };
+        return `<tr${c.label==="自分"?' style="background:var(--accent-soft)"':""}><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cmpColor(c.rank)};margin-right:4px"></span><b>${esc(c.label)}</b><br><small>${c.nd}日・${s.n}回</small></td><td class="num">${yen(c.avg)}円</td>${K.map(k=>`<td class="num">${cell(k)}</td>`).join("")}<td class="num">${cell("その他")}</td></tr>`; }).join("")}</tbody>`;
+    }
+  }
+  setupFull("cmpFullBtn","cmpMapWrap",()=>cmpMap); setupFull("cmpFull2Btn","cmpMap2Wrap",()=>cmpMap2);
   $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
   $("evReload").onclick=()=>renderEv(true);
   $("evCalBtn").onclick=()=>{ $("evCal").hidden=!$("evCal").hidden; };
