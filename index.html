@@ -226,6 +226,12 @@ a.flink:active{background:var(--sunk)}
 .cartbl tr.sec td{background:var(--accent-soft);font-weight:700}
 .cartbl input[type=number],.cartbl input[type=time],.cartbl input[type=text]{width:100%;min-height:36px;font-size:15px;padding:4px}
 .cartbl textarea{width:100%;font-size:13px;min-height:52px}
+/* イベント地図：地図の上のボタンと全画面 */
+.evmapbtns{position:absolute;top:10px;right:10px;z-index:1000;display:flex;gap:6px}
+.evmapbtns .btn{box-shadow:0 1px 4px rgba(0,0,0,.25);background:var(--surface)}
+#evMapWrap.evfull{position:fixed;inset:0;z-index:2000;background:var(--bg);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#evMapWrap.evfull #evMap{height:100%!important;border-radius:0;border:0}
+#evMapWrap.evfull .evmapbtns{top:calc(10px + env(safe-area-inset-top,0px))}
 #pdTbl input::placeholder{color:var(--ink);opacity:1}
 .cartbl .check{font-size:13px;gap:4px;margin:1px 0}
 .cartbl .check input{width:18px;height:18px}
@@ -616,7 +622,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="sv" aria-selected="false" id="segSv" hidden>接遇</button>
     <button role="tab" data-sub="rest" aria-selected="false">休憩場</button>
     <button role="tab" data-sub="taxi" aria-selected="false">専用乗り場</button>
-    <button role="tab" data-sub="event" aria-selected="false">イベント地図</button>
+    <button role="tab" data-sub="event" aria-selected="false">イベント</button>
   </div>
 
   <div class="wrap" id="subSv" hidden></div>
@@ -637,9 +643,13 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subEvent" hidden>
     <section class="card">
-      <div class="infohead"><h2>イベント地図</h2><div class="btnrow" style="margin:0"><button class="btn" id="evReload">更新</button><button class="btn" id="evMeBtn">現在地</button></div></div>
+      <div class="infohead"><h2 id="evTitle">イベント</h2><div class="btnrow" style="margin:0"><button class="btn" id="evReload">更新</button></div></div>
+      <div class="seg" role="tablist" aria-label="日付" id="evDaySeg"></div>
       <div class="src">昨日・今日・明日のイベントを自動で読み込み、会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
-      <div id="evMap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+      <div id="evMapWrap" style="position:relative">
+        <div id="evMap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+        <div class="evmapbtns"><button class="btn" id="evMeBtn">現在地</button><button class="btn" id="evFullBtn">全画面</button></div>
+      </div>
       <div class="msg" id="evMsg" role="status"></div>
       <div id="evListBox"></div>
       <h3 style="margin:14px 0 6px;font-size:16px">自分でイベントを足す（CSV）</h3>
@@ -832,7 +842,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 14:49</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 15:06</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1958,7 +1968,11 @@ body.rtfull{overflow:hidden}
     evMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(evMap);
     if(center) evMap.setView([p.lat,p.lng],Math.max(evMap.getZoom()||0,14));
     return p; }
-  async function renderEv(first){
+  let evDay=null;
+  const ymdOf=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  // イベントの日：メモの開始の日付。なければ自動の分は入っていたファイルの日、CSVの分は読み込んだ日
+  const evDayOf=e=>{ const {S}=evTimes(e.memo,e.at); return S?ymdOf(S):(e.day||ymdOf(new Date(e.at||Date.now()))); };
+  async function renderEv(first,fit){
     const m=$("evMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
     if(!evMap){ evMap=L.map("evMap",{zoomControl:true,attributionControl:true});
@@ -1967,17 +1981,29 @@ body.rtfull{overflow:hidden}
     setTimeout(()=>evMap.invalidateSize(),60);
     if(first){ m.textContent="イベントを読み込んでいます…"; await evFetch(); }
     if(evLayer) evLayer.remove(); evLayer=L.layerGroup().addTo(evMap); evMarks={};
-    const all=evAll(), rows=all.map((e,i)=>({e,i,st:evState(e)})).sort((a,b)=>(a.st.l==="終了")-(b.st.l==="終了")||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
+    // 日付ごとに見る（見出し「10月22日のイベント」）。はじめは今日（朝6時までは前の日）
+    const all=evAll(), now=new Date(), def=new Date(now); if(def.getHours()<6) def.setDate(def.getDate()-1);
+    const near=[-1,0,1].map(d=>{ const x=new Date(def); x.setDate(x.getDate()+d); return ymdOf(x); });
+    const days=[...new Set(near.concat(all.map(evDayOf)))].sort().filter(d=>near.includes(d)||all.some(e=>evDayOf(e)===d));
+    if(!evDay||!days.includes(evDay)) evDay=ymdOf(def);
+    const dd=new Date(evDay+"T00:00:00"), wd="日月火水木金土"[dd.getDay()];
+    $("evTitle").textContent=`${dd.getMonth()+1}月${dd.getDate()}日のイベント`;
+    $("evDaySeg").innerHTML=days.map(d=>{ const x=new Date(d+"T00:00:00"), n=all.filter(e=>evDayOf(e)===d).length; return `<button role="tab" data-evday="${d}" aria-selected="${d===evDay}">${x.getMonth()+1}/${x.getDate()}（${"日月火水木金土"[x.getDay()]}）${n?`<small> ${n}件</small>`:""}</button>`; }).join("");
+    $("evDaySeg").querySelectorAll("[data-evday]").forEach(b=>b.onclick=()=>{ evDay=b.dataset.evday; renderEv(false,true); });
+    const rows=all.map((e,i)=>({e,i,st:evState(e)})).filter(x=>evDayOf(x.e)===evDay).sort((a,b)=>(a.st.l==="終了")-(b.st.l==="終了")||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
     rows.forEach(({e,i,st})=>{ evMarks[i]=L.circleMarker([e.lat,e.lng],{radius:12,color:"#fff",weight:3,fillColor:st.c,fillOpacity:1,bubblingMouseEvents:false})
       .bindTooltip(esc(e.name),{permanent:true,direction:"top",offset:[0,-10]}).bindPopup(evPopup(e,st)).addTo(evLayer); });
-    m.textContent=all.length?`${all.length}件のイベント（自動 ${evSrv.length}件・CSV ${evList.length}件）`:"イベントがまだありません（自動の分もありません）。下の「CSVファイルを選ぶ」から読み込むこともできます";
+    m.textContent=rows.length?`${dd.getMonth()+1}/${dd.getDate()}（${wd}）のイベント ${rows.length}件`:`${dd.getMonth()+1}/${dd.getDate()}（${wd}）のイベントはまだありません。Claudeに頼むか、下の「CSVファイルを選ぶ」から読み込めます`;
     $("evListBox").innerHTML=rows.map(({e,i,st})=>`<div class="grp" style="margin-top:8px;border-left:6px solid ${st.c}">
         <b>${esc(e.name)}</b>${st.l?` <span style="color:${st.c};font-weight:700">${esc(st.l)}</span>`:""}<div class="src">開始 ${evClock(st.S)}・終了見込み ${evClock(st.E)}${e.addr?`<br>${esc(e.addr)}`:""}</div>
         <div class="btnrow"><button class="btn" data-evpin="${i}">地図で見る</button><a class="btn primary" style="text-decoration:none" href="${evRoute(e)}" target="_blank" rel="noopener">ルート案内</a></div></div>`).join("");
     $("evListBox").querySelectorAll("[data-evpin]").forEach(b=>b.onclick=()=>{ const mk=evMarks[b.dataset.evpin]; if(!mk) return; evMap.setView(mk.getLatLng(),15); mk.openPopup(); $("evMap").scrollIntoView({behavior:"smooth",block:"center"}); });
-    if(first){ const p=await evShowMe(false); const pts=all.map(e=>[e.lat,e.lng]).concat(p?[[p.lat,p.lng]]:[]);
-      if(pts.length>1) evMap.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:15}); else if(pts.length) evMap.setView(pts[0],14); }
+    $("evListBox").insertAdjacentHTML("afterbegin",rows.length?"":`<div class="geo">この日のイベントはありません</div>`);
+    if(first||fit){ const p=first?await evShowMe(false):(evMe?{lat:evMe.getLatLng().lat,lng:evMe.getLatLng().lng}:null); const pts=rows.map(({e})=>[e.lat,e.lng]).concat(p?[[p.lat,p.lng]]:[]);
+      if(pts.length>1) evMap.fitBounds(L.latLngBounds(pts),{padding:[40,40],maxZoom:15}); else if(pts.length) evMap.setView(pts[0],14); }
   }
+  // 地図を画面いっぱいに広げる／戻す
+  $("evFullBtn").onclick=()=>{ const w=$("evMapWrap"), on=!w.classList.contains("evfull"); w.classList.toggle("evfull",on); $("evFullBtn").textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":""; setTimeout(()=>evMap&&evMap.invalidateSize(),80); };
   $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
   $("evReload").onclick=()=>renderEv(true);
   $("evPick").onclick=()=>$("evFile").click();
