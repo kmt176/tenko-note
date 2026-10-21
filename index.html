@@ -170,6 +170,12 @@ input,textarea,button{font-weight:700}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:var(--sunk);border-radius:12px;padding:5px}
 .seg button{border:0;background:none;border-radius:9px;padding:10px 0;font-size:15px;letter-spacing:-.02em;white-space:nowrap;color:var(--muted);min-height:46px}
 .seg button[aria-selected="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+/* イベントの日付：1週間分を横にスクロール。今日は色付き */
+#evDaySeg{grid-auto-columns:minmax(88px,1fr);overflow-x:auto;scrollbar-width:none}
+#evDaySeg::-webkit-scrollbar{display:none}
+#evDaySeg button{padding:8px 6px;line-height:1.25}
+#evDaySeg button.evtoday{color:#fff;background:#D23C2F;font-weight:700}
+#evDaySeg button.evtoday[aria-selected="true"]{background:#D23C2F;color:#fff;box-shadow:0 0 0 3px var(--accent)}
 .infohead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .infohead .btn{padding:8px 12px}
 .stamp{font-size:14px;color:var(--muted);font-weight:400}
@@ -659,7 +665,7 @@ body.rtfull{overflow:hidden}
       <div class="infohead"><h2 id="evTitle">イベント</h2><div class="btnrow" style="margin:0"><button class="btn" id="evReload">更新</button></div></div>
       <div class="seg" role="tablist" aria-label="日付" id="evDaySeg"></div>
 
-      <div class="src">昨日・今日・明日のイベントを自動で読み込み、会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
+      <div class="src">今日から1週間のイベントを自動で読み込み（朝6時までは前の日を「今日」とします）、会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
       <div id="evMapWrap" class="mapwrap">
         <div id="evMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="evMeBtn">現在地</button><button class="btn" id="evFullBtn">全画面</button></div>
@@ -873,7 +879,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 22:01</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 22:08</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2062,12 +2068,13 @@ body.rtfull{overflow:hidden}
     if(evLayer) evLayer.remove(); evLayer=L.layerGroup().addTo(evMap); evMarks={};
     // 日付ごとに見る（見出し「10月22日のイベント」）。はじめは今日（朝6時までは前の日）
     const all=evAll(), now=new Date(), def=new Date(now); if(def.getHours()<6) def.setDate(def.getDate()-1);
-    const near=[-1,0,1].map(d=>{ const x=new Date(def); x.setDate(x.getDate()+d); return ymdOf(x); });
-    const days=[...new Set(near.concat(all.map(evDayOf)))].sort().filter(d=>near.includes(d)||all.some(e=>evDayOf(e)===d));
+    const near=[0,1,2,3,4,5,6].map(d=>{ const x=new Date(def); x.setDate(x.getDate()+d); return ymdOf(x); }), today=near[0], yday=ymdOf(new Date(def.getTime()-864e5));
+    const days=[...new Set(near.concat(all.map(evDayOf)))].sort().filter(d=>near.includes(d)||(d===yday&&all.some(e=>evDayOf(e)===d)));   // 今日〜6日後。昨日はイベントがあるときだけ
     if(!evDay||!days.includes(evDay)) evDay=ymdOf(def);
     const dd=new Date(evDay+"T00:00:00"), wd="日月火水木金土"[dd.getDay()];
-    $("evTitle").textContent=`${dd.getMonth()+1}月${dd.getDate()}日のイベント`;
-    $("evDaySeg").innerHTML=days.map(d=>{ const x=new Date(d+"T00:00:00"), n=all.filter(e=>evDayOf(e)===d).length; return `<button role="tab" data-evday="${d}" aria-selected="${d===evDay}">${x.getMonth()+1}/${x.getDate()}（${"日月火水木金土"[x.getDay()]}）${n?`<small> ${n}件</small>`:""}</button>`; }).join("");
+    $("evTitle").textContent=evDay===today?`今日（${dd.getMonth()+1}月${dd.getDate()}日）のイベント`:`${dd.getMonth()+1}月${dd.getDate()}日（${wd}）のイベント`;
+    $("evDaySeg").innerHTML=days.map(d=>{ const x=new Date(d+"T00:00:00"), n=all.filter(e=>evDayOf(e)===d).length; return `<button role="tab" data-evday="${d}" aria-selected="${d===evDay}"${d===today?` class="evtoday"`:""}>${d===today?"今日":`${x.getMonth()+1}/${x.getDate()}（${"日月火水木金土"[x.getDay()]}）`}<br><small>${n?`${n}件`:"—"}</small></button>`; }).join("");
+    { const sel=$("evDaySeg").querySelector(`[aria-selected="true"]`); if(sel) sel.scrollIntoView({block:"nearest",inline:"center"}); }
     $("evDaySeg").querySelectorAll("[data-evday]").forEach(b=>b.onclick=()=>{ evDay=b.dataset.evday; renderEv(false,true); });
     const rows=all.map((e,i)=>({e,i,st:evState(e)})).filter(x=>evDayOf(x.e)===evDay).sort((a,b)=>(a.st.l==="終了")-(b.st.l==="終了")||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
     rows.forEach(({e,i,st})=>{ evMarks[i]=L.circleMarker([e.lat,e.lng],{radius:12,color:"#fff",weight:3,fillColor:st.c,fillOpacity:1,bubblingMouseEvents:false})
