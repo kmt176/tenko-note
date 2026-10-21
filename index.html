@@ -227,10 +227,11 @@ a.flink:active{background:var(--sunk)}
 .cartbl input[type=number],.cartbl input[type=time],.cartbl input[type=text]{width:100%;min-height:36px;font-size:15px;padding:4px}
 .cartbl textarea{width:100%;font-size:13px;min-height:52px}
 /* イベント地図：地図の上のボタンと全画面 */
+#evMapWrap{position:relative}
 .evmapbtns{position:absolute;top:10px;right:10px;z-index:1000;display:flex;gap:6px}
 .evmapbtns .btn{box-shadow:0 1px 4px rgba(0,0,0,.25);background:var(--surface)}
-#evMapWrap.evfull{position:fixed;inset:0;z-index:2000;background:var(--bg);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-#evMapWrap.evfull #evMap{height:100%!important;border-radius:0;border:0}
+#evMapWrap.evfull{position:fixed;top:0;left:0;right:0;bottom:0;width:auto;height:100vh;height:100dvh;z-index:2000;background:var(--bg);margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#evMapWrap.evfull #evMap{width:100%;height:100%!important;border-radius:0;border:0}
 #evMapWrap.evfull .evmapbtns{top:calc(10px + env(safe-area-inset-top,0px))}
 #pdTbl input::placeholder{color:var(--ink);opacity:1}
 .cartbl .check{font-size:13px;gap:4px;margin:1px 0}
@@ -646,14 +647,14 @@ body.rtfull{overflow:hidden}
       <div class="infohead"><h2 id="evTitle">イベント</h2><div class="btnrow" style="margin:0"><button class="btn" id="evReload">更新</button></div></div>
       <div class="seg" role="tablist" aria-label="日付" id="evDaySeg"></div>
       <div class="src">昨日・今日・明日のイベントを自動で読み込み、会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
-      <div id="evMapWrap" style="position:relative">
+      <div id="evMapWrap">
         <div id="evMap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="evMeBtn">現在地</button><button class="btn" id="evFullBtn">全画面</button></div>
       </div>
       <div class="msg" id="evMsg" role="status"></div>
       <div id="evListBox"></div>
       <h3 style="margin:14px 0 6px;font-size:16px">自分でイベントを足す（CSV）</h3>
-      <div class="src">CSVの列は「地点名,緯度,経度,住所,電話番号,メモ」です（カーナビタイムのMy地点プラスと同じ形式なので、同じファイルを両方に使えます）。メモに「10/21 18:30開始 終了は21時前後見込み」のように書くと、開始と終了見込みを読み取ります。日付がないときは、読み込んだ日のイベントとして扱います。</div>
+      <div class="src">CSVの列は「地点名,緯度,経度,住所,電話番号,メモ」です（カーナビタイムのMy地点プラスと同じ形式なので、同じファイルを両方に使えます）。メモに「10/21 18:30開始 終了は21時前後見込み 集客見込み 約3,000人」のように書くと、開始・終了見込み・集客見込みを読み取ります。日付がないときは、読み込んだ日のイベントとして扱います。</div>
       <input type="file" id="evFile" accept=".csv,text/csv,text/plain" hidden>
       <div class="btnrow"><button class="btn primary" id="evPick">CSVファイルを選ぶ</button><button class="btn" id="evClear">自分で読み込んだ分を消す</button></div>
     </section>
@@ -842,7 +843,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 15:06</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 15:18</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1956,10 +1957,12 @@ body.rtfull{overflow:hidden}
     if(S&&now<S.getTime()) return {c:"#1D6A80",l:"開始前",S,E};
     return {c:"#1D6A80",l:S?"開催中":"",S,E}; }
   const evClock=d=>d?`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`:"—";
+  // メモの「集客見込み 約1.4万人」を取り出す（吹き出しと一覧で目立たせる）
+  const evCap=e=>{ const m=/集客見込み[:：]?\s*([^\s、。（(]+)/.exec(e.memo||""); return m?m[1]:""; };
   const evRoute=e=>`https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lng}&travelmode=driving`;
   function evPopup(e,st){ return `<div style="font-size:15px;line-height:1.5;min-width:200px"><b style="font-size:16px">${esc(e.name)}</b>
       ${st.l?`<div style="color:${st.c};font-weight:700">${esc(st.l)}</div>`:""}
-      <div>開始：${evClock(st.S)}</div><div>終了見込み：${evClock(st.E)}</div>${e.auto?`<div style="color:#5A6866;font-size:13px">自動で読み込んだイベント</div>`:""}
+      <div>開始：${evClock(st.S)}</div><div>終了見込み：${evClock(st.E)}</div>${evCap(e)?`<div><b>集客見込み：${esc(evCap(e))}</b></div>`:""}${e.auto?`<div style="color:#5A6866;font-size:13px">自動で読み込んだイベント</div>`:""}
       ${e.addr?`<div>${esc(e.addr)}</div>`:""}${e.tel?`<div><a href="tel:${esc(e.tel.replace(/[^\d+]/g,""))}">${esc(e.tel)}</a></div>`:""}${e.memo?`<div style="color:#5A6866">${esc(e.memo)}</div>`:""}
       <a href="${evRoute(e)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#1D6A80;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:17px;text-decoration:none;margin-top:10px">ルート案内</a></div>`; }
   async function evShowMe(center){
@@ -1995,7 +1998,7 @@ body.rtfull{overflow:hidden}
       .bindTooltip(esc(e.name),{permanent:true,direction:"top",offset:[0,-10]}).bindPopup(evPopup(e,st)).addTo(evLayer); });
     m.textContent=rows.length?`${dd.getMonth()+1}/${dd.getDate()}（${wd}）のイベント ${rows.length}件`:`${dd.getMonth()+1}/${dd.getDate()}（${wd}）のイベントはまだありません。Claudeに頼むか、下の「CSVファイルを選ぶ」から読み込めます`;
     $("evListBox").innerHTML=rows.map(({e,i,st})=>`<div class="grp" style="margin-top:8px;border-left:6px solid ${st.c}">
-        <b>${esc(e.name)}</b>${st.l?` <span style="color:${st.c};font-weight:700">${esc(st.l)}</span>`:""}<div class="src">開始 ${evClock(st.S)}・終了見込み ${evClock(st.E)}${e.addr?`<br>${esc(e.addr)}`:""}</div>
+        <b>${esc(e.name)}</b>${st.l?` <span style="color:${st.c};font-weight:700">${esc(st.l)}</span>`:""}<div class="src">開始 ${evClock(st.S)}・終了見込み ${evClock(st.E)}${evCap(e)?`<br><b style="color:var(--ink)">集客見込み ${esc(evCap(e))}</b>`:""}${e.addr?`<br>${esc(e.addr)}`:""}</div>
         <div class="btnrow"><button class="btn" data-evpin="${i}">地図で見る</button><a class="btn primary" style="text-decoration:none" href="${evRoute(e)}" target="_blank" rel="noopener">ルート案内</a></div></div>`).join("");
     $("evListBox").querySelectorAll("[data-evpin]").forEach(b=>b.onclick=()=>{ const mk=evMarks[b.dataset.evpin]; if(!mk) return; evMap.setView(mk.getLatLng(),15); mk.openPopup(); $("evMap").scrollIntoView({behavior:"smooth",block:"center"}); });
     $("evListBox").insertAdjacentHTML("afterbegin",rows.length?"":`<div class="geo">この日のイベントはありません</div>`);
@@ -2003,7 +2006,12 @@ body.rtfull{overflow:hidden}
       if(pts.length>1) evMap.fitBounds(L.latLngBounds(pts),{padding:[40,40],maxZoom:15}); else if(pts.length) evMap.setView(pts[0],14); }
   }
   // 地図を画面いっぱいに広げる／戻す
-  $("evFullBtn").onclick=()=>{ const w=$("evMapWrap"), on=!w.classList.contains("evfull"); w.classList.toggle("evfull",on); $("evFullBtn").textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":""; setTimeout(()=>evMap&&evMap.invalidateSize(),80); };
+  // 全画面のときは、地図をページの一番上（body）に移す（カードの中のままだと、スマホによっては広がらず消えて見えるため）。閉じたら元の場所に戻す
+  const evHome=document.createComment("evMapWrap");
+  $("evFullBtn").onclick=()=>{ const w=$("evMapWrap"), on=!w.classList.contains("evfull");
+    if(on){ w.parentNode.insertBefore(evHome,w); document.body.appendChild(w); } else if(evHome.parentNode){ evHome.parentNode.insertBefore(w,evHome); evHome.remove(); }
+    w.classList.toggle("evfull",on); $("evFullBtn").textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":"";
+    setTimeout(()=>evMap&&evMap.invalidateSize(),80); setTimeout(()=>evMap&&evMap.invalidateSize(),400); };
   $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
   $("evReload").onclick=()=>renderEv(true);
   $("evPick").onclick=()=>$("evFile").click();
