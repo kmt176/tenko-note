@@ -236,6 +236,7 @@ a.flink:active{background:var(--sunk)}
 .tritem .btn{white-space:nowrap;min-width:64px;text-align:center}
 .trroute{background:#7B3FA0!important;border-color:#7B3FA0!important;color:#fff!important;text-decoration:none}
 .tritem.trred{border-left-color:#D23C2F;background:rgba(210,60,47,.12)}
+.trdist{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#2F6FD6;color:#fff;font-size:12px;vertical-align:middle;white-space:nowrap}
 .trbadge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#D23C2F;color:#fff;font-size:12px;vertical-align:middle}
 .tritem.trred .trroute{background:#D23C2F!important;border-color:#D23C2F!important}
 .evmapbtns{position:absolute;top:10px;right:10px;z-index:1000;display:flex;gap:6px}
@@ -872,7 +873,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 21:21</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 21:28</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2010,7 +2011,7 @@ body.rtfull{overflow:hidden}
     try{ $("trainSel").value=localStorage.getItem("tenko.trainLine")||""; $("trOnlyRed").checked=localStorage.getItem("tenko.trainRed")==="1"; }catch(e){} })();
   // ===== 電車が止まったら（別のタブ。イベントと同じ地図の作り） =====
   let trMap=null, trLayer=null, trMe=null;
-  async function renderTrainTab(first){
+  async function renderTrainTab(first,noFit){
     const m=$("trMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
     if(!trMap){ trMap=L.map("trMap",{zoomControl:true,attributionControl:true});
@@ -2027,17 +2028,19 @@ body.rtfull{overflow:hidden}
       mk.bindTooltip(esc(x.n),{permanent:!!x.i||xs.length<=12,direction:"top",offset:[0,x.i?-10:-6]}); mk.addTo(trLayer); mk._trn=x.n; });
     m.textContent=l?`${trLabel(l)}：${all.length}駅（赤＝近くに別の路線の駅がない駅 ${red}駅）`:"止まった路線を選んでください";
     // 一覧：路線に沿った順。赤い駅は枠と見出しを赤に
-    $("trainBox").innerHTML=l?`<div class="trlist">${xs.map(x=>`<div class="tritem${x.i?" trred":""}"><div class="trname"><b>${esc(x.n)}${x.i?`<span class="trbadge">近くに別の路線なし</span>`:""}</b><small>${esc(x.w)}・乗降客数 <b style="color:var(--ink)">${pax(x)}</b></small><small>一番近い別の路線：${esc(x.near)}（${esc(x.nl)}）約${km(x.d)}</small></div>
+    const meD=x=>{ if(!trMe) return ""; const p=trMe.getLatLng(), dm=distM([p.lat,p.lng],[x.lat,x.lng]); return `<span class="trdist">現在地から ${dm>=1000?(dm/1000).toFixed(1)+"km":Math.round(dm/10)*10+"m"}</span>`; };   // 現在地が分かっていれば、駅名の右に現在地からの直線距離
+    $("trainBox").innerHTML=l?`<div class="trlist">${xs.map(x=>`<div class="tritem${x.i?" trred":""}"><div class="trname"><b>${esc(x.n)}${x.i?`<span class="trbadge">近くに別の路線なし</span>`:""}${meD(x)}</b><small>${esc(x.w)}・乗降客数 <b style="color:var(--ink)">${pax(x)}</b></small><small>一番近い別の路線：${esc(x.near)}（${esc(x.nl)}）約${km(x.d)}</small></div>
       <button class="btn" data-trpin="${esc(x.n)}">地図</button><a class="btn primary trroute" href="${evRoute(x)}" target="_blank" rel="noopener">ルート</a></div>`).join("")}</div>`:"";
     $("trainBox").querySelectorAll("[data-trpin]").forEach(b=>b.onclick=()=>{ const x=xs.find(y=>y.n===b.dataset.trpin); if(!x) return; trMap.setView([x.lat,x.lng],15); trLayer.eachLayer(mk=>{ if(mk._trn===x.n) mk.openPopup(); }); $("trMap").scrollIntoView({behavior:"smooth",block:"center"}); });
-    if(first){ const p=await getPos(); if(p){ if(trMe) trMap.removeLayer(trMe); trMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(trMap); } }
+    if(first){ const p=await getPos(); if(p){ if(trMe) trMap.removeLayer(trMe); trMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(trMap); $("trainBox").innerHTML=""; return renderTrainTab(false); } }
+    if(noFit) return;
     const pts=xs.map(x=>[x.lat,x.lng]);
     if(pts.length>1) trMap.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:15}); else if(pts.length) trMap.setView(pts[0],14);
   }
   $("trOnlyRed").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainRed",$("trOnlyRed").checked?"1":""); }catch(e){} renderTrainTab(false); });
   $("trainSel").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainLine",$("trainSel").value); }catch(e){} renderTrainTab(false); });
   $("trMeBtn").onclick=async()=>{ if(!trMap) return; const p=await getPos(); if(!p){ $("trMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; }
-    if(trMe) trMap.removeLayer(trMe); trMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(trMap); trMap.setView([p.lat,p.lng],Math.max(trMap.getZoom(),14)); };
+    if(trMe) trMap.removeLayer(trMe); trMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(trMap); renderTrainTab(false,true); trMap.setView([p.lat,p.lng],Math.max(trMap.getZoom(),14)); };   // 一覧に現在地からの距離を出す
   let evDay=null;
   const ymdOf=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   // イベントの日：メモの開始の日付。なければ自動の分は入っていたファイルの日、CSVの分は読み込んだ日
