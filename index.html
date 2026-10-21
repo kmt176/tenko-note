@@ -498,6 +498,7 @@ body.rtfull{overflow:hidden}
       <div class="ckin" id="ckIn">
         <div class="field"><label for="ck_genshu">日計表の現収</label><input type="text" class="yenin" id="ck_genshu" data-ck="genshu" inputmode="numeric" autocomplete="off"></div>
         <div class="field"><label for="ck_mishu">日計表の未収</label><input type="text" class="yenin" id="ck_mishu" data-ck="mishu" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label for="ck_koteki">公的割引（日報の差引の数字。障害者割引＝この数字×10円）</label><input type="text" class="yenin" id="ck_koteki" data-ck="koteki" inputmode="numeric" autocomplete="off"></div>
         <div class="field"><label for="ck_etcSelf">ETC自己負担</label><input type="text" class="yenin" id="ck_etcSelf" data-ck="etcSelf" inputmode="numeric" autocomplete="off"></div>
       </div>
       <div id="ckResult"></div>
@@ -814,7 +815,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 08:31</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 09:22</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3030,7 +3031,7 @@ body.rtfull{overflow:hidden}
     }
     // 空欄のアプリ手配料金・ETC・日計表合計・その他未収は、乗車の記録から出した値を薄く表示して、その値で計算する
     const auto={app:s.app,etc:s.etc,etcCo:0,card:CARD.reduce((a,k)=>a+(s.byPay[k]||0),0),other:OTHER.reduce((a,k)=>a+(s.byPay[k]||0),0)};
-    ["total","app","etc","etcCo","card","other","genshu","mishu","etcSelf","note"].forEach(f=>setVal("ck_"+f,d.check[f]));
+    ["total","app","etc","etcCo","card","other","genshu","mishu","koteki","etcSelf","note"].forEach(f=>setVal("ck_"+f,(d.check||{})[f]));
     ["app","etc","etcCo","card","other"].forEach(f=>{ $("ck_"+f).placeholder=simple?"":yen(auto[f])+"（記録から）"; });
     $("ck_total").placeholder="日報の総営収";
     document.querySelectorAll("#nkTable .nk-d").forEach(tr=>tr.hidden=simple);
@@ -3602,10 +3603,13 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       rzRaw.forEach(([a,b])=>{ let x=toMin(a), y=toMin(b); if(x<ref-60) x+=DAY; if(prev!=null&&x<prev-360) x+=DAY; while(y<x) y+=DAY; prev=y;
         rides.push({id:newId(),kind:RZ,on:x,off:y,imported:true}); });
     }
-    if(!rides.length) errs.push("明細の行がありません");
-    if(date&&!rzOnly&&!hasShift(date)&&!tenko.ab) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
+    // 公的割引だけの日（明細なし）は、もうある勤務に公的割引（障害者割引）だけを入れる
+    const kotekiOnly=!rides.length&&!rzRaw.length&&check.koteki!=null&&Object.keys(check).length===1;
+    if(!rides.length&&!kotekiOnly) errs.push("明細の行がありません");
+    if(date&&kotekiOnly&&!dayHas(sales.days[date])) errs.push(`${md(date)} 出庫の記録がありません（公的割引だけは入れられません）`);
+    if(date&&!rzOnly&&!kotekiOnly&&!hasShift(date)&&!tenko.ab) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
     if(date&&rzOnly&&!sales.days[date]&&!hasShift(date)) errs.push(`${md(date)} 出社の勤務がありません（連続配車の時間だけは入れられません）`);
-    return {date,check,rides,errs,tenko,rzOnly};
+    return {date,check,rides,errs,tenko,rzOnly,kotekiOnly};
   }
   // 点呼時間にその日の勤務がなければ、取り込んだ点呼の実績で作る（計画も同じ時刻）。実績が空なら埋める
   function applyTenko(p){
@@ -3628,6 +3632,10 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     if(navigator.clipboard) navigator.clipboard.writeText(IMPORT_PROMPT).then(ok,()=>{ $("iText").value=IMPORT_PROMPT; $("iText").select(); $("iMsg").textContent="自動でコピーできませんでした。欄の文を長押ししてコピーしてください"; });
     else { $("iText").value=IMPORT_PROMPT; $("iText").select(); } };
   let multi=null;
+  // 公的割引（障害者割引）だけを入れる。金額の記録は変わらないので、照合済みの日も確認しない
+  const applyKoteki=p=>{ const d=sales.days[p.date]; d.check=d.check||{}; const was=d.check.koteki; d.check.koteki=p.check.koteki;
+    if(was!==p.check.koteki) pushHist(d,"公的割引",[`公的割引を ${was==null?"なし":was} → ${p.check.koteki}（障害者割引 ${yen(p.check.koteki*10)}円）にしました`]); };
+  const kotekiSum=p=>`公的割引 ${p.check.koteki}（障害者割引 ${yen(p.check.koteki*10)}円）`;
   const dayHas=ex=>ex&&(ex.rides.length||ex.simple.amt!=null||ex.check.total!=null);
   // 連続配車の時間だけを、その日の記録に入れる（前に入れた連続配車の時間は置き換える）。金額は変わらないので照合済みの日も確認しない
   function applyRz(p){
@@ -3686,6 +3694,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       const ps=blocks.map(parseNippo); parsed=null;
       const rows=ps.map(p=>{ if(p.errs.length) return `<tr><td>${p.date?md(p.date):"?"}</td><td colspan="2" class="red">${esc(p.errs[0])}</td></tr>`;
         if(p.rzOnly) return `<tr><td class="num">${md(p.date)}（${dow(p.date)}）</td><td class="num">${rzSum(p)}</td><td>連続配車の時間を入れる</td></tr>`;
+        if(p.kotekiOnly) return `<tr><td class="num">${md(p.date)}（${dow(p.date)}）</td><td class="num">${kotekiSum(p)}</td><td>公的割引を入れる</td></tr>`;
         const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
         p.skip=!!dayHas(ex);
         return `<tr><td class="num">${md(p.date)}（${dow(p.date)}）</td><td class="num">${s.count}回・${st.total!=null?yen(st.total):yen(s.total)}円</td><td>${p.skip?"もう記録あり（取り込まない）":st.total==null?"取り込む":st.meterOk?`<span class="pill ok">照合OK</span>`:`<span class="pill warn">照合 差 ${yen(s.total-st.meterCalc)}</span>`}${!p.skip&&p.tenko.ab&&!hasShift(p.date)?"<br><small>点呼の記録も作ります</small>":""}</td></tr>`; });
@@ -3696,6 +3705,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const p=parseNippo($("iText").value); parsed=p.errs.length?null:p;
     if(p.errs.length){ $("iResult").innerHTML=`<div class="err">${p.errs.slice(0,8).map(esc).join("<br>")}</div>`; $("iGoRow").hidden=true; return; }
     if(p.rzOnly){ $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${rzSum(p)} を入れます（前に入れた連続配車の時間は置き換えます）`; $("iGoRow").hidden=false; return; }
+    if(p.kotekiOnly){ $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${kotekiSum(p)} を入れます（ほかの記録は変わりません）`; $("iGoRow").hidden=false; return; }
     const d={mode:"detail",rides:p.rides,simple:{},check:p.check}, s=dayCalc(d), st=settle(d,s), ex=sales.days[p.date];
     const exists=dayHas(ex);
     $("iResult").innerHTML=`<b>${md(p.date)}（${dow(p.date)}）出庫</b>：${s.count}回・記録の合計 ${yen(s.total)}円・総営収 ${st.total!=null?yen(st.total)+"円":"なし"}<br>
@@ -3708,13 +3718,14 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   };
   $("iGo").onclick=()=>{
     if(multi){
-      multi.forEach(p=>{ if(p.rzOnly){ applyRz(p); return; } applyTenko(p); sales.days[p.date]={mode:"detail",rides:p.rides,simple:{},check:p.check,locked:false,importedAt:new Date().toISOString(),hw:{items:[]}};
+      multi.forEach(p=>{ if(p.rzOnly){ applyRz(p); return; } if(p.kotekiOnly){ applyKoteki(p); return; } applyTenko(p); sales.days[p.date]={mode:"detail",rides:p.rides,simple:{},check:p.check,locked:false,importedAt:new Date().toISOString(),hw:{items:[]}};
         pushHist(sales.days[p.date],"replace",[`日報から新規に取り込みました（${p.rides.filter(r=>!isEv(r.kind)).length}件）`]); syncRz(sales.days[p.date]); });
       const n=multi.length, lastD=multi[multi.length-1].date; multi=null;
       saveSales(); render(); filled=false; sDay=lastD; closeImport(); $("iText").value=""; renderSales();
       $("sStatus").textContent=`${n}日分を取り込みました。上の日付を押すと、ほかの日を選べます`; return;
     }
     if(!parsed) return;
+    if(parsed.kotekiOnly){ applyKoteki(parsed); saveSales(); sDay=parsed.date; closeImport(); $("iText").value=""; renderSales(); $("sStatus").textContent="公的割引を入れました"; return; }
     if(parsed.rzOnly){ applyRz(parsed); saveSales(); sDay=parsed.date; closeImport(); $("iText").value=""; renderSales(); $("sStatus").textContent="連続配車の時間を入れました"; return; }
     applyTenko(parsed);
     const ex=sales.days[parsed.date];
