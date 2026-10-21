@@ -548,7 +548,7 @@ body.rtfull{overflow:hidden}
     </div>
     <div class="src" style="margin-bottom:12px">通常は「詳細入力」のままにしてください。乗車ボタンでも日報の取り込みでも、1回ごとの記録は詳細入力です。簡易入力は、売上・回数・営業時間だけを入れる方法で、納金明細書・照合・営業分析は出ません。</div>
     <div class="src">点呼の実績を違う日に入れたまま記録したときなどに使います。</div>
-    <div id="sKodeRow" hidden><label class="check"><input type="checkbox" id="sKode">この勤務は公休出勤（公出）<br><small>給与明細では「公出営収」として別に計算されるので、差額チェックの比べ方から外します（管理者のみ）</small></label></div>
+
     <div class="btnrow"><button class="btn" id="sMove">この勤務の日付を変える</button><button class="btn danger" id="sDelDay">この勤務の売上を消す</button></div>
     <div class="grp" id="sMoveBox" hidden>
       <div class="field"><label for="sMoveTo">正しい出庫日</label><input type="date" id="sMoveTo"></div>
@@ -798,7 +798,7 @@ body.rtfull{overflow:hidden}
 
   <section class="card" id="payDiffCard" hidden>
     <h2>月次 売上差額チェック（管理者のみ）</h2>
-    <div class="src">給与明細の「実営業収入」と、アプリの総営収の差を月度ごとに見ます。給与明細と同じ条件にそろえるため、日報の総営収を税抜（÷1.1）にし、公休出勤（公出）の勤務は除いています（公出営収は会社が平均の売上から別に出すため）。公出の勤務は、売上の画面の「勤務の修正」で「公休出勤（公出）」に印を付けてください。給与明細の実営業収入はこのスマホの中だけに保存されます（バックアップには入ります）。障害者割引は、補填されるはずの額として参考に出します（日報の公的割引×10円）。</div>
+    <div class="src">給与明細の「実営業収入」と、アプリの総営収の差を月度ごとに見ます。給与明細と同じ条件にそろえるため、日報の総営収を税抜（÷1.1）にし、公休出勤（公出）の勤務は除いています（公出営収は会社が平均の売上から別に出すため）。公出の勤務は、点呼時間の勤務の画面で「公休出勤（公出）」に印を付けてください。給与明細の実営業収入はこのスマホの中だけに保存されます（バックアップには入ります）。障害者割引は、補填されるはずの額として参考に出します（日報の公的割引×10円）。</div>
     <div style="overflow-x:auto"><table class="cartbl" id="pdTbl"></table></div>
     <div class="src">差額＝給与明細の実営業収入−アプリの税抜総営収（公出を除く）。全勤務の差＝（実営業収入＋公出営収）−アプリの税抜総営収（全勤務）。公出営収は会社が平均の売上などから決めるので、公出の日の実際の売上とは違います。その分は「差額」には出ますが、「全勤務の差」には出ません。売上がきちんと数えられているかは「全勤務の差」で見てください。</div>
   </section>
@@ -817,7 +817,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 11:51</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 12:24</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1018,6 +1018,7 @@ body.rtfull{overflow:hidden}
       </div>
       <div class="btnrow"><button class="btn" id="samePlan">計画と同じ時刻を入れる</button></div>
     </div>
+    <label class="check"><input type="checkbox" id="fKode">公休出勤（公出）<br><small>公休日に出勤した勤務に付けます。勤務の一覧に「公出」と出ます</small></label>
     <div class="live" id="live"></div>
     <div class="btnrow">
       <button class="btn primary" id="saveBtn">保存</button>
@@ -1075,6 +1076,10 @@ body.rtfull{overflow:hidden}
   // 試作版は保存が空なら例のデータで始める。本番は空から始める
   function load(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(Array.isArray(v)&&(PROD||v.length)) return v; }catch(e){} return PROD?[]:SAMPLE.map(r=>({...r})); }
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(recs)); }catch(e){} if(typeof queueShift==="function") queueShift(); }
+  // 公休出勤（公出）の印は点呼時間の勤務に付ける（2026-10-21）。前に売上の勤務に付けた印は、点呼の勤務に移す
+  { let moved=false; Object.keys(sales.days).forEach(k=>{ if(!sales.days[k].kode) return; const r=recs.find(x=>x.date===k); if(!r) return; r.kode=true; delete sales.days[k].kode; moved=true; });
+    if(moved){ try{ localStorage.setItem(KEY,JSON.stringify(recs)); localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} } }
+  const isKode=k=>{ const r=recs.find(x=>x.date===k); return !!((r&&r.kode)||(sales.days[k]&&sales.days[k].kode)); };
 
   const $=id=>document.getElementById(id);
   const toMin=t=>{ if(!t) return null; const [h,m]=t.split(":").map(Number); return h*60+m; };
@@ -1115,6 +1120,7 @@ body.rtfull{overflow:hidden}
 
   function chipsFor(c){
     const out=[];
+    if(c.r.kode) out.push(`<span class="chip">公出</span>`);   // 公休出勤
     const lvl=(bad,warn)=>bad?"bad":warn?"warn":"ok";
     out.push(`<span class="chip ${lvl(c.dur>22*60,c.dur>c.max)}">拘束 <span class="num">${hm(c.dur)}</span>${c.dur>c.max?" 上限超え":""}</span>`);
     if(c.avg!=null) out.push(`<span class="chip ${lvl(c.avg>21*60,false)}">2回平均 <span class="num">${hm(c.avg)}</span></span>`);
@@ -1189,11 +1195,11 @@ body.rtfull{overflow:hidden}
     }
     $("sheetTitle").textContent=id?"勤務を直す":"勤務を追加";
     $("delBtn").hidden=!id;
-    $("fDate").value=r.date; $("fPb").value=r.pb; $("fPa").value=r.pa; $("fAb").value=r.ab; $("fAa").value=r.aa;
+    $("fDate").value=r.date; $("fPb").value=r.pb; $("fPa").value=r.pa; $("fAb").value=r.ab; $("fAa").value=r.aa; $("fKode").checked=!!r.kode;
     $("sheet").hidden=$("sheetBg").hidden=false; liveCalc(); $("fDate").focus();
   }
   function closeSheet(){ $("sheet").hidden=$("sheetBg").hidden=true; }
-  function formRec(){ return {id:editId||("r"+Date.now()),date:$("fDate").value,pb:$("fPb").value,pa:$("fPa").value,ab:$("fAb").value,aa:$("fAa").value}; }
+  function formRec(){ const r={id:editId||("r"+Date.now()),date:$("fDate").value,pb:$("fPb").value,pa:$("fPa").value,ab:$("fAb").value,aa:$("fAa").value}; if($("fKode").checked) r.kode=true; return r; }
   function liveCalc(){
     const f=formRec(); if(!f.date){ $("live").textContent="出社日を入れてください"; return; }
     const keep=recs; recs=recs.filter(x=>x.id!==f.id).concat([f]); const c=calc().find(x=>x.r.id===f.id); recs=keep;
@@ -2460,7 +2466,7 @@ body.rtfull{overflow:hidden}
   }
   // 1勤務の売上（月度の合計用）：総営収があればそれ、なければ記録から見込み（アプリ料・ETCを引く）
   // 公休出勤（公出）の印。給与明細では公出営収として別に計算されるので、差額チェックで外す
-  $("sKode").addEventListener("change",()=>{ const dd=ensureDay(sDay); if($("sKode").checked) dd.kode=true; else delete dd.kode; saveSales(); });
+
   // 月次 売上差額チェック（管理者のみ）。入れた値は sales.payChk に月度ごとに保存（バックアップに入る）
   function renderPayDiff(){
     const card=$("payDiffCard"); if(!card) return;
@@ -2472,7 +2478,7 @@ body.rtfull{overflow:hidden}
     const rows=[], ks=Object.keys(sales.days);
     PERIODS.forEach(P=>{ const id=P.y+"-"+P.m;
       const done=ks.filter(k=>k>=P.start&&k<=P.end).map(shiftSales).filter(x=>x.has); if(!done.length&&!pc[id]) return;
-      const reg=done.filter(x=>!x.d.kode), kode=done.filter(x=>x.d.kode);
+      const reg=done.filter(x=>!isKode(x.k)), kode=done.filter(x=>isKode(x.k));
       const app=Math.round(reg.reduce((a,x)=>a+x.amt/1.1,0)), est=reg.some(x=>x.est), appAll=Math.round(done.reduce((a,x)=>a+x.amt/1.1,0));
       const missK=done.filter(x=>(x.d.check||{}).koteki==null).map(x=>x.k), miss=missK.length, auto=miss?null:done.reduce((a,x)=>a+x.d.check.koteki*10,0);
       rows.push({P,app,appAll,est,n:reg.length,kode,auto,miss,missK,v:pc[id]||{},id}); });
@@ -2953,7 +2959,7 @@ body.rtfull{overflow:hidden}
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
     fillPick();
     $("sMove").hidden=$("sDelDay").hidden=!hasData(d); $("sFix").hidden=false;
-    $("sKodeRow").hidden=!isAdmin(); $("sKode").checked=!!d.kode;   // 入力のしかたの切り替えがあるので、勤務があればいつも出す
+   // 入力のしかたの切り替えがあるので、勤務があればいつも出す
     { const hasR=!simple&&d.rides.some(r=>!isEv(r.kind)&&+r.amt>0); $("sHour").hidden=!hasR; if(hasR) $("sHourBody").innerHTML=hourBars(hourly(d)); }
     if(delDayArmed!==k){ delDayArmed=null; $("sDelDay").textContent="この勤務の売上を消す"; }
     $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<span class="dd">▾</span><small>${act?"今の勤務":k===activeDay()?"直前の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
