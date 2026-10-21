@@ -227,12 +227,19 @@ a.flink:active{background:var(--sunk)}
 .cartbl input[type=number],.cartbl input[type=time],.cartbl input[type=text]{width:100%;min-height:36px;font-size:15px;padding:4px}
 .cartbl textarea{width:100%;font-size:13px;min-height:52px}
 /* イベント地図：地図の上のボタンと全画面 */
-#evMapWrap{position:relative}
+.mapwrap{position:relative}
+/* 電車が止まったら：駅の一覧（右に「地図」「ルート」をそろえる） */
+.trlist{display:grid;gap:8px}
+.tritem{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;border-left:6px solid #7B3FA0;background:var(--sunk);border-radius:10px;padding:10px 10px 10px 12px}
+.trname{display:flex;flex-direction:column;min-width:0}
+.trname small{color:var(--muted);font-size:13px;line-height:1.4}
+.tritem .btn{white-space:nowrap;min-width:64px;text-align:center}
+.trroute{background:#7B3FA0!important;border-color:#7B3FA0!important;color:#fff!important;text-decoration:none}
 .evmapbtns{position:absolute;top:10px;right:10px;z-index:1000;display:flex;gap:6px}
 .evmapbtns .btn{box-shadow:0 1px 4px rgba(0,0,0,.25);background:var(--surface)}
-#evMapWrap.evfull{position:fixed;top:0;left:0;right:0;bottom:0;width:auto;height:100vh;height:100dvh;z-index:2000;background:var(--bg);margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-#evMapWrap.evfull #evMap{width:100%;height:100%!important;border-radius:0;border:0}
-#evMapWrap.evfull .evmapbtns{top:calc(10px + env(safe-area-inset-top,0px))}
+.mapwrap.evfull{position:fixed;top:0;left:0;right:0;bottom:0;width:auto;height:100vh;height:100dvh;z-index:2000;background:var(--bg);margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.mapwrap.evfull .bigmap{width:100%;height:100%!important;border-radius:0;border:0}
+.mapwrap.evfull .evmapbtns{top:calc(10px + env(safe-area-inset-top,0px))}
 #pdTbl input::placeholder{color:var(--ink);opacity:1}
 .cartbl .check{font-size:13px;gap:4px;margin:1px 0}
 .cartbl .check input{width:18px;height:18px}
@@ -624,6 +631,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="rest" aria-selected="false">休憩場</button>
     <button role="tab" data-sub="taxi" aria-selected="false">専用乗り場</button>
     <button role="tab" data-sub="event" aria-selected="false">イベント</button>
+    <button role="tab" data-sub="train" aria-selected="false">電車が止まったら</button>
   </div>
 
   <div class="wrap" id="subSv" hidden></div>
@@ -646,19 +654,34 @@ body.rtfull{overflow:hidden}
     <section class="card">
       <div class="infohead"><h2 id="evTitle">イベント</h2><div class="btnrow" style="margin:0"><button class="btn" id="evReload">更新</button></div></div>
       <div class="seg" role="tablist" aria-label="日付" id="evDaySeg"></div>
-      <div class="field"><label for="trainSel">電車が止まったとき（路線を選ぶと、近くに別の路線がない駅を紫のピンで出します）</label><select id="trainSel"><option value="">選ばない</option></select></div>
+
       <div class="src">昨日・今日・明日のイベントを自動で読み込み、会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
-      <div id="evMapWrap">
-        <div id="evMap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+      <div id="evMapWrap" class="mapwrap">
+        <div id="evMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="evMeBtn">現在地</button><button class="btn" id="evFullBtn">全画面</button></div>
       </div>
       <div class="msg" id="evMsg" role="status"></div>
-      <div id="trainBox"></div>
+
       <div id="evListBox"></div>
       <h3 style="margin:14px 0 6px;font-size:16px">自分でイベントを足す（CSV）</h3>
       <div class="src">CSVの列は「地点名,緯度,経度,住所,電話番号,メモ」です（カーナビタイムのMy地点プラスと同じ形式なので、同じファイルを両方に使えます）。メモに「10/21 18:30開始 終了は21時前後見込み 集客見込み 約3,000人」のように書くと、開始・終了見込み・集客見込みを読み取ります。日付がないときは、読み込んだ日のイベントとして扱います。</div>
       <input type="file" id="evFile" accept=".csv,text/csv,text/plain" hidden>
       <div class="btnrow"><button class="btn primary" id="evPick">CSVファイルを選ぶ</button><button class="btn" id="evClear">自分で読み込んだ分を消す</button></div>
+    </section>
+  </div>
+
+  <div class="wrap" id="subTrain" hidden>
+    <section class="card">
+      <h2>電車が止まったら</h2>
+      <div class="src">止まった路線を選ぶと、<b>近くに別の路線の駅がない駅</b>（半径1km以内に、JR・地下鉄・私鉄などの別の路線の駅がない駅。東京23区内）を地図に出します。振替輸送が使いにくく、タクシーを待つ人が出やすい駅です。</div>
+      <div class="field"><label for="trainSel">止まった路線</label><select id="trainSel"><option value="">選んでください</option></select></div>
+      <div id="trMapWrap" class="mapwrap">
+        <div id="trMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+        <div class="evmapbtns"><button class="btn" id="trMeBtn">現在地</button><button class="btn" id="trFullBtn">全画面</button></div>
+      </div>
+      <div class="msg" id="trMsg" role="status"></div>
+      <div id="trainBox"></div>
+      <div class="src">駅の位置は国土数値情報（鉄道データ）から。距離は駅の中心どうしの直線距離です。</div>
     </section>
   </div>
 
@@ -845,7 +868,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 20:23</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 20:52</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1826,7 +1849,7 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -1842,6 +1865,7 @@ body.rtfull{overflow:hidden}
     if(KIND[s]&&!$("tabLong").hidden) loadInfo(KIND[s],false);
     if(s==="rest"&&!$("tabLong").hidden&&typeof loadRest==="function") loadRest();
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
+    if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function") renderTrainTab(true);
   }
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
   $("restCode").value=cfg.empCode||"";
@@ -1979,18 +2003,33 @@ body.rtfull{overflow:hidden}
   let trainLayer=null;
   (()=>{ const ls=[...new Set(TRAIN_ISO.map(x=>x.l))]; $("trainSel").insertAdjacentHTML("beforeend",ls.map(l=>`<option value="${escC(l)}">${escC(l)}（${TRAIN_ISO.filter(x=>x.l===l).length}駅）</option>`).join(""));
     try{ $("trainSel").value=localStorage.getItem("tenko.trainLine")||""; }catch(e){} })();
-  function renderTrain(fit){
-    if(!evMap) return; if(trainLayer) trainLayer.remove(); trainLayer=L.layerGroup().addTo(evMap);
+  // ===== 電車が止まったら（別のタブ。イベントと同じ地図の作り） =====
+  let trMap=null, trLayer=null, trMe=null;
+  async function renderTrainTab(first){
+    const m=$("trMsg");
+    try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
+    if(!trMap){ trMap=L.map("trMap",{zoomControl:true,attributionControl:true});
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(trMap);
+      trMap.setView([35.69,139.75],11); }
+    setTimeout(()=>trMap.invalidateSize(),60);
+    if(trLayer) trLayer.remove(); trLayer=L.layerGroup().addTo(trMap);
     const l=$("trainSel").value, xs=TRAIN_ISO.filter(x=>x.l===l);
     xs.forEach(x=>L.circleMarker([x.lat,x.lng],{radius:11,color:"#fff",weight:3,fillColor:"#7B3FA0",fillOpacity:1,bubblingMouseEvents:false})
       .bindTooltip(esc(x.n)+"駅",{permanent:true,direction:"top",offset:[0,-10]})
       .bindPopup(`<div style="font-size:15px;line-height:1.5;min-width:200px"><b style="font-size:16px">${esc(x.n)}駅</b>（${esc(x.l)}）<div>${esc(x.w)}</div><div>一番近い別の路線の駅：${esc(x.near)}（${esc(x.nl)}）約${(x.d/1000).toFixed(1)}km</div>
-        <a href="${evRoute(x)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#7B3FA0;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:17px;text-decoration:none;margin-top:10px">ルート案内</a></div>`).addTo(trainLayer));
-    $("trainBox").innerHTML=l?`<div class="grp" style="border-left:6px solid #7B3FA0"><b>${esc(l)}が止まったとき</b><div class="src">近くに別の路線の駅がない駅（遠い順）。振替輸送が使いにくく、タクシーを待つ人が出やすい駅です。</div>
-      ${xs.map(x=>`<div class="row" style="margin-top:6px;align-items:center;gap:8px"><span style="flex:1;min-width:0"><b>${esc(x.n)}</b> <small>${esc(x.w)}・一番近い別の路線 ${esc(x.near)} 約${(x.d/1000).toFixed(1)}km</small></span><a class="btn primary" style="text-decoration:none;background:#7B3FA0;border-color:#7B3FA0;white-space:nowrap;flex:0 0 auto" href="${evRoute(x)}" target="_blank" rel="noopener">ルート</a></div>`).join("")}</div>`:"";
-    if(fit&&xs.length){ const pts=xs.map(x=>[x.lat,x.lng]).concat(evMe?[[evMe.getLatLng().lat,evMe.getLatLng().lng]]:[]); evMap.fitBounds(L.latLngBounds(pts),{padding:[40,40],maxZoom:15}); }
+        <a href="${evRoute(x)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#7B3FA0;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:17px;text-decoration:none;margin-top:10px">ルート案内</a></div>`).addTo(trLayer));
+    m.textContent=l?`${l}：対象の駅 ${xs.length}駅`:"止まった路線を選んでください";
+    // 一覧：左に駅名と説明、右にそろえた「ルート」ボタン
+    $("trainBox").innerHTML=l?`<div class="trlist">${xs.map(x=>`<div class="tritem"><div class="trname"><b>${esc(x.n)}</b><small>${esc(x.w)}</small><small>一番近い別の路線：${esc(x.near)}（${esc(x.nl)}）約${(x.d/1000).toFixed(1)}km</small></div>
+      <button class="btn" data-trpin="${esc(x.n)}">地図</button><a class="btn primary trroute" href="${evRoute(x)}" target="_blank" rel="noopener">ルート</a></div>`).join("")}</div>`:"";
+    $("trainBox").querySelectorAll("[data-trpin]").forEach(b=>b.onclick=()=>{ const x=xs.find(y=>y.n===b.dataset.trpin); if(!x) return; trMap.setView([x.lat,x.lng],15); trLayer.eachLayer(mk=>{ const p=mk.getLatLng(); if(p.lat===x.lat&&p.lng===x.lng) mk.openPopup(); }); $("trMap").scrollIntoView({behavior:"smooth",block:"center"}); });
+    if(first){ const p=await getPos(); if(p){ if(trMe) trMap.removeLayer(trMe); trMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(trMap); } }
+    const pts=xs.map(x=>[x.lat,x.lng]).concat(trMe?[[trMe.getLatLng().lat,trMe.getLatLng().lng]]:[]);
+    if(pts.length>1) trMap.fitBounds(L.latLngBounds(pts),{padding:[40,40],maxZoom:15}); else if(pts.length) trMap.setView(pts[0],14);
   }
-  $("trainSel").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainLine",$("trainSel").value); }catch(e){} renderTrain(true); });
+  $("trainSel").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainLine",$("trainSel").value); }catch(e){} renderTrainTab(false); });
+  $("trMeBtn").onclick=async()=>{ if(!trMap) return; const p=await getPos(); if(!p){ $("trMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; }
+    if(trMe) trMap.removeLayer(trMe); trMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(trMap); trMap.setView([p.lat,p.lng],Math.max(trMap.getZoom(),14)); };
   let evDay=null;
   const ymdOf=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   // イベントの日：メモの開始の日付。なければ自動の分は入っていたファイルの日、CSVの分は読み込んだ日
@@ -2022,18 +2061,18 @@ body.rtfull{overflow:hidden}
         <div class="btnrow"><button class="btn" data-evpin="${i}">地図で見る</button><a class="btn primary" style="text-decoration:none" href="${evRoute(e)}" target="_blank" rel="noopener">ルート案内</a></div></div>`).join("");
     $("evListBox").querySelectorAll("[data-evpin]").forEach(b=>b.onclick=()=>{ const mk=evMarks[b.dataset.evpin]; if(!mk) return; evMap.setView(mk.getLatLng(),15); mk.openPopup(); $("evMap").scrollIntoView({behavior:"smooth",block:"center"}); });
     $("evListBox").insertAdjacentHTML("afterbegin",rows.length?"":`<div class="geo">この日のイベントはありません</div>`);
-    renderTrain(false);
-    if(first&&$("trainSel").value){ await evShowMe(false); renderTrain(true); return; }   // 路線を選んでいるときは、その駅に合わせて地図を動かす
     if(first||fit){ const p=first?await evShowMe(false):(evMe?{lat:evMe.getLatLng().lat,lng:evMe.getLatLng().lng}:null); const pts=rows.map(({e})=>[e.lat,e.lng]).concat(p?[[p.lat,p.lng]]:[]);
       if(pts.length>1) evMap.fitBounds(L.latLngBounds(pts),{padding:[40,40],maxZoom:15}); else if(pts.length) evMap.setView(pts[0],14); }
   }
   // 地図を画面いっぱいに広げる／戻す（電車が止まったときの駅のピンも一緒に出す）
   // 全画面のときは、地図をページの一番上（body）に移す（カードの中のままだと、スマホによっては広がらず消えて見えるため）。閉じたら元の場所に戻す
-  const evHome=document.createComment("evMapWrap");
-  $("evFullBtn").onclick=()=>{ const w=$("evMapWrap"), on=!w.classList.contains("evfull");
-    if(on){ w.parentNode.insertBefore(evHome,w); document.body.appendChild(w); } else if(evHome.parentNode){ evHome.parentNode.insertBefore(w,evHome); evHome.remove(); }
-    w.classList.toggle("evfull",on); $("evFullBtn").textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":"";
-    setTimeout(()=>evMap&&evMap.invalidateSize(),80); setTimeout(()=>evMap&&evMap.invalidateSize(),400); };
+  // 全画面のときは、地図をページの一番上（body）に移す（カードの中のままだと、スマホによっては広がらず消えて見えるため）。閉じたら元の場所に戻す
+  function setupFull(btn,wrapId,getMap){ const home=document.createComment(wrapId);
+    $(btn).onclick=()=>{ const w=$(wrapId), on=!w.classList.contains("evfull");
+      if(on){ w.parentNode.insertBefore(home,w); document.body.appendChild(w); } else if(home.parentNode){ home.parentNode.insertBefore(w,home); home.remove(); }
+      w.classList.toggle("evfull",on); $(btn).textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":"";
+      const m=getMap(); setTimeout(()=>m&&m.invalidateSize(),80); setTimeout(()=>m&&m.invalidateSize(),400); }; }
+  setupFull("evFullBtn","evMapWrap",()=>evMap); setupFull("trFullBtn","trMapWrap",()=>trMap);
   $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
   $("evReload").onclick=()=>renderEv(true);
   $("evPick").onclick=()=>$("evFile").click();
