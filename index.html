@@ -817,7 +817,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 12:24</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 13:45</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3204,7 +3204,11 @@ body.rtfull{overflow:hidden}
     const mActPm=s.state==="none"?0:s.act?winSum(s.act.rz,s.a,s.act.b,RZ_WIN_PM):mustOfPm(s);
     const done=rzDoneTest||mActAm>=MUST_AM()||mActPm>=MUST_PM();
     el.hidden=false;
-    el.innerHTML=`<button class="btn rzbtn ${done?"rzdone":"rzneed"}${open?" on":""}" id="rzFloatBtn">${open?`連続配車 終了<small>${tm(open.on)} から ${hm(n-open.on)}</small>`:`連続配車 開始<small>コアタイム中・必須${done?"達成済み":"まだ未達"}</small>`}</button>`;
+    // 今のコアタイム（朝か夕方）で数えた時間を出す。「○時から」は連続配車を始めた時刻からの経過で、コアタイムの時間ではない（ユーザー指摘 2026-10-21）
+    const nowM=new Date().getHours()*60+new Date().getMinutes(), am=RZ_WIN_AM.some(([x,y])=>nowM>=x&&nowM<y);
+    const core=am?{l:"朝",v:mActAm,m:MUST_AM()}:{l:"夕方",v:mActPm,m:MUST_PM()};
+    const coreTxt=`${core.l}のコアタイム ${hm(core.v)}${core.v>=core.m?"・達成":`（あと${hm(core.m-core.v)}）`}`;
+    el.innerHTML=`<button class="btn rzbtn ${done?"rzdone":"rzneed"}${open?" on":""}" id="rzFloatBtn">${open?`連続配車 終了<small>${coreTxt}<br>開始 ${tm(open.on)}（${hm(n-open.on)}前）</small>`:`連続配車 開始<small>${done?"必須は達成済み":coreTxt}</small>`}</button>`;
     $("rzFloatBtn").onclick=()=>{ sDay=k; evPress(RZ); };
   }
 
