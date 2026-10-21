@@ -548,6 +548,7 @@ body.rtfull{overflow:hidden}
     </div>
     <div class="src" style="margin-bottom:12px">通常は「詳細入力」のままにしてください。乗車ボタンでも日報の取り込みでも、1回ごとの記録は詳細入力です。簡易入力は、売上・回数・営業時間だけを入れる方法で、納金明細書・照合・営業分析は出ません。</div>
     <div class="src">点呼の実績を違う日に入れたまま記録したときなどに使います。</div>
+    <div id="sKodeRow" hidden><label class="check"><input type="checkbox" id="sKode">この勤務は公休出勤（公出）<br><small>給与明細では「公出営収」として別に計算されるので、差額チェックの比べ方から外します（管理者のみ）</small></label></div>
     <div class="btnrow"><button class="btn" id="sMove">この勤務の日付を変える</button><button class="btn danger" id="sDelDay">この勤務の売上を消す</button></div>
     <div class="grp" id="sMoveBox" hidden>
       <div class="field"><label for="sMoveTo">正しい出庫日</label><input type="date" id="sMoveTo"></div>
@@ -797,9 +798,9 @@ body.rtfull{overflow:hidden}
 
   <section class="card" id="payDiffCard" hidden>
     <h2>月次 売上差額チェック（管理者のみ）</h2>
-    <div class="src">給与明細の総営収と、アプリの総営収の差を給与の月ごとに見ます。給与明細と同じ条件にそろえるため、期間は点呼の月度（例：8月分＝7/27〜8/26出庫）、アプリの総営収は日報の（総営収−各種料金）÷1.1にしています。各種料金は、ETC・アプリ手配料・GOの迎車料金などです。給与明細の総営収と障害者割引の補填額を入れてください（このスマホの中だけに保存。バックアップにも入ります）。補填額が空のときは、日報から取り込んだ「公的割引」（差引×10円＝障害者割引の正確な額）の合計を黒字で出し、その値で計算します。公的割引を取り込んでいない勤務がある月度（2026年10月21日より前の取り込み）は、日報の公的割引の合計を手で入れてください。</div>
+    <div class="src">給与明細の「実営業収入」と、アプリの総営収の差を月度ごとに見ます。給与明細と同じ条件にそろえるため、日報の総営収を税抜（÷1.1）にし、公休出勤（公出）の勤務は除いています（公出営収は会社が平均の売上から別に出すため）。公出の勤務は、売上の画面の「勤務の修正」で「公休出勤（公出）」に印を付けてください。給与明細の実営業収入はこのスマホの中だけに保存されます（バックアップには入ります）。障害者割引は、補填されるはずの額として参考に出します（日報の公的割引×10円）。</div>
     <div style="overflow-x:auto"><table class="cartbl" id="pdTbl"></table></div>
-    <div class="src">差額＝給与明細の総営収−アプリの総営収。補填を除いた差額＝差額−障害者割引の補填額。</div>
+    <div class="src">差額＝給与明細の実営業収入−アプリの税抜総営収（公出を除く）。</div>
   </section>
 
   <section class="card" id="shareCard" style="margin-top:18px">
@@ -816,7 +817,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 10:24</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 11:28</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2458,31 +2459,33 @@ body.rtfull{overflow:hidden}
       genOk:gen==null?null:cash+bku===gen, misOk:mis==null?null:mishu===mis, sumOk:gen==null||mis==null?null:meter+bku===gen+mis};   // B空転は日計表の現収に入るので足して比べる
   }
   // 1勤務の売上（月度の合計用）：総営収があればそれ、なければ記録から見込み（アプリ料・ETCを引く）
+  // 公休出勤（公出）の印。給与明細では公出営収として別に計算されるので、差額チェックで外す
+  $("sKode").addEventListener("change",()=>{ const dd=ensureDay(sDay); if($("sKode").checked) dd.kode=true; else delete dd.kode; saveSales(); });
   // 月次 売上差額チェック（管理者のみ）。入れた値は sales.payChk に月度ごとに保存（バックアップに入る）
   function renderPayDiff(){
     const card=$("payDiffCard"); if(!card) return;
     card.hidden=!isAdmin(); if(card.hidden) return;
     const pc=sales.payChk||{};
-    // 給与明細と同じ条件にそろえる（2026-10-21、7〜9月の給与明細とExcelで確認）：
-    //  期間は点呼の月度（PERIODS。例 8月度＝7/27〜8/26出庫）、金額は（日報の総営収−各種料金）÷1.1。各種料金＝ETC・アプリ手配料・GOの迎車料金など
-    //  各種料金・総営収が入っていない勤務があるときは出さない（日付を出す）
-    // 補填額：手で入れた額があればそれ。なければ取り込んだ日報の「公的割引」（差引×10円）の合計。公的割引のない勤務があるときは出さない
+    // 給与明細の「実営業収入」と比べる（2026-10-21、7〜9月の給与明細で確認。9月は110円差）：
+    //  期間は点呼の月度（PERIODS）、金額は日報の総営収÷1.1（税抜）、公休出勤（公出）の勤務は除く（公出営収は会社が平均から別に出すため）
+    //  障害者割引（公的割引×10円）は、補填されるはずの額として参考に出す（差額の計算には入れない）
     const rows=[], ks=Object.keys(sales.days);
     PERIODS.forEach(P=>{ const id=P.y+"-"+P.m;
       const done=ks.filter(k=>k>=P.start&&k<=P.end).map(shiftSales).filter(x=>x.has); if(!done.length&&!pc[id]) return;
-      const gross=done.reduce((a,x)=>a+x.amt,0), c=x=>x.d.check||{};
-      const missA=done.filter(x=>c(x).kakushu==null||x.st.total==null).map(x=>x.k);
-      const app=missA.length?null:Math.round(done.reduce((a,x)=>a+(x.st.total-c(x).kakushu)/1.1,0));
-      const missK=done.filter(x=>c(x).koteki==null).map(x=>x.k), miss=missK.length, auto=miss?null:done.reduce((a,x)=>a+x.d.check.koteki*10,0);
-      rows.push({P,app,gross,missA,auto,miss,missK,v:pc[id]||{},id}); });
+      const reg=done.filter(x=>!x.d.kode), kode=done.filter(x=>x.d.kode);
+      const app=Math.round(reg.reduce((a,x)=>a+x.amt/1.1,0)), est=reg.some(x=>x.est);
+      const missK=done.filter(x=>(x.d.check||{}).koteki==null).map(x=>x.k), miss=missK.length, auto=miss?null:done.reduce((a,x)=>a+x.d.check.koteki*10,0);
+      rows.push({P,app,est,n:reg.length,kode,auto,miss,missK,v:pc[id]||{},id}); });
     rows.reverse();
-    const dl=ks=>ks.map(k=>`${md(k)}（${dow(k)}）`).join("、");
-    const cell=(id,f,v,ph)=>`<input type="text" class="yenin" inputmode="numeric" autocomplete="off" data-pd="${id}" data-f="${f}" value="${v!=null?fmtYen(v):""}" placeholder="${ph}">`;    $("pdTbl").innerHTML=`<thead><tr><td>給与</td><td>アプリの総営収<br><small>（総営収−各種料金）÷1.1</small></td><td>給与明細の総営収（税抜）</td><td>障害者割引の補填額</td><td>差額</td><td>補填を除いた差額</td></tr></thead><tbody>`+
-      (rows.map(({P,app,gross,missA,auto,miss,missK,v,id})=>{ const sh=v.sh!=null?v.sh:auto, diff=v.pay!=null&&app!=null?v.pay-app:null;
-        return `<tr><td>${P.m}月分<br><small>${md(P.start)}〜${md(P.end)}出庫</small></td><td class="num">${app==null?"—":yen(app)}<small style="display:block;color:var(--muted)">税込みの総営収 ${yen(gross)}</small>${missA.length?`<small style="display:block;color:var(--muted)">各種料金（または総営収）が入っていない勤務：${dl(missA)}</small>`:""}</td>
-          <td>${cell(id,"pay",v.pay,"")}</td><td>${cell(id,"sh",v.sh,auto!=null?yen(auto)+"（日報から）":"")}${v.sh==null&&miss?`<small style="display:block;color:var(--muted)">公的割引が入っていない勤務：${dl(missK)}。その日の売上の画面（照合の欄）で公的割引を入れるか、この欄に月の合計を入れてください</small>`:""}</td>
-          <td class="num">${diff==null?"—":yen(diff)}</td><td class="num">${diff==null||sh==null?"—":yen(diff-sh)}</td></tr>`; }).join("")||`<tr><td colspan="6">売上の記録がまだありません</td></tr>`)+`</tbody>`;
-    $("pdTbl").querySelectorAll("[data-pd]").forEach(el=>el.onchange=()=>{
+    const dl=ks=>ks.map(k=>`${md(k)}（${dow(k)}）`).join("、"), sm=s=>`<small style="display:block;color:var(--muted)">${s}</small>`;
+    const cell=(id,f,v,ph)=>`<input type="text" class="yenin" inputmode="numeric" autocomplete="off" data-pd="${id}" data-f="${f}" value="${v!=null?fmtYen(v):""}" placeholder="${ph}">`;
+    $("pdTbl").innerHTML=`<thead><tr><td>月度</td><td>アプリの税抜総営収<br><small>公出を除く</small></td><td>給与明細の実営業収入</td><td>差額</td><td>障害者割引<br><small>参考・補填されるはずの額</small></td></tr></thead><tbody>`+
+      (rows.map(({P,app,est,n,kode,auto,miss,missK,v,id})=>{ const diff=v.pay!=null?v.pay-app:null, sh=v.sh!=null?v.sh:auto;
+        return `<tr><td>${P.m}月度<br><small>${md(P.start)}〜${md(P.end)}出庫</small></td>
+          <td class="num">${yen(app)}${sm(`${n}勤務${est?"（見込みを含む）":""}`)}${sm(kode.length?`公出：${dl(kode.map(x=>x.k))}（税抜 ${yen(Math.round(kode.reduce((a,x)=>a+x.amt/1.1,0)))}）`:"公出の印なし")}</td>
+          <td>${cell(id,"pay",v.pay,"")}</td>
+          <td class="num">${diff==null?"—":yen(diff)}${diff!=null&&app?sm(`${(diff/app*100).toFixed(1)}%`):""}</td>
+          <td>${cell(id,"sh",v.sh,auto!=null?yen(auto)+"（日報から）":"")}${v.sh==null&&miss?sm(`公的割引が入っていない勤務：${dl(missK)}`):""}</td></tr>`; }).join("")||`<tr><td colspan="5">売上の記録がまだありません</td></tr>`)+`</tbody>`;    $("pdTbl").querySelectorAll("[data-pd]").forEach(el=>el.onchange=()=>{
       const p=sales.payChk=sales.payChk||{}, o=p[el.dataset.pd]=p[el.dataset.pd]||{}, n=numOf(el.value);
       if(el.value.trim()===""||n==null) delete o[el.dataset.f]; else o[el.dataset.f]=n;
       if(!Object.keys(o).length) delete p[el.dataset.pd];
@@ -2946,7 +2949,8 @@ body.rtfull{overflow:hidden}
     $("sSum").hidden=false; $("ckCard").hidden=false; $("hwCard").hidden=!!offCfg.hw; $("rtCard").hidden=!!offCfg.route;
     const k=sDay, d=getDay(k), s=dayCalc(d), act=k===shiftNow(), simple=d.mode==="simple";
     fillPick();
-    $("sMove").hidden=$("sDelDay").hidden=!hasData(d); $("sFix").hidden=false;   // 入力のしかたの切り替えがあるので、勤務があればいつも出す
+    $("sMove").hidden=$("sDelDay").hidden=!hasData(d); $("sFix").hidden=false;
+    $("sKodeRow").hidden=!isAdmin(); $("sKode").checked=!!d.kode;   // 入力のしかたの切り替えがあるので、勤務があればいつも出す
     { const hasR=!simple&&d.rides.some(r=>!isEv(r.kind)&&+r.amt>0); $("sHour").hidden=!hasR; if(hasR) $("sHourBody").innerHTML=hourBars(hourly(d)); }
     if(delDayArmed!==k){ delDayArmed=null; $("sDelDay").textContent="この勤務の売上を消す"; }
     $("sTitle").innerHTML=`${md(k)}（${dow(k)}）出庫<span class="dd">▾</span><small>${act?"今の勤務":k===activeDay()?"直前の勤務":"記録の確認・修正"}${d.locked?"・照合済み 🔒":""}</small>`;
