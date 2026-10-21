@@ -616,6 +616,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="sv" aria-selected="false" id="segSv" hidden>接遇</button>
     <button role="tab" data-sub="rest" aria-selected="false">休憩場</button>
     <button role="tab" data-sub="taxi" aria-selected="false">専用乗り場</button>
+    <button role="tab" data-sub="event" aria-selected="false">イベント地図</button>
   </div>
 
   <div class="wrap" id="subSv" hidden></div>
@@ -631,6 +632,20 @@ body.rtfull{overflow:hidden}
       <div class="field"><label for="restNote">メモ（場所の名前など・省略できます）</label><input type="text" id="restNote" maxlength="60" autocomplete="off"></div>
       <div class="btnrow"><button class="btn primary" id="restAdd">この場所を休憩場として追加</button></div>
       <div class="msg" id="restMsg" role="status"></div>
+    </section>
+  </div>
+
+  <div class="wrap" id="subEvent" hidden>
+    <section class="card">
+      <div class="infohead"><h2>イベント地図</h2><button class="btn" id="evMeBtn">現在地</button></div>
+      <div class="src">イベント会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
+      <div id="evMap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+      <div class="msg" id="evMsg" role="status"></div>
+      <div id="evListBox"></div>
+      <h3 style="margin:14px 0 6px;font-size:16px">イベントの読み込み</h3>
+      <div class="src">CSVの列は「地点名,緯度,経度,住所,電話番号,メモ」です（カーナビタイムのMy地点プラスと同じ形式なので、同じファイルを両方に使えます）。メモに「10/21 18:30開始 終了は21時前後見込み」のように書くと、開始と終了見込みを読み取ります。日付がないときは、読み込んだ日のイベントとして扱います。</div>
+      <input type="file" id="evFile" accept=".csv,text/csv,text/plain" hidden>
+      <div class="btnrow"><button class="btn primary" id="evPick">CSVファイルを選ぶ</button><button class="btn" id="evClear">読み込んだイベントを消す</button></div>
     </section>
   </div>
 
@@ -817,7 +832,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 13:57</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 14:37</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1798,7 +1813,7 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -1813,6 +1828,7 @@ body.rtfull{overflow:hidden}
     try{ localStorage.setItem("tenko.sub",s); }catch(e){}
     if(KIND[s]&&!$("tabLong").hidden) loadInfo(KIND[s],false);
     if(s==="rest"&&!$("tabLong").hidden&&typeof loadRest==="function") loadRest();
+    if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
   }
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
   $("restCode").value=cfg.empCode||"";
@@ -1891,6 +1907,88 @@ body.rtfull{overflow:hidden}
     }catch(e2){ m.textContent="通信できませんでした。電波を確認してください"; }
   });
   $("restReload").onclick=loadRest;
+
+  // ===== イベント地図（CSVで読み込んだ会場をピンで出す。カーナビタイム My地点プラスと同じ形式：地点名,緯度,経度,住所,電話番号,メモ） =====
+  const EV_KEY="tenko.events";
+  let evList=[]; try{ evList=JSON.parse(localStorage.getItem(EV_KEY)||"[]")||[]; }catch(e){}
+  let evMap=null, evLayer=null, evMe=null, evMarks={};
+  function csvRows(text){ const rows=[]; let row=[], cur="", q=false;
+    for(let i=0;i<text.length;i++){ const c=text[i];
+      if(q){ if(c==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else q=false; } else cur+=c; }
+      else if(c==='"') q=true; else if(c===","){ row.push(cur); cur=""; }
+      else if(c==="\n"||c==="\r"){ if(c==="\r"&&text[i+1]==="\n") i++; row.push(cur); rows.push(row); row=[]; cur=""; } else cur+=c; }
+    if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+    return rows.filter(r=>r.some(x=>x.trim())); }
+  // メモから開始・終了見込みを読む（例：10/21 18:30開始 終了は21時前後見込み）。日付がなければ読み込んだ日
+  function evTimes(memo,loadedAt){
+    const s=String(memo||"").replace(/[０-９：／]/g,c=>c==="："?":":c==="／"?"/":String.fromCharCode(c.charCodeAt(0)-65248));
+    const base=new Date(loadedAt||Date.now()), dm=/(\d{1,2})\/(\d{1,2})/.exec(s);
+    const day=dm?new Date(base.getFullYear(),+dm[1]-1,+dm[2]):new Date(base.getFullYear(),base.getMonth(),base.getDate());
+    if(dm&&day-base<-180*864e5) day.setFullYear(day.getFullYear()+1);   // 12月に1月のイベントを読み込んだとき
+    const hm2=m=>m?(+m[1])*60+(m[2]?+m[2]:0):null;
+    const st=hm2(/(\d{1,2})[:時](\d{2})?分?\s*(?:開始|開演|開場|から|〜|~)/.exec(s));
+    const en=hm2(/終了[^\d]{0,8}(\d{1,2})[:時](\d{2})?/.exec(s))??hm2(/(\d{1,2})[:時](\d{2})?分?\s*(?:終了|終演|まで)/.exec(s));
+    const at=m=>m==null?null:new Date(day.getTime()+m*60000);
+    const S=at(st); let E=at(en); if(S&&E&&E<S) E=new Date(E.getTime()+864e5);
+    return {S,E};
+  }
+  // 状態：終了1時間前〜終了30分後は赤、それより後は灰色（終了）、ほかは青
+  function evState(e){ const {S,E}=evTimes(e.memo,e.at), now=Date.now();
+    if(E&&now>E.getTime()+30*60000) return {c:"#8A8F8E",l:"終了",S,E};
+    if(E&&now>=E.getTime()-60*60000) return {c:"#D23C2F",l:now>=E.getTime()?"終了見込みを過ぎました":"まもなく終了",S,E};
+    if(S&&now<S.getTime()) return {c:"#1D6A80",l:"開始前",S,E};
+    return {c:"#1D6A80",l:S?"開催中":"",S,E}; }
+  const evClock=d=>d?`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`:"—";
+  const evRoute=e=>`https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lng}&travelmode=driving`;
+  function evPopup(e,st){ return `<div style="font-size:15px;line-height:1.5;min-width:200px"><b style="font-size:16px">${esc(e.name)}</b>
+      ${st.l?`<div style="color:${st.c};font-weight:700">${esc(st.l)}</div>`:""}
+      <div>開始：${evClock(st.S)}</div><div>終了見込み：${evClock(st.E)}</div>
+      ${e.addr?`<div>${esc(e.addr)}</div>`:""}${e.tel?`<div><a href="tel:${esc(e.tel.replace(/[^\d+]/g,""))}">${esc(e.tel)}</a></div>`:""}${e.memo?`<div style="color:#5A6866">${esc(e.memo)}</div>`:""}
+      <a href="${evRoute(e)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#1D6A80;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:17px;text-decoration:none;margin-top:10px">ルート案内</a></div>`; }
+  async function evShowMe(center){
+    const p=await getPos(); if(!p){ $("evMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return null; }
+    if(evMe) evMap.removeLayer(evMe);
+    evMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(evMap);
+    if(center) evMap.setView([p.lat,p.lng],Math.max(evMap.getZoom()||0,14));
+    return p; }
+  async function renderEv(first){
+    const m=$("evMsg");
+    try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
+    if(!evMap){ evMap=L.map("evMap",{zoomControl:true,attributionControl:true});
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(evMap);
+      evMap.setView([35.68,139.76],11); }
+    setTimeout(()=>evMap.invalidateSize(),60);
+    if(evLayer) evLayer.remove(); evLayer=L.layerGroup().addTo(evMap); evMarks={};
+    const rows=evList.map((e,i)=>({e,i,st:evState(e)})).sort((a,b)=>(a.st.l==="終了")-(b.st.l==="終了")||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
+    rows.forEach(({e,i,st})=>{ evMarks[i]=L.circleMarker([e.lat,e.lng],{radius:12,color:"#fff",weight:3,fillColor:st.c,fillOpacity:1,bubblingMouseEvents:false})
+      .bindTooltip(esc(e.name),{permanent:true,direction:"top",offset:[0,-10]}).bindPopup(evPopup(e,st)).addTo(evLayer); });
+    m.textContent=evList.length?`${evList.length}件のイベント`:"イベントがまだありません。下の「CSVファイルを選ぶ」から読み込んでください";
+    $("evListBox").innerHTML=rows.map(({e,i,st})=>`<div class="grp" style="margin-top:8px;border-left:6px solid ${st.c}">
+        <b>${esc(e.name)}</b>${st.l?` <span style="color:${st.c};font-weight:700">${esc(st.l)}</span>`:""}<div class="src">開始 ${evClock(st.S)}・終了見込み ${evClock(st.E)}${e.addr?`<br>${esc(e.addr)}`:""}</div>
+        <div class="btnrow"><button class="btn" data-evpin="${i}">地図で見る</button><a class="btn primary" style="text-decoration:none" href="${evRoute(e)}" target="_blank" rel="noopener">ルート案内</a></div></div>`).join("");
+    $("evListBox").querySelectorAll("[data-evpin]").forEach(b=>b.onclick=()=>{ const mk=evMarks[b.dataset.evpin]; if(!mk) return; evMap.setView(mk.getLatLng(),15); mk.openPopup(); $("evMap").scrollIntoView({behavior:"smooth",block:"center"}); });
+    if(first){ const p=await evShowMe(false); const pts=evList.map(e=>[e.lat,e.lng]).concat(p?[[p.lat,p.lng]]:[]);
+      if(pts.length>1) evMap.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:15}); else if(pts.length) evMap.setView(pts[0],14); }
+  }
+  $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
+  $("evPick").onclick=()=>$("evFile").click();
+  $("evFile").addEventListener("change",async()=>{
+    const f=$("evFile").files[0]; $("evFile").value=""; if(!f) return; const m=$("evMsg");
+    const buf=await f.arrayBuffer(); let text;
+    try{ text=new TextDecoder("utf-8",{fatal:true}).decode(buf); }catch(e){ text=new TextDecoder("shift_jis").decode(buf); }   // カーナビタイムなどのShift_JISのCSVも読む
+    text=text.replace(/^\uFEFF/,"");
+    const now=Date.now(), out=[], bad=[];
+    csvRows(text).forEach((r,n)=>{ if(n===0&&/地点名|緯度/.test(r.join(","))) return;
+      const lat=+String(r[1]||"").trim(), lng=+String(r[2]||"").trim();
+      if(!r[0]||!isFinite(lat)||!isFinite(lng)||!lat||!lng){ bad.push(n+1); return; }
+      out.push({name:r[0].trim(),lat,lng,addr:(r[3]||"").trim(),tel:(r[4]||"").trim(),memo:(r[5]||"").trim(),at:now}); });
+    if(!out.length){ m.textContent="読み込めるイベントがありませんでした。列が「地点名,緯度,経度,住所,電話番号,メモ」になっているか確かめてください"; return; }
+    evList=out; try{ localStorage.setItem(EV_KEY,JSON.stringify(evList)); }catch(e){}
+    await renderEv(true); m.textContent=`${out.length}件のイベントを読み込みました${bad.length?`（${bad.length}行は緯度・経度が読めず飛ばしました）`:""}`;
+  });
+  $("evClear").onclick=()=>{ if(!evList.length) return; if(!confirm("読み込んだイベントを消しますか？")) return; evList=[]; try{ localStorage.removeItem(EV_KEY); }catch(e){} renderEv(false); };
+  // 1分ごとにピンの色（終了間近の赤など）を更新する
+  setInterval(()=>{ if(evMap&&curSub==="event"&&!$("tabLong").hidden&&!$("evMap").querySelector(".leaflet-popup")) renderEv(false); },60000);   // 吹き出しを開いている間は待つ
   $("restAdd").onclick=async()=>{
     const m=$("restMsg"), code=$("restCode").value.trim();
     if(!code){ m.textContent="社員コードを入れてください"; return; }
