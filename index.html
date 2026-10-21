@@ -817,7 +817,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 13:45</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 13:57</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1455,7 +1455,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -2305,6 +2305,18 @@ body.rtfull{overflow:hidden}
       if(s.act){ const q=part(s.act.rz,s.a,s.act.b); act.n+=q.n; act.d+=q.d; } });
     return {w,rule,shifts,act,all};
   }
+  // 計画だけで見た週（計画どおりなら目標に届くか）と、今までの計画（実績と比べて＋−を出す）。勤務しなかった過去の勤務は除く
+  function rzPlanCalc(w){
+    const a=w, b=w+7*DAY, rule=ruleOf(w), now=nowAbsMin();
+    const keys=[...new Set([...recs.map(r=>r.date),...Object.keys(sales.days)])].filter(k=>{ const di=dayNo(k); return di*DAY<b&&(di+2)*DAY>a; }).sort();
+    const plan={n:0,d:0}, toNow={n:0,d:0};
+    keys.forEach(k=>{ if(rzShift(k).state==="none") return; const base=dayNo(k)*DAY, pl=planOf(k), x=base+pl.out, y=base+pl.in; if(ovl(x,y,a,b)<=0) return;
+      const rz=pl.rz.map(([p,q])=>[base+p,base+q]), e=Math.min(b,now);
+      if(rule.type==="am"){ plan.n+=winSum(rz,a,b,RZ_AM); plan.d+=winSum([[x,y]],a,b,RZ_AM); if(e>a){ toNow.n+=winSum(rz,a,e,RZ_AM); toNow.d+=winSum([[x,y]],a,e,RZ_AM); } }
+      else { plan.n+=sumIv(rz,a,b); plan.d+=ovl(x,y,a,b); if(e>a){ toNow.n+=sumIv(rz,a,e); toNow.d+=ovl(x,y,a,e); } } });
+    return {plan,toNow};
+  }
+  const pm=v=>(v>=0?"＋":"−")+hm(Math.abs(v));   // 計画との差の表示
   const rate=o=>o.d?o.n/o.d:null;
   // 目標に届くには、あと何分の連続配車が要るか（分母はそのまま）
   const short=(o,r)=>o.d?Math.max(0,Math.ceil(r.pct/100*o.d-o.n)):0;
@@ -2323,6 +2335,7 @@ body.rtfull{overflow:hidden}
       <div class="sumgrid">
         <div><span class="h">この乗務の連続配車</span><span class="v num">${hm(ren)}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
         <div><span class="h">出庫〜入庫</span><span class="v num">${hm(span)}<small style="display:block;font-size:13px;color:var(--muted)">${span>0?pct(ren/span):"—"}</small></span></div>
+        ${offCfg.rzweek?"":(()=>{ const w=weekOf(nowAbsMin()), W=rzWeekCalc(w), PC=rzPlanCalc(w), ra=rate(W.act); return `<div><span class="h">今週の計画との差</span><span class="v num">${PC.toNow.d?pm(W.act.n-PC.toNow.n):"—"}<small style="display:block;font-size:13px;color:var(--muted)">今週の実績 ${ra!=null?pct(ra):"—"}（目標 ${W.rule.pct}%）</small></span></div>`; })()}
         <div><span class="h">必須・コアタイム（朝か夕方、どちらか）</span><span class="v num">${mActAm>=MUST_AM()||mActPm>=MUST_PM()?"✅":"❌"}<small style="display:block;font-size:13px;color:var(--muted)">朝(6〜10時) ${hm(mActAm)}${mActAm>=MUST_AM()?"✅":`（あと${hm(MUST_AM()-mActAm)}）`}・夕(16〜20時) ${hm(mActPm)}${mActPm>=MUST_PM()?"✅":`（あと${hm(MUST_PM()-mActPm)}）`}</small></span></div>
       </div>`;
     $("rzOpen").onclick=()=>setView("rz");
@@ -2333,7 +2346,7 @@ body.rtfull{overflow:hidden}
   const stLabel={done:"実績",now:"勤務中",plan:"計画"};
   function renderRzView(){
     const z=rzCfg(); if(rzW==null) rzW=weekOf(nowAbsMin());
-    const W=rzWeekCalc(rzW), r=W.rule, ra=rate(W.act), rp=rate(W.all), goal=r.pct/100;
+    const W=rzWeekCalc(rzW), r=W.rule, ra=rate(W.act), rp=rate(W.all), goal=r.pct/100, PC=rzPlanCalc(rzW), rpl=rate(PC.plan), useWk=!offCfg.rzweek;
     const bar=(v,cls)=>`<i class="${cls}" style="width:${Math.min(100,Math.max(0,(v||0)*100))}%"></i>`;
     const sh=W.shifts.map(s=>{ const mAm=mustOfAm(s), mPm=mustOfPm(s), ren=sumIv(s.rz,s.a,s.b), wk=s.b-s.a;
       return `<tr><td class="num">${md(s.k)}（${dow(s.k)}）<br><small>${stLabel[s.state]}${s.mine?"・個別の計画":""}</small></td>
@@ -2357,13 +2370,18 @@ body.rtfull{overflow:hidden}
         <div class="btnrow"><button class="btn primary" id="rzRuleSave">この週から変える</button></div>
         <small>この週から先の週がこの目標になります（前の週はそのまま）。</small>
       </div>
-      <div class="row" style="margin-top:6px"><span>実績</span><span class="total num">${ra!=null?pct(ra):"—"}</span></div>
+      ${useWk?`<div class="row" style="margin-top:6px"><span>計画</span><span class="total num">${rpl!=null?pct(rpl):"—"}</span></div>
+      <div class="src num">計画の連続配車 ${hm(PC.plan.n)}／${r.type==="am"?"8〜10時の勤務":"出庫〜入庫"} ${hm(PC.plan.d)}</div>
+      <div class="checks">${rpl==null?"":rpl>=goal?`<span class="pill ok">🟢 計画どおりなら目標（${r.pct}%）に届きます</span>`:`<span class="pill warn">🔴 計画でも目標（${r.pct}%）に、あと ${hm(short(PC.plan,r))} 足りません。計画を見直してください</span>`}</div>
+      <div class="row" style="margin-top:6px"><span>計画との差（今まで）</span><span class="total num">${PC.toNow.d?pm(W.act.n-PC.toNow.n):"—"}</span></div>
+      <div class="src num">今までの実績 ${hm(W.act.n)}／今までの計画 ${hm(PC.toNow.n)}（＋は計画より多い、−は少ない）</div>`:`<div class="src">週の目標は使わない設定です（メニューの設定「画面に出す機能」で変えられます）。</div>`}
+      ${useWk?`<div class="row" style="margin-top:6px"><span>実績</span><span class="total num">${ra!=null?pct(ra):"—"}</span></div>
       <div class="bar">${bar(ra,"a")}</div>
       <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.act.n)}／${r.type==="am"?"8〜10時の勤務":"出庫〜入庫"} ${hm(W.act.d)}</div>
       <div class="row" style="margin-top:6px"><span>計画を含む見込み</span><span class="total num">${rp!=null?pct(rp):"—"}</span></div>
       <div class="bar">${bar(rp,"p")}</div>
       <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.all.n)}／${r.type==="am"?"8〜10時の勤務":"出庫〜入庫"} ${hm(W.all.d)}</div>
-      <div class="checks">${rp==null?"":rp>=goal?`<span class="pill ok">🟢 計画どおりなら目標（${r.pct}%）に届きます</span>`:`<span class="pill warn">🔴 目標（${r.pct}%）まで、あと ${hm(short(W.all,r))} の連続配車が必要</span>`}</div>
+      <div class="checks">${rp==null?"":rp>=goal?`<span class="pill ok">🟢 今のペースで計画どおり進めば、目標（${r.pct}%）に届きます</span>`:`<span class="pill warn">🔴 目標（${r.pct}%）まで、あと ${hm(short(W.all,r))} の連続配車が必要</span>`}</div>`:""}
     </section>
     <section class="card">
       <h2>乗務ごと（必須・コアタイム：朝6〜10時90分 または 夕方16〜20時2時間、どちらか）</h2>
