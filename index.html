@@ -637,15 +637,15 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subEvent" hidden>
     <section class="card">
-      <div class="infohead"><h2>イベント地図</h2><button class="btn" id="evMeBtn">現在地</button></div>
-      <div class="src">イベント会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
+      <div class="infohead"><h2>イベント地図</h2><div class="btnrow" style="margin:0"><button class="btn" id="evReload">更新</button><button class="btn" id="evMeBtn">現在地</button></div></div>
+      <div class="src">昨日・今日・明日のイベントを自動で読み込み、会場を地図に出します。ピンを押すと、開始時刻・終了見込みと「ルート案内」が出ます。<b>終了1時間前からは赤いピン</b>になります（青：これから・開催中、灰色：終わったもの）。</div>
       <div id="evMap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
       <div class="msg" id="evMsg" role="status"></div>
       <div id="evListBox"></div>
-      <h3 style="margin:14px 0 6px;font-size:16px">イベントの読み込み</h3>
+      <h3 style="margin:14px 0 6px;font-size:16px">自分でイベントを足す（CSV）</h3>
       <div class="src">CSVの列は「地点名,緯度,経度,住所,電話番号,メモ」です（カーナビタイムのMy地点プラスと同じ形式なので、同じファイルを両方に使えます）。メモに「10/21 18:30開始 終了は21時前後見込み」のように書くと、開始と終了見込みを読み取ります。日付がないときは、読み込んだ日のイベントとして扱います。</div>
       <input type="file" id="evFile" accept=".csv,text/csv,text/plain" hidden>
-      <div class="btnrow"><button class="btn primary" id="evPick">CSVファイルを選ぶ</button><button class="btn" id="evClear">読み込んだイベントを消す</button></div>
+      <div class="btnrow"><button class="btn primary" id="evPick">CSVファイルを選ぶ</button><button class="btn" id="evClear">自分で読み込んだ分を消す</button></div>
     </section>
   </div>
 
@@ -832,7 +832,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 14:37</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 14:49</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1911,6 +1911,13 @@ body.rtfull{overflow:hidden}
   // ===== イベント地図（CSVで読み込んだ会場をピンで出す。カーナビタイム My地点プラスと同じ形式：地点名,緯度,経度,住所,電話番号,メモ） =====
   const EV_KEY="tenko.events";
   let evList=[]; try{ evList=JSON.parse(localStorage.getItem(EV_KEY)||"[]")||[]; }catch(e){}
+  // サーバーから自動で読み込むイベント（Claude Codeがドライブに入れたもの）。電波がないときのために前回の分を残す
+  let evSrv=[]; try{ evSrv=JSON.parse(localStorage.getItem("tenko.eventsAuto")||"[]")||[]; }catch(e){}
+  const evAll=()=>evSrv.concat(evList);
+  async function evFetch(){
+    if(!cfg.url) return; try{ const j=await post({action:"eventGet"}); if(!j.ok) return;
+      evSrv=(j.items||[]).map(x=>Object.assign({},x,{at:new Date(x.day+"T12:00:00").getTime(),auto:true}));
+      try{ localStorage.setItem("tenko.eventsAuto",JSON.stringify(evSrv)); }catch(e){} }catch(e){} }
   let evMap=null, evLayer=null, evMe=null, evMarks={};
   function csvRows(text){ const rows=[]; let row=[], cur="", q=false;
     for(let i=0;i<text.length;i++){ const c=text[i];
@@ -1942,7 +1949,7 @@ body.rtfull{overflow:hidden}
   const evRoute=e=>`https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lng}&travelmode=driving`;
   function evPopup(e,st){ return `<div style="font-size:15px;line-height:1.5;min-width:200px"><b style="font-size:16px">${esc(e.name)}</b>
       ${st.l?`<div style="color:${st.c};font-weight:700">${esc(st.l)}</div>`:""}
-      <div>開始：${evClock(st.S)}</div><div>終了見込み：${evClock(st.E)}</div>
+      <div>開始：${evClock(st.S)}</div><div>終了見込み：${evClock(st.E)}</div>${e.auto?`<div style="color:#5A6866;font-size:13px">自動で読み込んだイベント</div>`:""}
       ${e.addr?`<div>${esc(e.addr)}</div>`:""}${e.tel?`<div><a href="tel:${esc(e.tel.replace(/[^\d+]/g,""))}">${esc(e.tel)}</a></div>`:""}${e.memo?`<div style="color:#5A6866">${esc(e.memo)}</div>`:""}
       <a href="${evRoute(e)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#1D6A80;color:#fff;padding:12px;border-radius:10px;font-weight:700;font-size:17px;text-decoration:none;margin-top:10px">ルート案内</a></div>`; }
   async function evShowMe(center){
@@ -1958,19 +1965,21 @@ body.rtfull{overflow:hidden}
       L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(evMap);
       evMap.setView([35.68,139.76],11); }
     setTimeout(()=>evMap.invalidateSize(),60);
+    if(first){ m.textContent="イベントを読み込んでいます…"; await evFetch(); }
     if(evLayer) evLayer.remove(); evLayer=L.layerGroup().addTo(evMap); evMarks={};
-    const rows=evList.map((e,i)=>({e,i,st:evState(e)})).sort((a,b)=>(a.st.l==="終了")-(b.st.l==="終了")||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
+    const all=evAll(), rows=all.map((e,i)=>({e,i,st:evState(e)})).sort((a,b)=>(a.st.l==="終了")-(b.st.l==="終了")||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
     rows.forEach(({e,i,st})=>{ evMarks[i]=L.circleMarker([e.lat,e.lng],{radius:12,color:"#fff",weight:3,fillColor:st.c,fillOpacity:1,bubblingMouseEvents:false})
       .bindTooltip(esc(e.name),{permanent:true,direction:"top",offset:[0,-10]}).bindPopup(evPopup(e,st)).addTo(evLayer); });
-    m.textContent=evList.length?`${evList.length}件のイベント`:"イベントがまだありません。下の「CSVファイルを選ぶ」から読み込んでください";
+    m.textContent=all.length?`${all.length}件のイベント（自動 ${evSrv.length}件・CSV ${evList.length}件）`:"イベントがまだありません（自動の分もありません）。下の「CSVファイルを選ぶ」から読み込むこともできます";
     $("evListBox").innerHTML=rows.map(({e,i,st})=>`<div class="grp" style="margin-top:8px;border-left:6px solid ${st.c}">
         <b>${esc(e.name)}</b>${st.l?` <span style="color:${st.c};font-weight:700">${esc(st.l)}</span>`:""}<div class="src">開始 ${evClock(st.S)}・終了見込み ${evClock(st.E)}${e.addr?`<br>${esc(e.addr)}`:""}</div>
         <div class="btnrow"><button class="btn" data-evpin="${i}">地図で見る</button><a class="btn primary" style="text-decoration:none" href="${evRoute(e)}" target="_blank" rel="noopener">ルート案内</a></div></div>`).join("");
     $("evListBox").querySelectorAll("[data-evpin]").forEach(b=>b.onclick=()=>{ const mk=evMarks[b.dataset.evpin]; if(!mk) return; evMap.setView(mk.getLatLng(),15); mk.openPopup(); $("evMap").scrollIntoView({behavior:"smooth",block:"center"}); });
-    if(first){ const p=await evShowMe(false); const pts=evList.map(e=>[e.lat,e.lng]).concat(p?[[p.lat,p.lng]]:[]);
+    if(first){ const p=await evShowMe(false); const pts=all.map(e=>[e.lat,e.lng]).concat(p?[[p.lat,p.lng]]:[]);
       if(pts.length>1) evMap.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:15}); else if(pts.length) evMap.setView(pts[0],14); }
   }
   $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
+  $("evReload").onclick=()=>renderEv(true);
   $("evPick").onclick=()=>$("evFile").click();
   $("evFile").addEventListener("change",async()=>{
     const f=$("evFile").files[0]; $("evFile").value=""; if(!f) return; const m=$("evMsg");
@@ -1986,7 +1995,7 @@ body.rtfull{overflow:hidden}
     evList=out; try{ localStorage.setItem(EV_KEY,JSON.stringify(evList)); }catch(e){}
     await renderEv(true); m.textContent=`${out.length}件のイベントを読み込みました${bad.length?`（${bad.length}行は緯度・経度が読めず飛ばしました）`:""}`;
   });
-  $("evClear").onclick=()=>{ if(!evList.length) return; if(!confirm("読み込んだイベントを消しますか？")) return; evList=[]; try{ localStorage.removeItem(EV_KEY); }catch(e){} renderEv(false); };
+  $("evClear").onclick=()=>{ if(!evList.length) return; if(!confirm("自分で読み込んだCSVのイベントを消しますか？（自動の分は消えません）")) return; evList=[]; try{ localStorage.removeItem(EV_KEY); }catch(e){} renderEv(false); };
   // 1分ごとにピンの色（終了間近の赤など）を更新する
   setInterval(()=>{ if(evMap&&curSub==="event"&&!$("tabLong").hidden&&!$("evMap").querySelector(".leaflet-popup")) renderEv(false); },60000);   // 吹き出しを開いている間は待つ
   $("restAdd").onclick=async()=>{
