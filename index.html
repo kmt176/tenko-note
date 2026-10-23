@@ -982,7 +982,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 15:39</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 15:50</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3334,7 +3334,7 @@ body.rtfull{overflow:hidden}
   let fullSig={}; try{ fullSig=JSON.parse(localStorage.getItem("tenko.fullsig")||"{}")||{}; }catch(e){}
   const saveFlashState=()=>{ try{ localStorage.setItem("tenko.flashq",JSON.stringify(flashQ)); localStorage.setItem("tenko.flashsig",JSON.stringify(flashSig)); localStorage.setItem("tenko.fullsig",JSON.stringify(fullSig)); }catch(e){} };
   // 1勤務の、速報に出す乗車（1万円以上・B空転以外）
-  const srcOf=p=>!p?"":p.from==="addr"?"住所":p.from==="route"?"ルート":"GPS";
+  const srcOf=p=>!p?"":p.from==="addr"?"住所":p.from==="route"?"ルート":p.from==="tl"?"タイムライン推定":"GPS";
   function flashRides(k){
     const d=sales.days[k]; if(!d) return [];
     return d.rides.filter(r=>!isEv(r.kind)&&r.kind!=="B空転"&&(+r.amt||0)>=flashMin&&r.on!=null)
@@ -3499,14 +3499,43 @@ body.rtfull{overflow:hidden}
       for(const w of ["on","off"]){ if(!r[w+"Pos"]&&r[w+"Addr"]&&!r[w+"Tried"]){ r[w+"Tried"]=true; r[w+"Pos"]=await posOfAddr(r[w+"Addr"]); } }
       for(const w of ["On","Off"]){ if(r["n"+w+"Addr"]&&!r["n"+w+"Pos"]&&!r["n"+w+"Tried"]){ r["n"+w+"Tried"]=true; r["n"+w+"Pos"]=await posOfAddr(r["n"+w+"Addr"]); } }
       for(const w of ["on","off"]){ const p=r[w+"Pos"]; if(p&&r[w+"Addr"]==null){ r[w+"Addr"]=await townOf(p); } }
+      tlFillDay(k,sales.days[k]);
       if(r.onPos&&!r.wx&&r.on!=null){ const w=await weatherAt(r.onPos,new Date(dayStart(k).getTime()+r.on*60000)); if(w) r.wx=w; }
       saveSales(); queueFlash(k); renderSales();
     }catch(e){ /* 電波がないときは、次に開いたときにもう一度 */ }
+  }
+  // ボタンを押さず日報から入った乗車（場所が日報の住所＝丁目の真ん中）は、その勤務にタイムラインがあれば、
+  // 乗車・降車の時刻のタイムラインから場所を推定する。時刻の近くで車が止まっていた所（点が60m以内にかたまる所）を優先し、
+  // なければその時刻の位置を前後の点から割り出す。日報の丁目から800m以上離れたら外れとみて、丁目の真ん中のまま
+  const TL_FAR=800;
+  function tlPosFor(d,min,w){
+    const pts=d.route&&d.route.pts; if(!pts||pts.length<2||min==null) return null;
+    const lo=w==="on"?min-5:min-1, hi=w==="on"?min+1:min+5;
+    const win=pts.filter(p=>p[2]>=lo&&p[2]<=hi);
+    const still=win.filter(p=>win.some(q=>q!==p&&distM(p,q)<=60));
+    if(still.length){ const c=still.slice().sort((a,b)=>Math.abs(a[2]-min)-Math.abs(b[2]-min))[0]; return {lat:c[0],lng:c[1],acc:null,from:"tl"}; }
+    const r=routePosAt(d,min); return r?Object.assign(r,{acc:null,from:"tl"}):null;
+  }
+  function tlFillDay(k,d){
+    if(!d||!d.rides) return false; let ch=false;
+    if(!d.route||!d.route.pts){   // ルートを消したら、推定した場所を日報の住所の場所に戻す
+      d.rides.forEach(r=>["on","off"].forEach(w=>{ if(r[w+"Pos"]&&r[w+"Pos"].from==="tl"){ r[w+"Pos"]=r[w+"AddrPos"]||null; delete r[w+"AddrPos"]; delete r[w+"Tl"]; ch=true; } }));
+      if(ch) saveSales(); return ch; }
+    d.rides.forEach(r=>{ if(isEv(r.kind)) return;
+      ["on","off"].forEach(w=>{ const p=r[w+"Pos"], key=w+"Tl";
+        if(r[key]===d.route.at) return;
+        if(!(p&&p.from==="addr")&&!(!p&&r[w+"Tried"])) return;   // ボタン（GPS）の場所や、まだ住所を調べていないものはそのまま
+        r[key]=d.route.at; ch=true;
+        const e=tlPosFor(d,r[w],w); if(!e) return;
+        if(p&&distM([p.lat,p.lng],[e.lat,e.lng])>=TL_FAR) return;
+        r[w+"AddrPos"]=p||null; r[w+"Pos"]=e; }); });
+    if(ch) saveSales(); return ch;
   }
   // 9日以内（アメダスが残っている期間）で、位置・住所・天気が抜けている乗車を埋め直す（1回開くごとに1度だけ）
   let filled=false;
   function fillPending(){
     if(filled) return; filled=true;
+    Object.entries(sales.days).forEach(([k,d])=>tlFillDay(k,d));   // タイムラインがある勤務は、日にちに関係なく推定し直す
     const lim=Date.now()-9*864e5;
     Object.entries(sales.days).forEach(([k,d])=>{ if(dayStart(k).getTime()<lim) return;
       d.rides.forEach(r=>{ if(isEv(r.kind)) return;
@@ -3683,7 +3712,7 @@ body.rtfull{overflow:hidden}
     .replace(/(十?[一二三四五六七八九]?|十)丁目/g,m=>{ const k=m.replace("丁目",""); const n=k==="十"?10:k.startsWith("十")?10+(KANJI[k[1]]||0):k.endsWith("十")?(KANJI[k[0]]||1)*10:KANJI[k]||k; return String(n); })
     .replace(/丁目/g,"").replace(/\s/g,"");
   const sameTown=(a,b)=>!!a&&!!b&&normTown(a)===normTown(b);
-  const isGps=p=>p&&p.from!=="addr";
+  const isGps=p=>p&&p.from!=="addr"&&p.from!=="tl";
   function routePosAt(d,min){
     const pts=d.route&&d.route.pts; if(!pts||!pts.length) return null;
     let a=null,b=null; for(const p of pts){ if(p[2]<=min) a=p; else { b=p; break; } }
@@ -3964,7 +3993,7 @@ body.rtfull{overflow:hidden}
         const s0=dayStart(r.date).getTime(), dd=ensureDay(r.date);
         let km=0; for(let i=1;i<sel.length;i++) km+=distM([sel[i-1][1],sel[i-1][2]],[sel[i][1],sel[i][2]]);
         dd.route={pts:sel.map(p=>[+p[1].toFixed(5),+p[2].toFixed(5),Math.round((p[0]-s0)/60000)]),km:r1(km/1000),at:new Date().toISOString()};
-        got.push(r.date);
+        got.push(r.date); tlFillDay(r.date,dd);
       });
       saveSales(); rtKey=""; renderSales();
       $("rtInfo").textContent=got.length?`${got.length}勤務分のルートを入れました（${got.map(md).join("・")}）`:"ファイルの期間に、点呼で業務前点呼（実績）が入った勤務がありませんでした";
@@ -3972,7 +4001,7 @@ body.rtfull{overflow:hidden}
   });
   // 地図の吹き出しの「この乗車のルートだけ見る」
   $("rtMap").addEventListener("click",e=>{ const a=e.target.closest("[data-rtpick]"); if(!a) return; e.preventDefault(); rtSelId=a.dataset.rtpick; rtKey=""; renderSales(); });
-  $("rtDel").onclick=()=>{ const d=sales.days[sDay]; if(!d||!d.route) return; if(!confirm("この勤務のルートを消しますか？")) return; delete d.route; saveSales(); rtKey=""; renderSales(); };
+  $("rtDel").onclick=()=>{ const d=sales.days[sDay]; if(!d||!d.route) return; if(!confirm("この勤務のルートを消しますか？")) return; delete d.route; tlFillDay(sDay,d); saveSales(); rtKey=""; renderSales(); };
   // 地図（Leaflet＋地理院タイル）は、ルートのある勤務を開いたときだけ読み込む
   let leafletP=null, rtMapObj=null, rtLayer=null, rtKey="", rtSelId="", rtSelDay="";
   $("rtSel").addEventListener("change",()=>{ rtSelId=$("rtSel").value; rtKey=""; renderSales(); });
