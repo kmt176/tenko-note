@@ -725,6 +725,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="train" aria-selected="false">電車が止まったら</button>
     <button role="tab" data-sub="air" aria-selected="false">飛行機</button>
     <button role="tab" data-sub="cmp" aria-selected="false" id="segCmp" hidden>乗務員比較（試験）</button>
+    <button role="tab" data-sub="patrol" aria-selected="false" id="segPatrol">取締り</button>
     <button role="tab" data-sub="bus" aria-selected="false" id="segBus">都営バス</button>
     <button role="tab" data-sub="ship" aria-selected="false" id="segShip">竹芝の船</button>
   </div>
@@ -853,6 +854,20 @@ body.rtfull{overflow:hidden}
       <div class="msg" id="trMsg" role="status"></div>
       <div id="trainBox"></div>
       <div class="src">駅の位置は国土数値情報（鉄道データ）、乗降客数は国土数値情報（駅別乗降客数・2023年度の1日あたり。JRは乗車人員の2倍）から。距離は駅の中心どうしの直線距離です。</div>
+    </section>
+  </div>
+
+  <div class="wrap" id="subPatrol" hidden>
+    <section class="card">
+      <h2>取締りの場所</h2>
+      <div class="src">マイマップ「東京都内_公開・重点取締り」の場所を地図と一覧に出します。色は、<b style="color:#D23C2F">●重点取締場所</b>・<b style="color:#E8890C">●速度取締り</b>・<b style="color:#7B3FA0">●8月重点取締り</b>です。近づいたときの音と黄色の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
+      <div id="ptGroups" class="btnrow" style="flex-wrap:wrap"></div>
+      <div id="ptMapWrap" class="mapwrap">
+        <div id="ptMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+        <div class="evmapbtns"><button class="btn" id="ptMeBtn">現在地</button><button class="btn" id="ptFullBtn">全画面</button></div>
+      </div>
+      <div class="msg" id="ptMsg" role="status"></div>
+      <div id="ptList"></div>
     </section>
   </div>
 
@@ -1065,7 +1080,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-24 01:47</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-24 01:58</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2116,7 +2131,7 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip",patrol:"subPatrol"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -2137,6 +2152,7 @@ body.rtfull{overflow:hidden}
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
     if(s==="bus"&&!$("tabLong").hidden&&typeof loadBus==="function") loadBus(false);
+    if(s==="patrol"&&!$("tabLong").hidden&&typeof renderPatrolTab==="function") renderPatrolTab(true);
     if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function") loadShip(false);
     if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function"){ loadAir(false); loadAir(false,airKind==="arr"?"dep":"arr"); }   // 到着・出発の両方を先に読む
   }
@@ -2147,7 +2163,7 @@ body.rtfull{overflow:hidden}
   // ボタン：[キー, アイコン（Lucide・線画。ISCライセンス）, ボタンの名前（1行に入る短い名前）, 画面の見出しの名前]。グループごとにテーマ色
   const MICON={"event": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "taxi": "<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><path d=\"M10 6h4\"/><path d=\"M10 10h4\"/><path d=\"M10 14h4\"/><path d=\"M10 18h4\"/>", "train": "<path d=\"M8 3.1V7a4 4 0 0 0 8 0V3.1\"/><path d=\"m9 15-1-1\"/><path d=\"m15 15 1-1\"/><path d=\"M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z\"/><path d=\"m8 19-2 3\"/><path d=\"m16 19 2 3\"/>", "air": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "rest": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "flash": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "long": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>", "cmp": "<path d=\"M3 3v18h18\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "bus": "<path d=\"M8 6v6\"/><path d=\"M15 6v6\"/><path d=\"M2 12h19.6\"/><path d=\"M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/><path d=\"M9 18h5\"/><circle cx=\"16\" cy=\"18\" r=\"2\"/>", "ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>", "pay": "<polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/>", "set": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bk": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "help": "<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>"};
   const MENU_GROUPS=[
-    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["taxi","🏢","専用乗り場","専用乗り場"],["train","🚃","電車の乱れ","電車が止まったら"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
+    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["taxi","🏢","専用乗り場","専用乗り場"],["train","🚃","電車の乱れ","電車が止まったら"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["patrol","🚨","取締り","取締りの場所"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
     ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["help","📖","使い方","使い方"]]]];
@@ -4968,6 +4984,38 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     else if(!on&&patrolWid!=null){ navigator.geolocation.clearWatch(patrolWid); patrolWid=null; patrolPrev={}; }
   }
   document.addEventListener("visibilitychange",patrolWatch);
+  // 取締りの場所の画面（地図と、近い順の一覧）
+  const PT_COL=["#D23C2F","#E8890C","#7B3FA0","#2F6FD6","#3E9B4F"];
+  let ptMap=null, ptLayer=null, ptMe=null, ptOff={}; try{ ptOff=JSON.parse(localStorage.getItem("tenko.ptOff")||"{}")||{}; }catch(e){}
+  async function renderPatrolTab(first){
+    const m=$("ptMsg");
+    try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
+    if(!ptMap){ ptMap=L.map("ptMap",{zoomControl:true,attributionControl:true});
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(ptMap);
+      ptMap.setView([35.69,139.75],12); addAreaMask(ptMap); }
+    setTimeout(()=>ptMap.invalidateSize(),60);
+    if(!patrolPts){ m.textContent="取締りの場所を読み込んでいます…"; try{ localStorage.removeItem("tenko.patrolAt"); }catch(e){} await patrolLoad(); if(!patrolPts){ m.textContent="取締りの場所を読み込めませんでした。電波を確認してください"; return; } }
+    // グループのしぼり込み（押すたびに出す・出さない）
+    $("ptGroups").innerHTML=patrolGroups.map((g,i)=>`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-ptg="${i}" ${ptOff[i]?"":"checked"}><b style="color:${PT_COL[i%PT_COL.length]}">●</b>${esc(g)}（${patrolPts.filter(x=>x[1]===i).length}）</label>`).join("");
+    $("ptGroups").querySelectorAll("[data-ptg]").forEach(b=>b.onchange=()=>{ if(b.checked) delete ptOff[b.dataset.ptg]; else ptOff[b.dataset.ptg]=true; try{ localStorage.setItem("tenko.ptOff",JSON.stringify(ptOff)); }catch(e){} renderPatrolTab(false); });
+    if(ptLayer) ptLayer.remove(); ptLayer=L.layerGroup().addTo(ptMap);
+    const xs=patrolPts.filter(x=>!ptOff[x[1]]);
+    xs.forEach(x=>{ const col=PT_COL[x[1]%PT_COL.length], c=x[2][0];
+      const pop=`<div style="font-size:15px;line-height:1.5;min-width:180px"><b style="font-size:16px">${esc(x[0])}</b><div style="color:${col};font-weight:700">${esc(patrolGroups[x[1]]||"")}</div><a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a></div>`;
+      if(x[2].length>1) L.polyline(x[2],{color:col,weight:5,opacity:.85}).bindPopup(pop).addTo(ptLayer);
+      else L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:col,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(ptLayer); });
+    if(first){ const p=await getPos(); if(p){ if(ptMe) ptMap.removeLayer(ptMe); ptMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(ptMap); ptMap.setView([p.lat,p.lng],15); }
+      else if(xs.length) ptMap.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
+    // 近い順の一覧（現在地が分かっているときだけ）
+    if(ptMe){ const me=ptMe.getLatLng(), near=xs.map(x=>({x,d:Math.min(...x[2].map(c=>distM([me.lat,me.lng],c)))})).sort((a,b)=>a.d-b.d).slice(0,15);
+      $("ptList").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${PT_COL[x[1]%PT_COL.length]}"><div class="trname"><b>${esc(x[0])}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${esc(patrolGroups[x[1]]||"")}</small></div><button class="btn" data-ptpin="${patrolPts.indexOf(x)}">地図</button></div>`).join("");
+      $("ptList").querySelectorAll("[data-ptpin]").forEach(b=>b.onclick=()=>{ const x=patrolPts[+b.dataset.ptpin]; ptMap.setView(x[2][0],17); $("ptMap").scrollIntoView({behavior:"smooth",block:"center"}); }); }
+    else $("ptList").innerHTML=`<div class="src">「現在地」を押すと、近い順の一覧を出します。</div>`;
+    m.textContent=`${xs.length}か所を表示しています`;
+  }
+  $("ptMeBtn").onclick=async()=>{ if(!ptMap) return; const p=await getPos(); if(!p){ $("ptMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; }
+    if(ptMe) ptMap.removeLayer(ptMe); ptMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(ptMap); ptMap.setView([p.lat,p.lng],Math.max(ptMap.getZoom(),15)); renderPatrolTab(false); };
+  setupFull("ptFullBtn","ptMapWrap",()=>ptMap);
   if(PROD){ setTimeout(patrolLoad,3000); setInterval(patrolLoad,60*60*1000); } patrolWatch();
   function showTrainRecover(xs,test){
     trChime("ok");
