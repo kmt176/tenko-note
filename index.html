@@ -274,6 +274,7 @@ a.flink:active{background:var(--sunk)}
 .air-r{border-left-color:#D23C2F;background:rgba(210,60,47,.16)}.air-r2{border-left-color:#D23C2F}
 .air-o{border-left-color:#E8742A;background:rgba(232,116,42,.12)}.air-y{border-left-color:#E0A100}
 .air-c{opacity:.6}.air-c b{text-decoration:line-through}
+.eyebtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;font-size:18px;line-height:1;padding:4px 8px;margin-left:6px;vertical-align:middle;cursor:pointer}
 .trdist{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#2F6FD6;color:#fff;font-size:12px;vertical-align:middle;white-space:nowrap}
 .trbadge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#D23C2F;color:#fff;font-size:12px;vertical-align:middle}
 .tritem.trred .trroute{background:#D23C2F!important;border-color:#D23C2F!important}
@@ -775,6 +776,7 @@ body.rtfull{overflow:hidden}
       <h2>電車が止まったら</h2>
       <div class="src">止まった路線を選ぶと、その路線の駅（東京23区・武蔵野市・三鷹市）を地図と一覧に出します。区域の外は地図を暗くしています。<b style="color:#D23C2F">赤い駅</b>は、半径1km以内にJR・地下鉄・私鉄などの別の路線の駅がない駅です。振替輸送が使いにくく、タクシーを待つ人が出やすい駅です。どの駅からも「ルート」でGoogleマップの道案内が開きます。</div>
       <div id="trInfo" class="grp"></div>
+      <div class="btnrow" id="trBanTestRow" hidden><button class="btn" id="trBanTest">帯をテスト表示する（管理者のみ）</button></div>
       <div class="field"><label for="trainSel">止まった路線</label><select id="trainSel"><option value="">選んでください</option></select></div>
       <label class="check"><input type="checkbox" id="trOnlyRed">赤い駅（近くに別の路線がない駅）だけ出す</label>
       <div id="trMapWrap" class="mapwrap">
@@ -970,7 +972,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:09</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:18</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1073,7 +1075,7 @@ body.rtfull{overflow:hidden}
     <p>「メニュー」の上のボタンで切り替えます。どちらも合言葉なしで使えます。</p>
     <dl class="explain">
       <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。「現在地」を押すと、地図が今いる場所に移り、赤い丸で示します。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd>
-      <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（5km以内）にいるときに台数が足りないと、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
+      <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（1km以内）にいるときに台数が足りないと、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
     </dl>
   </section>
 
@@ -1786,7 +1788,7 @@ body.rtfull{overflow:hidden}
   }
   function applyRole(){
     const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
-    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin();   // 乗務員比較（試験）は管理者だけ
+    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin(); $("trBanTestRow").hidden=!isAdmin();   // 乗務員比較（試験）は管理者だけ
     if(!isAdmin()&&typeof curSub!=="undefined"&&curSub==="cmp") showSub("rest");
     $("segSv").hidden=true; if(typeof curSub!=="undefined"&&curSub==="sv") showSub("wx");   // 接遇は売上 → 勤務 の中に移した
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
@@ -3516,20 +3518,24 @@ body.rtfull{overflow:hidden}
     // 合計
     const st=settle(d,s), tot=st.total!=null?st.total:simple?+d.simple.amt||0:s.total, cnt=simple?+d.simple.cnt||0:s.count;
     const hrs=simple?(+d.simple.hrs||0)*60:s.eig;
-    $("sSum").innerHTML=`<div class="row"><span>${st.total!=null?"売上（総営収・税込）":simple?"売上（税込）":"記録の合計<small style='font-size:13px;color:var(--muted)'>（ETC・アプリ料を含む）</small>"}</span><span class="total num">${yen(tot)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
+    // 金額をかくす（お客様に見られないように。👁のボタンで切り替え、状態は覚えておく）。回数・時間は出したまま
+    let amtHid=false; try{ amtHid=localStorage.getItem("tenko.hideAmt")==="1"; }catch(e){}
+    const Y=v=>amtHid?"＊＊＊＊":yen(v);
+    $("sSum").innerHTML=`<div class="row"><span>${st.total!=null?"売上（総営収・税込）":simple?"売上（税込）":"記録の合計<small style='font-size:13px;color:var(--muted)'>（ETC・アプリ料を含む）</small>"} <button type="button" class="eyebtn" id="sAmtEye" aria-label="${amtHid?"金額を見せる":"金額をかくす"}">${amtHid?"🙈":"👁"}</button></span><span class="total num">${Y(tot)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
       <div class="sumgrid">
         <div><span class="h">回数</span><span class="v num">${cnt}回</span></div>
-        <div><span class="h">平均単価</span><span class="v num">${cnt?yen(tot/cnt):"—"}</span></div>
+        <div><span class="h">平均単価</span><span class="v num">${cnt?Y(tot/cnt):"—"}</span></div>
         ${simple?`<div><span class="h">営業時間</span><span class="v num">${hm(hrs)}</span></div>`:
         `<div><span class="h">配車／手上げ${s.noriba?"／乗り場":""}</span><span class="v num">${s.haisha}／${s.nagashi}${s.noriba?"／"+s.noriba:""}${s.renzoku?`<small style="display:block;font-size:13px;color:var(--muted)">うち連続配車 ${s.renzoku}</small>`:""}${s.thanks?`<small style="display:block;font-size:13px;color:var(--muted)">うちサンキュー ${s.thanks}</small>`:""}</span></div>
          <div><span class="h">実車時間</span><span class="v num">${hm(s.eig)}</span></div>
          <div><span class="h">空車時間</span><span class="v num">${(e=>e==null?"—":hm(e))(emptyMin(d,act))}</span></div>`}
-        <div><span class="h">税抜営収</span><span class="v num">${yen(shiftSales(k).amt*salesCfg().tax)}</span></div>
+        <div><span class="h">税抜営収</span><span class="v num">${Y(shiftSales(k).amt*salesCfg().tax)}</span></div>
         ${simple?"":(t=>`<div><span class="h">実車率（時間）</span><span class="v num">${t?pct(t.eig/t.work):"—"}</span></div>
-         <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?yen(t.net/(t.work/60)):"—"}</span></div>
-         <div><span class="h">時給（給与＋賞与）</span><span class="v num">${t?yen(t.net*salesCfg().pay/(t.work/60)):"—"}<small style="display:block;font-size:13px;color:var(--muted)">休憩・回送を除く</small></span></div>`)(workOf(k))}
+         <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?Y(t.net/(t.work/60)):"—"}</span></div>
+         <div><span class="h">時給（給与＋賞与）</span><span class="v num">${t?Y(t.net*salesCfg().pay/(t.work/60)):"—"}<small style="display:block;font-size:13px;color:var(--muted)">休憩・回送を除く</small></span></div>`)(workOf(k))}
       </div>
-      ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(payLabel(p))} <span class="num">${yen(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${yen(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${yen(s.etc)}</span></span>`:""}</div>`:""}`;
+      ${!simple&&Object.keys(s.byPay).length?`<div class="legend">${Object.entries(s.byPay).sort((a,b)=>b[1]-a[1]).map(([p,a])=>`<span>${esc(payLabel(p))} <span class="num">${Y(a)}</span></span>`).join("")}${s.app?`<span>アプリ料 <span class="num">${Y(s.app)}</span></span>`:""}${s.etc?`<span>ETC <span class="num">${Y(s.etc)}</span></span>`:""}</div>`:""}`;
+    $("sAmtEye").onclick=()=>{ try{ localStorage.setItem("tenko.hideAmt",amtHid?"":"1"); }catch(e){} renderSales(); };
 
     renderRz(k);
 
@@ -4428,7 +4434,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   setInterval(renderRzFloat,60000);
   renderRzFloat();
 
-  // ===== 専用乗り場（森ビル）の空車不足お知らせ。5km圏内に入ったら確認し、不足中なら帯で知らせる =====
+  // ===== 専用乗り場（森ビル）の空車不足お知らせ。1km圏内に入ったら確認し、不足中なら帯で知らせる（2026-10-23に5kmから1kmへ。ユーザー指定） =====
   const TAXI_SPOTS=[
     {id:"roppongi_mori",name:"六本木ヒルズ森タワー1F",lat:35.66026,lng:139.72909},
     {id:"toranomon_st",name:"虎ノ門ヒルズステーションタワー1F",lat:35.66733,lng:139.74731},
@@ -4437,11 +4443,11 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("taxiBannerClose").onclick=()=>{ $("taxiBanner").hidden=true; };
   async function taxiCheck(){
     if(!PROD||!cfg.url||offCfg.taxi) return;
-    const near=TAXI_SPOTS.filter(s=>pos&&distM([pos.lat,pos.lng],[s.lat,s.lng])<=5000);
+    const near=TAXI_SPOTS.filter(s=>pos&&distM([pos.lat,pos.lng],[s.lat,s.lng])<=1000);
     let list=near;
     if(!list.length){
       const p=await getPos(); if(!p) return;
-      list=TAXI_SPOTS.filter(s=>distM([p.lat,p.lng],[s.lat,s.lng])<=5000);
+      list=TAXI_SPOTS.filter(s=>distM([p.lat,p.lng],[s.lat,s.lng])<=1000);
     }
     if(!list.length) return;
     let j; try{ j=await post({action:"taxiStatus"}); }catch(e){ return; }
@@ -4472,10 +4478,17 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const sig=stop.map(x=>x.l+x.status).sort().join("|"); let last={}; try{ last=JSON.parse(localStorage.getItem("tenko.trainBan")||"{}"); }catch(e){}
     if(last.sig===sig&&Date.now()-last.at<30*60*1000) return;   // 同じ止まり方は30分あけてから
     try{ localStorage.setItem("tenko.trainBan",JSON.stringify({sig,at:Date.now()})); }catch(e){}
+    showTrainBanner(stop,false);
+  }
+  function showTrainBanner(stop,test){
     const have=new Set(TRAIN_ALL.map(x=>x.l)); trainBanLine=(stop.find(x=>have.has(x.l))||{}).l||"";
-    $("trainBannerText").textContent=`🚃 電車が止まりました：${stop.slice(0,2).map(x=>`${x.l}（${x.status||"運転見合わせ"}）`).join("、")}${stop.length>2?` ほか${stop.length-2}路線`:""}　押すと近くに別の路線がない駅を出します ›`;
+    $("trainBannerText").textContent=`🚃 電車が止まりました：${stop.slice(0,2).map(x=>`${x.l}（${x.status||"運転見合わせ"}）`).join("、")}${stop.length>2?` ほか${stop.length-2}路線`:""}${test?"　※テスト表示":""}　押すと近くに別の路線がない駅を出します ›`;
     $("trainBanner").hidden=false;
   }
+  // テスト表示（管理者のみ）：今止まっている路線があればそれ、なければ試しの路線で帯を出す（30分の間隔・設定のオフは見ない）
+  $("trBanTest").onclick=async()=>{ let stop=[];
+    try{ const j=await post({action:"trainInfo"}); if(j&&j.ok) stop=(j.items||[]).map(x=>{ const id=x.railway.replace(/^odpt\.Railway:/,""); return Object.assign({},x,{l:ODPT_LINE[id]||id.replace(/^[^.]*\./,""),sev:trSev(x)}); }).filter(x=>x.sev===2); }catch(e){}
+    showTrainBanner(stop.length?stop:[{l:"都営三田線",status:"運転見合わせ"}],true); window.scrollTo(0,0); };
   if(PROD){ setTimeout(trainCheck,10000); setInterval(trainCheck,3*60*1000); }
   // 現地に行かなくても確認できる、テスト用のボタン（距離・30分の間隔は見ない）
   $("taxiTestBtn").onclick=async()=>{
