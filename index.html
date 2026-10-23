@@ -259,6 +259,8 @@ a.flink:active{background:var(--sunk)}
 .busrow{border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px}.busrow.stop{border-left-color:#D23C2F;background:rgba(210,60,47,.08)}.busrow small{display:block;color:var(--muted);font-size:13px;margin-top:2px}.bustag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--warn);color:#fff;font-size:13px;font-weight:700}.busrow.stop .bustag{background:#D23C2F}.busguess{display:inline-block;margin-left:4px;padding:0 6px;border:1px dashed var(--muted);border-radius:6px;font-size:11px;color:var(--muted)}
 .shipnext{border:2px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}.shipnext .big{font-size:30px;font-weight:800}.shipnext .big span{font-size:16px;margin-left:10px;color:var(--accent)}.shipnext.s-late{border-color:#E8890C}.shipnext.s-cond{border-color:#E8890C}
 .shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+.noticepop{position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}.noticepop[hidden]{display:none}.noticebox{background:var(--surface);color:var(--ink);border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}.noticebox b{font-size:18px}.noticebox small{color:var(--muted)}#noticeText{font-size:16px;line-height:1.6;white-space:pre-wrap}.noticebox .btn{align-self:flex-end;min-width:120px}
+.ntrow{border-top:1px solid var(--line);padding:8px 0}.ntrow small{color:var(--muted)}
 .menuback{display:flex;align-items:center;gap:10px;margin:0 0 8px}.menuback b{font-size:17px}
 .mgrp{font-size:14px;color:var(--muted);margin:14px 0 6px}.mgrp:first-child{margin-top:0}
 .mtiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -425,6 +427,7 @@ body.rtfull{overflow:hidden}
 .taxibanner button{background:transparent;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;flex:none}
 </style>
 
+<div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
 <div id="trainBanner" class="trainbanner" hidden role="status">
   <button type="button" id="trainBannerText"></button>
   <button type="button" id="trainBannerClose" aria-label="閉じる">×</button>
@@ -969,6 +972,17 @@ body.rtfull{overflow:hidden}
           <div class="src">見出し・説明文を空にすると、もとの文言に戻ります。全員のアプリに反映されます。</div>
           <div class="btnrow"><button class="btn primary" id="aSave">保存</button><button class="btn" id="aReload">読み直す</button></div>
           <div class="msg" id="aSaveMsg" role="status"></div>
+          <h3 style="margin-top:14px">全員への設定・お知らせ</h3>
+          <div class="field"><label for="aRzLock">連続配車の週の目標（60%など）</label><select id="aRzLock"><option value="">各自の設定にまかせる</option><option value="off">全員 使わない（固定）</option></select></div>
+          <div class="src">「全員 使わない」にすると、みんなのアプリで週の目標のチェックが外れ、各自では付けられなくなります（コアタイムの確認になります）。次にアプリを開いたとき（開いている人は15分以内）に変わります。</div>
+          <div class="btnrow"><button class="btn primary" id="aRzLockSave">この設定を保存</button></div>
+          <div class="msg" id="aRzLockMsg" role="status"></div>
+          <div class="field" style="margin-top:10px"><label for="aNotice">お知らせの文（みんなのアプリの画面の真ん中に出ます。「読んだ」を押すと消えます）</label><textarea id="aNotice" rows="3" maxlength="400"></textarea></div>
+          <div class="pair"><div class="field"><label for="aNoticeTo">送る相手</label><select id="aNoticeTo"><option value="all">全員</option></select></div>
+            <div class="field"><label for="aNoticeDays">出す期間</label><select id="aNoticeDays"><option value="1">1日</option><option value="3" selected>3日</option><option value="7">7日</option><option value="30">30日</option></select></div></div>
+          <div class="btnrow"><button class="btn primary" id="aNoticeSend">お知らせを送る</button></div>
+          <div class="msg" id="aNoticeMsg" role="status"></div>
+          <div id="aNoticeList"></div>
           <h3 style="margin-top:14px">車種ごとの設定</h3>
           <div class="src">全員のアプリに反映されます（開いたときに読み込みます）。乗務員が自分で変えた値（給与の率・余裕時間など）は、その人の値が優先されます。</div>
           <div style="overflow-x:auto"><table class="cartbl" id="aCars"></table></div>
@@ -1007,6 +1021,10 @@ body.rtfull{overflow:hidden}
     <div class="src">差額＝給与明細の実営業収入−アプリの税抜総営収（公出を除く）。全勤務の差＝（実営業収入＋公出営収）−アプリの税抜総営収（全勤務）。公出営収は会社が平均の売上などから決めるので、公出の日の実際の売上とは違います。その分は「差額」には出ますが、「全勤務の差」には出ません。売上がきちんと数えられているかは「全勤務の差」で見てください。</div>
   </section>
 
+  <section class="card" id="noticeCard" style="margin-top:18px">
+    <h2>管理者からのお知らせ</h2>
+    <div id="noticeList"></div>
+  </section>
   <section class="card" id="shareCard" style="margin-top:18px">
     <h2>このアプリを紹介する</h2>
     <div class="src">仲間に点呼ノートを紹介するときに使ってください。無料で、アプリストアからのインストールも要りません。</div>
@@ -1021,7 +1039,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 20:09</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 20:19</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1261,6 +1279,9 @@ body.rtfull{overflow:hidden}
   const carOf=t=>Object.assign({},CAR_DEF[t]||CAR_DEF.jpn,(carsCfg&&carsCfg[t])||{});
   // 自分で画面に出さないと決めた機能（記録・計算・データはそのまま。表示だけ止める）
   let offCfg={}; try{ offCfg=JSON.parse(localStorage.getItem("tenko.off")||"{}")||{}; }catch(e){}
+  // 管理者が全員に決めた設定（連続配車の週の目標を全員「使わない」に固定、など）。開いたときにサーバーから受け取る
+  let adminLock={}; try{ adminLock=JSON.parse(localStorage.getItem("tenko.adminLock")||"{}")||{}; }catch(e){}
+  if(adminLock.rzweek) offCfg.rzweek=true;
   const car=()=>{ const c=carOf(carType);
     if(offCfg.rz){ c.rz=false; c.kinds=c.kinds.filter(k=>k!=="連続配車"); }
     if(offCfg.thanks) c.thanks=false;
@@ -1661,9 +1682,9 @@ body.rtfull{overflow:hidden}
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
   const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
-    el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
+    el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>{ const lk=k==="rzweek"&&adminLock.rzweek; return `<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}${lk?" disabled":""}>${escC(label)}${lk?`<br><small style="color:var(--warn)">管理者が全員「使わない」にしています</small>`:""}</label>`; }).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
-      try{ localStorage.setItem("tenko.off",JSON.stringify(offCfg)); }catch(e){}
+      try{ const sv=Object.assign({},offCfg); if(adminLock.rzweek){ let st={}; try{ st=JSON.parse(localStorage.getItem("tenko.off")||"{}")||{}; }catch(e){} if(st.rzweek) sv.rzweek=true; else delete sv.rzweek; } localStorage.setItem("tenko.off",JSON.stringify(sv)); }catch(e){}
       if(b.dataset.off==="taxi"&&!b.checked) $("taxiBanner").hidden=true;
       if(b.dataset.off==="trainban"&&!b.checked) $("trainBanner").hidden=true;
       if(b.dataset.off==="wake") wakeSet();
@@ -1685,10 +1706,33 @@ body.rtfull{overflow:hidden}
     el.innerHTML=CAR_TYPES.map(t=>`<button role="tab" data-car="${t}" aria-selected="${t===carType}">${escC(carOf(t).name)}</button>`).join("");
     el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>setCar(b.dataset.car)); }
   // 管理者が保存した車種の設定を読み込む（合言葉なしで誰でも読める。書けるのは管理者だけ）
+  // ===== 管理者からのお知らせ：開いたとき（と開いている間15分ごと）に受け取り、まだ読んでいないものを画面の真ん中に出す =====
+  let notices=[], carsAt=0; try{ notices=JSON.parse(localStorage.getItem("tenko.notices")||"[]")||[]; }catch(e){}
+  const noticeRead=()=>{ try{ return JSON.parse(localStorage.getItem("tenko.noticeRead")||"[]")||[]; }catch(e){ return []; } };
+  const ntDate=iso=>{ const d=new Date(iso); return isNaN(d)?"":`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  function showNotice(){
+    const rd=noticeRead(), now=Date.now(), x=notices.filter(n=>!rd.includes(n.id)&&new Date(n.until).getTime()>now).slice(-1)[0];   // 古いものから順に1つずつ
+    const box=$("noticePop"); if(!box) return;
+    if(!x){ box.hidden=true; return; }
+    $("noticeText").textContent=x.text; $("noticeDate").textContent=`${ntDate(x.at)} 管理者から`;
+    box.hidden=false;
+    $("noticeOk").onclick=()=>{ const r=noticeRead(); if(!r.includes(x.id)) r.push(x.id); try{ localStorage.setItem("tenko.noticeRead",JSON.stringify(r.slice(-50))); }catch(e){} box.hidden=true; renderNoticeCard(); setTimeout(showNotice,300); };
+  }
+  function renderNoticeCard(){
+    const el=$("noticeList"); if(!el) return; const rd=noticeRead();
+    el.innerHTML=notices.length?notices.map(n=>`<div class="ntrow"><small>${ntDate(n.at)}${rd.includes(n.id)?"":"・<b style=\"color:var(--accent)\">未読</b>"}</small><div>${esc(n.text).replace(/\n/g,"<br>")}</div></div>`).join(""):`<div class="src">今、お知らせはありません。</div>`;
+  }
+  setInterval(()=>{ if(!document.hidden) loadCars(); },15*60*1000);
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&Date.now()-carsAt>5*60*1000) loadCars(); });
   async function loadCars(){
     if(!cfg.url) return;
-    try{ const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"cars"})}); const j=await res.json();
-      if(!j.ok) return; const before=JSON.stringify(carsCfg); carsCfg=j.cars||null;
+    try{ const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"cars",passcode:cfg.npass||""})}); const j=await res.json();
+      if(!j.ok) return; carsAt=Date.now(); const before=JSON.stringify(carsCfg); carsCfg=j.cars||null;
+      if(j.rzWeekLock!=null){ const lk=j.rzWeekLock==="off";
+        if(!!adminLock.rzweek!==lk){ adminLock.rzweek=lk; try{ localStorage.setItem("tenko.adminLock",JSON.stringify(adminLock)); }catch(e){}
+          if(lk) offCfg.rzweek=true; else { let st={}; try{ st=JSON.parse(localStorage.getItem("tenko.off")||"{}")||{}; }catch(e){} if(st.rzweek) offCfg.rzweek=true; else delete offCfg.rzweek; }
+          renderOffBox(); render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); } }
+      if(Array.isArray(j.notices)){ notices=j.notices; try{ localStorage.setItem("tenko.notices",JSON.stringify(notices)); }catch(e){} showNotice(); renderNoticeCard(); }
       try{ localStorage.setItem("tenko.cars",JSON.stringify(carsCfg)); }catch(e){}
       if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
       // 接遇チェックの見出し・説明文（全員に出すので、ここで受け取る。古いサーバーでは項目がないので変えない）
@@ -1745,6 +1789,23 @@ body.rtfull{overflow:hidden}
       applyCarConsts(); applyLongDefaults(); fillCarSel(); drawCars(carsCfg); render(); m.textContent=msg;
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度押してください"; }
   }
+  // 管理者の画面：全員の設定（連続配車の週の目標）とお知らせ
+  function drawAdminNotice(j){
+    if(j.rzWeekLock!=null) $("aRzLock").value=j.rzWeekLock||"";
+    const to=$("aNoticeTo").value||"all", gs=(j.groups||[]).filter(g=>g.pass);
+    $("aNoticeTo").innerHTML=`<option value="all">全員</option>`+gs.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}（仲間のグループ）</option>`).join(""); $("aNoticeTo").value=[...$("aNoticeTo").options].some(o=>o.value===to)?to:"all";
+    const gname=id=>id==="all"?"全員":((j.groups||[]).find(g=>g.id===id)||{}).name||id;
+    $("aNoticeList").innerHTML=(j.notices||[]).length?`<div class="src">今出しているお知らせ</div>`+j.notices.map(n=>`<div class="ntrow"><small>${ntDate(n.at)}〜${ntDate(n.until)}・${esc(gname(n.to))}あて</small><div>${esc(n.text).replace(/\n/g,"<br>")}</div><div class="btnrow" style="margin:4px 0 0"><button class="btn" data-ntdel="${esc(n.id)}">取り消す</button></div></div>`).join(""):"";
+    $("aNoticeList").querySelectorAll("[data-ntdel]").forEach(b=>b.onclick=async()=>{ if(!confirm("このお知らせを取り消しますか？（まだ読んでいない人には出なくなります）")) return;
+      try{ const r=await post({action:"admin",op:"delNotice",adminPass:cfg.apass,id:b.dataset.ntdel}); if(r.ok){ drawAdminNotice(r); loadCars(); } else $("aNoticeMsg").textContent=r.error||"取り消せませんでした"; }catch(e){ $("aNoticeMsg").textContent="通信できませんでした"; } });
+  }
+  $("aRzLockSave").onclick=async()=>{ const m=$("aRzLockMsg"); m.textContent="保存しています…";
+    try{ const r=await post({action:"admin",op:"saveRzLock",adminPass:cfg.apass,lock:$("aRzLock").value}); if(!r.ok){ m.textContent=r.error||"保存できませんでした"; return; }
+      drawAdminNotice(r); m.textContent=r.rzWeekLock==="off"?"保存しました。みんなのアプリで週の目標が「使わない」になります":"保存しました。週の目標は各自の設定になります"; loadCars(); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; } };
+  $("aNoticeSend").onclick=async()=>{ const m=$("aNoticeMsg"), text=$("aNotice").value.trim(); if(!text){ m.textContent="お知らせの文を入れてください"; return; }
+    if(!confirm(`「${$("aNoticeTo").selectedOptions[0].textContent}」にお知らせを送りますか？`)) return; m.textContent="送っています…";
+    try{ const r=await post({action:"admin",op:"saveNotice",adminPass:cfg.apass,text,to:$("aNoticeTo").value,days:+$("aNoticeDays").value}); if(!r.ok){ m.textContent=r.error||"送れませんでした"; return; }
+      $("aNotice").value=""; drawAdminNotice(r); m.textContent="送りました。次にアプリを開いたとき（開いている人は15分以内）に出ます"; loadCars(); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; } };
   function drawAdmin(j){
     $("aGroups").innerHTML=j.groups.map((g,i)=>`<div class="agrp" data-i="${i}"><span class="num">${i+1}</span>
       <input type="text" data-a="name" value="${esc(g.name)}" maxlength="20" aria-label="グループ${i+1}の名前">
@@ -1752,6 +1813,7 @@ body.rtfull{overflow:hidden}
       <span class="st">${g.pass?`直近3日の速報 ${g.flash}件・${g.people}人`:"使っていない"}</span>
       <label class="check" style="grid-column:2/-1"><input type="checkbox" data-a="csv" ${g.csv?"checked":""}><span class="vtext">このグループのメンバーに、月度の乗車明細のExcel用（CSV）出力を許可する（自分の記録だけ）</span></label></div>`).join("");
     $("aLong").value=j.longPass||"";
+    drawAdminNotice(j);
     $("aLongInfo").textContent=`ロング判定の今日の件数：${j.longToday}／${j.longLimit}件`;
     $("aFlashMin").value=j.flashMin||10000;
 
@@ -2051,7 +2113,7 @@ body.rtfull{overflow:hidden}
     ["設定・その他",[["set","⚙️","設定・バックアップ"]]]];
   const MENU_ALL={}; MENU_GROUPS.forEach(([,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
-  const SET_IDS=["cfgBox","bkBox","calcBox","payDiffCard","shareCard"], setPh={};
+  const SET_IDS=["noticeCard","cfgBox","bkBox","calcBox","payDiffCard","shareCard"], setPh={};
   SET_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
   const menuVisible=k=>{ if(k==="set") return true; const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
   function renderMenuHome(){
