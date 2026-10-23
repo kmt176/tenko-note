@@ -251,6 +251,11 @@ a.flink:active{background:var(--sunk)}
 .tritem .btn{white-space:nowrap;min-width:64px;text-align:center}
 .trroute{background:#7B3FA0!important;border-color:#7B3FA0!important;color:#fff!important;text-decoration:none}
 .tritem.trred{border-left-color:#D23C2F;background:rgba(210,60,47,.12)}
+.trinfo{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;border:0;border-left:6px solid;border-radius:10px;padding:10px 12px;margin-top:6px;font:inherit;color:var(--ink)}
+.trinfo small{font-size:13px;color:var(--muted);line-height:1.4}
+.trinfo .trgo{color:var(--accent);font-weight:700}
+.trstop{border-left-color:#D23C2F;background:rgba(210,60,47,.14)}
+.trlate{border-left-color:#E8742A;background:rgba(232,116,42,.14)}
 .trdist{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#2F6FD6;color:#fff;font-size:12px;vertical-align:middle;white-space:nowrap}
 .trbadge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#D23C2F;color:#fff;font-size:12px;vertical-align:middle}
 .tritem.trred .trroute{background:#D23C2F!important;border-color:#D23C2F!important}
@@ -721,6 +726,7 @@ body.rtfull{overflow:hidden}
     <section class="card">
       <h2>電車が止まったら</h2>
       <div class="src">止まった路線を選ぶと、その路線の駅（東京23区・武蔵野市・三鷹市）を地図と一覧に出します。区域の外は地図を暗くしています。<b style="color:#D23C2F">赤い駅</b>は、半径1km以内にJR・地下鉄・私鉄などの別の路線の駅がない駅です。振替輸送が使いにくく、タクシーを待つ人が出やすい駅です。どの駅からも「ルート」でGoogleマップの道案内が開きます。</div>
+      <div id="trInfo" class="grp"></div>
       <div class="field"><label for="trainSel">止まった路線</label><select id="trainSel"><option value="">選んでください</option></select></div>
       <label class="check"><input type="checkbox" id="trOnlyRed">赤い駅（近くに別の路線がない駅）だけ出す</label>
       <div id="trMapWrap" class="mapwrap">
@@ -916,7 +922,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-21 23:27</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 11:41</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1915,7 +1921,7 @@ body.rtfull{overflow:hidden}
     if(KIND[s]&&!$("tabLong").hidden) loadInfo(KIND[s],false);
     if(s==="rest"&&!$("tabLong").hidden&&typeof loadRest==="function") loadRest();
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
-    if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function") renderTrainTab(true);
+    if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
   }
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
@@ -2229,6 +2235,33 @@ body.rtfull{overflow:hidden}
     }
   }
   setupFull("cmpFullBtn","cmpMapWrap",()=>cmpMap); setupFull("cmpFull2Btn","cmpMap2Wrap",()=>cmpMap2);
+
+  // ===== 電車の運行情報（公共交通オープンデータセンター。サーバーの trainInfo を通して取る） =====
+  // 路線のID（odpt.Railway:会社.路線）→ このタブの路線名。ない路線（都電・舎人ライナーなど）は、そのまま名前を出す
+  const ODPT_LINE={"TokyoMetro.Ginza":"銀座線","TokyoMetro.Marunouchi":"丸ノ内線","TokyoMetro.MarunouchiBranch":"丸ノ内線","TokyoMetro.Hibiya":"日比谷線","TokyoMetro.Tozai":"東西線","TokyoMetro.Chiyoda":"千代田線","TokyoMetro.Yurakucho":"有楽町線","TokyoMetro.Hanzomon":"半蔵門線","TokyoMetro.Namboku":"南北線","TokyoMetro.Fukutoshin":"副都心線",
+    "Toei.Asakusa":"都営浅草線","Toei.Mita":"都営三田線","Toei.Shinjuku":"都営新宿線","Toei.Oedo":"都営大江戸線","Toei.Arakawa":"都電荒川線","Toei.NipporiToneri":"日暮里・舎人ライナー",
+    "JR-East.Yamanote":"JR山手線","JR-East.KeihinTohokuNegishi":"JR京浜東北線","JR-East.KeihinTohoku":"JR京浜東北線","JR-East.SaikyoKawagoe":"JR埼京線","JR-East.Saikyo":"JR埼京線","JR-East.ChuoRapid":"JR中央線（快速）","JR-East.Chuo":"JR中央線（快速）","JR-East.ChuoSobuLocal":"JR中央・総武線（各駅停車）",
+    "JR-East.SobuRapid":"JR総武線（快速）","JR-East.Joban":"JR常磐線","JR-East.JobanRapid":"JR常磐線","JR-East.JobanLocal":"JR常磐線","JR-East.Keiyo":"JR京葉線","JR-East.Utsunomiya":"JR宇都宮線・高崎線","JR-East.Takasaki":"JR宇都宮線・高崎線","JR-East.Tokaido":"JR東海道線","JR-East.ShonanShinjuku":"JR湘南新宿ライン"};
+  let trInfoAt=0;
+  const trSev=x=>/見合わせ|運休|停止|不通/.test(x.status+x.text)?2:/遅|乱れ|変更|直通運転を中止|一部列車/.test(x.status+x.text)?1:0;   // 2＝止まっている、1＝遅れ、0＝平常
+  async function loadTrainInfo(force){
+    const box=$("trInfo"); if(!box) return; if(!force&&Date.now()-trInfoAt<60000) return; trInfoAt=Date.now();
+    box.innerHTML=`<div class="geo">運行情報を読み込んでいます…</div>`;
+    try{ const j=await post({action:"trainInfo"}); if(!j.ok){ box.innerHTML=`<div class="geo">${esc(j.error||"運行情報を読み込めませんでした")}</div>`; return; }
+      const rows=(j.items||[]).map(x=>{ const id=x.railway.replace(/^odpt\.Railway:/,""); return Object.assign({},x,{id,l:ODPT_LINE[id]||id.replace(/^[^.]*\./,""),sev:trSev(x)}); });
+      const bad=rows.filter(x=>x.sev>0).sort((a,b)=>b.sev-a.sev), have=new Set(TRAIN_ALL.map(x=>x.l));
+      const ts=new Date(j.updatedAt), hm2=`${String(ts.getHours()).padStart(2,"0")}:${String(ts.getMinutes()).padStart(2,"0")}`;
+      box.innerHTML=`<div class="row" style="align-items:center;gap:8px"><b>今の運行情報</b><span style="display:flex;align-items:center;gap:8px"><small style="color:var(--muted)">${hm2}時点</small><button class="btn" id="trInfoReload">更新</button></span></div>`+
+        (bad.length?bad.map(x=>`<button class="trinfo ${x.sev===2?"trstop":"trlate"}" ${have.has(x.l)?`data-trline="${esc(x.l)}"`:"disabled"}><b>${x.sev===2?"🔴":"🟠"} ${esc(x.l)}　${esc(x.status||"お知らせ")}</b><small>${esc(x.text)}</small>${have.has(x.l)?`<small class="trgo">押すとこの路線の駅を出します ›</small>`:""}</button>`).join("")
+          :`<div class="geo">🟢 東京メトロ・都営・JR東日本（${rows.length}路線）は、いま平常運転です</div>`)+
+        (j.errs&&j.errs.length?`<div class="src">一部の会社の情報を読めませんでした（${esc(j.errs.join("、"))}）</div>`:"")+
+        `<div class="src">出典：公共交通オープンデータセンター。情報は各社の発表で、遅れて届くことがあります。</div>`;
+      $("trInfoReload").onclick=()=>loadTrainInfo(true);
+      box.querySelectorAll("[data-trline]").forEach(b=>b.onclick=()=>{ $("trainSel").value=b.dataset.trline; try{ localStorage.setItem("tenko.trainLine",b.dataset.trline); }catch(e){} renderTrainTab(false); $("trMap").scrollIntoView({behavior:"smooth",block:"start"}); });
+    }catch(e){ box.innerHTML=`<div class="geo">運行情報を読み込めませんでした。電波を確認してください</div>`; }
+  }
+  // タブを開いている間は3分ごとに新しくする
+  setInterval(()=>{ if(curSub==="train"&&!$("tabLong").hidden) loadTrainInfo(true); },180000);
   $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
   $("evReload").onclick=()=>renderEv(true);
   $("evCalBtn").onclick=()=>{ $("evCal").hidden=!$("evCal").hidden; };
