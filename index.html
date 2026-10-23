@@ -963,7 +963,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:45</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:59</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2361,13 +2361,13 @@ body.rtfull{overflow:hidden}
     const arr=airKind==="arr", all=(j.items||[]).filter(x=>x.ap===airAp).map(airRow);
     airUp=all.filter(x=>x.rel>=-30).sort((a,b)=>a.rel-b.rel); airFillFilters();   // これからの便（30分前より後）
     const up=airFilter(airUp,true), early=x=>x.when!=null&&x.when>=4*60&&x.when<7*60;
-    const CAT={late:{l:arr?"深夜着":"早朝発",f:x=>!x.cancel&&(arr?x.late:early(x))},cancel:{l:"欠航",f:x=>x.cancel},delay:{l:"遅れ",f:x=>!x.cancel&&x.dl>=30}};
+    const CAT={ok:{l:"正常",f:x=>!x.cancel&&x.dl<30},late:{l:arr?"深夜着":"早朝発",f:x=>!x.cancel&&(arr?x.late:early(x))},cancel:{l:"欠航",f:x=>x.cancel},delay:{l:"遅れ",f:x=>!x.cancel&&x.dl>=30}};
     const row=x=>{ const st=AIR_ST[x.st]||x.st||"", to=AIR_NAME[x.from]||x.from||"", tm=x.e&&x.e!==x.s?`<s>${esc(x.s)}</s> → <b>${esc(x.e)}</b>`:x.a?`${esc(x.s)} → <b>${esc(x.a)}</b>`:`<b>${esc(x.s)}</b>`;
       return `<div class="airrow air-${x.lvl}"><div class="airtm num">${tm}${x.dl>=5&&!x.cancel?`<small>${x.dl}分遅れ</small>`:""}</div><div class="airmid"><b>${esc(x.f)}</b> <small>${esc(to)}${x.term?"・"+esc(x.term.replace("Terminal","第")+"T"+(x.tguess?"（推定）":"")):""}</small>${x.sum||x.txt?`<br><small class="airnote">${esc(x.sum)} ${esc(x.txt)}</small>`:""}</div><div class="airst">${x.late&&!x.cancel?`<span class="airbadge">深夜着</span>`:""}${esc(st)}</div></div>`; };
     // ① ターミナルの枠：行（深夜着・欠航・遅れ）を押すと、下にその便が出る。ルートは「ルート ›」だけ
-    $("airCards").innerHTML=Object.entries(AIR_TERM[airAp]).map(([k,[la,ln,nm]])=>{ const xs=up.filter(x=>x.term===k), n={late:xs.filter(CAT.late.f).length,cancel:xs.filter(CAT.cancel.f).length,delay:xs.filter(CAT.delay.f).length};
+    $("airCards").innerHTML=Object.entries(AIR_TERM[airAp]).map(([k,[la,ln,nm]])=>{ const xs=up.filter(x=>x.term===k), n={ok:xs.filter(CAT.ok.f).length,late:xs.filter(CAT.late.f).length,cancel:xs.filter(CAT.cancel.f).length,delay:xs.filter(CAT.delay.f).length};
       const line=c=>`<button class="aircat${airSel&&airSel.term===k&&airSel.cat===c?" on":""}" data-sel="${k}|${c}">${CAT[c].l} <b class="num"${c==="cancel"&&n[c]?' style="color:#D23C2F"':""}>${n[c]}</b></button>`;
-      return `<div class="aircard${n.late?" hot":""}"><b>${esc(nm.replace(/^.. /,"").replace("ターミナル",""))}</b>${line("late")}${line("cancel")}${line("delay")}<a href="https://www.google.com/maps/dir/?api=1&destination=${la},${ln}&travelmode=driving" target="_blank" rel="noopener">ルート ›</a></div>`; }).join("");
+      return `<div class="aircard${n.late?" hot":""}"><b>${esc(nm.replace(/^.. /,"").replace("ターミナル",""))} <small style="font-weight:400;color:var(--muted)">これから${xs.length}便</small></b>${line("ok")}${line("late")}${line("cancel")}${line("delay")}<a href="https://www.google.com/maps/dir/?api=1&destination=${la},${ln}&travelmode=driving" target="_blank" rel="noopener">ルート ›</a></div>`; }).join("");
     $("airCards").querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>{ const [term,cat]=b.dataset.sel.split("|"); airSel=airSel&&airSel.term===term&&airSel.cat===cat?null:{term,cat}; renderAir(); if(airSel) $("airAttn").scrollIntoView({behavior:"smooth",block:"start"}); });
     // ② 時間帯ごとの便の数（羽田だけ。これから8時間）
     if(airAp==="HND"){ const now=new Date().getHours(), hs=[...Array(9)].map((_,i)=>(now+i)%24), cnt=h=>airFilter(airUp).filter(x=>!x.cancel&&x.when!=null&&Math.floor(x.when/60)===h).length, mx=Math.max(1,...hs.map(cnt));
