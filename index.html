@@ -259,6 +259,12 @@ a.flink:active{background:var(--sunk)}
 .busrow{border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px}.busrow.stop{border-left-color:#D23C2F;background:rgba(210,60,47,.08)}.busrow small{display:block;color:var(--muted);font-size:13px;margin-top:2px}.bustag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--warn);color:#fff;font-size:13px;font-weight:700}.busrow.stop .bustag{background:#D23C2F}.busguess{display:inline-block;margin-left:4px;padding:0 6px;border:1px dashed var(--muted);border-radius:6px;font-size:11px;color:var(--muted)}
 .shipnext{border:2px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}.shipnext .big{font-size:30px;font-weight:800}.shipnext .big span{font-size:16px;margin-left:10px;color:var(--accent)}.shipnext.s-late{border-color:#E8890C}.shipnext.s-cond{border-color:#E8890C}
 .shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+.menuback{display:flex;align-items:center;gap:10px;margin:0 0 8px}.menuback b{font-size:17px}
+.mgrp{font-size:14px;color:var(--muted);margin:14px 0 6px}.mgrp:first-child{margin-top:0}
+.mtiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:86px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font-size:14px;font-weight:700;line-height:1.25;padding:8px 4px;text-align:center;cursor:pointer}
+.mtile .mi{font-size:28px;line-height:1}
+#setSlot>details,#setSlot>section{margin-top:12px}
 .airfilter .airhrbtn{grid-column:1/-1;min-height:44px;font-size:15px;text-align:left}.airfilter .airhrbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 .airhrs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.airhrs button{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:15px}.airhrs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}.airhrs .airhrok{grid-column:1/-1}
 .airfilter{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.airfilter select,.airfilter input{width:100%;min-height:44px;font-size:15px}.airfilter input{grid-column:1/-1}
@@ -469,7 +475,7 @@ body.rtfull{overflow:hidden}
     </div>
   </details>
 
-  <details>
+  <details id="bkBox">
     <summary>バックアップ・機種変更</summary>
     <div class="body">
       <div>「バックアップを作る」→「コピー」か「ファイルに保存」で、点呼と売上をまとめたバックアップを、メモ・OneDrive・iCloud Driveなどに保存してください。ファイルにした場合、復元は「ファイルから読み込む」でそのファイルを選ぶだけです。文字は暗号化されているので、見ても内容は分かりません。新しいスマホでは、貼り付けて「復元」を押します。</div>
@@ -667,7 +673,7 @@ body.rtfull{overflow:hidden}
       <div id="mHour"></div>
     </section>
     <div class="list" id="mList"></div>
-    <details>
+    <details id="calcBox">
       <summary>計算の設定</summary>
       <div class="body">
         <div class="pair">
@@ -683,6 +689,9 @@ body.rtfull{overflow:hidden}
 </div>
 
 <div class="wrap" id="tabLong" hidden>
+  <div id="menuBack" class="menuback" hidden><button type="button" class="btn" id="menuBackBtn">← メニュー</button><b id="menuBackTitle"></b></div>
+  <div id="menuHome" hidden></div>
+  <div id="subSet" hidden><section class="card"><h2>設定・バックアップ</h2><div class="src">合言葉・車種・画面に出す機能・計算の設定・バックアップを、ここにまとめています。</div></section><div id="setSlot"></div></div>
   <div class="seg" role="tablist" aria-label="メニュー">
     <button role="tab" data-sub="long" id="segLong" aria-selected="true">ロング判定</button>
     <button role="tab" data-sub="wx" aria-selected="false" hidden>天気</button>
@@ -922,6 +931,9 @@ body.rtfull{overflow:hidden}
         <h3>画面に出す機能</h3>
         <div class="src">使わない機能のチェックを外すと、画面に出なくなります。記録や計算、データはそのまま残るので、あとでチェックを付ければ元に戻ります。このスマホだけの設定です。</div>
         <div id="offBox"></div>
+      <h3 style="margin-top:12px">メニューの表示</h3>
+      <div class="seg" role="tablist" aria-label="メニューの表示" id="menuStyleSeg"><button role="tab" data-ms="tile" aria-selected="true">ボタンの一覧（新）</button><button role="tab" data-ms="bar" aria-selected="false">今までの横並び</button></div>
+      <div class="src">「今までの横並び」にすると、前のメニューの形に戻ります（設定・バックアップも元の場所に戻ります）。このスマホだけの設定です。</div>
       </div>
       <div>休憩場・専用乗り場は、合言葉なしで使えます。合言葉を知っている人は、ここに入れると使える機能が増えます。このスマホの中に保存されます。ホーム画面に追加した場合は、必ずホーム画面のアイコンから開いて設定してください（iPhoneはブラウザとホーム画面で保存場所が別になります）。</div>
       <div class="field"><label for="lUrl">Apps ScriptのURL</label><input type="url" id="lUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
@@ -1009,7 +1021,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:19</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:34</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1846,6 +1858,7 @@ body.rtfull{overflow:hidden}
     if(typeof setView==="function"){ const can=isNakama()||isAdmin(); $("sViewFlash").hidden=!can; if(!can&&sView==="flash") setView("day"); }
     if(!mem&&curSub==="long") showSub("wx");
     renderOffBox(); renderPayDiff();
+    if(typeof menuStyle!=="undefined"&&menuStyle==="tile"&&!$("menuHome").hidden) renderMenuHome();
   }
 
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -2016,6 +2029,7 @@ body.rtfull{overflow:hidden}
 
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
+    if(typeof menuStyle!=="undefined"&&menuStyle==="tile"){ $("menuHome").hidden=true; $("subSet").hidden=true; $("menuBack").hidden=false; $("menuBackTitle").textContent=MENU_ALL[s]?MENU_ALL[s][1]+" "+MENU_ALL[s][2]:""; }
     document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sub===s));
     try{ localStorage.setItem("tenko.sub",s); }catch(e){}
     if(KIND[s]&&!$("tabLong").hidden) loadInfo(KIND[s],false);
@@ -2027,6 +2041,52 @@ body.rtfull{overflow:hidden}
     if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function") loadShip(false);
     if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function"){ loadAir(false); loadAir(false,airKind==="arr"?"dep":"arr"); }   // 到着・出発の両方を先に読む
   }
+  // ===== メニューの形：ボタンの一覧（新・初期値）か、今までの横並び（設定で切り替え。2026-10-23） =====
+  // ボタンの一覧では、メニューを開くと目的別のボタンが並び、押すとその画面へ（左上の「← メニュー」で戻る）。
+  // 設定（合言葉・車種・画面に出す機能・計算の設定・バックアップなど）は「設定・バックアップ」の画面にまとめる。横並びに戻すと元の場所に戻す
+  const MENU_GROUPS=[
+    ["営業中に見る",[["event","🎫","イベント"],["taxi","🏢","専用乗り場"],["train","🚃","電車が止まったら"],["air","✈️","飛行機"],["rest","☕","休憩場"]]],
+    ["お客様の対応",[["long","📏","ロング判定"]]],
+    ["管理者だけ（試験）",[["cmp","📊","乗務員比較"],["bus","🚌","都営バス"],["ship","🚢","竹芝の船"]]],
+    ["設定・その他",[["set","⚙️","設定・バックアップ"]]]];
+  const MENU_ALL={}; MENU_GROUPS.forEach(([,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
+  let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
+  const SET_IDS=["cfgBox","bkBox","calcBox","payDiffCard","shareCard"], setPh={};
+  SET_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
+  const menuVisible=k=>{ if(k==="set") return true; const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
+  function renderMenuHome(){
+    let rec=[]; try{ rec=JSON.parse(localStorage.getItem("tenko.menuRecent")||"[]"); }catch(e){}
+    rec=rec.filter(k=>MENU_ALL[k]&&menuVisible(k)).slice(0,3);
+    const tile=x=>`<button type="button" class="mtile" data-mt="${x[0]}"><span class="mi">${x[1]}</span><span>${esc(x[2])}</span></button>`;
+    const grp=(t,xs)=>xs.length?`<h3 class="mgrp">${t}</h3><div class="mtiles">${xs.map(tile).join("")}</div>`:"";
+    $("menuHome").innerHTML=`<section class="card">${grp("★ よく使う（最近使った順）",rec.map(k=>MENU_ALL[k]))}${MENU_GROUPS.map(([t,xs])=>grp(t,xs.filter(x=>menuVisible(x[0])))).join("")}</section>`;
+    $("menuHome").querySelectorAll("[data-mt]").forEach(b=>b.onclick=()=>{ const k=b.dataset.mt;
+      try{ let r=JSON.parse(localStorage.getItem("tenko.menuRecent")||"[]"); r=[k].concat(r.filter(x=>x!==k)).slice(0,6); localStorage.setItem("tenko.menuRecent",JSON.stringify(r)); }catch(e){}
+      if(k==="set") showSet(); else showSub(k); window.scrollTo(0,0); });
+  }
+  function menuHomeShow(){
+    if(menuStyle!=="tile") return;
+    Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=true; }); $("subSet").hidden=true; $("menuBack").hidden=true;
+    curSub="home"; renderMenuHome(); $("menuHome").hidden=false;
+  }
+  function showSet(){
+    Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=true; }); $("menuHome").hidden=true;
+    curSub="set"; $("subSet").hidden=false; $("menuBack").hidden=false; $("menuBackTitle").textContent="設定・バックアップ";
+    if(typeof renderPayDiff==="function") renderPayDiff();
+  }
+  $("menuBackBtn").onclick=()=>{ menuHomeShow(); window.scrollTo(0,0); };
+  function applyMenuStyle(){
+    const tile=menuStyle==="tile";
+    document.querySelectorAll("#menuStyleSeg [data-ms]").forEach(b=>b.setAttribute("aria-selected",b.dataset.ms===menuStyle));
+    const seg=document.querySelector("#tabLong > .seg"); if(seg) seg.hidden=tile;
+    SET_IDS.forEach(id=>{ const el=$(id), ph=setPh[id]; if(!el||!ph) return;
+      if(tile){ $("setSlot").appendChild(el); if(id==="cfgBox"||id==="bkBox"||id==="calcBox") el.open=id==="cfgBox"; }
+      else ph.parentNode.insertBefore(el,ph.nextSibling); });
+    if(tile){ if(curSub==="set") showSet(); else if(curSub==="home"||$("menuHome").hidden&&$("menuBack").hidden) menuHomeShow(); }
+    else { $("menuHome").hidden=true; $("menuBack").hidden=true; $("subSet").hidden=true; if(curSub==="home"||curSub==="set") showSub(localStorage.getItem("tenko.sub")||"rest"); }
+  }
+  document.querySelectorAll("#menuStyleSeg [data-ms]").forEach(b=>b.onclick=()=>{ menuStyle=b.dataset.ms; try{ localStorage.setItem("tenko.menuStyle",menuStyle); }catch(e){} applyMenuStyle(); });
+
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
   $("restCode").value=cfg.empCode||"";
   $("restCode").addEventListener("change",()=>{ cfg.empCode=$("restCode").value.trim(); saveCfg(); });
@@ -2704,7 +2764,7 @@ body.rtfull{overflow:hidden}
   svThUI(); svRender();
 
   // メニューのタブを開いたときも、表示中の情報を新しくする
-  $("tb2").onclick=()=>{ showTab(2); showSub(curSub); };
+  $("tb2").onclick=()=>{ showTab(2); if(menuStyle==="tile") menuHomeShow(); else showSub(curSub==="home"||curSub==="set"?(localStorage.getItem("tenko.sub")||"rest"):curSub); };
   document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.onclick=()=>showSub(b.dataset.sub));
   document.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>loadInfo(b.dataset.reload,true));
   // キャッシュを飛ばして新しい版を読み込み直す（ホーム画面に保存したアイコンは特に前の内容を覚えやすいため）。保存データは消えない
@@ -4748,6 +4808,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   applyRole();
   applySvText();
   showSub(startSub);
+  applyMenuStyle(); if(menuStyle==="tile") menuHomeShow();
   // 合言葉が保存されていれば、まだ正しいか裏で確かめる（変わっていたらロング判定を隠す）
   if(PROD&&cfg.npass&&cfg.url) checkNakama().then(j=>{
     if(j.ok){ cfg.nakama=!!j.nakama; cfg.group=j.group||null; } else if(/合言葉/.test(j.error||"")) cfg.nakama=false;
