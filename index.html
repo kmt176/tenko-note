@@ -1021,7 +1021,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:55</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 20:09</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4021,7 +4021,8 @@ body.rtfull{overflow:hidden}
   function inCoreTime(){ if(rzFloatTest) return true; const now=new Date(), m=now.getHours()*60+now.getMinutes(); return RZ_WIN.some(([a,b])=>m>=a&&m<b); }
   function renderRzFloat(){
     const el=$("rzFloat"); if(!el) return;
-    const k=shiftNow();
+    // テスト表示のときは、勤務中でなくても、今見ている勤務（なければ直前の勤務）で出す（勤務中だけだと、押しても何も出ないように見えるため）
+    const k=shiftNow()||(rzFloatTest?(sDay||activeDay()):null);
     const wkMode=!offCfg.rzweek;   // 週の目標（60%など）を使うときは、コアタイムではなく週の目標で出す（2026-10-23 ユーザー指定：60%をやるときはコアタイムは必ず満たすので管理不要）
     if(!car().rz||offCfg.buttons||!k||getDay(k).mode==="simple"||(!wkMode&&!inCoreTime()&&!rzFloatTest)){ el.hidden=true; return; }
     if(wkMode){
