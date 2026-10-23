@@ -258,7 +258,8 @@ a.flink:active{background:var(--sunk)}
 .trlate{border-left-color:#E8742A;background:rgba(232,116,42,.14)}
 .busrow{border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px}.busrow.stop{border-left-color:#D23C2F;background:rgba(210,60,47,.08)}.busrow small{display:block;color:var(--muted);font-size:13px;margin-top:2px}.bustag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--warn);color:#fff;font-size:13px;font-weight:700}.busrow.stop .bustag{background:#D23C2F}.busguess{display:inline-block;margin-left:4px;padding:0 6px;border:1px dashed var(--muted);border-radius:6px;font-size:11px;color:var(--muted)}
 .shipnext{border:2px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}.shipnext .big{font-size:30px;font-weight:800}.shipnext .big span{font-size:16px;margin-left:10px;color:var(--accent)}.shipnext.s-late{border-color:#E8890C}.shipnext.s-cond{border-color:#E8890C}
-.shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+.shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-wait .shipst{color:var(--accent)}.shipnext.s-wait{border-color:var(--accent)}
+.shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
 .noticepop{position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}.noticepop[hidden]{display:none}.noticebox{background:var(--surface);color:var(--ink);border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}.noticebox b{font-size:18px}.noticebox small{color:var(--muted)}#noticeText{font-size:16px;line-height:1.6;white-space:pre-wrap}.noticebox .btn{align-self:flex-end;min-width:120px}
 .ntrow{border-top:1px solid var(--line);padding:8px 0}.ntrow small{color:var(--muted)}
 .docview{position:fixed;inset:0;z-index:2700;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}.docview[hidden]{display:none}.docbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}.docbar b{font-size:16px}#docFrame{flex:1;width:100%;border:0;background:#E9EEED}
@@ -433,6 +434,8 @@ body.rtfull{overflow:hidden}
 .taxibanner{position:fixed;top:0;left:0;right:0;z-index:2000;background:var(--accent);color:#fff;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .trainbanner{position:fixed;top:0;left:0;right:0;z-index:2001;background:#FBE3EC;color:#7A1F3D;border-bottom:2px solid #EBB8CB;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .trainbanner.trok{background:#DDEFE3;color:#1E5A36;border-bottom-color:#9FD0B0}.trainbanner.trok #trainBannerClose{color:#1E5A36}
+.patrolbanner{position:fixed;top:0;left:0;right:0;z-index:2002;background:#FFF1C2;color:#5A4300;border-bottom:2px solid #E8C14A;padding:12px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:17px;font-weight:800}
+.patrolbanner[hidden]{display:none}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
 .trainbanner #trainBannerText{flex:1;text-align:left;background:none;border:0;color:inherit;font:inherit;font-size:15px;font-weight:700;padding:0}
 .trainbanner #trainBannerClose{background:transparent;border:0;color:#7A1F3D;font-size:22px;line-height:1;padding:0 4px;flex:none}
 .taxibanner button{background:transparent;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;flex:none}
@@ -440,6 +443,7 @@ body.rtfull{overflow:hidden}
 
 <div id="docView" class="docview" hidden role="dialog" aria-modal="true" aria-labelledby="docTitle"><div class="docbar"><b id="docTitle"></b><button type="button" class="btn" id="docClose">✕ 閉じる</button></div><iframe id="docFrame" title="資料"></iframe></div>
 <div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
+<div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
 <div id="trainBanner" class="trainbanner" hidden role="status">
   <button type="button" id="trainBannerText"></button>
   <button type="button" id="trainBannerClose" aria-label="閉じる">×</button>
@@ -948,6 +952,8 @@ body.rtfull{overflow:hidden}
         <h3>画面に出す機能</h3>
         <div class="src">使わない機能のチェックを外すと、画面に出なくなります。記録や計算、データはそのまま残るので、あとでチェックを付ければ元に戻ります。このスマホだけの設定です。</div>
         <div id="offBox"></div>
+      <div class="field" style="margin-top:10px"><label for="patrolDist">取締りの場所を知らせる距離</label><select id="patrolDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option></select></div>
+      <div class="src">場所は、マイマップ「東京都内_公開・重点取締り」から読み込みます（地図が更新されると数時間で反映）。近づいている途中だけ鳴らし、同じ場所は10分間は鳴らしません。iPhoneはマナーモードだと鳴らないことがあります。</div>
       <h3 style="margin-top:12px">メニューの表示</h3>
       <div class="seg" role="tablist" aria-label="メニューの表示" id="menuStyleSeg"><button role="tab" data-ms="tile" aria-selected="true">ボタンの一覧（新）</button><button role="tab" data-ms="bar" aria-selected="false">今までの横並び</button></div>
       <div class="src">「今までの横並び」にすると、前のメニューの形に戻ります（設定・バックアップも元の場所に戻ります）。このスマホだけの設定です。</div>
@@ -1059,7 +1065,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-24 01:26</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-24 01:47</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1703,7 +1709,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音と画面の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>{ const lk=k==="rzweek"&&adminLock.rzweek; return `<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}${lk?" disabled":""}>${escC(label)}${lk?`<br><small style="color:var(--warn)">管理者が全員「使わない」にしています</small>`:""}</label>`; }).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -1711,6 +1717,7 @@ body.rtfull{overflow:hidden}
       if(b.dataset.off==="taxi"&&!b.checked) $("taxiBanner").hidden=true;
       if(b.dataset.off==="trainban"&&!b.checked) $("trainBanner").hidden=true;
       if(b.dataset.off==="wake") wakeSet();
+      if(b.dataset.off==="patrol") patrolWatch();
       render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); }); }
   // 画面を消さない（Wake Lock）。アプリを開いている間だけ効く。ほかのアプリに切り替えると外れるので、戻ったら付け直す
   let wakeLock=null;
@@ -2648,7 +2655,8 @@ body.rtfull{overflow:hidden}
     hit.forEach(a=>{ const t=txt(a);
       if(a.effect===1||/欠航|運休/.test(t)){ st={k:"cancel",l:"欠航",eta:null}; return; }
       if(st.k==="cancel") return;
-      if(/条件付/.test(t)) st={k:"cond",l:"条件付き運航",eta:st.eta};
+      if(/条件付|接岸できない場合|着岸できない場合/.test(t)) st={k:"cond",l:"条件付き運航",eta:st.eta};
+      else if(st.k==="ok"&&/就航決定まで|お待ちください|未定/.test(t)) st={k:"wait",l:"運航確認中",eta:null};
       if(a.effect===3||/遅|見込|変更/.test(t)){
         const m=/(\d+)\s*分[^\d]{0,4}遅/.exec(t), h=/(\d+)\s*時間[^\d]{0,4}遅/.exec(t);
         let eta=m||h?x.a+(h?+h[1]*60:0)+(m?+m[1]:0):null;
@@ -2683,6 +2691,7 @@ body.rtfull{overflow:hidden}
     const gen=dayAlerts.filter(a=>!used.has(a)&&(a.head||a.desc));
     $("shipAlert").innerHTML="";
     const TY={big:"🚢 大型客船",jet:"🚤 ジェット船"};
+    const tyOf=x=>`${TY[x.type]}${x.vessel?` ${esc(x.vessel)}`:""}${x.guess?"（推定）":""}`;
     const eta=x=>x.st.eta!=null?x.st.eta:x.a;   // 見込みの到着（分からなければ予定）
     const lateTxt=x=>x.st.eta!=null&&x.st.eta>x.a?`（${x.st.eta-x.a}分遅れ）`:"";
     const when=x=>x.st.k==="cancel"?`<span class="shipplan"><s>予定 ${shm(x.a)}着</s></span><b class="shipst">欠航</b>`
@@ -2690,12 +2699,12 @@ body.rtfull{overflow:hidden}
       :`<b class="num shipeta">${shm(x.a)}着</b><b class="shipst">${esc(x.st.l)}</b>`;
     if(tt.ok&&!tt.needUpdate){
       const next=isToday?arr.filter(x=>x.st.k!=="cancel"&&eta(x)>=nm).sort((a,b)=>eta(a)-eta(b))[0]:null;
-      $("shipNext").innerHTML=!isToday?"":next?`<div class="shipnext s-${next.st.k}"><small>次に着く船</small><div class="big num">${shm(eta(next))}着<span>あと${eta(next)-nm}分</span></div>${eta(next)!==next.a?`<div class="shipplan">予定 ${shm(next.a)}着${lateTxt(next)}</div>`:""}<div>${esc(next.from)}発・${TY[next.type]}${next.guess?"（推定）":""}・<b>${esc(next.st.l)}</b></div></div>`:`<div class="geo">今日、これから着く船はありません</div>`;
-      $("shipBox").innerHTML=arr.length?arr.map(x=>`<div class="shiprow s-${x.st.k}${isToday&&eta(x)<nm?" past":""}"><div class="shipfrom"><b>${esc(x.from)}発</b><span class="shipty ${x.type}">${TY[x.type]}${x.guess?"（推定）":""}</span></div><div class="shipwhen">${when(x)}</div></div>`).join("")
+      $("shipNext").innerHTML=!isToday?"":next?`<div class="shipnext s-${next.st.k}"><small>次に着く船</small><div class="big num">${shm(eta(next))}着<span>あと${eta(next)-nm}分</span></div>${eta(next)!==next.a?`<div class="shipplan">予定 ${shm(next.a)}着${lateTxt(next)}</div>`:""}<div>${esc(next.from)}発・${tyOf(next)}・<b>${esc(next.st.l)}</b></div></div>`:`<div class="geo">今日、これから着く船はありません</div>`;
+      $("shipBox").innerHTML=arr.length?arr.map(x=>`<div class="shiprow s-${x.st.k}${isToday&&eta(x)<nm?" past":""}"><div class="shipfrom"><b>${esc(x.from)}発</b><span class="shipty ${x.type}">${tyOf(x)}</span></div><div class="shipwhen">${when(x)}</div></div>`).join("")
         +(gen.length?`<details class="shipraw"><summary>どの便か分からなかった運行情報（${gen.length}件）</summary>${gen.map(a=>`<div><b>${esc(a.head||"")}</b> ${esc(a.desc||"")}</div>`).join("")}</details>`:"")
         :`<div class="geo">${isToday?"今日":"この日"}、竹芝に着く便はありません</div>`;
     }
-    $("shipNote").innerHTML=`最終更新 ${clk(j.updatedAt)}。時刻表 ${esc(String(tt.feedStart||"").replace(/^(\d{4})-?(\d{2})-?(\d{2})$/,"$1/$2/$3"))}〜${esc(String(tt.feedEnd||"").replace(/^(\d{4})-?(\d{2})-?(\d{2})$/,"$1/$2/$3"))}${j.rtError?`。運行情報：${esc(j.rtError)}`:""}。船の種類は、名前で分からないときは所要時間（4時間未満＝ジェット船）で推定しています。小笠原（おがさわら丸）は東海汽船ではないので入っていません。`;
+    $("shipNote").innerHTML=`最終更新 ${clk(j.updatedAt)}。時刻表 ${esc(String(tt.feedStart||"").replace(/^(\d{4})-?(\d{2})-?(\d{2})$/,"$1/$2/$3"))}〜${esc(String(tt.feedEnd||"").replace(/^(\d{4})-?(\d{2})-?(\d{2})$/,"$1/$2/$3"))}${j.rtError?`。運行情報：${esc(j.rtError)}`:""}。船の種類は便の名前から出しています（分からないときは所要時間で推定）。小笠原（おがさわら丸）は2日がかりなので、着く日の一覧に入ります。運航確認中＝当日の就航がまだ決まっていない便です。`;
   }
   setInterval(()=>{ if(curSub==="ship"&&!$("tabLong").hidden&&!document.hidden){ loadShip(false); } },180000);
   setInterval(()=>{ if(curSub==="ship"&&shipData) renderShip(); },30000);   // 「あと何分」を進める
@@ -4915,6 +4924,51 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       else tone(784,0,0.8,0.3);   // 再開：ポン（やさしく1回）
     }catch(e){}
   }
+  // ===== 取締りの場所のお知らせ（2026-10-24）。マイマップの場所に近づいている途中で、決めた距離に入ったら「ピーポーン」と画面の帯 =====
+  // アプリを開いている間だけ位置を見る（iPhoneは、ほかのアプリや画面を消している間は位置を見られない）
+  let patrolPts=null, patrolGroups=[], patrolWid=null, patrolPrev={}, patrolLast={}, patrolHideT=0;
+  try{ const c=JSON.parse(localStorage.getItem("tenko.patrol")||"null"); if(c&&c.pts){ patrolPts=c.pts; patrolGroups=c.groups||[]; } }catch(e){}
+  try{ const v=localStorage.getItem("tenko.patrolDist"); if(v) $("patrolDist").value=v; }catch(e){}
+  $("patrolDist").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.patrolDist",$("patrolDist").value); }catch(e){} });
+  $("patrolBannerClose").onclick=()=>{ $("patrolBanner").hidden=true; };
+  async function patrolLoad(){
+    if(!cfg.url) return;
+    let at=0; try{ at=+(localStorage.getItem("tenko.patrolAt")||0); }catch(e){}
+    if(patrolPts&&Date.now()-at<6*3600e3) return;
+    try{ const j=await post({action:"patrolPts"}); if(j&&j.ok&&Array.isArray(j.pts)){ patrolPts=j.pts; patrolGroups=j.groups||[];
+      try{ localStorage.setItem("tenko.patrol",JSON.stringify({pts:j.pts,groups:patrolGroups})); localStorage.setItem("tenko.patrolAt",String(Date.now())); }catch(e){} patrolWatch(); } }catch(e){}
+  }
+  function patrolChime(){
+    try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+    if(!trAudio) return;
+    try{ const a=trAudio, now=a.currentTime;
+      const tone=(fq,t0,d)=>{ const o=a.createOscillator(), g=a.createGain(); o.type="sine"; o.frequency.value=fq;
+        g.gain.setValueAtTime(0.0001,now+t0); g.gain.exponentialRampToValueAtTime(0.5,now+t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,now+t0+d);
+        o.connect(g); g.connect(a.destination); o.start(now+t0); o.stop(now+t0+d+0.05); };
+      tone(988,0,0.35); tone(784,0.38,0.6);   // ピー・ポーン
+    }catch(e){}
+  }
+  function patrolCheck(p){
+    if(!patrolPts||offCfg.patrol) return;
+    const th=+$("patrolDist").value||100, now=Date.now(), dLat=0.004, dLng=0.005;   // 約400m四方だけ細かく測る
+    patrolPts.forEach((x,i)=>{
+      const near=x[2].some(c=>Math.abs(c[0]-p.lat)<dLat&&Math.abs(c[1]-p.lng)<dLng);
+      if(!near){ delete patrolPrev[i]; return; }
+      const d=Math.min(...x[2].map(c=>distM([p.lat,p.lng],c))), prev=patrolPrev[i]; patrolPrev[i]=d;
+      if(d<=th&&prev!=null&&d<prev-2&&!(patrolLast[i]&&now-patrolLast[i]<10*60e3)){   // 近づいている途中で、距離に入ったとき
+        patrolLast[i]=now; patrolChime();
+        $("patrolBannerText").textContent=`⚠ 取締り：${x[0]}（${patrolGroups[x[1]]||""}）まで約${Math.max(10,Math.round(d/10)*10)}m`;
+        $("patrolBanner").hidden=false; clearTimeout(patrolHideT); patrolHideT=setTimeout(()=>{ $("patrolBanner").hidden=true; },20000);
+      }
+    });
+  }
+  function patrolWatch(){
+    const on=!offCfg.patrol&&patrolPts&&patrolPts.length&&navigator.geolocation&&document.visibilityState==="visible";
+    if(on&&patrolWid==null){ patrolWid=navigator.geolocation.watchPosition(pos=>patrolCheck({lat:pos.coords.latitude,lng:pos.coords.longitude}),()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:20000}); }
+    else if(!on&&patrolWid!=null){ navigator.geolocation.clearWatch(patrolWid); patrolWid=null; patrolPrev={}; }
+  }
+  document.addEventListener("visibilitychange",patrolWatch);
+  if(PROD){ setTimeout(patrolLoad,3000); setInterval(patrolLoad,60*60*1000); } patrolWatch();
   function showTrainRecover(xs,test){
     trChime("ok");
     trainBanLine=""; const b=$("trainBanner"); b.classList.add("trok");
