@@ -736,7 +736,7 @@ body.rtfull{overflow:hidden}
       <div class="infohead"><h2>飛行機の発着（羽田・成田）</h2><button class="btn" id="airReload">更新</button></div>
       <div class="src">遅れて<b>深夜に着く便</b>（22:30〜翌5時。電車が少ない時間）は赤で出します。出発便は、早朝の便（都内から空港へ向かうお客様）の目安にどうぞ。</div>
       <div class="seg" role="tablist" aria-label="到着・出発" id="airKindSeg"><button role="tab" data-k="arr" aria-selected="true">到着</button><button role="tab" data-k="dep" aria-selected="false">出発</button></div>
-      <div class="seg" role="tablist" aria-label="空港" id="airApSeg"><button role="tab" data-ap="HND" aria-selected="true">羽田</button><button role="tab" data-ap="NRT" aria-selected="false">成田</button></div>
+      <div class="seg" role="tablist" aria-label="空港" id="airApSeg"><button role="tab" data-airap="HND" aria-selected="true">羽田</button><button role="tab" data-airap="NRT" aria-selected="false">成田</button></div>
       <div class="btnrow" id="airTerms"></div>
       <div id="airSum"></div>
       <label class="check"><input type="checkbox" id="airAll">1日分すべて出す（ふだんは30分前〜6時間後）</label>
@@ -945,7 +945,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 12:58</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2314,7 +2314,7 @@ body.rtfull{overflow:hidden}
   }
   function renderAir(){
     document.querySelectorAll("#airKindSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===airKind));
-    document.querySelectorAll("#airApSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.ap===airAp));
+    document.querySelectorAll("#airApSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.airap===airAp));
     $("airTerms").innerHTML=Object.values(AIR_TERM[airAp]).map(([la,ln,nm])=>`<a class="btn" style="text-decoration:none" href="https://www.google.com/maps/dir/?api=1&destination=${la},${ln}&travelmode=driving" target="_blank" rel="noopener">${esc(nm.replace(/^.. /,""))}へ</a>`).join("");
     const j=airData[airKind]; if(!j) return;
     const all=(j.items||[]).filter(x=>x.ap===airAp).map(airRow), wide=$("airAll").checked;
@@ -2328,7 +2328,8 @@ body.rtfull{overflow:hidden}
       :`<div class="geo">この時間帯の便はありません（「1日分すべて」で全部を出せます）</div>`;
   }
   document.querySelectorAll("#airKindSeg button").forEach(b=>b.onclick=()=>{ airKind=b.dataset.k; loadAir(false); });
-  document.querySelectorAll("#airApSeg button").forEach(b=>b.onclick=()=>{ airAp=b.dataset.ap; renderAir(); });
+  // 印は data-airap（古い「到着便」の機能が [data-ap] のボタンをまとめて使うので、ぶつからない名前にした）
+  document.querySelectorAll("#airApSeg button").forEach(b=>b.onclick=()=>{ airAp=b.dataset.airap; renderAir(); });
   $("airAll").addEventListener("change",renderAir);
   $("airReload").onclick=()=>loadAir(true);
   setInterval(()=>{ if(curSub==="air"&&!$("tabLong").hidden) loadAir(true); },180000);   // タブを開いている間は3分ごと
