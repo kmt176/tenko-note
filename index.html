@@ -962,7 +962,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:34</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:40</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2364,8 +2364,8 @@ body.rtfull{overflow:hidden}
     const night=x=>x.when!=null&&(x.when>=23*60||x.when<5*60), early=x=>x.when!=null&&x.when>=4*60&&x.when<7*60;
     // ① ターミナルごとのまとめ（押すとルート案内）
     $("airCards").innerHTML=Object.entries(AIR_TERM[airAp]).map(([k,[la,ln,nm]])=>{ const xs=up.filter(x=>x.term===k&&!x.cancel);
-      const n1=arr?xs.filter(x=>x.late).length:xs.filter(early).length, n2=xs.filter(x=>x.dl>=30).length;
-      return `<a class="aircard${n1?" hot":""}" href="https://www.google.com/maps/dir/?api=1&destination=${la},${ln}&travelmode=driving" target="_blank" rel="noopener"><b>${esc(nm.replace(/^.. /,"").replace("ターミナル",""))}</b><span>${arr?"深夜着":"早朝発"} <b class="num">${n1}</b></span><span>遅れ <b class="num">${n2}</b></span><small>ルート ›</small></a>`; }).join("");
+      const n1=arr?xs.filter(x=>x.late).length:xs.filter(early).length, n2=xs.filter(x=>x.dl>=30).length, nc=up.filter(x=>x.term===k&&x.cancel).length;   // nc＝欠航（遅れの数には入れない）
+      return `<a class="aircard${n1?" hot":""}" href="https://www.google.com/maps/dir/?api=1&destination=${la},${ln}&travelmode=driving" target="_blank" rel="noopener"><b>${esc(nm.replace(/^.. /,"").replace("ターミナル",""))}</b><span>${arr?"深夜着":"早朝発"} <b class="num">${n1}</b></span><span>欠航 <b class="num"${nc?' style="color:#D23C2F"':""}>${nc}</b></span><span>遅れ <b class="num">${n2}</b></span><small>ルート ›</small></a>`; }).join("");
     // ② 時間帯ごとの便の数（これから8時間）。深夜は🌙、0〜4時は終電後
     if(airAp==="HND"){ const now=new Date().getHours(), hs=[...Array(9)].map((_,i)=>(now+i)%24), cnt=h=>up.filter(x=>!x.cancel&&x.when!=null&&Math.floor(x.when/60)===h).length, mx=Math.max(1,...hs.map(cnt));
       $("airBars").innerHTML=`<div class="airbars"><b>時間帯ごとの${arr?"到着":"出発"}（これから）</b>${hs.map(h=>{ const n=cnt(h), nt=h>=23||h<5; return `<div class="airbar${nt?" nt":""}"><span class="num">${h}時</span><i style="width:${n/mx*100}%"></i><span class="num">${n}便${nt?(h<5?" 🌙終電後":" 🌙"):""}</span></div>`; }).join("")}</div>`; }
