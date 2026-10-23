@@ -258,7 +258,7 @@ a.flink:active{background:var(--sunk)}
 .trlate{border-left-color:#E8742A;background:rgba(232,116,42,.14)}
 .busrow{border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px}.busrow.stop{border-left-color:#D23C2F;background:rgba(210,60,47,.08)}.busrow small{display:block;color:var(--muted);font-size:13px;margin-top:2px}.bustag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--warn);color:#fff;font-size:13px;font-weight:700}.busrow.stop .bustag{background:#D23C2F}.busguess{display:inline-block;margin-left:4px;padding:0 6px;border:1px dashed var(--muted);border-radius:6px;font-size:11px;color:var(--muted)}
 .shipnext{border:2px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}.shipnext .big{font-size:30px;font-weight:800}.shipnext .big span{font-size:16px;margin-left:10px;color:var(--accent)}.shipnext.s-late{border-color:#E8890C}.shipnext.s-cond{border-color:#E8890C}
-.shiprow{display:grid;grid-template-columns:64px 1fr auto;gap:2px 8px;align-items:center;border-bottom:1px solid var(--line);padding:8px 2px;font-size:15px}.shiprow b{grid-column:1/-1;font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel b{color:#D23C2F}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-late b,.shiprow.s-cond b{color:#E8890C}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+.shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
 .airfilter .airhrbtn{grid-column:1/-1;min-height:44px;font-size:15px;text-align:left}.airfilter .airhrbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 .airhrs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.airhrs button{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:15px}.airhrs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}.airhrs .airhrok{grid-column:1/-1}
 .airfilter{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.airfilter select,.airfilter input{width:100%;min-height:44px;font-size:15px}.airfilter input{grid-column:1/-1}
@@ -774,7 +774,7 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="subShip" hidden>
     <section class="card">
       <div class="infohead"><h2>竹芝桟橋に着く船（試験・管理者のみ）</h2><button class="btn" id="shipReload">更新</button></div>
-      <div class="src">伊豆諸島から竹芝桟橋に着く東海汽船の、今日の到着便です。大型客船のほうが乗客・荷物が多いので目印を付けています。欠航は赤、遅れはオレンジです。</div>
+      <div class="src">伊豆諸島から竹芝桟橋に着く東海汽船の、今日の到着便です。予定の時刻と、運行情報から分かる見込みの時刻を並べて出します。大型客船のほうが乗客・荷物が多いので目印を付けています。欠航は赤、遅れはオレンジです。</div>
       <div id="shipNext"></div>
       <div id="shipAlert"></div>
       <div id="shipBox"><div class="geo">読み込んでいます…</div></div>
@@ -1006,7 +1006,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 16:22</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:05</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2443,30 +2443,49 @@ body.rtfull{overflow:hidden}
     catch(e){ if(!shipData) $("shipBox").innerHTML=`<div class="geo">読み込めませんでした。電波を確認してください</div>`; }
     finally{ shipBusy=false; }
   }
-  // 運行情報（アラート）をその便に当てる：便の指定 → 航路の指定 → 指定なし（全体）の順
-  function shipStatus(x,alerts){
-    const hit=alerts.filter(a=>a.ent.some(e=>(e.trip&&e.trip===x.trip)||(!e.trip&&e.route&&e.route===x.route)));
-    let st={k:"ok",l:"定刻"}; 
-    hit.forEach(a=>{ const t=(a.head||"")+" "+(a.desc||"");
-      if(a.effect===1||/欠航|運休/.test(t)) st={k:"cancel",l:"欠航"};
-      else if(st.k!=="cancel"&&/条件付/.test(t)) st={k:"cond",l:"条件付き運航"};
-      else if(st.k==="ok"&&(a.effect===3||/遅/.test(t))){ const m=/(\d+)\s*分/.exec(t), h=/(\d+)\s*時間/.exec(t); st={k:"late",l:m||h?`約${(h?+h[1]*60:0)+(m?+m[1]:0)}分遅れ`:"遅れ"}; } });
+  // 運行情報（アラート）をその便に当てる：便の指定 → 航路の指定 → 文の中の「島の名前と予定の時刻」→ 文の中の島の名前、の順
+  const shipTimes=t=>{ const out=[]; (t||"").replace(/(\d{1,2})[:：時](\d{2})?分?/g,(m,h,mi)=>{ out.push((+h)*60+(+(mi||0))); return m; }); return out; };
+  function shipStatus(x,alerts,arr){
+    const isle=String(x.from||"").replace(/(港|島)$/,"");
+    const txt=a=>(a.head||"")+" "+(a.desc||"");
+    let hit=alerts.filter(a=>a.ent.some(e=>(e.trip&&e.trip===x.trip)||(!e.trip&&e.route&&e.route===x.route)));
+    if(!hit.length) hit=alerts.filter(a=>!a.ent.some(e=>e.trip||e.route)&&isle&&txt(a).includes(isle)&&shipTimes(txt(a)).some(m=>Math.abs(m-x.a)<=1));
+    if(!hit.length) hit=alerts.filter(a=>!a.ent.some(e=>e.trip||e.route)&&isle&&txt(a).includes(isle)&&arr.filter(y=>String(y.from||"").replace(/(港|島)$/,"")===isle).length===1);
+    let st={k:"ok",l:"定刻",eta:null};
+    hit.forEach(a=>{ const t=txt(a);
+      if(a.effect===1||/欠航|運休/.test(t)){ st={k:"cancel",l:"欠航",eta:null}; return; }
+      if(st.k==="cancel") return;
+      if(/条件付/.test(t)) st={k:"cond",l:"条件付き運航",eta:st.eta};
+      if(a.effect===3||/遅|見込|変更/.test(t)){
+        const m=/(\d+)\s*分[^\d]{0,4}遅/.exec(t), h=/(\d+)\s*時間[^\d]{0,4}遅/.exec(t);
+        let eta=m||h?x.a+(h?+h[1]*60:0)+(m?+m[1]:0):null;
+        if(eta==null){ const later=shipTimes(t).filter(v=>v>x.a&&v<=x.a+360); if(later.length) eta=later[later.length-1]; }   // 文に見込みの時刻が書いてあればそれ
+        if(eta==null&&a.effect!==3&&!/遅/.test(t)) return;   // 「見込み」と書いてあっても、遅い時刻が読めなければそのまま
+        if(eta!=null&&eta<=x.a&&!/遅/.test(t)) return;
+        st={k:st.k==="cond"?"cond":"late",l:st.k==="cond"?"条件付き運航":"遅れ",eta};
+      } });
     return {st,hit};
   }
   function renderShip(){
     const j=shipData; if(!j) return; const tt=j.tt||{}, alerts=j.alerts||[];
     if(!tt.ok||tt.needUpdate){ $("shipNext").innerHTML=""; $("shipBox").innerHTML=`<div class="geo" style="color:var(--bad);font-weight:700">時刻表の更新が必要です${tt.error?`（${esc(tt.error)}）`:""}</div>`; }
     const now=new Date(), nm=now.getHours()*60+now.getMinutes();
-    const arr=(tt.arr||[]).map(x=>Object.assign({},x,shipStatus(x,alerts)));
+    const arr=(tt.arr||[]).map(x=>Object.assign({},x,shipStatus(x,alerts,tt.arr||[])));
     const used=new Set(); arr.forEach(x=>x.hit.forEach(a=>used.add(a)));
     const gen=alerts.filter(a=>!used.has(a)&&(a.head||a.desc));
-    $("shipAlert").innerHTML=gen.map(a=>`<div class="shipalert"><b>${esc(a.head||"運行情報")}</b>${a.desc?`<div>${esc(a.desc)}</div>`:""}</div>`).join("");
+    $("shipAlert").innerHTML="";
     const TY={big:"🚢 大型客船",jet:"🚤 ジェット船"};
-    const lateMin=x=>{ const m=/約(\d+)分/.exec(x.st.l); return m?+m[1]:0; };
+    const eta=x=>x.st.eta!=null?x.st.eta:x.a;   // 見込みの到着（分からなければ予定）
+    const lateTxt=x=>x.st.eta!=null&&x.st.eta>x.a?`（${x.st.eta-x.a}分遅れ）`:"";
+    const when=x=>x.st.k==="cancel"?`<span class="shipplan"><s>予定 ${shm(x.a)}着</s></span><b class="shipst">欠航</b>`
+      :x.st.eta!=null&&x.st.eta!==x.a?`<span class="shipplan">予定 ${shm(x.a)}着 → </span><b class="num shipeta">見込み ${shm(x.st.eta)}着</b><b class="shipst">${lateTxt(x)}${x.st.k==="cond"?" 条件付き運航":""}</b>`
+      :`<b class="num shipeta">${shm(x.a)}着</b><b class="shipst">${x.st.k==="ok"?"定刻":esc(x.st.l)}</b>`;
     if(tt.ok&&!tt.needUpdate){
-      const next=arr.filter(x=>x.st.k!=="cancel"&&x.a+lateMin(x)>=nm)[0];
-      $("shipNext").innerHTML=next?`<div class="shipnext s-${next.st.k}"><small>次に着く船</small><div class="big num">${shm(next.a+lateMin(next))}着<span>あと${next.a+lateMin(next)-nm}分</span></div><div>${esc(next.from)}発・${TY[next.type]}${next.guess?"（推定）":""}・<b>${esc(next.st.l)}</b></div></div>`:`<div class="geo">今日、これから着く船はありません</div>`;
-      $("shipBox").innerHTML=arr.length?arr.map(x=>`<div class="shiprow s-${x.st.k}${x.a+lateMin(x)<nm?" past":""}"><span class="num">${shm(x.a)}着</span><span>${esc(x.from)}発</span><span class="shipty ${x.type}">${TY[x.type]}${x.guess?"（推定）":""}</span><b>${esc(x.st.l)}</b></div>`).join(""):`<div class="geo">今日、竹芝に着く便はありません</div>`;
+      const next=arr.filter(x=>x.st.k!=="cancel"&&eta(x)>=nm).sort((a,b)=>eta(a)-eta(b))[0];
+      $("shipNext").innerHTML=next?`<div class="shipnext s-${next.st.k}"><small>次に着く船</small><div class="big num">${shm(eta(next))}着<span>あと${eta(next)-nm}分</span></div>${eta(next)!==next.a?`<div class="shipplan">予定 ${shm(next.a)}着${lateTxt(next)}</div>`:""}<div>${esc(next.from)}発・${TY[next.type]}${next.guess?"（推定）":""}・<b>${next.st.k==="ok"?"定刻":esc(next.st.l)}</b></div></div>`:`<div class="geo">今日、これから着く船はありません</div>`;
+      $("shipBox").innerHTML=arr.length?arr.map(x=>`<div class="shiprow s-${x.st.k}${eta(x)<nm?" past":""}"><div class="shipfrom"><b>${esc(x.from)}発</b><span class="shipty ${x.type}">${TY[x.type]}${x.guess?"（推定）":""}</span></div><div class="shipwhen">${when(x)}</div></div>`).join("")
+        +(gen.length?`<details class="shipraw"><summary>どの便か分からなかった運行情報（${gen.length}件）</summary>${gen.map(a=>`<div><b>${esc(a.head||"")}</b> ${esc(a.desc||"")}</div>`).join("")}</details>`:"")
+        :`<div class="geo">今日、竹芝に着く便はありません</div>`;
     }
     $("shipNote").innerHTML=`最終更新 ${clk(j.updatedAt)}。時刻表 ${esc(tt.feedStart||"")}〜${esc(tt.feedEnd||"")}${j.rtError?`。運行情報：${esc(j.rtError)}`:""}。船の種類は、名前で分からないときは所要時間（4時間未満＝ジェット船）で推定しています。小笠原（おがさわら丸）は東海汽船ではないので入っていません。`;
   }
