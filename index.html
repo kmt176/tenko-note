@@ -256,6 +256,8 @@ a.flink:active{background:var(--sunk)}
 .trinfo .trgo{color:var(--accent);font-weight:700}
 .trstop{border-left-color:#D23C2F;background:rgba(210,60,47,.14)}
 .trlate{border-left-color:#E8742A;background:rgba(232,116,42,.14)}
+.airfilter .airhrbtn{grid-column:1/-1;min-height:44px;font-size:15px;text-align:left}.airfilter .airhrbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.airhrs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.airhrs button{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:15px}.airhrs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}.airhrs .airhrok{grid-column:1/-1}
 .airfilter{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.airfilter select,.airfilter input{width:100%;min-height:44px;font-size:15px}.airfilter input{grid-column:1/-1}
 .aircards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .aircard{display:flex;flex-direction:column;gap:2px;padding:10px;border-radius:10px;background:var(--sunk);text-decoration:none;color:var(--ink);border:2px solid transparent}
@@ -764,7 +766,8 @@ body.rtfull{overflow:hidden}
       <div class="airfilter">
           <select id="airFAl" aria-label="航空会社"><option value="">航空会社：すべて</option></select>
           <select id="airFTerm" aria-label="ターミナル"><option value="">ターミナル：すべて</option><option value="Terminal1">第1</option><option value="Terminal2">第2</option><option value="Terminal3">第3</option></select>
-          <select id="airFHour" aria-label="時間帯"><option value="">時間帯：これから全部</option></select>
+          <button type="button" class="btn airhrbtn" id="airFHour" aria-expanded="false">時間帯：これから全部 ▾</button>
+          <div id="airHrBox" class="airhrs" hidden></div>
           <input type="search" id="airFText" placeholder="便名・出発地で探す（例：JL123、福岡）" autocomplete="off">
         </div>
       <div id="airCards" class="aircards"></div>
@@ -979,7 +982,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:56</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 15:03</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2372,13 +2375,20 @@ body.rtfull{overflow:hidden}
   function airFillFilters(){
     const keep=$("airFAl").value, cnt={}; airUp.forEach(x=>{ const p=airPre(x); if(p) cnt[p]=(cnt[p]||0)+1; });
     $("airFAl").innerHTML=`<option value="">航空会社：すべて</option>`+Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(p=>`<option value="${esc(p)}">${esc(AIR_AL[p]||p)}（${esc(p)}）${cnt[p]}便</option>`).join(""); $("airFAl").value=cnt[keep]?keep:"";
-    const hk=$("airFHour").value, now=new Date().getHours(); $("airFHour").innerHTML=`<option value="">時間帯：これから全部</option>`+[...Array(12)].map((_,i)=>{ const h=(Math.floor(now/2)*2+i*2)%24; return `<option value="${h}">${h}〜${h+2}時</option>`; }).join(""); $("airFHour").value=hk;
+    // 時間帯は複数選べる（押すたびに選ぶ・外す）。何も選ばなければ、これから全部
+    const now=new Date().getHours(), hs=[...Array(12)].map((_,i)=>(Math.floor(now/2)*2+i*2)%24);
+    $("airHrBox").innerHTML=`<button type="button" data-airhr="" aria-pressed="${!airHrs.size}">これから全部</button>`+hs.map(h=>`<button type="button" data-airhr="${h}" aria-pressed="${airHrs.has(h)}">${h}〜${h+2}時</button>`).join("")+`<button type="button" class="airhrok" data-airhrok="1">閉じる</button>`;
+    $("airHrBox").querySelectorAll("[data-airhr]").forEach(b=>b.onclick=()=>{ const v=b.dataset.airhr; if(v==="") airHrs.clear(); else { const h=+v; airHrs.has(h)?airHrs.delete(h):airHrs.add(h); } airFillFilters(); renderAir(); });
+    $("airHrBox").querySelector("[data-airhrok]").onclick=()=>{ $("airHrBox").hidden=true; $("airFHour").setAttribute("aria-expanded","false"); };
+    const sel=hs.filter(h=>airHrs.has(h)); $("airFHour").textContent=`時間帯：${sel.length?sel.slice(0,2).map(h=>`${h}〜${h+2}時`).join("・")+(sel.length>2?` ほか${sel.length-2}`:""):"これから全部"} ▾`; $("airFHour").classList.toggle("on",sel.length>0);
     $("airFTerm").querySelectorAll("option[value^=T]").forEach(o=>o.hidden=airAp==="NRT"&&o.value==="Terminal3"&&!airUp.some(x=>x.term==="Terminal3"));
   }
+  const airHrs=new Set();   // 選んだ時間帯（2時間ごとの始まりの時）。空＝これから全部
+  $("airFHour").onclick=()=>{ const b=$("airHrBox"); b.hidden=!b.hidden; $("airFHour").setAttribute("aria-expanded",String(!b.hidden)); };
   let airSel=null;   // ターミナルの枠で押した行（{term, cat}）。cat：late＝深夜着/早朝発、cancel＝欠航、delay＝遅れ
-  const airFilter=(xs,noTerm)=>{ const al=$("airFAl").value, tm=$("airFTerm").value, hr=$("airFHour").value, q=$("airFText").value.trim().toUpperCase();
-    return xs.filter(x=>(!al||airPre(x)===al)&&(noTerm||!tm||x.term===tm)&&(hr===""||(x.when!=null&&Math.floor(x.when/120)*2===+hr))&&(!q||(x.f+" "+x.fs+" "+(AIR_NAME[x.from]||"")+" "+x.from).toUpperCase().includes(q))); };
-  ["airFAl","airFTerm","airFHour"].forEach(id=>$(id).addEventListener("change",()=>renderAir())); $("airFText").addEventListener("input",()=>renderAir());
+  const airFilter=(xs,noTerm)=>{ const al=$("airFAl").value, tm=$("airFTerm").value, q=$("airFText").value.trim().toUpperCase();
+    return xs.filter(x=>(!al||airPre(x)===al)&&(noTerm||!tm||x.term===tm)&&(!airHrs.size||(x.when!=null&&airHrs.has((Math.floor(x.when/120)*2)%24)))&&(!q||(x.f+" "+x.fs+" "+(AIR_NAME[x.from]||"")+" "+x.from).toUpperCase().includes(q))); };
+  ["airFAl","airFTerm"].forEach(id=>$(id).addEventListener("change",()=>renderAir())); $("airFText").addEventListener("input",()=>renderAir());
   function renderAir(){
     document.querySelectorAll("#airKindSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===airKind));
     document.querySelectorAll("#airApSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.airap===airAp));
@@ -2405,7 +2415,7 @@ body.rtfull{overflow:hidden}
     else { const attn=airFilter(airUp).filter(x=>x.cancel||(arr?(x.late&&x.dl>=15)||x.dl>=60:x.dl>=30));
       $("airAttn").innerHTML=`<b>気をつける便</b><small style="color:var(--muted)"> ${arr?"（遅れて深夜に着く・1時間以上の遅れ・欠航）":"（30分以上の遅れ・欠航）"}</small>`+(attn.length?attn.map(row).join(""):`<div class="geo">🟢 いまは、気をつける便はありません</div>`); }
     // すべての便（これから・しぼり込みつき）は、開いたときに見る
-    const fl=airFilter(airUp), fon=$("airFAl").value||$("airFTerm").value||$("airFHour").value!==""||$("airFText").value.trim();
+    const fl=airFilter(airUp), fon=$("airFAl").value||$("airFTerm").value||airHrs.size||$("airFText").value.trim();
     $("airAllSum").textContent=`すべての便を見る（${fon?`しぼり込み ${fl.length}便／`:""}これから ${airUp.length}便）`;
     $("airList").innerHTML=fl.map(row).join("")||`<div class="geo">当てはまる便はありません</div>`;
     const ts=new Date(j.updatedAt);
