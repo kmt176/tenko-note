@@ -267,6 +267,7 @@ a.flink:active{background:var(--sunk)}
 .mgrp{font-size:14px;color:var(--muted);margin:14px 0 6px}.mgrp:first-child{margin-top:0}
 .mtiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:86px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font-size:14px;font-weight:700;line-height:1.25;padding:8px 4px;text-align:center;cursor:pointer}
+.mver{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}.mver small{flex-basis:100%;color:var(--muted);font-size:12px}
 .mtile .mi{font-size:28px;line-height:1}
 #setSlot>details,#setSlot>section{margin-top:12px}
 .airfilter .airhrbtn{grid-column:1/-1;min-height:44px;font-size:15px;text-align:left}.airfilter .airhrbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
@@ -1043,14 +1044,14 @@ body.rtfull{overflow:hidden}
     <h3 style="margin:14px 0 6px;font-size:16px">紹介用の資料</h3>
     <div class="src">押すとアプリの中で開きます。右上の「✕ 閉じる」で戻ります。</div>
     <div class="btnrow"><button type="button" class="btn" data-doc="setsumei-view.html" data-doct="説明資料（2枚）">説明資料（2枚）</button><button type="button" class="btn" data-doc="guide-view.html" data-doct="使い方ガイド（10枚）">使い方ガイド（10枚）</button></div>
-    <div class="src">仲間にファイルで送るとき：<a href="https://kmt176.github.io/tenko-note/setsumei.pdf" target="_blank" rel="noopener">説明資料（PDF）</a>・<a href="https://kmt176.github.io/tenko-note/guide.pptx" target="_blank" rel="noopener">使い方ガイド（PowerPoint）</a>（開いたあと、画面の共有ボタンから送れます）</div>
+    <div class="src">仲間にファイルで送るとき：<a href="https://kmt176.github.io/tenko-note/setsumei.pdf" target="_blank" rel="noopener">説明資料（PDF）</a>・<a href="https://kmt176.github.io/tenko-note/guide.pdf" target="_blank" rel="noopener">使い方ガイド（PDF）</a>（開いたあと、画面の共有ボタンから送れます）</div>
   </section>
 </div>
 
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 21:19</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 21:26</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2156,7 +2157,10 @@ body.rtfull{overflow:hidden}
     rec=rec.filter(k=>MENU_ALL[k]&&menuVisible(k)&&!["set","bk","help"].includes(k)).slice(0,3);
     const tile=x=>`<button type="button" class="mtile" data-mt="${x[0]}"><span class="mi">${x[1]}</span><span>${esc(x[2])}</span></button>`;
     const grp=(t,xs)=>xs.length?`<h3 class="mgrp">${t}</h3><div class="mtiles">${xs.map(tile).join("")}</div>`:"";
-    $("menuHome").innerHTML=`<section class="card">${grp("★ よく使う（最近使った順）",rec.map(k=>MENU_ALL[k]))}${MENU_GROUPS.map(([t,xs])=>grp(t,xs.filter(x=>menuVisible(x[0])))).join("")}</section>`;
+    const ver=(document.querySelector("#tabHelp .verpill")||{}).textContent||"";
+    $("menuHome").innerHTML=`<section class="card">${grp("★ よく使う（最近使った順）",rec.map(k=>MENU_ALL[k]))}${MENU_GROUPS.map(([t,xs])=>grp(t,xs.filter(x=>menuVisible(x[0])))).join("")}
+      <div class="mver"><span class="verpill">${esc(ver.trim())}</span><button type="button" class="btn" id="menuReload">更新</button><small>新しい版が出ているのに古いままのときに押します（データは消えません）</small></div></section>`;
+    $("menuReload").onclick=()=>{ location.href=location.pathname+"?r="+Date.now(); };
     $("menuHome").querySelectorAll("[data-mt]").forEach(b=>b.onclick=()=>{ const k=b.dataset.mt;
       try{ let r=JSON.parse(localStorage.getItem("tenko.menuRecent")||"[]"); r=[k].concat(r.filter(x=>x!==k)).slice(0,6); localStorage.setItem("tenko.menuRecent",JSON.stringify(r)); }catch(e){}
       menuOpen(k); });
