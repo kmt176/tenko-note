@@ -701,7 +701,7 @@ body.rtfull{overflow:hidden}
   <div id="subSet" hidden><section class="card" id="setHeadCard"><h2 id="setHead"></h2><div class="src" id="setDesc"></div></section><div id="setSlot"></div></div>
   <div id="setPark" hidden></div>
   <div class="seg" role="tablist" aria-label="メニュー">
-    <button role="tab" data-sub="long" id="segLong" aria-selected="true">ロング判定</button>
+    <button role="tab" data-sub="long" id="segLong" aria-selected="true">朝のロング判定</button>
     <button role="tab" data-sub="wx" aria-selected="false" hidden>天気</button>
     <button role="tab" data-sub="rail" aria-selected="false" hidden>電車</button>
     <button role="tab" data-sub="fl" aria-selected="false" hidden>到着便</button>
@@ -954,7 +954,7 @@ body.rtfull{overflow:hidden}
         <div class="btnrow"><button class="btn primary" id="nSave">保存</button><button class="btn" id="nForget">消す</button></div>
         <div class="msg" id="nMsg" role="status"></div>
       </div>
-      <div class="grp">
+      <div class="grp" id="lPassBox">
         <h3>ロング判定の合言葉</h3>
         <div class="field"><label for="lPass">ロング判定の合言葉</label><input type="password" id="lPass" autocomplete="off"></div>
         <div class="btnrow"><button class="btn primary" id="lSave">保存</button><button class="btn" id="lForget">消す</button></div>
@@ -978,7 +978,11 @@ body.rtfull{overflow:hidden}
           <div class="btnrow"><button class="btn primary" id="aSave">保存</button><button class="btn" id="aReload">読み直す</button></div>
           <div class="msg" id="aSaveMsg" role="status"></div>
           <h3 style="margin-top:14px">全員への設定・お知らせ</h3>
-          <div class="field"><label for="aRzLock">連続配車の週の目標（60%など）</label><select id="aRzLock"><option value="">各自の設定にまかせる</option><option value="off">全員 使わない（固定）</option></select></div>
+          <div class="field"><label for="aLongLock">朝のロング判定</label><select id="aLongLock"><option value="">全員が使える（合言葉なし）</option><option value="1">ロング判定の合言葉を知っている人だけ</option></select></div>
+          <div class="src">1日の上限（みんなで合わせて）はそのままです。使われすぎて上限に届くようなら「合言葉を知っている人だけ」に戻してください。</div>
+          <div class="btnrow"><button class="btn primary" id="aLongLockSave">この設定を保存</button></div>
+          <div class="msg" id="aLongLockMsg" role="status"></div>
+          <div class="field" style="margin-top:10px"><label for="aRzLock">連続配車の週の目標（60%など）</label><select id="aRzLock"><option value="">各自の設定にまかせる</option><option value="off">全員 使わない（固定）</option></select></div>
           <div class="src">「全員 使わない」にすると、みんなのアプリで週の目標のチェックが外れ、各自では付けられなくなります（コアタイムの確認になります）。次にアプリを開いたとき（開いている人は15分以内）に変わります。</div>
           <div class="btnrow"><button class="btn primary" id="aRzLockSave">この設定を保存</button></div>
           <div class="msg" id="aRzLockMsg" role="status"></div>
@@ -1046,7 +1050,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 21:12</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 21:19</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1089,8 +1093,8 @@ body.rtfull{overflow:hidden}
   </section>
 
   <section class="card help member-only">
-    <h2>ロング判定</h2>
-    <p>「メニュー」→「ロング判定」で開きます。</p>
+    <h2>朝のロング判定</h2>
+    <p>「メニュー」→「朝のロング判定」で開きます。合言葉なしで使えます。</p>
     <ol class="steps">
       <li>「<b>現在地を取得</b>」を押します。住所が自動で入ります（違っていたら直せます）。</li>
       <li><b>お迎え先に向かう前</b>なら「出発点（お迎え先）を入力する」にチェックを入れ、お迎え先を入れます。<small>チェックすると現在地も自動で取得します。お迎え先に着いてから調べるときは、チェック不要です</small></li>
@@ -1641,7 +1645,9 @@ body.rtfull{overflow:hidden}
   ["lStay","lMargin","lPickMin","lViaOn","lVia1","lVia2","lViaMin"].forEach(id=>$(id).addEventListener("change",saveForm));
   ["lDest","lPick","lVia1","lVia2"].forEach(id=>$(id).addEventListener("input",()=>renderLinks()));
   // ロング判定の合言葉（PASSCODE）：正しいか Apps Script で確かめてから、ロング判定を出す
-  const isMember=()=>!PROD||(!!cfg.pass&&cfg.member!==false);
+  // 2026-10-23から、サーバーが「全員に開く」にしていれば合言葉なしで使える（longOpen。開いたときにサーバーから受け取る）
+  let longOpen=false; try{ longOpen=localStorage.getItem("tenko.longOpen")==="1"; }catch(e){}
+  const isMember=()=>!PROD||longOpen||(!!cfg.pass&&cfg.member!==false);
   // 仲間の合言葉（NAKAMA_PASSCODE）：仲間の速報を出す
   const isNakama=()=>!PROD||(!!cfg.npass&&cfg.nakama===true);
   async function checkNakama(){
@@ -1740,6 +1746,8 @@ body.rtfull{overflow:hidden}
         if(!!adminLock.rzweek!==lk){ adminLock.rzweek=lk; try{ localStorage.setItem("tenko.adminLock",JSON.stringify(adminLock)); }catch(e){}
           if(lk) offCfg.rzweek=true; else { let st={}; try{ st=JSON.parse(localStorage.getItem("tenko.off")||"{}")||{}; }catch(e){} if(st.rzweek) offCfg.rzweek=true; else delete offCfg.rzweek; }
           renderOffBox(); render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); } }
+      if(j.longOpen!=null&&!!j.longOpen!==longOpen){ longOpen=!!j.longOpen; try{ localStorage.setItem("tenko.longOpen",longOpen?"1":""); }catch(e){} applyRole(); }
+      if(j.office&&cfg.office!==j.office){ cfg.office=j.office; saveCfg(); }
       if(Array.isArray(j.notices)){ notices=j.notices; try{ localStorage.setItem("tenko.notices",JSON.stringify(notices)); }catch(e){} showNotice(); renderNoticeCard(); }
       try{ localStorage.setItem("tenko.cars",JSON.stringify(carsCfg)); }catch(e){}
       if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
@@ -1800,6 +1808,7 @@ body.rtfull{overflow:hidden}
   // 管理者の画面：全員の設定（連続配車の週の目標）とお知らせ
   function drawAdminNotice(j){
     if(j.rzWeekLock!=null) $("aRzLock").value=j.rzWeekLock||"";
+    if(j.longLock!=null) $("aLongLock").value=j.longLock||"";
     const to=$("aNoticeTo").value||"all", gs=(j.groups||[]).filter(g=>g.pass);
     $("aNoticeTo").innerHTML=`<option value="all">全員</option>`+gs.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}（仲間のグループ）</option>`).join(""); $("aNoticeTo").value=[...$("aNoticeTo").options].some(o=>o.value===to)?to:"all";
     const gname=id=>id==="all"?"全員":((j.groups||[]).find(g=>g.id===id)||{}).name||id;
@@ -1807,6 +1816,9 @@ body.rtfull{overflow:hidden}
     $("aNoticeList").querySelectorAll("[data-ntdel]").forEach(b=>b.onclick=async()=>{ if(!confirm("このお知らせを取り消しますか？（まだ読んでいない人には出なくなります）")) return;
       try{ const r=await post({action:"admin",op:"delNotice",adminPass:cfg.apass,id:b.dataset.ntdel}); if(r.ok){ drawAdminNotice(r); loadCars(); } else $("aNoticeMsg").textContent=r.error||"取り消せませんでした"; }catch(e){ $("aNoticeMsg").textContent="通信できませんでした"; } });
   }
+  $("aLongLockSave").onclick=async()=>{ const m=$("aLongLockMsg"); m.textContent="保存しています…";
+    try{ const r=await post({action:"admin",op:"saveLongLock",adminPass:cfg.apass,lock:$("aLongLock").value}); if(!r.ok){ m.textContent=r.error||"保存できませんでした"; return; }
+      drawAdminNotice(r); m.textContent=r.longLock==="1"?"保存しました。朝のロング判定は、合言葉を知っている人だけになります":"保存しました。朝のロング判定を全員が使えます"; loadCars(); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; } };
   $("aRzLockSave").onclick=async()=>{ const m=$("aRzLockMsg"); m.textContent="保存しています…";
     try{ const r=await post({action:"admin",op:"saveRzLock",adminPass:cfg.apass,lock:$("aRzLock").value}); if(!r.ok){ m.textContent=r.error||"保存できませんでした"; return; }
       drawAdminNotice(r); m.textContent=r.rzWeekLock==="off"?"保存しました。みんなのアプリで週の目標が「使わない」になります":"保存しました。週の目標は各自の設定になります"; loadCars(); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; } };
@@ -1923,7 +1935,8 @@ body.rtfull{overflow:hidden}
     if(!isAdmin()&&typeof curSub!=="undefined"&&curSub==="cmp") showSub("rest");
     $("segSv").hidden=true; if(typeof curSub!=="undefined"&&curSub==="sv") showSub("wx");   // 接遇は売上 → 勤務 の中に移した
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
-    $("cfgSum").textContent="合言葉（"+[isNakama()&&PROD?"仲間 設定済み":"仲間の速報",mem&&PROD?"ロング判定 設定済み":"ロング判定"].join("・")+"）";
+    $("cfgSum").textContent="合言葉（"+[isNakama()&&PROD?"仲間 設定済み":"仲間の速報",longOpen?"":mem&&PROD?"ロング判定 設定済み":"ロング判定"].filter(Boolean).join("・")+"）";
+    if($("lPassBox")) $("lPassBox").hidden=longOpen;   // 全員に開いているときは、ロング判定の合言葉の欄はいらない
     $("nGroup").textContent=isNakama()&&cfg.group?"　"+cfg.group.name:"";
     if(typeof setView==="function"){ const can=isNakama()||isAdmin(); $("sViewFlash").hidden=!can; if(!can&&sView==="flash") setView("day"); }
     if(!mem&&curSub==="long") showSub("wx");
@@ -2117,7 +2130,7 @@ body.rtfull{overflow:hidden}
   // 横並びに戻すと、全部もとの場所に戻す
   const MENU_GROUPS=[
     ["営業中に見る",[["event","🎫","イベント"],["taxi","🏢","専用乗り場"],["train","🚃","電車が止まったら"],["air","✈️","飛行機"],["rest","☕","休憩場"],["flash","👥","仲間の速報"]]],
-    ["お客様の対応",[["long","📏","ロング判定"]]],
+    ["お客様の対応",[["long","📏","朝のロング判定"]]],
     ["管理者だけ（試験）",[["cmp","📊","乗務員比較"],["bus","🚌","都営バス"],["ship","🚢","竹芝の船"],["pay","📈","売上差額チェック"]]],
     ["設定・その他",[["set","⚙️","設定"],["bk","💾","バックアップ"],["help","📖","使い方"]]]];
   const MENU_ALL={}; MENU_GROUPS.forEach(([,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
@@ -2181,7 +2194,10 @@ body.rtfull{overflow:hidden}
   }
   document.querySelectorAll("#menuStyleSeg [data-ms]").forEach(b=>b.onclick=()=>{ menuStyle=b.dataset.ms; try{ localStorage.setItem("tenko.menuStyle",menuStyle); }catch(e){} applyMenuStyle(); });
   // 紹介の資料をアプリの中で開く（iPhoneのホーム画面のアプリでは、別の画面で開くと戻るボタンがないため）
-  document.querySelectorAll("[data-doc]").forEach(b=>b.onclick=()=>{ $("docTitle").textContent=b.dataset.doct||"資料"; $("docFrame").src=b.dataset.doc; $("docView").hidden=false; document.body.style.overflow="hidden"; });
+  document.querySelectorAll("[data-doc]").forEach(b=>b.onclick=async()=>{ $("docTitle").textContent=b.dataset.doct||"資料"; $("docView").hidden=false; document.body.style.overflow="hidden";
+    // 資料のファイルがまだGitHubに上がっていないと、何も出ずに分かりにくいので、先に確かめる
+    let ok=true; if(PROD){ try{ const r=await fetch(b.dataset.doc,{method:"HEAD",cache:"no-store"}); ok=r.ok; }catch(e){} }
+    $("docFrame").src=ok?b.dataset.doc:"data:text/html;charset=utf-8,"+encodeURIComponent('<meta name="viewport" content="width=device-width"><p style="font:16px sans-serif;padding:20px;line-height:1.7">資料のファイル（'+b.dataset.doc+'）が、まだアップロードされていません。管理者に伝えてください。</p>'); });
   $("docClose").onclick=()=>{ $("docView").hidden=true; $("docFrame").src="about:blank"; document.body.style.overflow=""; };
 
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
