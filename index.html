@@ -256,6 +256,9 @@ a.flink:active{background:var(--sunk)}
 .trinfo .trgo{color:var(--accent);font-weight:700}
 .trstop{border-left-color:#D23C2F;background:rgba(210,60,47,.14)}
 .trlate{border-left-color:#E8742A;background:rgba(232,116,42,.14)}
+.busrow{border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px}.busrow.stop{border-left-color:#D23C2F;background:rgba(210,60,47,.08)}.busrow small{display:block;color:var(--muted);font-size:13px;margin-top:2px}.bustag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--warn);color:#fff;font-size:13px;font-weight:700}.busrow.stop .bustag{background:#D23C2F}.busguess{display:inline-block;margin-left:4px;padding:0 6px;border:1px dashed var(--muted);border-radius:6px;font-size:11px;color:var(--muted)}
+.shipnext{border:2px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}.shipnext .big{font-size:30px;font-weight:800}.shipnext .big span{font-size:16px;margin-left:10px;color:var(--accent)}.shipnext.s-late{border-color:#E8890C}.shipnext.s-cond{border-color:#E8890C}
+.shiprow{display:grid;grid-template-columns:64px 1fr auto;gap:2px 8px;align-items:center;border-bottom:1px solid var(--line);padding:8px 2px;font-size:15px}.shiprow b{grid-column:1/-1;font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel b{color:#D23C2F}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-late b,.shiprow.s-cond b{color:#E8890C}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
 .airfilter .airhrbtn{grid-column:1/-1;min-height:44px;font-size:15px;text-align:left}.airfilter .airhrbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 .airhrs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.airhrs button{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:15px}.airhrs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}.airhrs .airhrok{grid-column:1/-1}
 .airfilter{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.airfilter select,.airfilter input{width:100%;min-height:44px;font-size:15px}.airfilter input{grid-column:1/-1}
@@ -692,6 +695,8 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="train" aria-selected="false">電車が止まったら</button>
     <button role="tab" data-sub="air" aria-selected="false">飛行機</button>
     <button role="tab" data-sub="cmp" aria-selected="false" id="segCmp" hidden>乗務員比較（試験）</button>
+    <button role="tab" data-sub="bus" aria-selected="false" id="segBus" hidden>都営バス（試験）</button>
+    <button role="tab" data-sub="ship" aria-selected="false" id="segShip" hidden>竹芝の船（試験）</button>
   </div>
 
   <div class="wrap" id="subSv" hidden></div>
@@ -757,6 +762,25 @@ body.rtfull{overflow:hidden}
     </section>
   </div>
 
+  <div class="wrap" id="subBus" hidden>
+    <section class="card">
+      <div class="infohead"><h2>都営バスの大きな乱れ（試験・管理者のみ）</h2><button class="btn" id="busReload">更新</button></div>
+      <div class="src">運休や大幅な遅れが出ている路線だけを出します。大雪などで都内の交通が乱れたとき、どの駅前に人が溜まりそうかの目安です。都営バスには運休・遅れのお知らせのデータがないため、<b>バスの位置と時刻表から推測</b>しています（〔推測〕の印）。</div>
+      <div class="field"><label for="busTh">大幅遅延とする遅れ</label><select id="busTh"><option value="10">10分以上</option><option value="15">15分以上</option><option value="20" selected>20分以上</option><option value="30">30分以上</option></select></div>
+      <div id="busBox"><div class="geo">読み込んでいます…</div></div>
+      <div class="src" id="busNote"></div>
+    </section>
+  </div>
+  <div class="wrap" id="subShip" hidden>
+    <section class="card">
+      <div class="infohead"><h2>竹芝桟橋に着く船（試験・管理者のみ）</h2><button class="btn" id="shipReload">更新</button></div>
+      <div class="src">伊豆諸島から竹芝桟橋に着く東海汽船の、今日の到着便です。大型客船のほうが乗客・荷物が多いので目印を付けています。欠航は赤、遅れはオレンジです。</div>
+      <div id="shipNext"></div>
+      <div id="shipAlert"></div>
+      <div id="shipBox"><div class="geo">読み込んでいます…</div></div>
+      <div class="src" id="shipNote"></div>
+    </section>
+  </div>
   <div class="wrap" id="subAir" hidden>
     <section class="card">
       <div class="infohead"><h2>飛行機の発着（羽田・成田）</h2><button class="btn" id="airReload">更新</button></div>
@@ -982,7 +1006,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 15:50</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 16:22</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1810,7 +1834,7 @@ body.rtfull{overflow:hidden}
   }
   function applyRole(){
     const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
-    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin();   // 乗務員比較（試験）は管理者だけ
+    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin(); $("segBus").hidden=$("segShip").hidden=!isAdmin();   // 乗務員比較（試験）は管理者だけ
     if(!isAdmin()&&typeof curSub!=="undefined"&&curSub==="cmp") showSub("rest");
     $("segSv").hidden=true; if(typeof curSub!=="undefined"&&curSub==="sv") showSub("wx");   // 接遇は売上 → 勤務 の中に移した
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
@@ -1977,7 +2001,7 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -1985,7 +2009,7 @@ body.rtfull{overflow:hidden}
     if(!SUBS[s]) s="long";
     if(s==="wx"||s==="rail"||s==="fl") s="rest";   // 天気・電車・到着便はいったん非表示にしたので、古い保存値が残っていても休憩場へ
     if(s==="long"&&!isMember()) s="rest";
-    if(s==="cmp"&&!isAdmin()) s="rest";
+    if((s==="cmp"||s==="bus"||s==="ship")&&!isAdmin()) s="rest";
 
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
@@ -1996,6 +2020,8 @@ body.rtfull{overflow:hidden}
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
+    if(s==="bus"&&!$("tabLong").hidden&&typeof loadBus==="function") loadBus(false);
+    if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function") loadShip(false);
     if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function"){ loadAir(false); loadAir(false,airKind==="arr"?"dep":"arr"); }   // 到着・出発の両方を先に読む
   }
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
@@ -2380,6 +2406,73 @@ body.rtfull{overflow:hidden}
     }catch(e){ if(k===airKind&&!airData[k]) $("airAttn").innerHTML=`<div class="geo">読み込めませんでした。電波を確認してください</div>`; }
     finally{ airLoading[k]=false; }
   }
+  // ===== 試験（管理者のみ）：都営バスの大きな乱れ（推測） =====
+  const shm=m=>m==null?"--:--":String(Math.floor(((m%1440)+1440)%1440/60)).padStart(2,"0")+":"+String(((m%60)+60)%60).padStart(2,"0");
+  const clk=iso=>{ const d=new Date(iso); return isNaN(d)?"":String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
+  let busData=null, busAt=0, busBusy=false;
+  try{ const v=localStorage.getItem("tenko.busTh"); if(v) $("busTh").value=v; }catch(e){}
+  $("busTh").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.busTh",$("busTh").value); }catch(e){} renderBus(); });
+  $("busReload").onclick=()=>loadBus(true);
+  async function loadBus(force){
+    if(busData) renderBus();
+    if(busBusy||(!force&&busData&&Date.now()-busAt<120000)) return; busBusy=true;
+    if(!busData) $("busBox").innerHTML=`<div class="geo">読み込んでいます…（最初は時刻表を集めるので30秒ほどかかることがあります）</div>`;
+    try{ const j=await post({action:"busInfo",adminPass:cfg.apass}); if(j.ok){ busData=j; busAt=Date.now(); renderBus(); } else $("busBox").innerHTML=`<div class="geo">${esc(j.error||"読み込めませんでした")}</div>`; }
+    catch(e){ if(!busData) $("busBox").innerHTML=`<div class="geo">読み込めませんでした。電波を確認してください</div>`; }
+    finally{ busBusy=false; }
+  }
+  function renderBus(){
+    const j=busData; if(!j) return; const th=+$("busTh").value||20;
+    const late=[]; j.items.forEach(it=>it.dirs.forEach(d=>{ if(d.med!=null&&d.med>=th) late.push({label:it.label,od:d.od,med:d.med,max:d.max,n:d.n}); }));
+    late.sort((a,b)=>b.med-a.med);
+    const r5=v=>Math.max(5,Math.round(v/5)*5);
+    const rows=j.stopped.map(x=>`<div class="busrow stop"><b>${esc(x.label)}</b> ${esc(x.od||"")}<span class="bustag">運休の可能性</span><span class="busguess">推測</span><small>${x.gap}分前から1台も走っていません${x.hw?`（いつもは約${x.hw}分おき）`:""}</small></div>`)
+      .concat(late.map(x=>`<div class="busrow late"><b>${esc(x.label)}</b> ${esc(x.od)}<span class="bustag">約${r5(x.med)}分遅れ</span><span class="busguess">推測</span><small>この向きを走っている${x.n}台の真ん中の値${x.max>x.med?`（一番遅いバスは${x.max}分）`:""}</small></div>`));
+    $("busBox").innerHTML=rows.length?rows.join(""):`<div class="geo" style="font-size:17px">現在、大きな乱れはありません</div>`;
+    $("busNote").innerHTML=`最終更新 ${clk(j.updatedAt)}（走っているバス ${j.buses}台）。${j.pending?`まだ読んでいない時刻表が${j.pending}系統あります（次の更新で増えます）。`:""}運休の可能性は、この画面を開いていた間（${clk(j.seenFrom)}〜）の記録から出すので、開いた直後は出ません。朝6時前と夜21時半より後は出しません。`;
+  }
+  setInterval(()=>{ if(curSub==="bus"&&!$("tabLong").hidden&&!document.hidden) loadBus(false); },180000);
+
+  // ===== 試験（管理者のみ）：竹芝桟橋に着く船（東海汽船） =====
+  let shipData=null, shipAt=0, shipBusy=false;
+  $("shipReload").onclick=()=>loadShip(true);
+  async function loadShip(force){
+    if(shipData) renderShip();
+    if(shipBusy||(!force&&shipData&&Date.now()-shipAt<120000)) return; shipBusy=true;
+    try{ const j=await post({action:"shipInfo",adminPass:cfg.apass}); if(j.ok){ shipData=j; shipAt=Date.now(); renderShip(); } else $("shipBox").innerHTML=`<div class="geo">${esc(j.error||"読み込めませんでした")}</div>`; }
+    catch(e){ if(!shipData) $("shipBox").innerHTML=`<div class="geo">読み込めませんでした。電波を確認してください</div>`; }
+    finally{ shipBusy=false; }
+  }
+  // 運行情報（アラート）をその便に当てる：便の指定 → 航路の指定 → 指定なし（全体）の順
+  function shipStatus(x,alerts){
+    const hit=alerts.filter(a=>a.ent.some(e=>(e.trip&&e.trip===x.trip)||(!e.trip&&e.route&&e.route===x.route)));
+    let st={k:"ok",l:"定刻"}; 
+    hit.forEach(a=>{ const t=(a.head||"")+" "+(a.desc||"");
+      if(a.effect===1||/欠航|運休/.test(t)) st={k:"cancel",l:"欠航"};
+      else if(st.k!=="cancel"&&/条件付/.test(t)) st={k:"cond",l:"条件付き運航"};
+      else if(st.k==="ok"&&(a.effect===3||/遅/.test(t))){ const m=/(\d+)\s*分/.exec(t), h=/(\d+)\s*時間/.exec(t); st={k:"late",l:m||h?`約${(h?+h[1]*60:0)+(m?+m[1]:0)}分遅れ`:"遅れ"}; } });
+    return {st,hit};
+  }
+  function renderShip(){
+    const j=shipData; if(!j) return; const tt=j.tt||{}, alerts=j.alerts||[];
+    if(!tt.ok||tt.needUpdate){ $("shipNext").innerHTML=""; $("shipBox").innerHTML=`<div class="geo" style="color:var(--bad);font-weight:700">時刻表の更新が必要です${tt.error?`（${esc(tt.error)}）`:""}</div>`; }
+    const now=new Date(), nm=now.getHours()*60+now.getMinutes();
+    const arr=(tt.arr||[]).map(x=>Object.assign({},x,shipStatus(x,alerts)));
+    const used=new Set(); arr.forEach(x=>x.hit.forEach(a=>used.add(a)));
+    const gen=alerts.filter(a=>!used.has(a)&&(a.head||a.desc));
+    $("shipAlert").innerHTML=gen.map(a=>`<div class="shipalert"><b>${esc(a.head||"運行情報")}</b>${a.desc?`<div>${esc(a.desc)}</div>`:""}</div>`).join("");
+    const TY={big:"🚢 大型客船",jet:"🚤 ジェット船"};
+    const lateMin=x=>{ const m=/約(\d+)分/.exec(x.st.l); return m?+m[1]:0; };
+    if(tt.ok&&!tt.needUpdate){
+      const next=arr.filter(x=>x.st.k!=="cancel"&&x.a+lateMin(x)>=nm)[0];
+      $("shipNext").innerHTML=next?`<div class="shipnext s-${next.st.k}"><small>次に着く船</small><div class="big num">${shm(next.a+lateMin(next))}着<span>あと${next.a+lateMin(next)-nm}分</span></div><div>${esc(next.from)}発・${TY[next.type]}${next.guess?"（推定）":""}・<b>${esc(next.st.l)}</b></div></div>`:`<div class="geo">今日、これから着く船はありません</div>`;
+      $("shipBox").innerHTML=arr.length?arr.map(x=>`<div class="shiprow s-${x.st.k}${x.a+lateMin(x)<nm?" past":""}"><span class="num">${shm(x.a)}着</span><span>${esc(x.from)}発</span><span class="shipty ${x.type}">${TY[x.type]}${x.guess?"（推定）":""}</span><b>${esc(x.st.l)}</b></div>`).join(""):`<div class="geo">今日、竹芝に着く便はありません</div>`;
+    }
+    $("shipNote").innerHTML=`最終更新 ${clk(j.updatedAt)}。時刻表 ${esc(tt.feedStart||"")}〜${esc(tt.feedEnd||"")}${j.rtError?`。運行情報：${esc(j.rtError)}`:""}。船の種類は、名前で分からないときは所要時間（4時間未満＝ジェット船）で推定しています。小笠原（おがさわら丸）は東海汽船ではないので入っていません。`;
+  }
+  setInterval(()=>{ if(curSub==="ship"&&!$("tabLong").hidden&&!document.hidden){ loadShip(false); } },180000);
+  setInterval(()=>{ if(curSub==="ship"&&shipData) renderShip(); },30000);   // 「あと何分」を進める
+
   // 「すべての便を見る」のしぼり込み（航空会社・ターミナル・時間帯・文字）
   const AIR_AL={JL:"JAL",NH:"ANA",BC:"スカイマーク","7G":"スターフライヤー","6J":"ソラシドエア",HD:"AIRDO",NU:"日本トランスオーシャン",JH:"FDA",GK:"ジェットスター",MM:"ピーチ",ZG:"ZIPAIR",IJ:"スプリング",UA:"ユナイテッド",DL:"デルタ",AA:"アメリカン",KE:"大韓航空",OZ:"アシアナ",CI:"チャイナエアライン",BR:"エバー航空",CX:"キャセイ",SQ:"シンガポール航空",TG:"タイ国際航空",PR:"フィリピン航空",VN:"ベトナム航空",MU:"中国東方",CA:"中国国際",CZ:"中国南方",HA:"ハワイアン",BA:"ブリティッシュ",AF:"エールフランス",LH:"ルフトハンザ",AY:"フィンエアー",QF:"カンタス",EK:"エミレーツ",QR:"カタール",TK:"ターキッシュ"};
   let airUp=[], airRowFn=null;
