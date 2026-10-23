@@ -117,8 +117,8 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 input[type=date],input[type=time]{width:100%;font:20.5px var(--num);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
 .live{font-size:15px;color:var(--muted)}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabbar button{flex:1 1 0;min-width:0;border:0;background:none;padding:9px 0 8px;font-weight:700;font-size:13.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1}
-.tabbar button .ic{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button{flex:1 1 0;min-width:0;border:0;background:none;padding:8px 0 8px;font-weight:700;font-size:16.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1}
+.tabbar button .ic{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tabbar button[aria-selected="true"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
 .tabbar .tb-help{flex:0 0 16%;border-right:1px solid var(--line)}
 .help p{margin:0}
@@ -268,15 +268,15 @@ a.flink:active{background:var(--sunk)}
 :root{--th-navy:#2B4A7E;--th-navy-bg:rgba(43,74,126,.12);--th-blue:#1F68C9;--th-blue-bg:rgba(31,104,201,.11);--th-green:#1F7A50;--th-green-bg:rgba(31,122,80,.12);--th-gray:#5B6664;--th-gray-bg:rgba(91,102,100,.12)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--th-navy:#9DB4E8;--th-navy-bg:rgba(157,180,232,.16);--th-blue:#74AEF5;--th-blue-bg:rgba(116,174,245,.15);--th-green:#6CCB9B;--th-green-bg:rgba(108,203,155,.15);--th-gray:#A9B5B3;--th-gray-bg:rgba(169,181,179,.14)}}
 :root[data-theme="dark"]{--th-navy:#9DB4E8;--th-navy-bg:rgba(157,180,232,.16);--th-blue:#74AEF5;--th-blue-bg:rgba(116,174,245,.15);--th-green:#6CCB9B;--th-green-bg:rgba(108,203,155,.15);--th-gray:#A9B5B3;--th-gray-bg:rgba(169,181,179,.14)}
-.mgrp{font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--th);margin:16px 0 8px;display:flex;align-items:center;gap:6px}.mgrp::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--th)}.mgrp:first-child{margin-top:0}
+.mgrp{font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--th);margin:16px 0 8px;display:flex;align-items:center;gap:6px}.mgrp::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--th)}.mgrp:first-child{margin-top:0}
 .th-navy{--th:var(--th-navy);--thbg:var(--th-navy-bg)}.th-blue{--th:var(--th-blue);--thbg:var(--th-blue-bg)}.th-green{--th:var(--th-green);--thbg:var(--th-green-bg)}.th-gray{--th:var(--th-gray);--thbg:var(--th-gray-bg)}
-.mtiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.mtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:92px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:700;line-height:1.2;padding:10px 4px;text-align:center;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06);-webkit-tap-highlight-color:transparent}
+.mtiles{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.mtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:104px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:700;line-height:1.2;padding:10px 2px;letter-spacing:-.02em;text-align:center;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06);-webkit-tap-highlight-color:transparent}
 .mtile:active{background:var(--thbg)}
 .mtile .lb{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mver{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}.mver small{flex-basis:100%;color:var(--muted);font-size:12px}
-.mtile .mi{width:46px;height:46px;border-radius:13px;background:var(--thbg);color:var(--th);display:flex;align-items:center;justify-content:center}
-.mtile .mi .ic{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mtile .mi{width:54px;height:54px;border-radius:15px;background:var(--thbg);color:var(--th);display:flex;align-items:center;justify-content:center}
+.mtile .mi .ic{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #setSlot>details,#setSlot>section{margin-top:12px}
 .airfilter .airhrbtn{grid-column:1/-1;min-height:44px;font-size:15px;text-align:left}.airfilter .airhrbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 .airhrs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.airhrs button{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:15px}.airhrs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}.airhrs .airhrok{grid-column:1/-1}
@@ -1059,7 +1059,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 21:52</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-24 01:09</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
