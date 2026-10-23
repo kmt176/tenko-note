@@ -783,8 +783,8 @@ body.rtfull{overflow:hidden}
       <div id="trInfo" class="grp"></div>
       <div class="trtest" id="trBanTestRow"><button class="btn" id="trBanTest">🚃 運転見合わせ<small>テスト表示</small></button><button class="btn" id="trBanTestOk">🟢 再開<small>テスト表示</small></button></div>
       <div class="field"><label for="trainSel">止まった路線</label><select id="trainSel"><option value="">選んでください</option></select></div>
-      <label class="check"><input type="checkbox" id="trYel" checked>黄色い駅（別の路線の駅まで500m以上）も色をつける</label>
-      <label class="check"><input type="checkbox" id="trOnlyRed">色のついた駅（赤・黄色）だけ出す</label>
+      <label class="check"><input type="checkbox" id="trOnlyRed">赤い駅（近くに別の路線がない駅）だけ出す</label>
+      <label class="check"><input type="checkbox" id="trYel" checked>黄色い駅（別の路線の駅まで500m以上）も出す</label>
       <div id="trMapWrap" class="mapwrap">
         <div id="trMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="trMeBtn">現在地</button><button class="btn" id="trFullBtn">全画面</button></div>
@@ -978,7 +978,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:48</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:52</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
