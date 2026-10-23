@@ -945,7 +945,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 12:55</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 12:58</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2294,7 +2294,7 @@ body.rtfull{overflow:hidden}
   const AIR_NAME={CTS:"札幌(新千歳)",FUK:"福岡",OKA:"那覇",ITM:"大阪(伊丹)",KIX:"関西",UKB:"神戸",NGO:"中部",KOJ:"鹿児島",KMJ:"熊本",HIJ:"広島",OKJ:"岡山",MYJ:"松山",KMI:"宮崎",NGS:"長崎",OIT:"大分",HSG:"佐賀",KMQ:"小松",TOY:"富山",AOJ:"青森",AKJ:"旭川",HKD:"函館",KUH:"釧路",OBO:"帯広",MMB:"女満別",WKJ:"稚内",ISG:"石垣",MMY:"宮古",UBJ:"山口宇部",TKS:"徳島",TAK:"高松",KCZ:"高知",IZO:"出雲",YGJ:"米子",SYO:"庄内",AXT:"秋田",GAJ:"山形",SDJ:"仙台",MSJ:"三沢",HNA:"花巻",ONJ:"大館能代",KKJ:"北九州",IWJ:"岩見",NTQ:"能登",SHM:"南紀白浜",TTJ:"鳥取",
     ICN:"ソウル(仁川)",GMP:"ソウル(金浦)",PUS:"釜山",TPE:"台北(桃園)",TSA:"台北(松山)",KHH:"高雄",HKG:"香港",MFM:"マカオ",PVG:"上海(浦東)",SHA:"上海(虹橋)",PEK:"北京",PKX:"北京(大興)",CAN:"広州",SIN:"シンガポール",BKK:"バンコク",DMK:"バンコク(ドンムアン)",KUL:"クアラルンプール",MNL:"マニラ",SGN:"ホーチミン",HAN:"ハノイ",CGK:"ジャカルタ",DPS:"デンパサール",DEL:"デリー",DXB:"ドバイ",DOH:"ドーハ",IST:"イスタンブール",
     HNL:"ホノルル",LAX:"ロサンゼルス",SFO:"サンフランシスコ",SEA:"シアトル",JFK:"ニューヨーク",ORD:"シカゴ",DFW:"ダラス",IAH:"ヒューストン",YVR:"バンクーバー",YYZ:"トロント",LHR:"ロンドン",CDG:"パリ",FRA:"フランクフルト",MUC:"ミュンヘン",HEL:"ヘルシンキ",AMS:"アムステルダム",SYD:"シドニー",MEL:"メルボルン",GUM:"グアム",HND:"羽田",NRT:"成田"};
-  const AIR_ST={Arrived:"到着",Landed:"着陸",Cancelled:"欠航",Delayed:"遅延",OnTime:"定刻",Changed:"時刻変更",Departed:"出発",Diverted:"他空港へ",Returned:"引き返し",Boarding:"搭乗中",CheckIn:"搭乗手続き中",FinalCall:"最終案内",GateClosed:"搭乗締切",Estimated:"予定",Takeoff:"出発"};
+  const AIR_ST={EstimatedArrival:"到着予定",EstimatedDeparture:"出発予定",InAir:"飛行中",LeftGate:"ゲート出発",Arrived:"到着",Landed:"着陸",Cancelled:"欠航",Delayed:"遅延",OnTime:"定刻",Changed:"時刻変更",Departed:"出発",Diverted:"他空港へ",Returned:"引き返し",Boarding:"搭乗中",CheckIn:"搭乗手続き中",FinalCall:"最終案内",GateClosed:"搭乗締切",Estimated:"予定",Takeoff:"出発"};
   const AIR_TERM={HND:{Terminal1:[35.5486,139.7843,"羽田 第1ターミナル"],Terminal2:[35.5507,139.7882,"羽田 第2ターミナル"],Terminal3:[35.5443,139.7686,"羽田 第3ターミナル"]},NRT:{Terminal1:[35.7645,140.3862,"成田 第1ターミナル"],Terminal2:[35.7727,140.3928,"成田 第2ターミナル"],Terminal3:[35.7778,140.3941,"成田 第3ターミナル"]}};
   let airKind="arr", airAp="HND", airData={}, airAt={};
   const airMin=s=>{ const m=/^(\d{1,2}):(\d{2})/.exec(s||""); return m?(+m[1])*60+(+m[2]):null; };
