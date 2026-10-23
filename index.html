@@ -954,7 +954,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:24</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:31</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1955,7 +1955,7 @@ body.rtfull{overflow:hidden}
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
-    if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function") loadAir(false);
+    if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function"){ loadAir(false); loadAir(false,airKind==="arr"?"dep":"arr"); }   // 到着・出発の両方を先に読む
   }
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
   $("restCode").value=cfg.empCode||"";
@@ -2317,12 +2317,19 @@ body.rtfull{overflow:hidden}
     if(/Wing/.test(x.term||"")) x=Object.assign({},x,{term:"Terminal1"});   // 「北ウィング・南ウィング」は第1ターミナルの中（羽田・成田とも）
     return Object.assign({},x,{sm:s,when,dl,cancel,late,lvl,rel:when!=null?airRel(when):0,term:x.term||guess,tguess:!!guess});
   }
-  async function loadAir(force){
-    const k=airKind, box=$("airList"); if(!force&&airData[k]&&Date.now()-airAt[k]<120000){ renderAir(); return; }
-    box.innerHTML=`<div class="geo">読み込んでいます…</div>`;
-    try{ const j=await post({action:"flightInfo",kind:k}); if(!j.ok){ box.innerHTML=`<div class="geo">${esc(j.error||"読み込めませんでした")}</div>`; return; }
-      airData[k]=j; airAt[k]=Date.now(); renderAir();
-    }catch(e){ box.innerHTML=`<div class="geo">読み込めませんでした。電波を確認してください</div>`; }
+  // 到着・出発を切り替えたら、すぐにボタンの色と「読み込んでいます」を出す。前に読んだ分があれば先に出して、裏で新しくする
+  const airLoading={};
+  async function loadAir(force,kind){
+    const k=kind||airKind;
+    if(k===airKind){ document.querySelectorAll("#airKindSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===airKind));
+      if(airData[k]) renderAir(); else { $("airCards").innerHTML=""; $("airBars").innerHTML=""; $("airAttn").innerHTML=`<div class="geo">読み込んでいます…（数秒かかることがあります）</div>`; } }
+    if(!force&&airData[k]&&Date.now()-airAt[k]<120000) return;
+    if(airLoading[k]) return; airLoading[k]=true;
+    try{ const j=await post({action:"flightInfo",kind:k});
+      if(j.ok){ airData[k]=j; airAt[k]=Date.now(); if(k===airKind) renderAir(); }
+      else if(k===airKind&&!airData[k]) $("airAttn").innerHTML=`<div class="geo">${esc(j.error||"読み込めませんでした")}</div>`;
+    }catch(e){ if(k===airKind&&!airData[k]) $("airAttn").innerHTML=`<div class="geo">読み込めませんでした。電波を確認してください</div>`; }
+    finally{ airLoading[k]=false; }
   }
   function renderAir(){
     document.querySelectorAll("#airKindSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===airKind));
@@ -2353,7 +2360,7 @@ body.rtfull{overflow:hidden}
   // 印は data-airap（古い「到着便」の機能が [data-ap] のボタンをまとめて使うので、ぶつからない名前にした）
   document.querySelectorAll("#airApSeg button").forEach(b=>b.onclick=()=>{ airAp=b.dataset.airap; renderAir(); });
   $("airReload").onclick=()=>loadAir(true);
-  setInterval(()=>{ if(curSub==="air"&&!$("tabLong").hidden) loadAir(true); },180000);   // タブを開いている間は3分ごと
+  setInterval(()=>{ if(curSub==="air"&&!$("tabLong").hidden){ loadAir(true,"arr"); loadAir(true,"dep"); } },180000);   // タブを開いている間は3分ごと
   $("evMeBtn").onclick=()=>{ if(evMap) evShowMe(true); };
   $("evReload").onclick=()=>renderEv(true);
   $("evCalBtn").onclick=()=>{ $("evCal").hidden=!$("evCal").hidden; };
