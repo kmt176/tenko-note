@@ -256,6 +256,7 @@ a.flink:active{background:var(--sunk)}
 .trinfo .trgo{color:var(--accent);font-weight:700}
 .trstop{border-left-color:#D23C2F;background:rgba(210,60,47,.14)}
 .trlate{border-left-color:#E8742A;background:rgba(232,116,42,.14)}
+.airfilter{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.airfilter select,.airfilter input{width:100%;min-height:44px;font-size:15px}.airfilter input{grid-column:1/-1}
 .aircards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .aircard{display:flex;flex-direction:column;gap:2px;padding:10px;border-radius:10px;background:var(--sunk);text-decoration:none;color:var(--ink);border:2px solid transparent}
 .aircard.hot{border-color:#D23C2F;background:rgba(210,60,47,.12)}
@@ -748,7 +749,14 @@ body.rtfull{overflow:hidden}
       <div id="airCards" class="aircards"></div>
       <div id="airBars"></div>
       <div id="airAttn"></div>
-      <details id="airAllBox"><summary id="airAllSum">すべての便を見る</summary><div id="airList"></div></details>
+      <details id="airAllBox"><summary id="airAllSum">すべての便を見る</summary>
+        <div class="airfilter">
+          <select id="airFAl" aria-label="航空会社"><option value="">航空会社：すべて</option></select>
+          <select id="airFTerm" aria-label="ターミナル"><option value="">ターミナル：すべて</option><option value="Terminal1">第1</option><option value="Terminal2">第2</option><option value="Terminal3">第3</option></select>
+          <select id="airFHour" aria-label="時間帯"><option value="">時間帯：これから全部</option></select>
+          <input type="search" id="airFText" placeholder="便名・出発地で探す（例：JL123、福岡）" autocomplete="off">
+        </div>
+        <div id="airList"></div></details>
       <div class="src" id="airNote"></div>
       <div class="src">出典：公共交通オープンデータセンター（各空港・航空会社の発表）。時刻は見込みで、変わることがあります。成田はJAL・ANA・ZIPAIRの便だけで、海外の航空会社やLCCの便は出ません。</div>
     </section>
@@ -954,7 +962,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:31</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:34</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2331,6 +2339,23 @@ body.rtfull{overflow:hidden}
     }catch(e){ if(k===airKind&&!airData[k]) $("airAttn").innerHTML=`<div class="geo">読み込めませんでした。電波を確認してください</div>`; }
     finally{ airLoading[k]=false; }
   }
+  // 「すべての便を見る」のしぼり込み（航空会社・ターミナル・時間帯・文字）
+  const AIR_AL={JL:"JAL",NH:"ANA",BC:"スカイマーク","7G":"スターフライヤー","6J":"ソラシドエア",HD:"AIRDO",NU:"日本トランスオーシャン",JH:"FDA",GK:"ジェットスター",MM:"ピーチ",ZG:"ZIPAIR",IJ:"スプリング",UA:"ユナイテッド",DL:"デルタ",AA:"アメリカン",KE:"大韓航空",OZ:"アシアナ",CI:"チャイナエアライン",BR:"エバー航空",CX:"キャセイ",SQ:"シンガポール航空",TG:"タイ国際航空",PR:"フィリピン航空",VN:"ベトナム航空",MU:"中国東方",CA:"中国国際",CZ:"中国南方",HA:"ハワイアン",BA:"ブリティッシュ",AF:"エールフランス",LH:"ルフトハンザ",AY:"フィンエアー",QF:"カンタス",EK:"エミレーツ",QR:"カタール",TK:"ターキッシュ"};
+  let airUp=[], airRowFn=null;
+  const airPre=x=>(String(x.f||"").match(/^[A-Z0-9]{2}/)||[""])[0];
+  function airFillFilters(){
+    const keep=$("airFAl").value, cnt={}; airUp.forEach(x=>{ const p=airPre(x); if(p) cnt[p]=(cnt[p]||0)+1; });
+    $("airFAl").innerHTML=`<option value="">航空会社：すべて</option>`+Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(p=>`<option value="${esc(p)}">${esc(AIR_AL[p]||p)}（${esc(p)}）${cnt[p]}便</option>`).join(""); $("airFAl").value=cnt[keep]?keep:"";
+    const hk=$("airFHour").value, now=new Date().getHours(); $("airFHour").innerHTML=`<option value="">時間帯：これから全部</option>`+[...Array(12)].map((_,i)=>{ const h=(Math.floor(now/2)*2+i*2)%24; return `<option value="${h}">${h}〜${h+2}時</option>`; }).join(""); $("airFHour").value=hk;
+    $("airFTerm").querySelectorAll("option[value^=T]").forEach(o=>o.hidden=airAp==="NRT"&&o.value==="Terminal3"&&!airUp.some(x=>x.term==="Terminal3"));
+  }
+  function airRenderList(){
+    const al=$("airFAl").value, tm=$("airFTerm").value, hr=$("airFHour").value, q=$("airFText").value.trim().toUpperCase();
+    const xs=airUp.filter(x=>(!al||airPre(x)===al)&&(!tm||x.term===tm)&&(hr===""||(x.when!=null&&Math.floor(x.when/120)*2===+hr))
+      &&(!q||(x.f+" "+x.fs+" "+(AIR_NAME[x.from]||"")+" "+x.from).toUpperCase().includes(q)));
+    $("airList").innerHTML=(al||tm||hr!==""||q?`<div class="src">しぼり込み：${xs.length}便</div>`:"")+(xs.map(airRowFn).join("")||`<div class="geo">当てはまる便はありません</div>`);
+  }
+  ["airFAl","airFTerm","airFHour"].forEach(id=>$(id).addEventListener("change",airRenderList)); $("airFText").addEventListener("input",airRenderList);
   function renderAir(){
     document.querySelectorAll("#airKindSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===airKind));
     document.querySelectorAll("#airApSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.airap===airAp));
@@ -2352,7 +2377,7 @@ body.rtfull{overflow:hidden}
     $("airAttn").innerHTML=`<b>気をつける便</b><small style="color:var(--muted)"> ${arr?"（遅れて深夜に着く・1時間以上の遅れ・欠航）":"（30分以上の遅れ・欠航）"}</small>`+(attn.length?attn.map(row).join(""):`<div class="geo">🟢 いまは、気をつける便はありません</div>`);
     // すべての便（これから）は、開いたときだけ
     $("airAllSum").textContent=`すべての便を見る（これから ${up.length}便）`;
-    $("airList").innerHTML=up.sort((a,b)=>a.rel-b.rel).map(row).join("")||`<div class="geo">これからの便はありません</div>`;
+    airUp=up.sort((a,b)=>a.rel-b.rel); airRowFn=row; airFillFilters(); airRenderList();
     const ts=new Date(j.updatedAt);
     $("airNote").textContent=`${airAp==="HND"?"羽田":"成田"}の${arr?"到着":"出発"}便（${String(ts.getHours()).padStart(2,"0")}:${String(ts.getMinutes()).padStart(2,"0")}時点）。${arr?"深夜着＝22:30〜翌5時に着く便。":"早朝発＝4〜7時に出る便。"}${j.errs&&j.errs.length?"一部読めませんでした。":""}`;
   }
