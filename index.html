@@ -973,7 +973,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:27</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:37</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1611,7 +1611,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -4486,13 +4486,27 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     try{ localStorage.setItem("tenko.trainBan",JSON.stringify({sig,at:Date.now()})); }catch(e){}
     showTrainBanner(stop,false);
   }
+  // お知らせの音（電車の帯だけ）。スマホのブラウザは、画面を一度さわるまで音を出せないので、さわったときに音の準備をしておく
+  let trAudio=null;
+  document.addEventListener("pointerdown",()=>{ try{ if(!trAudio){ const C=window.AudioContext||window.webkitAudioContext; if(C) trAudio=new C(); } if(trAudio&&trAudio.state==="suspended") trAudio.resume(); }catch(e){} },{passive:true});
+  function trChime(kind){
+    if(offCfg.trainsound||!trAudio) return;
+    try{ const a=trAudio, now=a.currentTime;
+      const tone=(fq,t0,d,vol)=>{ const o=a.createOscillator(), g=a.createGain(); o.type="sine"; o.frequency.value=fq;
+        g.gain.setValueAtTime(0.0001,now+t0); g.gain.exponentialRampToValueAtTime(vol,now+t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,now+t0+d);
+        o.connect(g); g.connect(a.destination); o.start(now+t0); o.stop(now+t0+d+0.05); };
+      if(kind==="stop"){ [0,1.3].forEach(b=>{ tone(880,b,0.5,0.45); tone(660,b+0.45,0.85,0.45); }); try{ if(navigator.vibrate) navigator.vibrate([300,150,300]); }catch(e){} }   // 止まった：ピンポーン×2（Androidは振動も）
+      else tone(784,0,0.8,0.3);   // 再開：ポン（やさしく1回）
+    }catch(e){}
+  }
   function showTrainRecover(xs,test){
+    trChime("ok");
     trainBanLine=""; const b=$("trainBanner"); b.classList.add("trok");
     $("trainBannerText").textContent=`🟢 運転を再開しました：${xs.slice(0,2).map(x=>`${x.l}${x.status?`（${x.status}）`:""}`).join("、")}${xs.length>2?` ほか${xs.length-2}路線`:""}${test?"　※テスト表示":""}`;
     b.hidden=false;
   }
   function showTrainBanner(stop,test){
-    $("trainBanner").classList.remove("trok");
+    $("trainBanner").classList.remove("trok"); trChime("stop");
     const have=new Set(TRAIN_ALL.map(x=>x.l)); trainBanLine=(stop.find(x=>have.has(x.l))||{}).l||"";
     $("trainBannerText").textContent=`🚃 電車が止まりました：${stop.slice(0,2).map(x=>`${x.l}（${x.status||"運転見合わせ"}）`).join("、")}${stop.length>2?` ほか${stop.length-2}路線`:""}${test?"　※テスト表示":""}　押すと近くに別の路線がない駅を出します ›`;
     $("trainBanner").hidden=false;
