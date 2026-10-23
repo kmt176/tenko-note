@@ -982,7 +982,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 15:03</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 15:39</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1620,14 +1620,26 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
       try{ localStorage.setItem("tenko.off",JSON.stringify(offCfg)); }catch(e){}
       if(b.dataset.off==="taxi"&&!b.checked) $("taxiBanner").hidden=true;
       if(b.dataset.off==="trainban"&&!b.checked) $("trainBanner").hidden=true;
+      if(b.dataset.off==="wake") wakeSet();
       render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); }); }
+  // 画面を消さない（Wake Lock）。アプリを開いている間だけ効く。ほかのアプリに切り替えると外れるので、戻ったら付け直す
+  let wakeLock=null;
+  async function wakeSet(){
+    try{ if(offCfg.wake){ if(wakeLock){ await wakeLock.release(); wakeLock=null; } return; }
+      if(!("wakeLock" in navigator)||document.visibilityState!=="visible"||wakeLock) return;
+      wakeLock=await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release",()=>{ wakeLock=null; });
+    }catch(e){ wakeLock=null; } }
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") wakeSet(); });
+  // iPhoneは画面をさわったあとでないと付けられないことがあるので、さわったときにも試す
+  document.addEventListener("pointerdown",()=>{ if(!wakeLock) wakeSet(); },{passive:true});
+  wakeSet();
   // 最初の表示は applyRole() の中で行う（接遇が出せるかは合言葉で決まるため）
   // 売上の上の切り替えは出さない（管理者も、メニューの設定で車種を選んだときだけ変わる。ユーザー指定）
   function renderCarSeg(){ const el=$("carSeg"); if(!el) return; el.hidden=true; return;
@@ -3032,10 +3044,13 @@ body.rtfull{overflow:hidden}
     const total=num(c.total)??(d.mode==="simple"?num(d.simple&&d.simple.amt):null);
     const meter=s.total, meterCalc=total==null?null:total+app+etc-etcCo-etcSelf-bku;
     const gen=num(c.genshu), mis=num(c.mishu);
-    return {meter,card,other,mishu,bku,cash,app,etc,etcCo,etcSelf,total,meterCalc,
+    const swap=gen!=null&&mis!=null&&gen-(cash+bku)>0&&mishu-mis===gen-(cash+bku)?gen-(cash+bku):0;
+    const swapRides=swap?(s.rows||[]).filter(x=>!isEv(x.kind)&&x.pay&&x.pay!=="現金"&&+x.amt===swap):[];
+    return {swap,swapRides,meter,card,other,mishu,bku,cash,app,etc,etcCo,etcSelf,total,meterCalc,
       // 簡易入力は決済の内訳がないので、納金は出さない
       nokin:total==null||d.mode==="simple"?null:((total-mishu)+(etc-etcCo)+app)-bku,
       meterOk:meterCalc!=null&&meterCalc===meter,
+      // 日報では現収なのに記録では未収（決済エラーのあと別に払われた等）：現収が多い分と未収が少ない分が同じ金額
       genOk:gen==null?null:cash+bku===gen, misOk:mis==null?null:mishu===mis, sumOk:gen==null||mis==null?null:meter+bku===gen+mis};   // B空転は日計表の現収に入るので足して比べる
   }
   // 1勤務の売上（月度の合計用）：総営収があればそれ、なければ記録から見込み（アプリ料・ETCを引く）
@@ -3636,11 +3651,21 @@ body.rtfull{overflow:hidden}
       st.total==null?`<div class="geo">売上額①（日報の総営収）を入れると、納金額と照合の結果を出します。</div>`:
       `<div class="checks">
         ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／明細書から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>${!st.etcSelf&&st.etc?`<small class="err">ETC自己負担が0のままになっていませんか？高速道路利用明細の「納金分」の入力漏れがないか確認してください。</small>`:""}`}
-        ${st.genOk==null?"":`<span class="pill ${st.genOk?"ok":"warn"}">日計表の現収 ${st.genOk?"OK":"要確認"}（現金＋B空転 ${yen(st.cash+st.bku)}円）</span>`}
-        ${st.misOk==null?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
+        ${st.swap?`<div class="grp" style="margin:4px 0;border-left:6px solid var(--warn)"><b>日報では現収・記録では未収の乗車が ${yen(st.swap)}円 あります</b>${st.swapRides.length?`（${st.swapRides.map(x=>`${tm(x.on)} の乗車 ${yen(x.amt)}円・${esc(payLabel(x.pay))}`).join("、")}）`:""}
+          <div class="src">決済がエラーになり、あとで決済された場合などです。記録（未収）のままでOKで、納金額もこのままです。納金明細書の伝達事項に書いてください。下のボタンで、伝達事項に文を入れられます（あとで直せます）。</div>
+          <div class="btnrow"><button class="btn" data-swapnote="cust">お客様の残高不足など</button><button class="btn" data-swapnote="sys">決済システムの不具合</button></div></div>`:""}
+        ${st.genOk==null||st.swap?"":`<span class="pill ${st.genOk?"ok":"warn"}">日計表の現収 ${st.genOk?"OK":"要確認"}（現金＋B空転 ${yen(st.cash+st.bku)}円）</span>`}
+        ${st.misOk==null||st.swap?"":`<span class="pill ${st.misOk?"ok":"warn"}">日計表の未収 ${st.misOk?"OK":"要確認"}（④ ${yen(st.mishu)}円）</span>`}
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
       </div>
-      <div class="src">メーター照合：①＋⑦＋⑤−⑥−ETC自己負担−⑧ が、記録の合計（メーター日計）と同じならOK。納金額＝①−④＋⑤−⑥＋⑦−⑧。</div>`;    renderHw(d); renderRoute(k,d,s); renderCmp(k,d); renderHist(d);
+      <div class="src">メーター照合：①＋⑦＋⑤−⑥−ETC自己負担−⑧ が、記録の合計（メーター日計）と同じならOK。納金額＝①−④＋⑤−⑥＋⑦−⑧。</div>`;
+    // 決済エラーの付け替え：伝達事項に文を足す
+    $("ckResult").querySelectorAll("[data-swapnote]").forEach(b=>b.onclick=()=>{ const dd=ensureDay(sDay); if(dd.locked&&!guard(dd)) return;
+      const what=st.swapRides.length?st.swapRides.map(x=>`${tm(x.on)}乗車（${yen(x.amt)}円）`).join("・"):`${yen(st.swap)}円分`;
+      const why=b.dataset.swapnote==="cust"?"お客様の残高不足で決済エラーになりましたが":"決済システムの不具合でエラーになりましたが";
+      const line=`${what}は、一度${why}、その後決済されたことを確認しましたので未収にしました。処理されていると思いますので確認をお願いします。`;
+      const cur=(dd.check.note||"").trim(); if(cur.includes(line)) return;
+      dd.check.note=cur?cur+"\n"+line:line; saveSales(); renderSales(); });    renderHw(d); renderRoute(k,d,s); renderCmp(k,d); renderHist(d);
     const canLock=st.total!=null&&(simple||st.meterOk);
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
