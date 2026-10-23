@@ -401,9 +401,16 @@ body.rtfull{overflow:hidden}
 .mrow .s{grid-column:2/4;font-size:13.5px;color:var(--muted);font-weight:400}
 .wxsel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .taxibanner{position:fixed;top:0;left:0;right:0;z-index:2000;background:var(--accent);color:#fff;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.trainbanner{position:fixed;top:0;left:0;right:0;z-index:2001;background:#FBE3EC;color:#7A1F3D;border-bottom:2px solid #EBB8CB;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.trainbanner #trainBannerText{flex:1;text-align:left;background:none;border:0;color:inherit;font:inherit;font-size:15px;font-weight:700;padding:0}
+.trainbanner #trainBannerClose{background:transparent;border:0;color:#7A1F3D;font-size:22px;line-height:1;padding:0 4px;flex:none}
 .taxibanner button{background:transparent;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;flex:none}
 </style>
 
+<div id="trainBanner" class="trainbanner" hidden role="status">
+  <button type="button" id="trainBannerText"></button>
+  <button type="button" id="trainBannerClose" aria-label="閉じる">×</button>
+</div>
 <div id="taxiBanner" class="taxibanner" hidden role="status">
   <span id="taxiBannerText"></span>
   <button type="button" id="taxiBannerClose" aria-label="閉じる">×</button>
@@ -963,7 +970,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 13:59</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:09</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1601,12 +1608,13 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>`<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}>${escC(label)}</label>`).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
       try{ localStorage.setItem("tenko.off",JSON.stringify(offCfg)); }catch(e){}
       if(b.dataset.off==="taxi"&&!b.checked) $("taxiBanner").hidden=true;
+      if(b.dataset.off==="trainban"&&!b.checked) $("trainBanner").hidden=true;
       render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); }); }
   // 最初の表示は applyRole() の中で行う（接遇が出せるかは合言葉で決まるため）
   // 売上の上の切り替えは出さない（管理者も、メニューの設定で車種を選んだときだけ変わる。ユーザー指定）
@@ -4449,6 +4457,26 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     }
   }
   if(PROD){ setTimeout(taxiCheck,8000); setInterval(taxiCheck,3*60*1000); }
+
+  // ===== 電車が止まったときのお知らせ（薄いピンクの帯）。運転見合わせ・運休などの路線があれば出す（遅れだけでは出さない） =====
+  let trainBanLine="";
+  $("trainBannerClose").onclick=()=>{ $("trainBanner").hidden=true; };
+  $("trainBannerText").onclick=()=>{ $("trainBanner").hidden=true; showTab(2); showSub("train");
+    if(trainBanLine&&[...$("trainSel").options].some(o=>o.value===trainBanLine)){ $("trainSel").value=trainBanLine; try{ localStorage.setItem("tenko.trainLine",trainBanLine); }catch(e){} renderTrainTab(false); } };
+  async function trainCheck(){
+    if(!PROD||!cfg.url||offCfg.trainban) return;
+    let j; try{ j=await post({action:"trainInfo"}); }catch(e){ return; }
+    if(!j||!j.ok) return;
+    const stop=(j.items||[]).map(x=>{ const id=x.railway.replace(/^odpt\.Railway:/,""); return Object.assign({},x,{l:ODPT_LINE[id]||id.replace(/^[^.]*\./,""),sev:trSev(x)}); }).filter(x=>x.sev===2);
+    if(!stop.length){ $("trainBanner").hidden=true; return; }
+    const sig=stop.map(x=>x.l+x.status).sort().join("|"); let last={}; try{ last=JSON.parse(localStorage.getItem("tenko.trainBan")||"{}"); }catch(e){}
+    if(last.sig===sig&&Date.now()-last.at<30*60*1000) return;   // 同じ止まり方は30分あけてから
+    try{ localStorage.setItem("tenko.trainBan",JSON.stringify({sig,at:Date.now()})); }catch(e){}
+    const have=new Set(TRAIN_ALL.map(x=>x.l)); trainBanLine=(stop.find(x=>have.has(x.l))||{}).l||"";
+    $("trainBannerText").textContent=`🚃 電車が止まりました：${stop.slice(0,2).map(x=>`${x.l}（${x.status||"運転見合わせ"}）`).join("、")}${stop.length>2?` ほか${stop.length-2}路線`:""}　押すと近くに別の路線がない駅を出します ›`;
+    $("trainBanner").hidden=false;
+  }
+  if(PROD){ setTimeout(trainCheck,10000); setInterval(trainCheck,3*60*1000); }
   // 現地に行かなくても確認できる、テスト用のボタン（距離・30分の間隔は見ない）
   $("taxiTestBtn").onclick=async()=>{
     const m=$("taxiTestMsg"); m.textContent="確認しています…";
