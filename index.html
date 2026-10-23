@@ -171,8 +171,8 @@ input,textarea,button{font-weight:700}
 .seg button{border:0;background:none;border-radius:9px;padding:10px 0;font-size:15px;letter-spacing:-.02em;white-space:nowrap;color:var(--muted);min-height:46px}
 .seg button[aria-selected="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 /* イベントの日付：1週間分を横にスクロール。今日は色付き */
-#evDaySeg{grid-auto-columns:minmax(88px,1fr);overflow-x:auto;scrollbar-width:none}
-#evDaySeg::-webkit-scrollbar{display:none}
+#evDaySeg,#shipDaySeg{grid-auto-columns:minmax(88px,1fr);overflow-x:auto;scrollbar-width:none}
+#evDaySeg::-webkit-scrollbar,#shipDaySeg::-webkit-scrollbar{display:none}
 .evcal{background:var(--sunk);border-radius:12px;padding:8px}
 .evcalh,.evcalg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
 .evcalh span{font-size:12px;color:var(--muted)}
@@ -182,9 +182,9 @@ input,textarea,button{font-weight:700}
 .evcalg button.evsel{box-shadow:0 0 0 3px var(--accent)}
 .evcalx{background:none;color:var(--line)}
 .evcalm{font-size:10px;color:var(--muted);font-weight:700}
-#evDaySeg button{padding:8px 6px;line-height:1.25}
-#evDaySeg button.evtoday{color:#fff;background:#D23C2F;font-weight:700}
-#evDaySeg button.evtoday[aria-selected="true"]{background:#D23C2F;color:#fff;box-shadow:0 0 0 3px var(--accent)}
+#evDaySeg button,#shipDaySeg button{padding:8px 6px;line-height:1.25}
+#evDaySeg button.evtoday,#shipDaySeg button.evtoday{color:#fff;background:#D23C2F;font-weight:700}
+#evDaySeg button.evtoday[aria-selected="true"],#shipDaySeg button.evtoday[aria-selected="true"]{background:#D23C2F;color:#fff;box-shadow:0 0 0 3px var(--accent)}
 .infohead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .infohead .btn{padding:8px 12px}
 .stamp{font-size:14px;color:var(--muted);font-weight:400}
@@ -773,8 +773,11 @@ body.rtfull{overflow:hidden}
   </div>
   <div class="wrap" id="subShip" hidden>
     <section class="card">
-      <div class="infohead"><h2>竹芝桟橋に着く船（試験・管理者のみ）</h2><button class="btn" id="shipReload">更新</button></div>
-      <div class="src">伊豆諸島から竹芝桟橋に着く東海汽船の、今日の到着便です。予定の時刻と、運行情報から分かる見込みの時刻を並べて出します。大型客船のほうが乗客・荷物が多いので目印を付けています。欠航は赤、遅れはオレンジです。</div>
+      <div class="infohead"><h2>竹芝桟橋に着く船（試験・管理者のみ）</h2><div class="btnrow" style="margin:0"><button class="btn" id="shipCalBtn">カレンダー</button><button class="btn" id="shipReload">更新</button></div></div>
+      <div class="src">伊豆諸島から竹芝桟橋に着く東海汽船の到着便です（今日から1か月分。日付やカレンダーで切り替え）。予定の時刻と、運行情報から分かる見込みの時刻を並べて出します。先の日は時刻表の予定だけです（欠航が前もって決まって運行情報に出ていれば入ります）。大型客船のほうが乗客・荷物が多いので目印を付けています。欠航は赤、遅れはオレンジです。</div>
+      <div id="shipCal" hidden></div>
+      <div class="seg" role="tablist" aria-label="日付" id="shipDaySeg"></div>
+      <div class="infohead" style="margin-top:10px"><h3 id="shipTitle" style="margin:0"></h3><a class="btn primary" style="text-decoration:none" href="https://www.google.com/maps/dir/?api=1&destination=%E7%AB%B9%E8%8A%9D%E5%AE%A2%E8%88%B9%E3%82%BF%E3%83%BC%E3%83%9F%E3%83%8A%E3%83%AB&travelmode=driving" target="_blank" rel="noopener">竹芝へルート案内</a></div>
       <div id="shipNext"></div>
       <div id="shipAlert"></div>
       <div id="shipBox"><div class="geo">読み込んでいます…</div></div>
@@ -1006,7 +1009,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:05</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:19</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2434,7 +2437,9 @@ body.rtfull{overflow:hidden}
   setInterval(()=>{ if(curSub==="bus"&&!$("tabLong").hidden&&!document.hidden) loadBus(false); },180000);
 
   // ===== 試験（管理者のみ）：竹芝桟橋に着く船（東海汽船） =====
-  let shipData=null, shipAt=0, shipBusy=false;
+  let shipData=null, shipAt=0, shipBusy=false, shipDay=null;
+  $("shipCalBtn").onclick=()=>{ $("shipCal").hidden=!$("shipCal").hidden; };
+  const ymdD=k=>new Date(k.slice(0,4)+"-"+k.slice(4,6)+"-"+k.slice(6)+"T00:00:00");
   $("shipReload").onclick=()=>loadShip(true);
   async function loadShip(force){
     if(shipData) renderShip();
@@ -2445,13 +2450,13 @@ body.rtfull{overflow:hidden}
   }
   // 運行情報（アラート）をその便に当てる：便の指定 → 航路の指定 → 文の中の「島の名前と予定の時刻」→ 文の中の島の名前、の順
   const shipTimes=t=>{ const out=[]; (t||"").replace(/(\d{1,2})[:：時](\d{2})?分?/g,(m,h,mi)=>{ out.push((+h)*60+(+(mi||0))); return m; }); return out; };
-  function shipStatus(x,alerts,arr){
+  function shipStatus(x,alerts,arr,isToday){
     const isle=String(x.from||"").replace(/(港|島)$/,"");
     const txt=a=>(a.head||"")+" "+(a.desc||"");
     let hit=alerts.filter(a=>a.ent.some(e=>(e.trip&&e.trip===x.trip)||(!e.trip&&e.route&&e.route===x.route)));
     if(!hit.length) hit=alerts.filter(a=>!a.ent.some(e=>e.trip||e.route)&&isle&&txt(a).includes(isle)&&shipTimes(txt(a)).some(m=>Math.abs(m-x.a)<=1));
     if(!hit.length) hit=alerts.filter(a=>!a.ent.some(e=>e.trip||e.route)&&isle&&txt(a).includes(isle)&&arr.filter(y=>String(y.from||"").replace(/(港|島)$/,"")===isle).length===1);
-    let st={k:"ok",l:"定刻",eta:null};
+    let st={k:"ok",l:isToday?"定刻":"予定",eta:null};
     hit.forEach(a=>{ const t=txt(a);
       if(a.effect===1||/欠航|運休/.test(t)){ st={k:"cancel",l:"欠航",eta:null}; return; }
       if(st.k==="cancel") return;
@@ -2469,25 +2474,40 @@ body.rtfull{overflow:hidden}
   function renderShip(){
     const j=shipData; if(!j) return; const tt=j.tt||{}, alerts=j.alerts||[];
     if(!tt.ok||tt.needUpdate){ $("shipNext").innerHTML=""; $("shipBox").innerHTML=`<div class="geo" style="color:var(--bad);font-weight:700">時刻表の更新が必要です${tt.error?`（${esc(tt.error)}）`:""}</div>`; }
-    const now=new Date(), nm=now.getHours()*60+now.getMinutes();
-    const arr=(tt.arr||[]).map(x=>Object.assign({},x,shipStatus(x,alerts,tt.arr||[])));
+    const now=new Date(), today=j.date, days=tt.days||(tt.arr?{[today]:tt.arr}:{});
+    const keys=Object.keys(days).sort(); if(!shipDay||!keys.includes(shipDay)) shipDay=today;
+    const isToday=shipDay===today, nm=isToday?now.getHours()*60+now.getMinutes():-1, dd=ymdD(shipDay), W="日月火水木金土";
+    // 日付の帯（イベントと同じ。今日は赤）とカレンダー
+    $("shipDaySeg").innerHTML=keys.map(k=>{ const x=ymdD(k), n=(days[k]||[]).length; return `<button role="tab" data-shipday="${k}" aria-selected="${k===shipDay}"${k===today?` class="evtoday"`:""}>${k===today?"今日":`${x.getMonth()+1}/${x.getDate()}（${W[x.getDay()]}）`}<br><small>${n?`${n}便`:"—"}</small></button>`; }).join("");
+    $("shipDaySeg").querySelectorAll("[data-shipday]").forEach(b=>b.onclick=()=>{ shipDay=b.dataset.shipday; renderShip(); });
+    { const sel=$("shipDaySeg").querySelector(`[aria-selected="true"]`); if(sel) $("shipDaySeg").scrollLeft=Math.max(0,sel.offsetLeft-$("shipDaySeg").clientWidth/2+sel.offsetWidth/2); }
+    if(keys.length){ const first=ymdD(keys[0]), last=ymdD(keys[keys.length-1]), start=new Date(first); start.setDate(start.getDate()-start.getDay());
+      let h=`<div class="evcal"><div class="evcalh">${[...W].map(w=>`<span>${w}</span>`).join("")}</div><div class="evcalg">`, mo=-1;
+      for(const x=new Date(start); x<=last||x.getDay()!==0; x.setDate(x.getDate()+1)){ const k=x.getFullYear()+String(x.getMonth()+1).padStart(2,"0")+String(x.getDate()).padStart(2,"0"), inR=keys.includes(k), n=inR?(days[k]||[]).length:0;
+        const mark=x.getMonth()!==mo&&inR?`<b class="evcalm">${x.getMonth()+1}月</b>`:""; if(inR) mo=x.getMonth();
+        h+=inR?`<button data-shipcal="${k}" class="${k===today?"evtoday":""}${k===shipDay?" evsel":""}">${mark}${x.getDate()}<small>${n?n+"便":""}</small></button>`:`<span class="evcalx">${x.getDate()}</span>`; }
+      $("shipCal").innerHTML=h+"</div></div>";
+      $("shipCal").querySelectorAll("[data-shipcal]").forEach(b=>b.onclick=()=>{ shipDay=b.dataset.shipcal; $("shipCal").hidden=true; renderShip(); }); }
+    $("shipTitle").textContent=isToday?`今日（${dd.getMonth()+1}月${dd.getDate()}日）の到着便`:`${dd.getMonth()+1}月${dd.getDate()}日（${W[dd.getDay()]}）の到着便`;
+    const dayAlerts=alerts.filter(a=>a.ent.some(e=>e.date===shipDay)||(isToday&&!a.ent.some(e=>e.date)));
+    const arr=(days[shipDay]||[]).map(x=>Object.assign({},x,shipStatus(x,dayAlerts,days[shipDay]||[],isToday)));
     const used=new Set(); arr.forEach(x=>x.hit.forEach(a=>used.add(a)));
-    const gen=alerts.filter(a=>!used.has(a)&&(a.head||a.desc));
+    const gen=dayAlerts.filter(a=>!used.has(a)&&(a.head||a.desc));
     $("shipAlert").innerHTML="";
     const TY={big:"🚢 大型客船",jet:"🚤 ジェット船"};
     const eta=x=>x.st.eta!=null?x.st.eta:x.a;   // 見込みの到着（分からなければ予定）
     const lateTxt=x=>x.st.eta!=null&&x.st.eta>x.a?`（${x.st.eta-x.a}分遅れ）`:"";
     const when=x=>x.st.k==="cancel"?`<span class="shipplan"><s>予定 ${shm(x.a)}着</s></span><b class="shipst">欠航</b>`
       :x.st.eta!=null&&x.st.eta!==x.a?`<span class="shipplan">予定 ${shm(x.a)}着 → </span><b class="num shipeta">見込み ${shm(x.st.eta)}着</b><b class="shipst">${lateTxt(x)}${x.st.k==="cond"?" 条件付き運航":""}</b>`
-      :`<b class="num shipeta">${shm(x.a)}着</b><b class="shipst">${x.st.k==="ok"?"定刻":esc(x.st.l)}</b>`;
+      :`<b class="num shipeta">${shm(x.a)}着</b><b class="shipst">${esc(x.st.l)}</b>`;
     if(tt.ok&&!tt.needUpdate){
-      const next=arr.filter(x=>x.st.k!=="cancel"&&eta(x)>=nm).sort((a,b)=>eta(a)-eta(b))[0];
-      $("shipNext").innerHTML=next?`<div class="shipnext s-${next.st.k}"><small>次に着く船</small><div class="big num">${shm(eta(next))}着<span>あと${eta(next)-nm}分</span></div>${eta(next)!==next.a?`<div class="shipplan">予定 ${shm(next.a)}着${lateTxt(next)}</div>`:""}<div>${esc(next.from)}発・${TY[next.type]}${next.guess?"（推定）":""}・<b>${next.st.k==="ok"?"定刻":esc(next.st.l)}</b></div></div>`:`<div class="geo">今日、これから着く船はありません</div>`;
-      $("shipBox").innerHTML=arr.length?arr.map(x=>`<div class="shiprow s-${x.st.k}${eta(x)<nm?" past":""}"><div class="shipfrom"><b>${esc(x.from)}発</b><span class="shipty ${x.type}">${TY[x.type]}${x.guess?"（推定）":""}</span></div><div class="shipwhen">${when(x)}</div></div>`).join("")
+      const next=isToday?arr.filter(x=>x.st.k!=="cancel"&&eta(x)>=nm).sort((a,b)=>eta(a)-eta(b))[0]:null;
+      $("shipNext").innerHTML=!isToday?"":next?`<div class="shipnext s-${next.st.k}"><small>次に着く船</small><div class="big num">${shm(eta(next))}着<span>あと${eta(next)-nm}分</span></div>${eta(next)!==next.a?`<div class="shipplan">予定 ${shm(next.a)}着${lateTxt(next)}</div>`:""}<div>${esc(next.from)}発・${TY[next.type]}${next.guess?"（推定）":""}・<b>${esc(next.st.l)}</b></div></div>`:`<div class="geo">今日、これから着く船はありません</div>`;
+      $("shipBox").innerHTML=arr.length?arr.map(x=>`<div class="shiprow s-${x.st.k}${isToday&&eta(x)<nm?" past":""}"><div class="shipfrom"><b>${esc(x.from)}発</b><span class="shipty ${x.type}">${TY[x.type]}${x.guess?"（推定）":""}</span></div><div class="shipwhen">${when(x)}</div></div>`).join("")
         +(gen.length?`<details class="shipraw"><summary>どの便か分からなかった運行情報（${gen.length}件）</summary>${gen.map(a=>`<div><b>${esc(a.head||"")}</b> ${esc(a.desc||"")}</div>`).join("")}</details>`:"")
-        :`<div class="geo">今日、竹芝に着く便はありません</div>`;
+        :`<div class="geo">${isToday?"今日":"この日"}、竹芝に着く便はありません</div>`;
     }
-    $("shipNote").innerHTML=`最終更新 ${clk(j.updatedAt)}。時刻表 ${esc(tt.feedStart||"")}〜${esc(tt.feedEnd||"")}${j.rtError?`。運行情報：${esc(j.rtError)}`:""}。船の種類は、名前で分からないときは所要時間（4時間未満＝ジェット船）で推定しています。小笠原（おがさわら丸）は東海汽船ではないので入っていません。`;
+    $("shipNote").innerHTML=`最終更新 ${clk(j.updatedAt)}。時刻表 ${esc(String(tt.feedStart||"").replace(/^(\d{4})-?(\d{2})-?(\d{2})$/,"$1/$2/$3"))}〜${esc(String(tt.feedEnd||"").replace(/^(\d{4})-?(\d{2})-?(\d{2})$/,"$1/$2/$3"))}${j.rtError?`。運行情報：${esc(j.rtError)}`:""}。船の種類は、名前で分からないときは所要時間（4時間未満＝ジェット船）で推定しています。小笠原（おがさわら丸）は東海汽船ではないので入っていません。`;
   }
   setInterval(()=>{ if(curSub==="ship"&&!$("tabLong").hidden&&!document.hidden){ loadShip(false); } },180000);
   setInterval(()=>{ if(curSub==="ship"&&shipData) renderShip(); },30000);   // 「あと何分」を進める
