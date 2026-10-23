@@ -261,6 +261,8 @@ a.flink:active{background:var(--sunk)}
 .shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
 .noticepop{position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}.noticepop[hidden]{display:none}.noticebox{background:var(--surface);color:var(--ink);border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}.noticebox b{font-size:18px}.noticebox small{color:var(--muted)}#noticeText{font-size:16px;line-height:1.6;white-space:pre-wrap}.noticebox .btn{align-self:flex-end;min-width:120px}
 .ntrow{border-top:1px solid var(--line);padding:8px 0}.ntrow small{color:var(--muted)}
+.docview{position:fixed;inset:0;z-index:2700;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}.docview[hidden]{display:none}.docbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}.docbar b{font-size:16px}#docFrame{flex:1;width:100%;border:0;background:#E9EEED}
+#menuHomeFoot>section{margin-top:12px}
 .menuback{display:flex;align-items:center;gap:10px;margin:0 0 8px}.menuback b{font-size:17px}
 .mgrp{font-size:14px;color:var(--muted);margin:14px 0 6px}.mgrp:first-child{margin-top:0}
 .mtiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -427,6 +429,7 @@ body.rtfull{overflow:hidden}
 .taxibanner button{background:transparent;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;flex:none}
 </style>
 
+<div id="docView" class="docview" hidden role="dialog" aria-modal="true" aria-labelledby="docTitle"><div class="docbar"><b id="docTitle"></b><button type="button" class="btn" id="docClose">✕ 閉じる</button></div><iframe id="docFrame" title="資料"></iframe></div>
 <div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
 <div id="trainBanner" class="trainbanner" hidden role="status">
   <button type="button" id="trainBannerText"></button>
@@ -694,7 +697,9 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabLong" hidden>
   <div id="menuBack" class="menuback" hidden><button type="button" class="btn" id="menuBackBtn">← メニュー</button><b id="menuBackTitle"></b></div>
   <div id="menuHome" hidden></div>
-  <div id="subSet" hidden><section class="card"><h2>設定・バックアップ</h2><div class="src">合言葉・車種・画面に出す機能・計算の設定・バックアップを、ここにまとめています。</div></section><div id="setSlot"></div></div>
+  <div id="menuHomeFoot" hidden></div>
+  <div id="subSet" hidden><section class="card" id="setHeadCard"><h2 id="setHead"></h2><div class="src" id="setDesc"></div></section><div id="setSlot"></div></div>
+  <div id="setPark" hidden></div>
   <div class="seg" role="tablist" aria-label="メニュー">
     <button role="tab" data-sub="long" id="segLong" aria-selected="true">ロング判定</button>
     <button role="tab" data-sub="wx" aria-selected="false" hidden>天気</button>
@@ -1032,14 +1037,16 @@ body.rtfull{overflow:hidden}
     <div class="btnrow"><button class="btn" id="shareCopy">URLをコピー</button><a class="btn primary" id="shareLine" target="_blank" rel="noopener" style="text-decoration:none">LINEで送る</a><button class="btn" id="shareMore" hidden>ほかのアプリで送る</button></div>
     <div class="msg" id="shareMsg" role="status"></div>
     <h3 style="margin:14px 0 6px;font-size:16px">紹介用の資料</h3>
-    <div class="src">開いたあと、画面の共有ボタンから仲間に送ることもできます。</div>
-    <div class="btnrow"><a class="btn" href="https://kmt176.github.io/tenko-note/setsumei.pdf" target="_blank" rel="noopener" style="text-decoration:none">説明資料（PDF・2枚）</a><a class="btn" href="https://kmt176.github.io/tenko-note/guide.pptx" target="_blank" rel="noopener" style="text-decoration:none">使い方ガイド（スライド）</a></div>
+    <div class="src">押すとアプリの中で開きます。右上の「✕ 閉じる」で戻ります。</div>
+    <div class="btnrow"><button type="button" class="btn" data-doc="setsumei-view.html" data-doct="説明資料（2枚）">説明資料（2枚）</button><button type="button" class="btn" data-doc="guide-view.html" data-doct="使い方ガイド（10枚）">使い方ガイド（10枚）</button></div>
+    <div class="src">仲間にファイルで送るとき：<a href="https://kmt176.github.io/tenko-note/setsumei.pdf" target="_blank" rel="noopener">説明資料（PDF）</a>・<a href="https://kmt176.github.io/tenko-note/guide.pptx" target="_blank" rel="noopener">使い方ガイド（PowerPoint）</a>（開いたあと、画面の共有ボタンから送れます）</div>
   </section>
 </div>
 
 <div class="wrap" id="tabHelp" hidden>
+  <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 20:19</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 21:12</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1564,6 +1571,7 @@ body.rtfull{overflow:hidden}
   const TABS=["tabHelp","tabTenko","tabLong","tabSales"];
   function showTab(n){
     TABS.forEach((id,i)=>{ $(id).hidden=n!==i; $("tb"+i).setAttribute("aria-selected",n===i); });
+    if(n!==0&&$("helpBack")) $("helpBack").hidden=true;
     try{ localStorage.setItem("tenko.tab",String(n)); }catch(e){}
     window.scrollTo(0,0);
     if(n===3&&typeof setView==="function"){ sDay=null; setView(sView); }
@@ -2091,7 +2099,7 @@ body.rtfull{overflow:hidden}
 
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
-    if(typeof menuStyle!=="undefined"&&menuStyle==="tile"){ $("menuHome").hidden=true; $("subSet").hidden=true; $("menuBack").hidden=false; $("menuBackTitle").textContent=MENU_ALL[s]?MENU_ALL[s][1]+" "+MENU_ALL[s][2]:""; }
+    if(typeof menuStyle!=="undefined"&&menuStyle==="tile"){ $("menuHome").hidden=true; $("menuHomeFoot").hidden=true; $("subSet").hidden=true; $("menuBack").hidden=false; $("menuBackTitle").textContent=MENU_ALL[s]?MENU_ALL[s][1]+" "+MENU_ALL[s][2]:""; }
     document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sub===s));
     try{ localStorage.setItem("tenko.sub",s); }catch(e){}
     if(KIND[s]&&!$("tabLong").hidden) loadInfo(KIND[s],false);
@@ -2105,49 +2113,76 @@ body.rtfull{overflow:hidden}
   }
   // ===== メニューの形：ボタンの一覧（新・初期値）か、今までの横並び（設定で切り替え。2026-10-23） =====
   // ボタンの一覧では、メニューを開くと目的別のボタンが並び、押すとその画面へ（左上の「← メニュー」で戻る）。
-  // 設定（合言葉・車種・画面に出す機能・計算の設定・バックアップなど）は「設定・バックアップ」の画面にまとめる。横並びに戻すと元の場所に戻す
+  // 設定・バックアップ・売上差額チェックは、それぞれのボタンで開くページにまとめる。紹介はメニューの一番下。使い方もメニューの中（下のボタンは3つ）。
+  // 横並びに戻すと、全部もとの場所に戻す
   const MENU_GROUPS=[
-    ["営業中に見る",[["event","🎫","イベント"],["taxi","🏢","専用乗り場"],["train","🚃","電車が止まったら"],["air","✈️","飛行機"],["rest","☕","休憩場"]]],
+    ["営業中に見る",[["event","🎫","イベント"],["taxi","🏢","専用乗り場"],["train","🚃","電車が止まったら"],["air","✈️","飛行機"],["rest","☕","休憩場"],["flash","👥","仲間の速報"]]],
     ["お客様の対応",[["long","📏","ロング判定"]]],
-    ["管理者だけ（試験）",[["cmp","📊","乗務員比較"],["bus","🚌","都営バス"],["ship","🚢","竹芝の船"]]],
-    ["設定・その他",[["set","⚙️","設定・バックアップ"]]]];
+    ["管理者だけ（試験）",[["cmp","📊","乗務員比較"],["bus","🚌","都営バス"],["ship","🚢","竹芝の船"],["pay","📈","売上差額チェック"]]],
+    ["設定・その他",[["set","⚙️","設定"],["bk","💾","バックアップ"],["help","📖","使い方"]]]];
   const MENU_ALL={}; MENU_GROUPS.forEach(([,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
+  // ボタンで開くページ（中身は、もとの場所から移してくる）
+  const PAGES={
+    set:{t:"⚙️ 設定",d:"合言葉・車種・画面に出す機能・メニューの表示・計算の設定と、管理者からのお知らせです。",ids:["noticeCard","cfgBox","calcBox"]},
+    bk:{t:"💾 バックアップ",d:"点呼と売上をまとめたバックアップを作る・戻すところです。機種変更のときもここから。",ids:["bkBox"]},
+    pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]}};
+  const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
-  const SET_IDS=["noticeCard","cfgBox","bkBox","calcBox","payDiffCard","shareCard"], setPh={};
-  SET_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
-  const menuVisible=k=>{ if(k==="set") return true; const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
+  MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
+  const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help") return true; if(k==="pay") return isAdmin(); if(k==="flash") return !$("sViewFlash").hidden;
+    const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
+  function menuOpen(k){
+    if(PAGES[k]) showPage(k);
+    else if(k==="help") showHelp();
+    else if(k==="flash"){ showTab(3); setView("flash"); }
+    else showSub(k);
+    window.scrollTo(0,0);
+  }
   function renderMenuHome(){
     let rec=[]; try{ rec=JSON.parse(localStorage.getItem("tenko.menuRecent")||"[]"); }catch(e){}
-    rec=rec.filter(k=>MENU_ALL[k]&&menuVisible(k)).slice(0,3);
+    rec=rec.filter(k=>MENU_ALL[k]&&menuVisible(k)&&!["set","bk","help"].includes(k)).slice(0,3);
     const tile=x=>`<button type="button" class="mtile" data-mt="${x[0]}"><span class="mi">${x[1]}</span><span>${esc(x[2])}</span></button>`;
     const grp=(t,xs)=>xs.length?`<h3 class="mgrp">${t}</h3><div class="mtiles">${xs.map(tile).join("")}</div>`:"";
     $("menuHome").innerHTML=`<section class="card">${grp("★ よく使う（最近使った順）",rec.map(k=>MENU_ALL[k]))}${MENU_GROUPS.map(([t,xs])=>grp(t,xs.filter(x=>menuVisible(x[0])))).join("")}</section>`;
     $("menuHome").querySelectorAll("[data-mt]").forEach(b=>b.onclick=()=>{ const k=b.dataset.mt;
       try{ let r=JSON.parse(localStorage.getItem("tenko.menuRecent")||"[]"); r=[k].concat(r.filter(x=>x!==k)).slice(0,6); localStorage.setItem("tenko.menuRecent",JSON.stringify(r)); }catch(e){}
-      if(k==="set") showSet(); else showSub(k); window.scrollTo(0,0); });
+      menuOpen(k); });
   }
+  function hideMenuParts(){ Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=true; }); $("subSet").hidden=true; $("menuHome").hidden=true; $("menuHomeFoot").hidden=true; }
   function menuHomeShow(){
     if(menuStyle!=="tile") return;
-    Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=true; }); $("subSet").hidden=true; $("menuBack").hidden=true;
-    curSub="home"; renderMenuHome(); $("menuHome").hidden=false;
+    hideMenuParts(); $("menuBack").hidden=true;
+    curSub="home"; renderMenuHome(); $("menuHome").hidden=false; $("menuHomeFoot").hidden=false;
   }
-  function showSet(){
-    Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=true; }); $("menuHome").hidden=true;
-    curSub="set"; $("subSet").hidden=false; $("menuBack").hidden=false; $("menuBackTitle").textContent="設定・バックアップ";
-    if(typeof renderPayDiff==="function") renderPayDiff();
+  function showPage(k){
+    const pg=PAGES[k]; if(!pg) return;
+    hideMenuParts();
+    PAGE_IDS.forEach(id=>{ const el=$(id); if(el&&!pg.ids.includes(id)) $("setPark").appendChild(el); });   // ほかのページの中身はしまっておく
+    pg.ids.forEach(id=>{ const el=$(id); if(el){ $("setSlot").appendChild(el); if(el.tagName==="DETAILS") el.open=(id==="cfgBox"||id==="bkBox"); } });
+    $("setHead").textContent=pg.t; $("setDesc").textContent=pg.d;
+    curSub=k; $("subSet").hidden=false; $("menuBack").hidden=false; $("menuBackTitle").textContent=pg.t;
+    if(k==="pay"&&typeof renderPayDiff==="function") renderPayDiff();
   }
+  const showSet=()=>showPage("set");
+  function showHelp(){ showTab(0); $("helpBack").hidden=menuStyle!=="tile"; }
   $("menuBackBtn").onclick=()=>{ menuHomeShow(); window.scrollTo(0,0); };
+  $("helpBackBtn").onclick=()=>{ showTab(2); menuHomeShow(); };
   function applyMenuStyle(){
     const tile=menuStyle==="tile";
     document.querySelectorAll("#menuStyleSeg [data-ms]").forEach(b=>b.setAttribute("aria-selected",b.dataset.ms===menuStyle));
     const seg=document.querySelector("#tabLong > .seg"); if(seg) seg.hidden=tile;
-    SET_IDS.forEach(id=>{ const el=$(id), ph=setPh[id]; if(!el||!ph) return;
-      if(tile){ $("setSlot").appendChild(el); if(id==="cfgBox"||id==="bkBox"||id==="calcBox") el.open=id==="cfgBox"; }
-      else ph.parentNode.insertBefore(el,ph.nextSibling); });
-    if(tile){ if(curSub==="set") showSet(); else if(curSub==="home"||$("menuHome").hidden&&$("menuBack").hidden) menuHomeShow(); }
-    else { $("menuHome").hidden=true; $("menuBack").hidden=true; $("subSet").hidden=true; if(curSub==="home"||curSub==="set") showSub(localStorage.getItem("tenko.sub")||"rest"); }
+    $("tb0").hidden=tile; $("helpBack").hidden=!tile||$("tabHelp").hidden;   // 使い方はメニューの中へ（下のボタンは3つ）
+    MOVE_IDS.forEach(id=>{ const el=$(id), ph=setPh[id]; if(!el||!ph) return;
+      if(!tile){ ph.parentNode.insertBefore(el,ph.nextSibling); if(id==="bkBox"||id==="calcBox"||id==="cfgBox") el.open=false; }
+      else if(id==="shareCard") $("menuHomeFoot").appendChild(el);
+      else if(!(PAGES[curSub]&&PAGES[curSub].ids.includes(id))) $("setPark").appendChild(el); });
+    if(tile){ if(PAGES[curSub]) showPage(curSub); else if(curSub==="home"||$("menuHome").hidden&&$("menuBack").hidden) menuHomeShow(); }
+    else { hideMenuParts(); $("menuBack").hidden=true; if(curSub==="home"||PAGES[curSub]) showSub(localStorage.getItem("tenko.sub")||"rest"); else showSub(curSub); }
   }
   document.querySelectorAll("#menuStyleSeg [data-ms]").forEach(b=>b.onclick=()=>{ menuStyle=b.dataset.ms; try{ localStorage.setItem("tenko.menuStyle",menuStyle); }catch(e){} applyMenuStyle(); });
+  // 紹介の資料をアプリの中で開く（iPhoneのホーム画面のアプリでは、別の画面で開くと戻るボタンがないため）
+  document.querySelectorAll("[data-doc]").forEach(b=>b.onclick=()=>{ $("docTitle").textContent=b.dataset.doct||"資料"; $("docFrame").src=b.dataset.doc; $("docView").hidden=false; document.body.style.overflow="hidden"; });
+  $("docClose").onclick=()=>{ $("docView").hidden=true; $("docFrame").src="about:blank"; document.body.style.overflow=""; };
 
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
   $("restCode").value=cfg.empCode||"";
@@ -2826,7 +2861,7 @@ body.rtfull{overflow:hidden}
   svThUI(); svRender();
 
   // メニューのタブを開いたときも、表示中の情報を新しくする
-  $("tb2").onclick=()=>{ showTab(2); if(menuStyle==="tile") menuHomeShow(); else showSub(curSub==="home"||curSub==="set"?(localStorage.getItem("tenko.sub")||"rest"):curSub); };
+  $("tb2").onclick=()=>{ showTab(2); if(menuStyle==="tile") menuHomeShow(); else showSub(curSub==="home"||PAGES[curSub]?(localStorage.getItem("tenko.sub")||"rest"):curSub); };
   document.querySelectorAll("#tabLong > .seg button").forEach(b=>b.onclick=()=>showSub(b.dataset.sub));
   document.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>loadInfo(b.dataset.reload,true));
   // キャッシュを飛ばして新しい版を読み込み直す（ホーム画面に保存したアイコンは特に前の内容を覚えやすいため）。保存データは消えない
