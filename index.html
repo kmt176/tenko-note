@@ -364,10 +364,10 @@ table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(
 #rtMap{height:380px;border-radius:10px;border:1px solid var(--line);z-index:0}
 /* 全画面：地図を画面いっぱいにして、右上に「閉じる」 */
 #rtFull{margin:0 0 8px auto;display:block}
-body.rtfull #rtMap{position:fixed!important;inset:0;height:100vh;height:100dvh;border-radius:0;border:0;z-index:1000}
-body.rtfull #rtFull{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:1001;margin:0;background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3);font-weight:700}
-body.rtfull #rtPlay{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:1001;margin:0;background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3);font-weight:700}
-body.rtfull #rtSpeed{position:fixed;top:calc(env(safe-area-inset-top,0px) + 54px);left:10px;z-index:1001;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+body.rtfull #rtMap{position:fixed!important;inset:0;height:100vh;height:100dvh;border-radius:0;border:0;z-index:3000}
+body.rtfull #rtFull{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:3001;margin:0;background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3);font-weight:700}
+body.rtfull #rtPlay{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:3001;margin:0;background:var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3);font-weight:700}
+body.rtfull #rtSpeed{position:fixed;top:calc(env(safe-area-inset-top,0px) + 54px);left:10px;z-index:3001;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 body.rtfull{overflow:hidden}
 .rtno{background:var(--accent);color:var(--accent-ink);border-radius:999px;font:700 12px var(--num);padding:2px 6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .rtno.big{background:var(--bad);color:#fff}
@@ -1021,7 +1021,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:34</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 19:48</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4207,8 +4207,13 @@ body.rtfull{overflow:hidden}
   }
   const ROUTE_PINK="#B3342A";   // 走行ルートの線の色（実車の区間に使う。見分けやすいよう赤に。空車は黒）
   const ROUTE_EMPTY="#222";
+  // 全画面のときは、地図と「閉じる」「再生」を一番上（body）に移す。カードの中のままだと、スマホによっては「閉じる」が地図の下に隠れて押せないため（イベント・電車の地図と同じやり方）
+  const RT_FULL_IDS=["rtMap","rtFull","rtPlay","rtSpeed"], rtFullPh={};
   function setRtFull(on){
-    document.body.classList.toggle("rtfull",on); $("rtFull").textContent=on?"閉じる":"全画面で見る";
+    RT_FULL_IDS.forEach(id=>{ const el=$(id); if(!el) return;
+      if(on&&!rtFullPh[id]){ const ph=document.createComment("rt-"+id); el.parentNode.insertBefore(ph,el); rtFullPh[id]=ph; document.body.appendChild(el); }
+      else if(!on&&rtFullPh[id]){ const ph=rtFullPh[id]; ph.parentNode.insertBefore(el,ph); ph.remove(); delete rtFullPh[id]; } });
+    document.body.classList.toggle("rtfull",on); $("rtFull").textContent=on?"✕ 閉じる":"全画面で見る";
     if(typeof rtMapObj!=="undefined"&&rtMapObj) setTimeout(()=>rtMapObj.invalidateSize(),80);
   }
   $("rtFull").onclick=()=>setRtFull(!document.body.classList.contains("rtfull"));
