@@ -278,6 +278,7 @@ a.flink:active{background:var(--sunk)}
 .eyebtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;font-size:18px;line-height:1;padding:4px 8px;margin-left:6px;vertical-align:middle;cursor:pointer}
 .trdist{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#2F6FD6;color:#fff;font-size:12px;vertical-align:middle;white-space:nowrap}
 .trbadge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#D23C2F;color:#fff;font-size:12px;vertical-align:middle}
+.trchk{white-space:nowrap;font-size:min(16px,4.1vw)}
 .tritem.tryel{border-left-color:#E0A800;background:rgba(224,168,0,.14)}
 .trbadge.trbadgey{background:#E0A800;color:#2A2000}
 .tritem.tryel .trroute{background:#E0A800!important;border-color:#E0A800!important;color:#2A2000!important}
@@ -783,8 +784,8 @@ body.rtfull{overflow:hidden}
       <div id="trInfo" class="grp"></div>
       <div class="trtest" id="trBanTestRow"><button class="btn" id="trBanTest">🚃 運転見合わせ<small>テスト表示</small></button><button class="btn" id="trBanTestOk">🟢 再開<small>テスト表示</small></button></div>
       <div class="field"><label for="trainSel">止まった路線</label><select id="trainSel"><option value="">選んでください</option></select></div>
-      <label class="check"><input type="checkbox" id="trOnlyRed">赤い駅（近くに別の路線がない駅）だけ出す</label>
-      <label class="check"><input type="checkbox" id="trYel" checked>黄色い駅（別の路線の駅まで500m以上）も出す</label>
+      <label class="check trchk"><input type="checkbox" id="trOnlyRed">赤い駅（近くに別の路線がない駅）だけ出す</label>
+      <label class="check trchk"><input type="checkbox" id="trYel">黄色い駅（別路線まで500m以上）だけ出す</label>
       <div id="trMapWrap" class="mapwrap">
         <div id="trMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="trMeBtn">現在地</button><button class="btn" id="trFullBtn">全画面</button></div>
@@ -978,7 +979,7 @@ body.rtfull{overflow:hidden}
 
 <div class="wrap" id="tabHelp" hidden>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:52</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-23 14:56</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2127,7 +2128,7 @@ body.rtfull{overflow:hidden}
   let trainLayer=null;
   const trLabel=l=>{ const xs=TRAIN_ALL.filter(x=>x.l===l), ks=xs.map(x=>x.k).filter(Boolean), k=ks.sort((a,b)=>ks.filter(v=>v===b).length-ks.filter(v=>v===a).length)[0]; return l+(k&&("JR"+k)!==l?`（${k}）`:""); };
   (()=>{ const ls=[...new Set(TRAIN_ALL.map(x=>x.l))]; $("trainSel").insertAdjacentHTML("beforeend",ls.map(l=>{ const xs=TRAIN_ALL.filter(x=>x.l===l), r=xs.filter(x=>x.i).length; return `<option value="${escC(l)}">${escC(trLabel(l))}　${xs.length}駅${r?`・赤${r}駅`:""}</option>`; }).join(""));
-    try{ $("trainSel").value=localStorage.getItem("tenko.trainLine")||""; $("trOnlyRed").checked=localStorage.getItem("tenko.trainRed")==="1"; $("trYel").checked=localStorage.getItem("tenko.trainYel")!=="0"; }catch(e){} })();
+    try{ $("trainSel").value=localStorage.getItem("tenko.trainLine")||""; $("trOnlyRed").checked=localStorage.getItem("tenko.trainRed")==="1"; $("trYel").checked=localStorage.getItem("tenko.trainYel")==="1"; }catch(e){} })();
   // ===== 電車が止まったら（別のタブ。イベントと同じ地図の作り） =====
   let trMap=null, trLayer=null, trMe=null;
   async function renderTrainTab(first,noFit){
@@ -2139,9 +2140,10 @@ body.rtfull{overflow:hidden}
       addAreaMask(trMap); }
     setTimeout(()=>trMap.invalidateSize(),60);
     if(trLayer) trLayer.remove(); trLayer=L.layerGroup().addTo(trMap);
-    // 黄色：近く1km以内に別の路線はあるが、一番近い別の路線の駅まで500m以上ある駅（チェックで出す・出さないを切り替え）
-    const yon=$("trYel").checked, yl=x=>yon&&!x.i&&x.d>=500, rk=x=>x.i?2:yl(x)?1:0;
-    const l=$("trainSel").value, all=TRAIN_ALL.filter(x=>x.l===l), xs=$("trOnlyRed").checked?all.filter(x=>rk(x)):all, red=all.filter(x=>x.i).length, yel=all.filter(yl).length;
+    // 黄色：近く1km以内に別の路線はあるが、一番近い別の路線の駅まで500m以上ある駅。色はいつも付ける
+    // チェックは絞り込みだけ：上＝赤だけ、下＝黄色だけ、両方＝赤と黄色、両方なし＝全部の駅
+    const yon=true, yl=x=>!x.i&&x.d>=500, rk=x=>x.i?2:yl(x)?1:0, fR=$("trOnlyRed").checked, fY=$("trYel").checked;
+    const l=$("trainSel").value, all=TRAIN_ALL.filter(x=>x.l===l), xs=fR||fY?all.filter(x=>(fR&&x.i)||(fY&&yl(x))):all, red=all.filter(x=>x.i).length, yel=all.filter(yl).length;
     const RED="#D23C2F", YEL="#E0A800", PUR="#7B3FA0", fc=x=>x.i?RED:yl(x)?YEL:PUR, km=d=>(d/1000).toFixed(1)+"km", pax=x=>x.p?`${x.p.toLocaleString()}人/日`:"—";
     // 赤（近くに別の路線がない駅）は大きく・名前を常に出す。ほかは小さめの紫で、名前は地図を寄せたときに出す
     xs.slice().sort((a,b)=>rk(a)-rk(b)).forEach(x=>{ const mk=L.circleMarker([x.lat,x.lng],{radius:x.i?12:yl(x)?10:7,color:"#fff",weight:rk(x)?3:2,fillColor:fc(x),fillOpacity:1,bubblingMouseEvents:false})
@@ -2159,7 +2161,7 @@ body.rtfull{overflow:hidden}
     const pts=xs.map(x=>[x.lat,x.lng]);
     if(pts.length>1) trMap.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:15}); else if(pts.length) trMap.setView(pts[0],14);
   }
-  $("trYel").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainYel",$("trYel").checked?"1":"0"); }catch(e){} renderTrainTab(false); });
+  $("trYel").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainYel",$("trYel").checked?"1":""); }catch(e){} renderTrainTab(false); });
   $("trOnlyRed").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainRed",$("trOnlyRed").checked?"1":""); }catch(e){} renderTrainTab(false); });
   $("trainSel").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainLine",$("trainSel").value); }catch(e){} renderTrainTab(false); });
   $("trMeBtn").onclick=async()=>{ if(!trMap) return; const p=await getPos(); if(!p){ $("trMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; }
