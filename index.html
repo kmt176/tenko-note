@@ -436,7 +436,15 @@ body.rtfull{overflow:hidden}
 .trainbanner{position:fixed;top:0;left:0;right:0;z-index:2001;background:#FBE3EC;color:#7A1F3D;border-bottom:2px solid #EBB8CB;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .trainbanner.trok{background:#DDEFE3;color:#1E5A36;border-bottom-color:#9FD0B0}.trainbanner.trok #trainBannerClose{color:#1E5A36}
 .patrolbanner{position:fixed;top:0;left:0;right:0;z-index:2002;background:#FFF1C2;color:#5A4300;border-bottom:2px solid #E8C14A;padding:12px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:17px;font-weight:800}
-.patrolbanner[hidden]{display:none}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
+.patrolbanner[hidden]{display:none}
+#patrolBanner{align-items:flex-start;padding:14px 12px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
+#patrolBannerText{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
+#patrolBannerText .pb1{font-size:44px;font-weight:900;line-height:1.1;display:flex;flex-wrap:wrap;gap:0 16px}
+#patrolBannerText .pb1 b{color:#B3261E;font-weight:900}
+#patrolBannerText .pb2{font-size:68px;font-weight:900;line-height:1.08;word-break:break-all}
+#patrolBannerText .pb3{font-size:22px;font-weight:800}
+#patrolBannerText .pbtest{font-style:normal;font-size:16px;margin-left:10px;padding:1px 8px;border:2px solid #5A4300;border-radius:999px}
+#patrolBannerClose{font-size:44px!important;padding:0 6px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
 .trainbanner #trainBannerText{flex:1;text-align:left;background:none;border:0;color:inherit;font:inherit;font-size:15px;font-weight:700;padding:0}
 .trainbanner #trainBannerClose{background:transparent;border:0;color:#7A1F3D;font-size:22px;line-height:1;padding:0 4px;flex:none}
@@ -1119,7 +1127,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 12:37</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 12:41</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5043,8 +5051,14 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     }catch(e){}
   }
   function geoShow(k,x,d,test){
-    const G=GEO[k], S=GS[k];
-    $(G.ban+"Text").textContent=G.msg(x,S.groups[x[1]]||"",d<=0?0:Math.max(10,Math.round(d/10)*10))+(test?"　※テスト表示":"");
+    const G=GEO[k], S=GS[k], dd=d<=0?0:Math.max(10,Math.round(d/10)*10);
+    if(k==="patrol"){   // 取締りは運転中でも見えるよう、大きな太字で3段（2026-10-25 ユーザー指定：4倍以上）
+      // 名前が長いときは、3行に収まるまで小さくする（短い名前は68px。最小でも36px）
+      const nm=String(x[0]||""), avail=Math.max(200,window.innerWidth-80), fs=Math.max(36,Math.min(68,Math.floor(avail*3/Math.max(1,nm.length))));
+      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span><span class="pb2" style="font-size:${fs}px">${esc(nm)}</span><span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span>`;
+      $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000); return;
+    }
+    $(G.ban+"Text").textContent=G.msg(x,S.groups[x[1]]||"",dd)+(test?"　※テスト表示":"");
     $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000);
   }
   function geoCheck(p){
@@ -5097,7 +5111,12 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     $(P+"MeBtn").onclick=async()=>{ const p=await getPos(); if(!p){ m.textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; } setMe(p); S.map.setView([p.lat,p.lng],Math.max(S.map.getZoom(),15)); renderGeoTab(k,false); };
   }
   Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k];
-    $(G.pre+"TestBan").onclick=async()=>{ if(!S.pts) await geoLoad(k,true); const x=(S.pts&&(S.pts.find(y=>!G.alertG||G.alertG(S.groups[y[1]]||""))||S.pts[0]))||["（試し）",0,[[0,0]]]; geoChime(G.chime); geoShow(k,x,+$(G.dist).value||100,true); window.scrollTo(0,0); };
+    $(G.pre+"TestBan").onclick=async()=>{ if(!S.pts) await geoLoad(k,true);
+      // テストは本番と同じ形で出す。場所は、現在地が分かれば一番近いもの（なければ最初のもの）
+      const cand=(S.pts||[]).filter(y=>!G.alertG||G.alertG(S.groups[y[1]]||""));
+      let x=cand[0]||["（試し）",0,[[0,0]]];
+      if(S.me&&cand.length){ const me=S.me.getLatLng(); x=cand.map(y=>({y,d:geoD({lat:me.lat,lng:me.lng},y)})).sort((a,b)=>a.d-b.d)[0].y; }
+      geoChime(G.chime); geoShow(k,x,+$(G.dist).value||100,true); window.scrollTo(0,0); };
     $(G.pre+"TestSnd").onclick=()=>geoChime(G.chime);
     setupFull(G.pre+"FullBtn",G.pre+"MapWrap",()=>S.map); });
   function showTrainRecover(xs,test){
