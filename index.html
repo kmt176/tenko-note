@@ -116,10 +116,11 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 .grp h3{margin:0;font-size:15.5px}
 input[type=date],input[type=time]{width:100%;font:20.5px var(--num);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
 .live{font-size:15px;color:var(--muted)}
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1500;transform:translateZ(0);background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1500;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabbar button{flex:1 1 0;min-width:0;border:0;background:none;padding:8px 0 8px;font-weight:700;font-size:16.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1}
 .tabbar button .ic{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tabbar button[aria-selected="true"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+body.sheetopen .tabbar{display:none}   /* 下から出る入力の画面を開いている間は、下のボタンを隠す（iPhoneで保存・閉じる・削除が隠れないように） */
 .tabbar .tb-help{flex:0 0 16%;border-right:1px solid var(--line)}
 .help p{margin:0}
 .help h3{margin:4px 0 0;font-size:16px}
@@ -1119,7 +1120,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 11:15</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 11:20</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1790,6 +1791,9 @@ body.rtfull{overflow:hidden}
     el.innerHTML=CAR_TYPES.map(t=>`<button role="tab" data-car="${t}" aria-selected="${t===carType}">${escC(carOf(t).name)}</button>`).join("");
     el.querySelectorAll("[data-car]").forEach(b=>b.onclick=()=>setCar(b.dataset.car)); }
   // 管理者が保存した車種の設定を読み込む（合言葉なしで誰でも読める。書けるのは管理者だけ）
+  // 下から出る入力の画面（勤務・乗車・日報の取り込み）が開いている間は、下のボタンを隠す
+  { const sheets=[...document.querySelectorAll(".sheet")], upd=()=>document.body.classList.toggle("sheetopen",sheets.some(e=>!e.hidden));
+    const mo=new MutationObserver(upd); sheets.forEach(e=>mo.observe(e,{attributes:true,attributeFilter:["hidden"]})); upd(); }
   // ===== 管理者からのお知らせ：開いたとき（と開いている間15分ごと）に受け取り、まだ読んでいないものを画面の真ん中に出す =====
   let notices=[], carsAt=0; try{ notices=JSON.parse(localStorage.getItem("tenko.notices")||"[]")||[]; }catch(e){}
   const noticeRead=()=>{ try{ return JSON.parse(localStorage.getItem("tenko.noticeRead")||"[]")||[]; }catch(e){ return []; } };
