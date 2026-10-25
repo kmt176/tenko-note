@@ -443,6 +443,7 @@ body.rtfull{overflow:hidden}
 #patrolBannerText .pb1 b{color:#B3261E;font-weight:900}
 #patrolBannerText .pb2{font-size:68px;font-weight:900;line-height:1.08;word-break:break-all}
 #patrolBannerText .pb3{font-size:22px;font-weight:800}
+#patrolBannerText .pb4{font-size:26px;font-weight:900;color:#B3261E;line-height:1.2}
 #patrolBannerText .pbtest{font-style:normal;font-size:16px;margin-left:10px;padding:1px 8px;border:2px solid #5A4300;border-radius:999px}
 #patrolBannerClose{font-size:44px!important;padding:0 6px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
@@ -1127,7 +1128,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 12:41</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 12:48</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5005,7 +5006,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // 決めた距離に「近づいている途中で」入ったら、音と画面の帯。同じ場所は10分間は鳴らさない。アプリを開いている間だけ位置を見る
   const GEO={
     patrol:{act:"patrolPts",store:"tenko.patrol",dist:"patrolDist",ban:"patrolBanner",pre:"pt",col:["#D23C2F","#E8890C","#7B3FA0","#2F6FD6","#3E9B4F"],chime:"pipo",route:false,
-      msg:(x,g,d)=>`⚠ 取締り：${x[0]}（${g}）まで約${d}m`},
+      msg:(x,g,d)=>`⚠ 取締り：${geoPlace("patrol",x).place}（${g}）まで約${d}m`},
     stand:{act:"standPts",store:"tenko.stand",dist:"standDist",ban:"standBanner",pre:"sd",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,
       msg:(x,g,d)=>`🚕 ${g}：${x[0].replace(/^\d+_/,"")}まで約${d}m`},
     rest2:{act:"restPts",store:"tenko.rest2",dist:"restDist",ban:"restBanner",pre:"rs",col:["#8B5A2B","#2F6FD6","#D23C2F","#7B3FA0","#3E9B4F"],chime:"ponpon",route:true,
@@ -5050,12 +5051,15 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       else { tone(1047,0,0.16,0.4); tone(1319,0.13,0.16,0.4); tone(1568,0.26,0.5,0.4); }   // ピ・ロ・リン（乗り場）
     }catch(e){}
   }
+  // 取締りの「8月重点取締り」は、名前が違反の種類（○○違反多発地点）で、場所（交差点・住所）は説明に入っている。そのときは説明を場所として出す
+  function geoPlace(k,x){ const n=String(x[0]||"").replace(/\s+/g," ").trim(), d=String(x[3]||"").trim();
+    if(k==="patrol"&&d&&/違反|多発/.test(n)) return {place:d,kind:n}; return {place:n,kind:""}; }
   function geoShow(k,x,d,test){
     const G=GEO[k], S=GS[k], dd=d<=0?0:Math.max(10,Math.round(d/10)*10);
     if(k==="patrol"){   // 取締りは運転中でも見えるよう、大きな太字で3段（2026-10-25 ユーザー指定：4倍以上）
       // 名前が長いときは、3行に収まるまで小さくする（短い名前は68px。最小でも36px）
-      const nm=String(x[0]||""), avail=Math.max(200,window.innerWidth-80), fs=Math.max(36,Math.min(68,Math.floor(avail*3/Math.max(1,nm.length))));
-      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span><span class="pb2" style="font-size:${fs}px">${esc(nm)}</span><span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span>`;
+      const gp=geoPlace(k,x), nm=gp.place, avail=Math.max(200,window.innerWidth-80), fs=Math.max(36,Math.min(68,Math.floor(avail*3/Math.max(1,nm.length))));
+      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span><span class="pb2" style="font-size:${fs}px">${esc(nm)}</span>${gp.kind?`<span class="pb4">${esc(gp.kind)}</span>`:""}<span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span>`;
       $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000); return;
     }
     $(G.ban+"Text").textContent=G.msg(x,S.groups[x[1]]||"",dd)+(test?"　※テスト表示":"");
@@ -5096,14 +5100,15 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const xs=S.pts.filter(x=>!S.offG[x[1]]&&gShow(x[1]));
     xs.forEach(x=>{ const c=x[2][0], cl=col(x[1]);
       const link=G.route?`<a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
-      const pop=`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(x[0])}</b><div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
+      const gp=geoPlace(k,x);
+      const pop=`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(gp.place)}</b>${gp.kind?`<div style="font-weight:700">${esc(gp.kind)}</div>`:""}<div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${!gp.kind&&x[3]&&x[3]!==x[0]?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
       if((x[4]||"P")==="A") L.polygon(x[2],{color:cl,weight:3,fillColor:cl,fillOpacity:.22}).bindPopup(pop).addTo(S.layer);
       else if(x[2].length>1) L.polyline(x[2],{color:cl,weight:6,opacity:.85}).bindPopup(pop).addTo(S.layer);
       else L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
     const setMe=p=>{ if(S.me) S.map.removeLayer(S.me); S.me=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(S.map); };
     if(first){ const p=await getPos(); if(p){ setMe(p); S.map.setView([p.lat,p.lng],15); } else if(xs.length) S.map.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
     if(S.me){ const me=S.me.getLatLng(), near=xs.map(x=>({x,d:geoD({lat:me.lat,lng:me.lng},x)})).sort((a,b)=>a.d-b.d).slice(0,15);
-      $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${col(x[1])}"><div class="trname"><b>${esc(x[0])}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="https://www.google.com/maps/dir/?api=1&destination=${x[2][0][0]},${x[2][0][1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
+      $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${col(x[1])}"><div class="trname"><b>${esc(geoPlace(k,x).place)}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${geoPlace(k,x).kind?esc(geoPlace(k,x).kind)+"・":""}${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="https://www.google.com/maps/dir/?api=1&destination=${x[2][0][0]},${x[2][0][1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
       $(P+"List").querySelectorAll("[data-geopin]").forEach(b=>b.onclick=()=>{ const x=S.pts[+b.dataset.geopin]; S.map.setView(x[2][0],17); $(P+"Map").scrollIntoView({behavior:"smooth",block:"center"}); }); }
     else $(P+"List").innerHTML=`<div class="src">「現在地」を押すと、近い順の一覧を出します。</div>`;
     m.textContent=`${xs.length}か所を表示しています`;
