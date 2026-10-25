@@ -468,6 +468,7 @@ body.rtfull{overflow:hidden}
 <div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
 <div id="restBanner" class="patrolbanner restbanner" hidden role="alert"><span id="restBannerText"></span><button type="button" id="restBannerClose" aria-label="閉じる">×</button></div>
 <div id="standBanner" class="patrolbanner standbanner" hidden role="status"><span id="standBannerText"></span><button type="button" id="standBannerClose" aria-label="閉じる">×</button></div>
+<div id="yuryoBanner" class="patrolbanner standbanner" hidden role="status"><span id="yuryoBannerText"></span><button type="button" id="yuryoBannerClose" aria-label="閉じる">×</button></div>
 <div id="trainBanner" class="trainbanner" hidden role="status">
   <button type="button" id="trainBannerText"></button>
   <button type="button" id="trainBannerClose" aria-label="閉じる">×</button>
@@ -744,13 +745,14 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="fl" aria-selected="false" hidden>到着便</button>
     <button role="tab" data-sub="sv" aria-selected="false" id="segSv" hidden>接遇</button>
     <button role="tab" data-sub="rest" aria-selected="false">休憩場</button>
-    <button role="tab" data-sub="taxi" aria-selected="false">専用乗り場</button>
+    <button role="tab" data-sub="taxi" aria-selected="false">森ビル乗り場</button>
     <button role="tab" data-sub="event" aria-selected="false">イベント</button>
     <button role="tab" data-sub="train" aria-selected="false">電車が止まったら</button>
     <button role="tab" data-sub="air" aria-selected="false">飛行機</button>
     <button role="tab" data-sub="cmp" aria-selected="false" id="segCmp" hidden>乗務員比較（試験）</button>
     <button role="tab" data-sub="patrol" aria-selected="false" id="segPatrol">取締り</button>
-    <button role="tab" data-sub="stand" aria-selected="false" id="segStand">乗り場マップ</button>
+    <button role="tab" data-sub="stand" aria-selected="false" id="segStand">日交乗り場</button>
+    <button role="tab" data-sub="yuryo" aria-selected="false" id="segYuryo">優良乗り場</button>
     <button role="tab" data-sub="rest2" aria-selected="false" id="segRest2">駐車禁止</button>
     <button role="tab" data-sub="bus" aria-selected="false" id="segBus">都営バス</button>
     <button role="tab" data-sub="ship" aria-selected="false" id="segShip">竹芝の船</button>
@@ -900,8 +902,8 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subStand" hidden>
     <section class="card">
-      <h2>日交乗り場・優良乗り場</h2>
-      <div class="src">マイマップ「専用乗り場・優良乗り場」の場所を地図と一覧に出します。色は、<b style="color:#2F6FD6">●日交乗り場</b>・<b style="color:#3E9B4F">●優良乗り場</b>です。印を押すと、待機できる時間・台数などの説明と「ルート案内」が出ます。近づいたときの音（ピロリン）と緑の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
+      <h2>日交乗り場</h2>
+      <div class="src">マイマップ「専用乗り場・優良乗り場」の日交乗り場を地図と一覧に出します。公共の優良乗り場は「優良乗り場」のボタンに分けています。印を押すと、待機できる時間・台数などの説明と「ルート案内」が出ます。近づいたときの音（ピロリン）と緑の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
       <div class="btnrow"><button class="btn" id="sdTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="sdTestSnd">🔊 音だけテスト</button></div>
       <div id="sdGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="sdMapWrap" class="mapwrap">
@@ -910,6 +912,20 @@ body.rtfull{overflow:hidden}
       </div>
       <div class="msg" id="sdMsg" role="status"></div>
       <div id="sdList"></div>
+    </section>
+  </div>
+  <div class="wrap" id="subYuryo" hidden>
+    <section class="card">
+      <h2>優良乗り場</h2>
+      <div class="src">マイマップ「専用乗り場・優良乗り場」の、公共の優良乗り場を地図と一覧に出します。印を押すと「ルート案内」が出ます。近づいたときの音（ピロリン）と緑の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
+      <div class="btnrow"><button class="btn" id="yrTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="yrTestSnd">🔊 音だけテスト</button></div>
+      <div id="yrGroups" class="btnrow" style="flex-wrap:wrap"></div>
+      <div id="yrMapWrap" class="mapwrap">
+        <div id="yrMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+        <div class="evmapbtns"><button class="btn" id="yrMeBtn">現在地</button><button class="btn" id="yrFullBtn">全画面</button></div>
+      </div>
+      <div class="msg" id="yrMsg" role="status"></div>
+      <div id="yrList"></div>
     </section>
   </div>
 
@@ -930,7 +946,7 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subTaxi" hidden>
     <section class="card">
-      <h2>専用乗り場の不足お知らせ（確認用）</h2>
+      <h2>森ビル乗り場（日交の専用乗り場）の不足お知らせ</h2>
       <div class="src">現地に行かなくても、今の空車状況を確認できます。不足中の場所があれば、上の帯を試しに表示します。</div>
       <div class="btnrow"><button class="btn" id="taxiTestBtn">今の状況を確認・テスト表示</button></div>
       <div class="msg" id="taxiTestMsg" role="status"></div>
@@ -1025,7 +1041,8 @@ body.rtfull{overflow:hidden}
         <div class="src">使わない機能のチェックを外すと、画面に出なくなります。記録や計算、データはそのまま残るので、あとでチェックを付ければ元に戻ります。このスマホだけの設定です。</div>
         <div id="offBox"></div>
       <div class="field" style="margin-top:10px"><label for="patrolDist">取締りの場所を知らせる距離</label><select id="patrolDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option></select></div>
-      <div class="field"><label for="standDist">日交乗り場・優良乗り場を知らせる距離</label><select id="standDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
+      <div class="field"><label for="standDist">日交乗り場を知らせる距離</label><select id="standDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
+      <div class="field"><label for="yuryoDist">優良乗り場を知らせる距離</label><select id="yuryoDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
       <div class="field"><label for="restDist">駐車禁止ポイントを知らせる距離</label><select id="restDist"><option value="30">30m手前</option><option value="50" selected>50m手前</option><option value="100">100m手前</option><option value="200">200m手前</option></select></div>
       <div class="src">場所は、マイマップ「東京都内_公開・重点取締り」「専用乗り場・優良乗り場」「休憩ポイント&amp;クレーム発生ポイント」から読み込みます（地図が更新されると数時間で反映）。近づいている途中だけ鳴らし、同じ場所は10分間は鳴らしません。iPhoneはマナーモードだと鳴らないことがあります。</div>
       <h3 style="margin-top:12px">メニューの表示</h3>
@@ -1139,7 +1156,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 13:22</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 13:26</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1783,7 +1800,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","日交乗り場・優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","駐車禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","日交乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["yuryo","優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","駐車禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>{ const lk=k==="rzweek"&&adminLock.rzweek; return `<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}${lk?" disabled":""}>${escC(label)}${lk?`<br><small style="color:var(--warn)">管理者が全員「使わない」にしています</small>`:""}</label>`; }).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -1791,7 +1808,7 @@ body.rtfull{overflow:hidden}
       if(b.dataset.off==="taxi"&&!b.checked) $("taxiBanner").hidden=true;
       if(b.dataset.off==="trainban"&&!b.checked) $("trainBanner").hidden=true;
       if(b.dataset.off==="wake") wakeSet();
-      if(b.dataset.off==="patrol"||b.dataset.off==="stand"||b.dataset.off==="rest2") geoWatch();
+      if(["patrol","stand","yuryo","rest2"].includes(b.dataset.off)) geoWatch();
       render(); if(!$("tabSales").hidden) setView(sView); renderRzFloat(); }); }
   // 画面を消さない（Wake Lock）。アプリを開いている間だけ効く。ほかのアプリに切り替えると外れるので、戻ったら付け直す
   let wakeLock=null;
@@ -2193,7 +2210,7 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip",patrol:"subPatrol",stand:"subStand",rest2:"subRest2"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip",patrol:"subPatrol",stand:"subStand",yuryo:"subYuryo",rest2:"subRest2"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -2214,7 +2231,7 @@ body.rtfull{overflow:hidden}
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
     if(s==="bus"&&!$("tabLong").hidden&&typeof loadBus==="function") loadBus(false);
-    if((s==="patrol"||s==="stand"||s==="rest2")&&!$("tabLong").hidden&&typeof renderGeoTab==="function") renderGeoTab(s,true);
+    if((s==="patrol"||s==="stand"||s==="yuryo"||s==="rest2")&&!$("tabLong").hidden&&typeof renderGeoTab==="function") renderGeoTab(s,true);
     if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function") loadShip(false);
     if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function"){ loadAir(false); loadAir(false,airKind==="arr"?"dep":"arr"); }   // 到着・出発の両方を先に読む
   }
@@ -2225,7 +2242,7 @@ body.rtfull{overflow:hidden}
   // ボタン：[キー, アイコン（Lucide・線画。ISCライセンス）, ボタンの名前（1行に入る短い名前）, 画面の見出しの名前]。グループごとにテーマ色
   const MICON={"event": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "taxi": "<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><path d=\"M10 6h4\"/><path d=\"M10 10h4\"/><path d=\"M10 14h4\"/><path d=\"M10 18h4\"/>", "train": "<path d=\"M8 3.1V7a4 4 0 0 0 8 0V3.1\"/><path d=\"m9 15-1-1\"/><path d=\"m15 15 1-1\"/><path d=\"M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z\"/><path d=\"m8 19-2 3\"/><path d=\"m16 19 2 3\"/>", "air": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "rest": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "flash": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "long": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>", "cmp": "<path d=\"M3 3v18h18\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "bus": "<path d=\"M8 6v6\"/><path d=\"M15 6v6\"/><path d=\"M2 12h19.6\"/><path d=\"M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/><path d=\"M9 18h5\"/><circle cx=\"16\" cy=\"18\" r=\"2\"/>", "ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>", "pay": "<polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/>", "set": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bk": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "help": "<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>"};
   const MENU_GROUPS=[
-    ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","乗り場マップ","日交乗り場・優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"],["taxi","🏢","専用乗り場","専用乗り場"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
+    ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","🚖","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
     ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
@@ -2253,7 +2270,7 @@ body.rtfull{overflow:hidden}
     let rec=[]; try{ rec=JSON.parse(localStorage.getItem("tenko.menuRecent")||"[]"); }catch(e){}
     rec=rec.filter(k=>MENU_ALL[k]&&menuVisible(k)&&!["set","bk","help"].includes(k)).slice(0,3);
     // 開いている間だけ知らせる機能は、右上にランプ（緑＝知らせがオン、灰色＝オフ）
-    const LAMP={patrol:"patrol",stand:"stand",rest2:"rest2",train:"trainban",taxi:"taxi"};
+    const LAMP={patrol:"patrol",stand:"stand",yuryo:"yuryo",rest2:"rest2",train:"trainban",taxi:"taxi"};
     const lamp=k=>LAMP[k]?`<i class="mlamp${offCfg[LAMP[k]]?"":" on"}" title="${offCfg[LAMP[k]]?"知らせはオフ":"知らせはオン"}"></i>`:"";
     const tile=x=>`<button type="button" class="mtile" data-mt="${x[0]}" aria-label="${esc(x[3])}${LAMP[x[0]]?(offCfg[LAMP[x[0]]]?"（知らせはオフ）":"（知らせはオン）"):""}">${lamp(x[0])}<span class="mi">${micon(x[0])}</span><span class="lb">${esc(x[2])}</span></button>`;
     const grp=(t,th,xs,desc)=>xs.length?`<div class="${th}"><h3 class="mgrp">${t}</h3>${desc?`<div class="mdesc">${esc(desc)}</div>`:""}<div class="mtiles">${xs.map(tile).join("")}</div></div>`:"";
@@ -5022,8 +5039,10 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   const GEO={
     patrol:{act:"patrolPts",store:"tenko.patrol",dist:"patrolDist",ban:"patrolBanner",pre:"pt",col:["#D23C2F","#E8890C","#7B3FA0","#2F6FD6","#3E9B4F"],chime:"pipo",route:false,
       msg:(x,g,d)=>`⚠ 取締り：${geoPlace("patrol",x).place}（${g}）まで約${d}m`},
-    stand:{act:"standPts",store:"tenko.stand",dist:"standDist",ban:"standBanner",pre:"sd",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,
+    stand:{act:"standPts",store:"tenko.stand",dist:"standDist",ban:"standBanner",pre:"sd",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:g=>!/優良/.test(g),
       msg:(x,g,d)=>`🚕 ${g}：${x[0].replace(/^\d+_/,"")}まで約${d}m`},
+    yuryo:{act:"standPts",store:"tenko.yuryo",dist:"yuryoDist",ban:"yuryoBanner",pre:"yr",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:g=>/優良/.test(g),
+      msg:(x,g,d)=>`🚖 優良乗り場：${x[0].replace(/優良タクシー乗り場|タクシー乗り場|優良/g,"").trim()||x[0]}まで約${d}m`},
     rest2:{act:"restPts",store:"tenko.rest2",dist:"restDist",ban:"restBanner",pre:"rs",col:["#8B5A2B","#2F6FD6","#D23C2F","#7B3FA0","#3E9B4F"],chime:"ponpon",route:true,
       alertG:g=>/クレーム|禁止/.test(g),   // 知らせる・この画面に出すのは駐車禁止（クレーム発生ポイント）だけ。喫煙所・長時間駐車可は「休憩場」の地図に出す
       msg:(x,g,d)=>d===0?`🚫 駐車禁止：${x[0]}（エリアの中です）`:`🚫 駐車禁止：${x[0]}まで約${d}m`}};
@@ -5048,7 +5067,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     $(GEO[k].ban+"Close").onclick=()=>{ $(GEO[k].ban).hidden=true; }; });
   let geoWid=null;
   // 乗り場マップは、マイマップのグループ名「専用乗り場」をアプリでは「日交乗り場」と出す（2026-10-25 ユーザー指定）
-  const geoGroups=(k,g)=>k==="stand"?(g||[]).map(x=>x==="専用乗り場"?"日交乗り場":x):(g||[]);
+  const geoGroups=(k,g)=>k==="stand"||k==="yuryo"?(g||[]).map(x=>x==="専用乗り場"?"日交乗り場":x):(g||[]);
   async function geoLoad(k,force){
     if(!cfg.url) return; let at=0; try{ at=+(localStorage.getItem(GEO[k].store+"At")||0); }catch(e){}
     if(!force&&GS[k].pts&&Date.now()-at<6*3600e3) return;
@@ -5093,6 +5112,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       const th=+$(G.dist).value||100;
       S.pts.forEach((x,i)=>{
         if(G.alertG&&!G.alertG(S.groups[x[1]]||"")) return;
+        if(G.grpF&&!G.grpF(S.groups[x[1]]||"")) return;
         const bb=geoBB(x); if(p.lat<bb[0]-dLat||p.lat>bb[1]+dLat||p.lng<bb[2]-dLng||p.lng>bb[3]+dLng){ delete S.prev[i]; return; }
         const d=geoD(p,x), prev=S.prev[i]; S.prev[i]=d;
         if(d<=th&&prev!=null&&(d<prev-2||(d===0&&prev>0))&&!(S.last[i]&&now-S.last[i]<10*60e3)){ S.last[i]=now; geoChime(G.chime); geoShow(k,x,d,false); }
@@ -5115,7 +5135,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     setTimeout(()=>S.map.invalidateSize(),60);
     if(!S.pts){ m.textContent="場所を読み込んでいます…"; await geoLoad(k,true); if(!S.pts){ m.textContent="場所を読み込めませんでした。電波を確認してください"; return; } }
     const col=i=>G.col[i%G.col.length];
-    const gShow=i=>!(G.alertG&&k==="rest2")||G.alertG(S.groups[i]||"");   // 駐車禁止の画面は、禁止のグループだけ
+    const gShow=i=>(!(G.alertG&&k==="rest2")||G.alertG(S.groups[i]||""))&&(!G.grpF||G.grpF(S.groups[i]||""));   // 駐車禁止＝禁止だけ、日交乗り場＝優良以外、優良乗り場＝優良だけ
     $(P+"Groups").innerHTML=S.groups.map((g,i)=>gShow(i)?`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-geog="${i}" ${S.offG[i]?"":"checked"}><b style="color:${col(i)}">●</b>${esc(g)}（${S.pts.filter(x=>x[1]===i).length}）</label>`:"").join("");
     $(P+"Groups").querySelectorAll("[data-geog]").forEach(b=>b.onchange=()=>{ if(b.checked) delete S.offG[b.dataset.geog]; else S.offG[b.dataset.geog]=true; try{ localStorage.setItem(G.store+"Off",JSON.stringify(S.offG)); }catch(e){} renderGeoTab(k,false); });
     if(S.layer) S.layer.remove(); S.layer=L.layerGroup().addTo(S.map);
@@ -5140,7 +5160,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k];
     $(G.pre+"TestBan").onclick=async()=>{ if(!S.pts) await geoLoad(k,true);
       // テストは本番と同じ形で出す。場所は、現在地が分かれば一番近いもの（なければ最初のもの）
-      const cand=(S.pts||[]).filter(y=>!G.alertG||G.alertG(S.groups[y[1]]||""));
+      const cand=(S.pts||[]).filter(y=>(!G.alertG||G.alertG(S.groups[y[1]]||""))&&(!G.grpF||G.grpF(S.groups[y[1]]||"")));
       let x=cand[0]||["（試し）",0,[[0,0]]];
       if(S.me&&cand.length){ const me=S.me.getLatLng(); x=cand.map(y=>({y,d:geoD({lat:me.lat,lng:me.lng},y)})).sort((a,b)=>a.d-b.d)[0].y; }
       // 取締りのテストは、いつも「御成門交差点」で出す（2026-10-25 ユーザー指定）。地図にないときも、この名前で出す
