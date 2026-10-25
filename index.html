@@ -751,6 +751,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="train" aria-selected="false">電車が止まったら</button>
     <button role="tab" data-sub="air" aria-selected="false">飛行機</button>
     <button role="tab" data-sub="cmp" aria-selected="false" id="segCmp" hidden>乗務員比較（試験）</button>
+    <button role="tab" data-sub="demand" aria-selected="false" id="segDemand" hidden>需要予想（試験）</button>
     <button role="tab" data-sub="patrol" aria-selected="false" id="segPatrol">取締り</button>
     <button role="tab" data-sub="stand" aria-selected="false" id="segStand">日交乗り場</button>
     <button role="tab" data-sub="yuryo" aria-selected="false" id="segYuryo">優良乗り場</button>
@@ -793,6 +794,42 @@ body.rtfull{overflow:hidden}
       <div class="src">CSVの列は「地点名,緯度,経度,住所,電話番号,メモ」です（カーナビタイムのMy地点プラスと同じ形式なので、同じファイルを両方に使えます）。メモに「10/21 18:30開始 終了は21時前後見込み 集客見込み 約3,000人」のように書くと、開始・終了見込み・集客見込みを読み取ります。日付がないときは、読み込んだ日のイベントとして扱います。</div>
       <input type="file" id="evFile" accept=".csv,text/csv,text/plain" hidden>
       <div class="btnrow"><button class="btn primary" id="evPick">CSVファイルを選ぶ</button><button class="btn" id="evClear">自分で読み込んだ分を消す</button></div>
+    </section>
+  </div>
+
+  <div class="wrap" id="subDemand" hidden>
+    <section class="card">
+      <h2>運転見合わせ時の需要予想（試験・管理者のみ）</h2>
+      <div class="src">運行情報（東京メトロ・都営・JR東日本）から、運転見合わせ・大幅な遅れの路線と区間をつかみ、止まった区間の駅に点数を付けて地図に色分けします。<b style="color:#D23C2F">●赤</b>＝需要が出やすい・<b style="color:#E0A800">●黄</b>・<b style="color:#3E9B4F">●緑</b>、<b style="color:#2F6FD6">◆青</b>＝振替で混みそうな近くの他路線の駅。点数は、乗降客数・他路線の駅までの遠さ・止まっている時間・帰宅時間帯から出します（下の「点数の付け方」で変えられます）。</div>
+      <div class="btnrow"><button class="btn primary" id="dmReload">今の運行情報で出す</button></div>
+      <div class="grp"><b>テスト（止まったことにして出す）</b>
+        <div class="pair"><div class="field"><label for="dmTestLine">路線</label><select id="dmTestLine"></select></div>
+          <div class="field"><label for="dmTestMin">止まっている時間</label><select id="dmTestMin"><option value="15">15分</option><option value="30">30分</option><option value="60" selected>1時間</option><option value="120">2時間</option><option value="180">3時間以上</option></select></div></div>
+        <div class="pair"><div class="field"><label for="dmTestFrom">区間（から）</label><select id="dmTestFrom"></select></div><div class="field"><label for="dmTestTo">区間（まで）</label><select id="dmTestTo"></select></div></div>
+        <div class="btnrow"><button class="btn" id="dmTestGo">この条件で出す</button></div>
+      </div>
+      <div class="msg" id="dmMsg" role="status"></div>
+      <div id="dmMapWrap" class="mapwrap">
+        <div id="dmMap" class="bigmap" style="height:440px;border-radius:10px;border:1px solid var(--line)"></div>
+        <div class="evmapbtns"><button class="btn" id="dmFullBtn">全画面</button></div>
+      </div>
+      <div id="dmList"></div>
+      <details class="grp" id="dmCfgBox"><summary>点数の付け方（あとで調整）</summary>
+        <div class="src">点数＝乗降客数×重み＋他路線の駅までの遠さ×重み＋止まっている時間×重み＋帰宅時間帯なら重み。満点が100になるよう、それぞれ0〜1に直してから重みを掛けます。</div>
+        <div class="pair"><div class="field"><label for="dmWPax">乗降客数の重み</label><input type="number" id="dmWPax" inputmode="numeric"></div><div class="field"><label for="dmWDist">他路線までの遠さの重み</label><input type="number" id="dmWDist" inputmode="numeric"></div></div>
+        <div class="pair"><div class="field"><label for="dmWDur">止まっている時間の重み</label><input type="number" id="dmWDur" inputmode="numeric"></div><div class="field"><label for="dmWEve">帰宅時間帯の重み</label><input type="number" id="dmWEve" inputmode="numeric"></div></div>
+        <div class="pair"><div class="field"><label for="dmEveFrom">帰宅時間帯（から・時）</label><input type="number" id="dmEveFrom" inputmode="numeric"></div><div class="field"><label for="dmEveTo">帰宅時間帯（まで・時）</label><input type="number" id="dmEveTo" inputmode="numeric"></div></div>
+        <div class="pair"><div class="field"><label for="dmThR">赤にする点数（以上）</label><input type="number" id="dmThR" inputmode="numeric"></div><div class="field"><label for="dmThY">黄にする点数（以上）</label><input type="number" id="dmThY" inputmode="numeric"></div></div>
+        <div class="pair"><div class="field"><label for="dmDistMax">遠さが満点になる距離（m）</label><input type="number" id="dmDistMax" inputmode="numeric"></div><div class="field"><label for="dmDurMax">時間が満点になる長さ（分）</label><input type="number" id="dmDurMax" inputmode="numeric"></div></div>
+        <div class="btnrow"><button class="btn primary" id="dmCfgSave">保存して出し直す</button><button class="btn" id="dmCfgReset">初期値に戻す</button></div>
+      </details>
+      <details class="grp" id="dmLogBox"><summary>実績で答え合わせ</summary>
+        <div class="src">管理者のアプリが開いている間に、運転見合わせを見つけるたび、日時と路線・駅を記録しています（このスマホの中）。下のボタンで、その時間帯に乗務員（社員コードを登録した人）が各駅の周り（500m以内）で乗せた件数を、平常時の同じ曜日・同じ時間帯（前の8週の平均）と比べます。</div>
+        <div id="dmLogList"></div>
+        <div class="btnrow"><button class="btn primary" id="dmCheck">答え合わせをする</button><button class="btn" id="dmLogClear">記録を消す</button></div>
+        <div class="msg" id="dmCheckMsg" role="status"></div>
+        <div id="dmCheckOut"></div>
+      </details>
     </section>
   </div>
 
@@ -1157,7 +1194,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 19:01</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 20:54</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2042,7 +2079,7 @@ body.rtfull{overflow:hidden}
   }
   function applyRole(){
     const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
-    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin();   // 乗務員比較（試験）は管理者だけ
+    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin(); $("segDemand").hidden=!isAdmin();   // 乗務員比較（試験）は管理者だけ
     if(!isAdmin()&&typeof curSub!=="undefined"&&curSub==="cmp") showSub("rest");
     $("segSv").hidden=true; if(typeof curSub!=="undefined"&&curSub==="sv") showSub("wx");   // 接遇は売上 → 勤務 の中に移した
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
@@ -2211,7 +2248,7 @@ body.rtfull{overflow:hidden}
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip",patrol:"subPatrol",stand:"subStand",yuryo:"subYuryo",rest2:"subRest2"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip",patrol:"subPatrol",stand:"subStand",yuryo:"subYuryo",rest2:"subRest2",demand:"subDemand"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -2219,7 +2256,7 @@ body.rtfull{overflow:hidden}
     if(!SUBS[s]) s="long";
     if(s==="wx"||s==="rail"||s==="fl") s="rest";   // 天気・電車・到着便はいったん非表示にしたので、古い保存値が残っていても休憩場へ
     if(s==="long"&&!isMember()) s="rest";
-    if(s==="cmp"&&!isAdmin()) s="rest";
+    if((s==="cmp"||s==="demand")&&!isAdmin()) s="rest";
 
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
@@ -2231,6 +2268,7 @@ body.rtfull{overflow:hidden}
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
+    if(s==="demand"&&!$("tabLong").hidden&&typeof dmOpen==="function") dmOpen();
     if(s==="bus"&&!$("tabLong").hidden&&typeof loadBus==="function") loadBus(false);
     if((s==="patrol"||s==="stand"||s==="yuryo"||s==="rest2")&&!$("tabLong").hidden&&typeof renderGeoTab==="function") renderGeoTab(s,true);
     if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function") loadShip(false);
@@ -2246,7 +2284,7 @@ body.rtfull{overflow:hidden}
     ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","🚖","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
-    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
+    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["help","📖","使い方","使い方"]]]];
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
   const micon=k=>`<span class="em" aria-hidden="true">${(MENU_ALL[k]||[])[1]||""}</span>`;   // 絵文字（線画のMICONは使わない）
@@ -2564,6 +2602,129 @@ body.rtfull{overflow:hidden}
       w.classList.toggle("evfull",on); $(btn).textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":"";
       const m=getMap(); setTimeout(()=>m&&m.invalidateSize(),80); setTimeout(()=>m&&m.invalidateSize(),400); }; }
   setupFull("evFullBtn","evMapWrap",()=>evMap); setupFull("trFullBtn","trMapWrap",()=>trMap);
+
+  // ===== 運転見合わせ時の需要予想（試験・管理者のみ。2026-10-25） =====
+  const DM_DEF={wPax:40,wDist:30,wDur:20,wEve:10,eveFrom:17,eveTo:24,thR:60,thY:35,distMax:2000,durMax:180};
+  let dmCfg=Object.assign({},DM_DEF); try{ Object.assign(dmCfg,JSON.parse(localStorage.getItem("tenko.dmCfg")||"{}")); }catch(e){}
+  let dmMap=null, dmLayer=null, dmLast=null;
+  const DM_F=["wPax","wDist","wDur","wEve","eveFrom","eveTo","thR","thY","distMax","durMax"], dmId=k=>"dm"+k[0].toUpperCase()+k.slice(1);
+  const dmFill=()=>DM_F.forEach(k=>{ $(dmId(k)).value=dmCfg[k]; });
+  const dmLines=()=>[...new Set(TRAIN_ALL.map(x=>x.l))];
+  // 運行情報の文から「○○駅〜○○駅間」を読んで、その路線の区間の駅にしぼる（読めなければ路線の全駅）
+  function dmSection(line,text){
+    const st=TRAIN_ALL.filter(x=>x.l===line); if(!st.length) return {st:[],part:false};
+    const norm=v=>String(v||"").replace(/[\s　]/g,"").replace(/駅$/,"").replace(/ヶ/g,"ケ");
+    const m=/([^\s、。,，（(「」]+?)駅?(?:〜|～|－|-|から)([^\s、。,，（(「」]+?)駅?間/.exec(String(text||""));
+    if(m){ const a=st.findIndex(x=>norm(x.n)===norm(m[1])), b=st.findIndex(x=>norm(x.n)===norm(m[2]));
+      if(a>=0&&b>=0){ const [i0,i1]=a<b?[a,b]:[b,a]; return {st:st.slice(i0,i1+1),part:true}; } }
+    return {st,part:false};
+  }
+  // 点数（0〜100）。重み・満点の距離と時間・帰宅時間帯は設定で変える
+  function dmScore(x,durMin,hour){
+    const c=dmCfg, tot=(+c.wPax)+(+c.wDist)+(+c.wDur)+(+c.wEve)||1;
+    const pax=Math.max(0,Math.min(1,(Math.log10(Math.max(x.p||0,1000))-3)/(Math.log10(500000)-3)));
+    const dist=Math.min(1,(x.d||0)/(+c.distMax||2000)), dur=Math.min(1,durMin/(+c.durMax||180));
+    const ef=+c.eveFrom, et=+c.eveTo, eve=et>ef?(hour>=ef&&hour<et):(hour>=ef||hour<et);
+    const raw=pax*c.wPax+dist*c.wDist+dur*c.wDur+(eve?1:0)*c.wEve;
+    return {score:Math.round(raw/tot*100),pax,dist,dur,eve};
+  }
+  const dmCol=sc=>sc>=+dmCfg.thR?"#D23C2F":sc>=+dmCfg.thY?"#E0A800":"#3E9B4F";
+  // 止まった路線の一覧（運行情報から）→ 影響する駅と点数、振替先の駅
+  function dmBuild(stops,now){
+    const hour=new Date(now).getHours(), stLines=new Set(stops.map(z=>z.l)), aff=[], seen=new Set();
+    stops.forEach(z=>{ const sec=dmSection(z.l,z.text); sec.st.forEach(x=>{ const key=x.l+"|"+x.n; if(seen.has(key)) return; seen.add(key);
+      const sc=dmScore(x,z.durMin,hour); aff.push(Object.assign({},x,sc,{why:z,part:sec.part})); }); });
+    aff.sort((a,b)=>b.score-a.score);
+    const tr=new Map();   // 振替先：止まった駅から1km以内の、止まっていない他路線の駅
+    const affNames=new Set(aff.map(a=>a.n));
+    aff.forEach(a=>TRAIN_ALL.forEach(y=>{ if(y.l===a.l||stLines.has(y.l)) return; const dm=distM([a.lat,a.lng],[y.lat,y.lng]); if(dm>1000) return;
+      const key=y.n, o=tr.get(key);
+      if(o&&distM([o.lat,o.lng],[y.lat,y.lng])<600){ if(!o.lines.includes(y.l)) o.lines.push(y.l); o.p=Math.max(o.p||0,y.p||0); if(dm<o.dm){ o.dm=dm; o.from=a.n; } }
+      else if(!o) tr.set(key,Object.assign({},y,{dm,from:a.n,lines:[y.l],same:affNames.has(y.n)})); }));
+    return {aff,tr:[...tr.values()].sort((a,b)=>(b.p||0)-(a.p||0)),hour};
+  }
+  async function dmDraw(stops,now,label){
+    const m=$("dmMsg");
+    try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした"; return; }
+    if(!dmMap){ dmMap=L.map("dmMap",{zoomControl:true,attributionControl:true});
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(dmMap);
+      dmMap.setView([35.69,139.75],11); addAreaMask(dmMap); }
+    setTimeout(()=>dmMap.invalidateSize(),60);
+    if(dmLayer) dmLayer.remove(); dmLayer=L.layerGroup().addTo(dmMap);
+    if(!stops.length){ m.textContent=`${label}：今、運転見合わせ・大幅な遅れの路線はありません（東京メトロ・都営・JR東日本）。下のテストで試せます。`; $("dmList").innerHTML=""; return; }
+    const R=dmBuild(stops,now); dmLast=R;
+    R.tr.forEach(y=>L.marker([y.lat,y.lng],{icon:L.divIcon({className:"",html:`<span style="display:block;width:14px;height:14px;background:#2F6FD6;border:2px solid #fff;transform:rotate(45deg);box-shadow:0 1px 3px rgba(0,0,0,.4)"></span>`,iconSize:[18,18],iconAnchor:[9,9]})})
+      .bindPopup(`<b>${esc(y.n)}駅</b>（${y.lines.map(l=>esc(trLabel(l))).join("・")}）<br>振替で混みそうな駅（${esc(y.from)}駅から約${Math.round(y.dm/10)*10}m）<br>乗降客数：${y.p?y.p.toLocaleString()+"人/日":"—"}`).addTo(dmLayer));
+    R.aff.slice().reverse().forEach(x=>{ const col=dmCol(x.score);
+      L.circleMarker([x.lat,x.lng],{radius:x.score>=+dmCfg.thR?13:x.score>=+dmCfg.thY?10:8,color:"#fff",weight:2,fillColor:col,fillOpacity:1,bubblingMouseEvents:false})
+        .bindTooltip(`${esc(x.n)} ${x.score}`,{permanent:x.score>=+dmCfg.thY,direction:"top",offset:[0,-8]})
+        .bindPopup(`<div style="font-size:14px;line-height:1.5"><b style="font-size:16px">${esc(x.n)}駅</b>（${esc(trLabel(x.l))}）<br><b style="color:${col}">点数 ${x.score}</b><br>乗降客数 ${x.p?x.p.toLocaleString()+"人/日":"—"}<br>一番近い他路線：${esc(x.near)}（約${(x.d/1000).toFixed(1)}km）<br>止まって約${x.why.durMin}分${x.eve?"・帰宅時間帯":""}<a href="${evRoute(x)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${col};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(dmLayer); });
+    dmMap.fitBounds(L.latLngBounds(R.aff.map(x=>[x.lat,x.lng]).concat(R.tr.map(y=>[y.lat,y.lng]))),{padding:[30,30],maxZoom:14});
+    m.textContent=`${label}：${stops.map(z=>`${z.l}（${z.status||"見合わせ"}${z.part?"・区間":""}・約${z.durMin}分）`).join("、")}　影響する駅 ${R.aff.length}・振替先 ${R.tr.length}`;
+    const row=x=>`<div class="tritem" style="border-left-color:${dmCol(x.score)}"><div class="trname"><b>${esc(x.n)}<span class="trbadge" style="background:${dmCol(x.score)}">${x.score}点</span></b><small>${esc(trLabel(x.l))}・乗降 ${x.p?x.p.toLocaleString():"—"}人・他路線まで${(x.d/1000).toFixed(1)}km</small></div><a class="btn primary trroute" href="${evRoute(x)}" target="_blank" rel="noopener">ルート</a></div>`;
+    $("dmList").innerHTML=`<h3 style="margin:12px 0 6px">点数の高い駅</h3><div class="trlist">${R.aff.slice(0,15).map(row).join("")}</div>`+
+      (R.tr.length?`<h3 style="margin:12px 0 6px">振替で混みそうな駅（青）</h3><div class="src">${R.tr.slice(0,15).map(y=>`<b>${esc(y.n)}</b>（${y.lines.map(l=>esc(trLabel(l))).join("・")}${y.same?"":`・${esc(y.from)}から${Math.round(y.dm/10)*10}m`}）`).join("、")}</div>`:"");
+  }
+  // 運行情報 → 止まった路線（運転見合わせ＝sev2、大幅な遅れ＝30分以上の遅れ・「大幅」）。止まり始めの時刻は、記録があればそれ
+  function dmStops(rows){
+    const log=dmLog(), now=Date.now();
+    return rows.filter(x=>x.sev===2||(x.sev===1&&(/大幅/.test((x.text||"")+(x.status||""))||+((/(\d+)\s*分/.exec(x.text||"")||[])[1]||0)>=30)))
+      .filter(x=>TRAIN_ALL.some(y=>y.l===x.l))
+      .map(x=>{ const ev=log.find(e=>e.l===x.l&&!e.end), at=x.at?new Date(x.at).getTime():NaN, st=Math.min(ev?ev.start:now,isFinite(at)?at:now); return Object.assign({},x,{durMin:Math.max(0,Math.round((now-st)/60000))}); });
+  }
+  async function dmOpen(){
+    dmFill();
+    const sel=$("dmTestLine"); if(!sel.options.length){ sel.innerHTML=dmLines().map(l=>`<option value="${esc(l)}">${esc(trLabel(l))}</option>`).join(""); dmFillSec(); }
+    dmRenderLog(); dmNow();
+  }
+  function dmFillSec(){ const st=TRAIN_ALL.filter(x=>x.l===$("dmTestLine").value); const o=`<option value="">（路線の全駅）</option>`+st.map(x=>`<option>${esc(x.n)}</option>`).join(""); $("dmTestFrom").innerHTML=o; $("dmTestTo").innerHTML=o; }
+  async function dmNow(){
+    $("dmMsg").textContent="運行情報を読んでいます…";
+    let j; try{ j=await post({action:"trainInfo"}); }catch(e){ $("dmMsg").textContent="通信できませんでした"; return; }
+    if(!j||!j.ok){ $("dmMsg").textContent=(j&&j.error)||"読み込めませんでした"; return; }
+    const rows=(j.items||[]).map(x=>{ const id=x.railway.replace(/^odpt\.Railway:/,""); return Object.assign({},x,{l:ODPT_LINE[id]||id.replace(/^[^.]*\./,""),sev:trSev(x)}); });
+    dmRecord(rows); dmRenderLog(); dmDraw(dmStops(rows),Date.now(),"今の運行情報");
+  }
+  $("dmReload").onclick=dmNow;
+  $("dmTestLine").addEventListener("change",dmFillSec);
+  $("dmTestGo").onclick=()=>{ const l=$("dmTestLine").value, a=$("dmTestFrom").value, b=$("dmTestTo").value;
+    dmDraw([{l,status:"運転見合わせ（テスト）",text:a&&b?`${a}駅〜${b}駅間で運転見合わせ`:"",durMin:+$("dmTestMin").value}],Date.now(),"テスト"); };
+  $("dmCfgSave").onclick=()=>{ DM_F.forEach(k=>{ const v=+$(dmId(k)).value; if(isFinite(v)) dmCfg[k]=v; }); try{ localStorage.setItem("tenko.dmCfg",JSON.stringify(dmCfg)); }catch(e){} $("dmMsg").textContent="点数の付け方を保存しました"; if(dmLast) $("dmTestGo").click(); };
+  $("dmCfgReset").onclick=()=>{ dmCfg=Object.assign({},DM_DEF); try{ localStorage.removeItem("tenko.dmCfg"); }catch(e){} dmFill(); };
+  setupFull("dmFullBtn","dmMapWrap",()=>dmMap);
+  // ---- 実績で答え合わせ：見合わせの記録（このスマホ）と、全員のデータの乗車 ----
+  function dmLog(){ try{ return JSON.parse(localStorage.getItem("tenko.dmLog")||"[]")||[]; }catch(e){ return []; } }
+  function dmRecord(rows){
+    const now=Date.now(), log=dmLog(), stops=rows.filter(x=>x.sev===2&&TRAIN_ALL.some(y=>y.l===x.l)), on=new Set(stops.map(x=>x.l));
+    stops.forEach(x=>{ const ev=log.find(e=>e.l===x.l&&!e.end);
+      if(ev){ ev.last=now; if(x.text) ev.text=x.text; }
+      else { const at=x.at?new Date(x.at).getTime():NaN; log.unshift({id:"e"+now+x.l,l:x.l,status:x.status||"",text:x.text||"",start:Math.min(now,isFinite(at)?at:now),last:now,end:null}); } });
+    log.forEach(e=>{ if(!e.end&&!on.has(e.l)) e.end=e.last; });
+    try{ localStorage.setItem("tenko.dmLog",JSON.stringify(log.slice(0,100))); }catch(e){}
+  }
+  const dmFmt=ms=>{ const d=new Date(ms); return `${d.getMonth()+1}/${d.getDate()}（${"日月火水木金土"[d.getDay()]}）${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  function dmRenderLog(){
+    const log=dmLog();
+    $("dmLogList").innerHTML=log.length?`<div class="src">記録した見合わせ：${log.length}件</div>`+log.slice(0,10).map(e=>`<div class="ntrow"><b>${esc(trLabel(e.l))}</b> ${dmFmt(e.start)}〜${e.end?dmFmt(e.end):"続いている"}<small style="display:block">${esc(e.text||e.status)}</small></div>`).join(""):`<div class="src">まだ記録がありません（管理者のアプリを開いている間に、運転見合わせが起きると記録されます）。</div>`;
+  }
+  $("dmLogClear").onclick=()=>{ if(!confirm("見合わせの記録を消しますか？")) return; try{ localStorage.removeItem("tenko.dmLog"); }catch(e){} dmRenderLog(); $("dmCheckOut").innerHTML=""; };
+  $("dmCheck").onclick=async()=>{
+    const m=$("dmCheckMsg"), log=dmLog(); if(!log.length){ m.textContent="見合わせの記録がありません"; return; }
+    // 必要な月：記録の月と、その前の8週が入る月
+    const months=new Set(); log.forEach(e=>{ for(let w=0;w<=8;w++){ const d=new Date(e.start-w*7*864e5); months.add(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")); } });
+    m.textContent=`全員のデータを読んでいます（${months.size}か月分）…`; let rides=[];
+    for(const mo of months){ try{ const j=await post({action:"fullGet",adminPass:cfg.apass,month:mo}); if(j&&j.ok) rides=rides.concat((j.items||[]).filter(x=>x.onLat&&x.onLng&&+x.amt>0).map(x=>({t:new Date(x.at).getTime(),lat:+x.onLat,lng:+x.onLng}))); else { m.textContent=(j&&j.error)||"読めませんでした"; return; } }catch(e){ m.textContent="通信できませんでした"; return; } }
+    const cnt=(st,t0,t1)=>rides.filter(r=>r.t>=t0&&r.t<t1&&distM([r.lat,r.lng],[st.lat,st.lng])<=500).length;
+    const out=[];
+    log.forEach(e=>{ const t0=e.start, t1=(e.end||Date.now())+60*60000;   // 見合わせの間と、そのあと1時間
+      const sec=dmSection(e.l,e.text), R=dmBuild([{l:e.l,status:e.status,text:e.text,durMin:Math.round((t1-60*60000-t0)/60000)}],t0);
+      R.aff.concat(R.tr.map(y=>Object.assign({},y,{score:null,isTr:true}))).forEach(st=>{
+        const act=cnt(st,t0,t1); let base=0; for(let w=1;w<=8;w++) base+=cnt(st,t0-w*7*864e5,t1-w*7*864e5); base=base/8;
+        if(act||base) out.push({ev:e,st,act,base,inc:act-base}); }); });
+    out.sort((a,b)=>b.inc-a.inc);
+    m.textContent=`乗車 ${rides.length}件を使って比べました（記録 ${log.length}件）`;
+    $("dmCheckOut").innerHTML=out.length?`<div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>駅</td><td>見合わせ</td><td>点数</td><td>実際</td><td>平常</td><td>増えた</td></tr></thead><tbody>${out.slice(0,40).map(o=>`<tr><td>${esc(o.st.n)}${o.st.isTr?"<small>（振替先）</small>":""}</td><td><small>${esc(trLabel(o.ev.l))} ${dmFmt(o.ev.start)}</small></td><td class="num">${o.st.score==null?"—":o.st.score}</td><td class="num">${o.act}</td><td class="num">${o.base.toFixed(1)}</td><td class="num" style="font-weight:700;color:${o.inc>0?"#D23C2F":"var(--muted)"}">${o.inc>0?"＋":""}${o.inc.toFixed(1)}</td></tr>`).join("")}</tbody></table></div><div class="src">実際＝見合わせの間とそのあと1時間に、駅から500m以内で乗せた件数（全員のデータ）。平常＝前の8週の同じ曜日・同じ時間帯の平均。点数が高いのに増えていない駅・点数が低いのに増えた駅を見て、点数の付け方を直してください。</div>`:`<div class="src">見合わせの時間帯に、対象の駅の近くで乗せた記録がありませんでした。</div>`;
+  };
 
   // ===== 乗務員比較分析（試験・管理者のみ）。「全員のデータ」（fullGet）を使う。名前は出さず、1日平均の売上が高い順に Aさん・Bさん… =====
   let cmpData=null, cmpCrew=[], cmpMap=null, cmpLayer=null, cmpMap2=null, cmpLayer2=null, cmpTab="1", cmpWhoCode=null;
@@ -5013,6 +5174,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const rows=(j.items||[]).map(x=>{ const id=x.railway.replace(/^odpt\.Railway:/,""); return Object.assign({},x,{l:ODPT_LINE[id]||id.replace(/^[^.]*\./,""),sev:trSev(x)}); }), stop=rows.filter(x=>x.sev===2);
     // 前に止まっていた路線が、止まらなくなったら「運転を再開しました」を1回だけ出す
     let was=[]; try{ was=JSON.parse(localStorage.getItem("tenko.trainStopped")||"[]"); }catch(e){}
+    if(isAdmin()&&typeof dmRecord==="function") dmRecord(rows);   // 需要予想の答え合わせ用に、見合わせの日時と路線を記録（管理者のみ）
     const nowStop=[...new Set(stop.map(x=>x.l))], back=was.filter(l=>!nowStop.includes(l));
     try{ localStorage.setItem("tenko.trainStopped",JSON.stringify(nowStop)); }catch(e){}
     if(back.length&&!stop.length){ showTrainRecover(back.map(l=>rows.find(x=>x.l===l)||{l}),false); return; }
