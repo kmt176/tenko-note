@@ -1197,7 +1197,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 22:59</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 23:22</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2304,7 +2304,7 @@ body.rtfull{overflow:hidden}
   function menuOpen(k){
     if(PAGES[k]) showPage(k);
     else if(k==="help") showHelp();
-    else if(k==="izakaya"){ $("docTitle").textContent="🍶 飲み屋街マップ（試験・管理者のみ）"; $("docFrame").src="izakaya.html"; $("docView").hidden=false; document.body.style.overflow="hidden"; }
+    else if(k==="izakaya"){ $("docTitle").textContent="🍶 飲み屋街マップ（試験・管理者のみ）"; $("docFrame").src="izakaya.html?v="+Date.now();   /* 毎回読み直す（スマホが古いファイルを覚えたままにならないように） */ $("docView").hidden=false; document.body.style.overflow="hidden"; }
     else if(k==="flash"){ showTab(3); setView("flash"); }
     else showSub(k);
     window.scrollTo(0,0);
@@ -2361,7 +2361,7 @@ body.rtfull{overflow:hidden}
   document.querySelectorAll("[data-doc]").forEach(b=>b.onclick=async()=>{ $("docTitle").textContent=b.dataset.doct||"資料"; $("docView").hidden=false; document.body.style.overflow="hidden";
     // 資料のファイルがまだGitHubに上がっていないと、何も出ずに分かりにくいので、先に確かめる
     let ok=true; if(PROD){ try{ const r=await fetch(b.dataset.doc,{method:"HEAD",cache:"no-store"}); ok=r.ok; }catch(e){} }
-    $("docFrame").src=ok?b.dataset.doc:"data:text/html;charset=utf-8,"+encodeURIComponent('<meta name="viewport" content="width=device-width"><p style="font:16px sans-serif;padding:20px;line-height:1.7">資料のファイル（'+b.dataset.doc+'）が、まだアップロードされていません。管理者に伝えてください。</p>'); });
+    $("docFrame").src=ok?b.dataset.doc+"?v="+Date.now():"data:text/html;charset=utf-8,"+encodeURIComponent('<meta name="viewport" content="width=device-width"><p style="font:16px sans-serif;padding:20px;line-height:1.7">資料のファイル（'+b.dataset.doc+'）が、まだアップロードされていません。管理者に伝えてください。</p>'); });
   $("docClose").onclick=()=>{ $("docView").hidden=true; $("docFrame").src="about:blank"; document.body.style.overflow=""; };
 
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
