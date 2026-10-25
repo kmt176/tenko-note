@@ -1197,7 +1197,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 23:22</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-26 08:43</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1500,6 +1500,13 @@ body.rtfull{overflow:hidden}
   }
 
   function periodOf(d){ return PERIODS.findIndex(p=>d>=p.start&&d<=p.end); }
+  // 月の上限（262・270時間）から出す、この勤務の業務後点呼の期限（2026-10-26 ユーザー指定）
+  // ＝業務前点呼＋（月の上限−同じ月度のほかの勤務の拘束時間。実績があれば実績、なければ予定）
+  function monthCap(all,c){
+    const pi=periodOf(c.r.date); if(pi<0||!c.ok) return null; const P=PERIODS[pi];
+    const others=all.filter(o=>o.ok&&o!==c&&periodOf(o.r.date)===pi).reduce((a,o)=>a+o.dur,0);
+    const cap=P.limit*60-others; return {cap,deadline:c.start+cap,limit:P.limit};
+  }
 
   function chipsFor(c){
     const out=[];
@@ -1530,8 +1537,11 @@ body.rtfull{overflow:hidden}
     const nc=$("nextCard");
     if(nx){
       const restTxt=nx.rest!=null?`前の勤務からの休息 <span class="num">${hm(nx.rest)}</span>${nx.rest<22*60?"（22時間未満）":""}`:"";
-      nc.innerHTML=`<div class="lbl">${state}：${md(nx.r.date)}（${dow(nx.r.date)}）出社　業務後点呼の期限（2日平均21時間）</div>
-        <div class="big num">${absToLabel(nx.deadline)}</div>
+      const mc=monthCap(all,nx), monFirst=mc&&mc.deadline<nx.deadline;   // 月の上限の方が早ければ、そちらを期限として大きく出す
+      nc.innerHTML=`<div class="lbl">${state}：${md(nx.r.date)}（${dow(nx.r.date)}）出社　業務後点呼の期限（${monFirst?`月の上限 ${mc.limit}時間`:"2日平均21時間"}）</div>
+        <div class="big num"${monFirst?' style="color:#8B0000"':""}>${absToLabel(monFirst?mc.deadline:nx.deadline)}</div>
+        ${mc?`<div class="sub${monFirst?" r21":""}">月の上限（${mc.limit}時間）<span class="num">${mc.cap>0?absToLabel(mc.deadline):"もう上限です"}</span>${mc.cap>0?"まで":""}<small>この勤務で使える拘束時間 ${mc.cap>0?hm(mc.cap):"0:00"}（ほかの勤務は実績、なければ予定で数えています）</small></div>`:""}
+        ${monFirst?`<div class="sub">2日平均21時間 <span class="num">${absToLabel(nx.deadline)}</span> まで</div>`:""}
         <div class="sub r21">${REP/60}時間（報告書）<span class="num">${absToLabel(nx.ok21)}</span>まで<small>${nx.r.ab?`業務前点呼 ${nx.r.ab}（実績）から`:`計画 ${nx.r.pb||"--:--"} から。実績を入れると直ります`}</small></div>
         <div class="sub">22時間（法令の上限）<span class="over num">${absToLabel(nx.over22)}</span> まで</div>
         <div class="sub">今回の上限 <span class="num">${hm(nx.max)}</span>（前回 <span class="num">${nx.prevDur!=null?hm(nx.prevDur):"—"}</span>）・納金〆 ${m2hm(NOKIN)}</div>
