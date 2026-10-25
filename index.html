@@ -805,6 +805,7 @@ body.rtfull{overflow:hidden}
       <div class="grp"><b>テスト（止まったことにして出す）</b>
         <div class="pair"><div class="field"><label for="dmTestLine">路線</label><select id="dmTestLine"></select></div>
           <div class="field"><label for="dmTestMin">止まっている時間</label><select id="dmTestMin"><option value="15">15分</option><option value="30">30分</option><option value="60" selected>1時間</option><option value="120">2時間</option><option value="180">3時間以上</option></select></div></div>
+        <div class="field"><label for="dmTestDir">方向</label><select id="dmTestDir"><option value="">両方向とも止まっている</option><option value="内回り">内回りだけ止まっている（山手線など）</option><option value="外回り">外回りだけ止まっている</option><option value="上り">上り線だけ止まっている</option><option value="下り">下り線だけ止まっている</option></select></div>
         <div class="pair"><div class="field"><label for="dmTestFrom">区間（から）</label><select id="dmTestFrom"></select></div><div class="field"><label for="dmTestTo">区間（まで）</label><select id="dmTestTo"></select></div></div>
         <div class="btnrow"><button class="btn" id="dmTestGo">この条件で出す</button></div>
       </div>
@@ -818,6 +819,7 @@ body.rtfull{overflow:hidden}
         <div class="src">点数＝乗降客数×重み＋他路線の駅までの遠さ×重み＋止まっている時間×重み＋帰宅時間帯なら重み。満点が100になるよう、それぞれ0〜1に直してから重みを掛けます。</div>
         <div class="pair"><div class="field"><label for="dmWPax">乗降客数の重み</label><input type="number" id="dmWPax" inputmode="numeric"></div><div class="field"><label for="dmWDist">他路線までの遠さの重み</label><input type="number" id="dmWDist" inputmode="numeric"></div></div>
         <div class="pair"><div class="field"><label for="dmWDur">止まっている時間の重み</label><input type="number" id="dmWDur" inputmode="numeric"></div><div class="field"><label for="dmWEve">帰宅時間帯の重み</label><input type="number" id="dmWEve" inputmode="numeric"></div></div>
+        <div class="field"><label for="dmOneDir">片方向だけ止まっているとき（山手線の内回りだけ・上り線だけ など）の点数の割合（%）</label><input type="number" id="dmOneDir" inputmode="numeric"></div>
         <div class="field"><label for="dmWFlow">振替先：流れ込む人の多さの重み（振替先の点数は、流れ込む人・その駅の乗降客数・止まっている時間・帰宅時間帯で出す）</label><input type="number" id="dmWFlow" inputmode="numeric"></div>
         <div class="pair"><div class="field"><label for="dmEveFrom">帰宅時間帯（から・時）</label><input type="number" id="dmEveFrom" inputmode="numeric"></div><div class="field"><label for="dmEveTo">帰宅時間帯（まで・時）</label><input type="number" id="dmEveTo" inputmode="numeric"></div></div>
         <div class="pair"><div class="field"><label for="dmThR">赤にする点数（以上）</label><input type="number" id="dmThR" inputmode="numeric"></div><div class="field"><label for="dmThY">黄にする点数（以上）</label><input type="number" id="dmThY" inputmode="numeric"></div></div>
@@ -1195,7 +1197,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 21:22</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 21:41</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2605,10 +2607,10 @@ body.rtfull{overflow:hidden}
   setupFull("evFullBtn","evMapWrap",()=>evMap); setupFull("trFullBtn","trMapWrap",()=>trMap);
 
   // ===== 運転見合わせ時の需要予想（試験・管理者のみ。2026-10-25） =====
-  const DM_DEF={wPax:40,wDist:30,wDur:20,wEve:10,wFlow:40,eveFrom:17,eveTo:24,thR:60,thY:35,distMax:2000,durMax:180};
+  const DM_DEF={oneDir:50,wPax:40,wDist:30,wDur:20,wEve:10,wFlow:40,eveFrom:17,eveTo:24,thR:60,thY:35,distMax:2000,durMax:180};
   let dmCfg=Object.assign({},DM_DEF); try{ Object.assign(dmCfg,JSON.parse(localStorage.getItem("tenko.dmCfg")||"{}")); }catch(e){}
   let dmMap=null, dmLayer=null, dmLast=null;
-  const DM_F=["wPax","wDist","wDur","wEve","wFlow","eveFrom","eveTo","thR","thY","distMax","durMax"], dmId=k=>"dm"+k[0].toUpperCase()+k.slice(1);
+  const DM_F=["oneDir","wPax","wDist","wDur","wEve","wFlow","eveFrom","eveTo","thR","thY","distMax","durMax"], dmId=k=>"dm"+k[0].toUpperCase()+k.slice(1);
   const dmFill=()=>DM_F.forEach(k=>{ $(dmId(k)).value=dmCfg[k]; });
   const dmLines=()=>[...new Set(TRAIN_ALL.map(x=>x.l))];
   // 運行情報の文から「○○駅〜○○駅間」を読んで、その路線の区間の駅にしぼる（読めなければ路線の全駅）
@@ -2619,6 +2621,16 @@ body.rtfull{overflow:hidden}
     if(m){ const a=st.findIndex(x=>norm(x.n)===norm(m[1])), b=st.findIndex(x=>norm(x.n)===norm(m[2]));
       if(a>=0&&b>=0){ const [i0,i1]=a<b?[a,b]:[b,a]; return {st:st.slice(i0,i1+1),part:true}; } }
     return {st,part:false};
+  }
+  // 片方向だけ止まっているか（運行情報の文に「内回り・外回り・上り・下り」のどれか1つだけがあり、両方向の言葉がない）。山手線の内回りだけ、など
+  function dmDir(text){
+    const tx=String(text||""); if(/両方向|上下線|上下とも|内回り・外回り|外回り・内回り|内外回り|全線/.test(tx)) return "";
+    const D=["内回り","外回り","上り","下り"], has=(se,w)=>se.includes(w)&&!(w==="上り"&&se.includes("上り下り"));
+    // 一文ずつ見て、「見合わせ・運休」と書かれた文に出てくる方向だけを、止まっている方向とする（「外回りは運転しています」は数えない）
+    const stop=new Set(); tx.split(/[。．\n]/).forEach(se=>{ if(/見合わせ|運休|運転を中止|止まって/.test(se)) D.forEach(w=>{ if(has(se,w)) stop.add(w); }); });
+    if(stop.size===1) return [...stop][0];
+    if(stop.size===0){ const all=D.filter(w=>has(tx,w)); if(all.length===1) return all[0]; }
+    return "";
   }
   // 点数（0〜100）。重み・満点の距離と時間・帰宅時間帯は設定で変える
   function dmScore(x,durMin,hour){
@@ -2633,8 +2645,9 @@ body.rtfull{overflow:hidden}
   // 止まった路線の一覧（運行情報から）→ 影響する駅と点数、振替先の駅
   function dmBuild(stops,now){
     const hour=new Date(now).getHours(), stLines=new Set(stops.map(z=>z.l)), aff=[], seen=new Set();
-    stops.forEach(z=>{ const sec=dmSection(z.l,z.text); sec.st.forEach(x=>{ const key=x.l+"|"+x.n; if(seen.has(key)) return; seen.add(key);
-      const sc=dmScore(x,z.durMin,hour); aff.push(Object.assign({},x,sc,{why:z,part:sec.part})); }); });
+    stops.forEach(z=>{ const sec=dmSection(z.l,z.text), dir=z.dir!=null?z.dir:dmDir(z.text), fac=dir?Math.max(0,Math.min(100,+dmCfg.oneDir))/100:1;
+      sec.st.forEach(x=>{ const key=x.l+"|"+x.n; if(seen.has(key)) return; seen.add(key);
+      const sc=dmScore(x,z.durMin,hour); sc.score=Math.round(sc.score*fac); aff.push(Object.assign({},x,sc,{why:z,part:sec.part,dir,fac})); }); });
     aff.sort((a,b)=>b.score-a.score);
     const tr=new Map();   // 振替先：止まった駅から1km以内の、止まっていない他路線の駅
     const affNames=new Set(aff.map(a=>a.n));
@@ -2644,7 +2657,7 @@ body.rtfull{overflow:hidden}
       else if(!o) tr.set(key,Object.assign({},y,{dm,from:a.n,lines:[y.l],same:affNames.has(y.n)})); }));
     // 振替先の点数：流れ込む人の多さ（止まった駅の乗降客数を、その駅から1km以内の振替先の数で割って足す）・その駅の乗降客数・止まっている時間・帰宅時間帯
     const trs=[...tr.values()]; trs.forEach(y=>{ y.flow=0; });
-    aff.forEach(a=>{ const near=trs.filter(y=>distM([a.lat,a.lng],[y.lat,y.lng])<=1000); near.forEach(y=>{ y.flow+=(a.p||0)/near.length; }); });
+    aff.forEach(a=>{ const near=trs.filter(y=>distM([a.lat,a.lng],[y.lat,y.lng])<=1000); near.forEach(y=>{ y.flow+=(a.p||0)*(a.fac==null?1:a.fac)/near.length; }); });
     const paxN=v=>Math.max(0,Math.min(1,(Math.log10(Math.max(v||0,1000))-3)/(Math.log10(500000)-3)));
     const durMax=Math.max(...stops.map(z=>z.durMin||0),0), c=dmCfg, ef=+c.eveFrom, et=+c.eveTo, eve=et>ef?(hour>=ef&&hour<et):(hour>=ef||hour<et);
     const tot=(+c.wFlow)+(+c.wPax)+(+c.wDur)+(+c.wEve)||1;
@@ -2668,9 +2681,9 @@ body.rtfull{overflow:hidden}
     R.aff.slice().reverse().forEach(x=>{ const col=dmCol(x.score);
       L.circleMarker([x.lat,x.lng],{radius:x.score>=+dmCfg.thR?13:x.score>=+dmCfg.thY?10:8,color:"#fff",weight:2,fillColor:col,fillOpacity:1,bubblingMouseEvents:false})
         .bindTooltip(`${esc(x.n)} ${x.score}`,{permanent:x.score>=+dmCfg.thY,direction:"top",offset:[0,-8]})
-        .bindPopup(`<div style="font-size:14px;line-height:1.5"><b style="font-size:16px">${esc(x.n)}駅</b>（${esc(trLabel(x.l))}）<br><b style="color:${col}">点数 ${x.score}</b><br>乗降客数 ${x.p?x.p.toLocaleString()+"人/日":"—"}<br>一番近い他路線：${esc(x.near)}（約${(x.d/1000).toFixed(1)}km）<br>止まって約${x.why.durMin}分${x.eve?"・帰宅時間帯":""}<a href="${evRoute(x)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${col};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(dmLayer); });
+        .bindPopup(`<div style="font-size:14px;line-height:1.5"><b style="font-size:16px">${esc(x.n)}駅</b>（${esc(trLabel(x.l))}）<br><b style="color:${col}">点数 ${x.score}</b><br>乗降客数 ${x.p?x.p.toLocaleString()+"人/日":"—"}<br>一番近い他路線：${esc(x.near)}（約${(x.d/1000).toFixed(1)}km）<br>止まって約${x.why.durMin}分${x.eve?"・帰宅時間帯":""}${x.dir?`<br><b>${esc(x.dir)}のみ止まっている</b>（反対向きは運転。点数は${Math.round(x.fac*100)}%）`:""}<a href="${evRoute(x)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${col};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(dmLayer); });
     dmMap.fitBounds(L.latLngBounds(R.aff.map(x=>[x.lat,x.lng]).concat(R.tr.map(y=>[y.lat,y.lng]))),{padding:[30,30],maxZoom:14});
-    m.textContent=`${label}：${stops.map(z=>`${z.l}（${z.status||"見合わせ"}${z.part?"・区間":""}・約${z.durMin}分）`).join("、")}　影響する駅 ${R.aff.length}・振替先 ${R.tr.length}`;
+    m.textContent=`${label}：${stops.map(z=>{ const dr=z.dir!=null?z.dir:dmDir(z.text); return `${z.l}（${z.status||"見合わせ"}${dr?`・${dr}のみ`:""}${z.part?"・区間":""}・約${z.durMin}分）`; }).join("、")}　影響する駅 ${R.aff.length}・振替先 ${R.tr.length}`;
     const row=x=>`<div class="tritem" style="border-left-color:${dmCol(x.score)}"><div class="trname"><b>${esc(x.n)}<span class="trbadge" style="background:${dmCol(x.score)}">${x.score}点</span></b><small>${esc(trLabel(x.l))}・乗降 ${x.p?x.p.toLocaleString():"—"}人・他路線まで${(x.d/1000).toFixed(1)}km</small></div><a class="btn primary trroute" href="${evRoute(x)}" target="_blank" rel="noopener">ルート</a></div>`;
     $("dmList").innerHTML=`<h3 style="margin:12px 0 6px">点数の高い駅</h3><div class="trlist">${R.aff.slice(0,15).map(row).join("")}</div>`+
       (R.tr.length?`<h3 style="margin:12px 0 6px">振替で混みそうな駅（◆ひし形・点数順）</h3><div class="trlist">${R.tr.slice(0,15).map(y=>`<div class="tritem" style="border-left-color:${dmCol(y.score)}"><div class="trname"><b>◆${esc(y.n)}<span class="trbadge" style="background:${dmCol(y.score)}">${y.score}点</span></b><small>${y.lines.map(l=>esc(trLabel(l))).join("・")}・流れ込む人 約${Math.round(y.flow).toLocaleString()}人/日分${y.same?"":`・${esc(y.from)}から${Math.round(y.dm/10)*10}m`}</small></div><a class="btn primary trroute" href="${evRoute(y)}" target="_blank" rel="noopener">ルート</a></div>`).join("")}</div>`:"");
@@ -2698,7 +2711,8 @@ body.rtfull{overflow:hidden}
   $("dmReload").onclick=dmNow;
   $("dmTestLine").addEventListener("change",dmFillSec);
   $("dmTestGo").onclick=()=>{ const l=$("dmTestLine").value, a=$("dmTestFrom").value, b=$("dmTestTo").value;
-    dmDraw([{l,status:"運転見合わせ（テスト）",text:a&&b?`${a}駅〜${b}駅間で運転見合わせ`:"",durMin:+$("dmTestMin").value}],Date.now(),"テスト"); };
+    const dr=$("dmTestDir").value;
+    dmDraw([{l,status:"運転見合わせ（テスト）",text:(a&&b?`${a}駅〜${b}駅間で`:"")+(dr?`${dr}線の`:"")+"運転見合わせ",dir:dr,durMin:+$("dmTestMin").value}],Date.now(),"テスト"); };
   $("dmCfgSave").onclick=()=>{ DM_F.forEach(k=>{ const v=+$(dmId(k)).value; if(isFinite(v)) dmCfg[k]=v; }); try{ localStorage.setItem("tenko.dmCfg",JSON.stringify(dmCfg)); }catch(e){} $("dmMsg").textContent="点数の付け方を保存しました"; if(dmLast) $("dmTestGo").click(); };
   $("dmCfgReset").onclick=()=>{ dmCfg=Object.assign({},DM_DEF); try{ localStorage.removeItem("tenko.dmCfg"); }catch(e){} dmFill(); };
   setupFull("dmFullBtn","dmMapWrap",()=>dmMap);
