@@ -450,6 +450,14 @@ body.rtfull{overflow:hidden}
 #patrolBannerText .pbtest{font-style:normal;font-size:16px;margin-left:10px;padding:1px 8px;border:2px solid #5A4300;border-radius:999px}
 #patrolBannerClose{font-size:44px!important;padding:0 6px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
+#trainBanner{align-items:flex-start;padding:14px 12px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
+#trainBannerText{display:flex!important;flex-direction:column;gap:6px;min-width:0}
+#trainBannerText .tb1{font-size:40px;font-weight:900;line-height:1.1}
+#trainBannerText .tb2{font-size:64px;font-weight:900;line-height:1.08;word-break:break-all}
+#trainBannerText .tb4{font-size:26px;font-weight:900}
+#trainBannerText .tb3{font-size:18px;font-weight:800}
+#trainBannerText .pbtest{font-style:normal;font-size:15px;margin-left:10px;padding:1px 8px;border:2px solid currentColor;border-radius:999px}
+#trainBannerClose{font-size:44px!important;padding:0 6px!important}
 .trainbanner #trainBannerText{flex:1;text-align:left;background:none;border:0;color:inherit;font:inherit;font-size:15px;font-weight:700;padding:0}
 .trainbanner #trainBannerClose{background:transparent;border:0;color:#7A1F3D;font-size:22px;line-height:1;padding:0 4px;flex:none}
 .taxibanner button{background:transparent;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;flex:none}
@@ -892,8 +900,8 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subStand" hidden>
     <section class="card">
-      <h2>専用乗り場・優良乗り場</h2>
-      <div class="src">マイマップ「専用乗り場・優良乗り場」の場所を地図と一覧に出します。色は、<b style="color:#2F6FD6">●専用乗り場</b>・<b style="color:#3E9B4F">●優良乗り場</b>です。印を押すと、待機できる時間・台数などの説明と「ルート案内」が出ます。近づいたときの音（ピロリン）と緑の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
+      <h2>日交乗り場・優良乗り場</h2>
+      <div class="src">マイマップ「専用乗り場・優良乗り場」の場所を地図と一覧に出します。色は、<b style="color:#2F6FD6">●日交乗り場</b>・<b style="color:#3E9B4F">●優良乗り場</b>です。印を押すと、待機できる時間・台数などの説明と「ルート案内」が出ます。近づいたときの音（ピロリン）と緑の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
       <div class="btnrow"><button class="btn" id="sdTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="sdTestSnd">🔊 音だけテスト</button></div>
       <div id="sdGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="sdMapWrap" class="mapwrap">
@@ -1017,7 +1025,7 @@ body.rtfull{overflow:hidden}
         <div class="src">使わない機能のチェックを外すと、画面に出なくなります。記録や計算、データはそのまま残るので、あとでチェックを付ければ元に戻ります。このスマホだけの設定です。</div>
         <div id="offBox"></div>
       <div class="field" style="margin-top:10px"><label for="patrolDist">取締りの場所を知らせる距離</label><select id="patrolDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option></select></div>
-      <div class="field"><label for="standDist">専用乗り場・優良乗り場を知らせる距離</label><select id="standDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
+      <div class="field"><label for="standDist">日交乗り場・優良乗り場を知らせる距離</label><select id="standDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
       <div class="field"><label for="restDist">駐車禁止ポイントを知らせる距離</label><select id="restDist"><option value="30">30m手前</option><option value="50" selected>50m手前</option><option value="100">100m手前</option><option value="200">200m手前</option></select></div>
       <div class="src">場所は、マイマップ「東京都内_公開・重点取締り」「専用乗り場・優良乗り場」「休憩ポイント&amp;クレーム発生ポイント」から読み込みます（地図が更新されると数時間で反映）。近づいている途中だけ鳴らし、同じ場所は10分間は鳴らしません。iPhoneはマナーモードだと鳴らないことがあります。</div>
       <h3 style="margin-top:12px">メニューの表示</h3>
@@ -1131,7 +1139,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 13:07</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 13:22</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1775,7 +1783,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","専用乗り場・優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","駐車禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","日交乗り場・優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","駐車禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>{ const lk=k==="rzweek"&&adminLock.rzweek; return `<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}${lk?" disabled":""}>${escC(label)}${lk?`<br><small style="color:var(--warn)">管理者が全員「使わない」にしています</small>`:""}</label>`; }).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -2217,7 +2225,7 @@ body.rtfull{overflow:hidden}
   // ボタン：[キー, アイコン（Lucide・線画。ISCライセンス）, ボタンの名前（1行に入る短い名前）, 画面の見出しの名前]。グループごとにテーマ色
   const MICON={"event": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "taxi": "<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><path d=\"M10 6h4\"/><path d=\"M10 10h4\"/><path d=\"M10 14h4\"/><path d=\"M10 18h4\"/>", "train": "<path d=\"M8 3.1V7a4 4 0 0 0 8 0V3.1\"/><path d=\"m9 15-1-1\"/><path d=\"m15 15 1-1\"/><path d=\"M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z\"/><path d=\"m8 19-2 3\"/><path d=\"m16 19 2 3\"/>", "air": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "rest": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "flash": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "long": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>", "cmp": "<path d=\"M3 3v18h18\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "bus": "<path d=\"M8 6v6\"/><path d=\"M15 6v6\"/><path d=\"M2 12h19.6\"/><path d=\"M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/><path d=\"M9 18h5\"/><circle cx=\"16\" cy=\"18\" r=\"2\"/>", "ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>", "pay": "<polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/>", "set": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bk": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "help": "<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>"};
   const MENU_GROUPS=[
-    ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","乗り場マップ","専用乗り場・優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"],["taxi","🏢","専用乗り場","専用乗り場"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
+    ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","乗り場マップ","日交乗り場・優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"],["taxi","🏢","専用乗り場","専用乗り場"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
     ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
@@ -5033,16 +5041,18 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // 大まかな囲み（緯度・経度の最小と最大）。近くにあるものだけ細かく測るため
   const geoBB=x=>x._bb||(x._bb=[Math.min(...x[2].map(c=>c[0])),Math.max(...x[2].map(c=>c[0])),Math.min(...x[2].map(c=>c[1])),Math.max(...x[2].map(c=>c[1]))]);
   const GS={}; Object.keys(GEO).forEach(k=>{ GS[k]={pts:null,groups:[],prev:{},last:{},hideT:0,map:null,layer:null,me:null,offG:{}};
-    try{ const c=JSON.parse(localStorage.getItem(GEO[k].store)||"null"); if(c&&c.pts){ GS[k].pts=c.pts; GS[k].groups=c.groups||[]; } }catch(e){}
+    try{ const c=JSON.parse(localStorage.getItem(GEO[k].store)||"null"); if(c&&c.pts){ GS[k].pts=c.pts; GS[k].groups=geoGroups(k,c.groups); } }catch(e){}
     try{ GS[k].offG=JSON.parse(localStorage.getItem(GEO[k].store+"Off")||"{}")||{}; }catch(e){}
     try{ const v=localStorage.getItem("tenko."+GEO[k].dist); if(v) $(GEO[k].dist).value=v; }catch(e){}
     $(GEO[k].dist).addEventListener("change",()=>{ try{ localStorage.setItem("tenko."+GEO[k].dist,$(GEO[k].dist).value); }catch(e){} });
     $(GEO[k].ban+"Close").onclick=()=>{ $(GEO[k].ban).hidden=true; }; });
   let geoWid=null;
+  // 乗り場マップは、マイマップのグループ名「専用乗り場」をアプリでは「日交乗り場」と出す（2026-10-25 ユーザー指定）
+  const geoGroups=(k,g)=>k==="stand"?(g||[]).map(x=>x==="専用乗り場"?"日交乗り場":x):(g||[]);
   async function geoLoad(k,force){
     if(!cfg.url) return; let at=0; try{ at=+(localStorage.getItem(GEO[k].store+"At")||0); }catch(e){}
     if(!force&&GS[k].pts&&Date.now()-at<6*3600e3) return;
-    try{ const j=await post({action:GEO[k].act}); if(j&&j.ok&&Array.isArray(j.pts)){ GS[k].pts=j.pts; GS[k].groups=j.groups||[];
+    try{ const j=await post({action:GEO[k].act}); if(j&&j.ok&&Array.isArray(j.pts)){ GS[k].pts=j.pts; GS[k].groups=geoGroups(k,j.groups);
       try{ localStorage.setItem(GEO[k].store,JSON.stringify({pts:j.pts,groups:GS[k].groups})); localStorage.setItem(GEO[k].store+"At",String(Date.now())); }catch(e){} geoWatch(); } }catch(e){}
   }
   function geoChime(kind){
@@ -5066,7 +5076,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     if(k==="patrol"){   // 取締りは運転中でも見えるよう、大きな太字で3段（2026-10-25 ユーザー指定：4倍以上）
       // 名前が長いときは、3行に収まるまで小さくする（短い名前は68px。最小でも36px）
       // 「○○交差点」は「交差点」だけ小さくして、名前の部分をなるべく1行で大きく（2026-10-25 ユーザー指定）
-      const gp=geoPlace(k,x), nm=gp.place, avail=Math.max(200,window.innerWidth-80), km=/^(.+?)\s*(交差点)(.*)$/.exec(nm);
+      const gp=geoPlace(k,x), nm=gp.place, avail=Math.max(200,window.innerWidth-110), km=/^(.+?)\s*(交差点)(.*)$/.exec(nm);
       let nameHtml, fs;
       if(km){ const base=km[1], rest=km[3]; fs=Math.max(36,Math.min(68,Math.floor(avail/(base.length+2+rest.length*0.55))));
         nameHtml=`${esc(base)}<small class="pbx">交差点${esc(rest)}</small>`; }
@@ -5138,16 +5148,22 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       geoChime(G.chime); geoShow(k,x,+$(G.dist).value||100,true); window.scrollTo(0,0); };
     $(G.pre+"TestSnd").onclick=()=>geoChime(G.chime);
     setupFull(G.pre+"FullBtn",G.pre+"MapWrap",()=>S.map); });
+  // 電車の帯：運転中でも見えるよう、大きな太字で3段（2026-10-25 ユーザー指定。取締りの帯と同じ形）
+  function trBig(head,xs,foot,test){
+    const names=xs.slice(0,2).map(x=>x.l).join("・"), more=xs.length>2?`ほか${xs.length-2}路線`:"";
+    const avail=Math.max(200,window.innerWidth-110), n1=Math.floor(avail/Math.max(1,names.length)), fs=n1>=40?Math.min(68,n1):Math.max(34,Math.min(68,Math.floor(avail*2/Math.max(1,names.length))));   // 1行に入るならその大きさ、入らなければ2行
+    return `<span class="tb1">${esc(head)}</span><span class="tb2" style="font-size:${fs}px">${esc(names)}</span>${more?`<span class="tb4">${esc(more)}</span>`:""}<span class="tb3">${esc(foot)}${test?`<i class="pbtest">テスト</i>`:""}</span>`;
+  }
   function showTrainRecover(xs,test){
     trChime("ok");
     trainBanLine=""; const b=$("trainBanner"); b.classList.add("trok");
-    $("trainBannerText").textContent=`🟢 運転を再開しました：${xs.slice(0,2).map(x=>`${x.l}${x.status?`（${x.status}）`:""}`).join("、")}${xs.length>2?` ほか${xs.length-2}路線`:""}${test?"　※テスト表示":""}`;
+    $("trainBannerText").innerHTML=trBig("🟢 運転再開",xs,xs.map(x=>x.status).filter(Boolean)[0]||"",test);
     b.hidden=false;
   }
   function showTrainBanner(stop,test){
     $("trainBanner").classList.remove("trok"); trChime("stop");
     const have=new Set(TRAIN_ALL.map(x=>x.l)); trainBanLine=(stop.find(x=>have.has(x.l))||{}).l||"";
-    $("trainBannerText").textContent=`🚃 電車が止まりました：${stop.slice(0,2).map(x=>`${x.l}（${x.status||"運転見合わせ"}）`).join("、")}${stop.length>2?` ほか${stop.length-2}路線`:""}${test?"　※テスト表示":""}　押すと近くに別の路線がない駅を出します ›`;
+    $("trainBannerText").innerHTML=trBig(`🚃 ${(stop[0]&&stop[0].status)||"運転見合わせ"}`,stop,"押すと近くに別の路線がない駅を出します ›",test);
     $("trainBanner").hidden=false;
   }
   // テスト表示（全員。左＝運転見合わせ、右＝再開）：今止まっている路線があればそれ、なければ試しの路線で帯を出す（30分の間隔・設定のオフは見ない）
