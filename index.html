@@ -414,7 +414,7 @@ body.rtfull{overflow:hidden}
 .nkt td input{width:100%;text-align:right;font:21px var(--num);font-weight:700;min-height:36px;padding:4px 4px}
 .nkt td input::placeholder{font-size:14px;font-weight:400}
 /* 記録から出した金額（空欄のときに、この値で計算する）は、入れた数字と同じ黒で出す。ユーザー指定 */
-#ck_app::placeholder,#ck_etc::placeholder,#ck_etcCo::placeholder,#ck_card::placeholder,#ck_other::placeholder{color:var(--ink);opacity:1}
+#ck_app::placeholder,#ck_etc::placeholder,#ck_etcCo::placeholder,#ck_card::placeholder,#ck_other::placeholder,#ck_bku::placeholder{color:var(--ink);opacity:1}
 .nkt tr.nk-cash th,.nkt tr.nk-cash td{border-top:2px solid var(--ink);background:var(--accent-soft)}
 .nkt tr.nk-cash td{font-size:24px}
 .paytbl{width:100%;border-collapse:collapse;font-size:15.5px}
@@ -1120,7 +1120,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 11:47</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 12:30</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4590,7 +4590,11 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
 （明細を上から順に1行ずつ）
 
 明細の書き方：
-・内容：「出」は出庫、「入」は入庫、「回」は回送、「休」は休憩。番号の行は、迎の欄が2なら配車、空欄なら手上げ。合計金額が0の行はCAN。迎が空欄で合計金額が500、かつ1つ前の番号の行の迎が2のときはB空転（決済もB空転）。
+・内容：「出」は出庫、「入」は入庫、「回」は回送、「休」は休憩。番号の行は、迎の欄が2なら配車、空欄なら手上げ。合計金額が0の行はCAN。B空転（決済もB空転）は、次のとおり判断します。
+　B空転の候補：合計金額が500の行で、「迎が空欄で、1つ前の番号の行の迎が2」または「同じ行の迎が2」のもの。
+　候補のうち、営業kmが0（0.0）か、乗車地と降車地が同じ行は、B空転としてよい。
+　※B空転かどうか判断できないとき（候補だが営業kmが0ではなく乗車地と降車地も違う＝500円の普通の短い乗車かもしれない・迎や金額の欄が写真で読みにくい・条件は合わないがB空転らしく見える、など）は、推測で決めないでください。書き出す前に必ず利用者に質問し、答えに合わせてから書き出してください。迷う行がいくつかあるときは、まとめて1回で聞いてください。
+　　質問の例：「No.12（03:04 港区西麻布→港区西麻布 500円）は、B空転ですか？ それとも通常の乗車（手上げ・現金など）ですか？」
 ・乗車・降車：HH:MM（日報のとおり。出庫・入庫は時刻を1つだけ、必ず「乗車」の列に入れる。「降車」の列は空欄のままにする（入庫も同じく、時刻は降車ではなく乗車の列）。
 ・金額：現収＋未収（合計金額ではありません）。
 ・合計金額：日報の「合計金額」の欄の数字（最後の列）。
