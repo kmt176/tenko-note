@@ -1197,7 +1197,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 21:41</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 22:59</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2287,7 +2287,7 @@ body.rtfull{overflow:hidden}
     ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","🚖","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
-    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
+    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["izakaya","🍶","飲み屋街","飲み屋街マップ（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["help","📖","使い方","使い方"]]]];
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
   const micon=k=>`<span class="em" aria-hidden="true">${(MENU_ALL[k]||[])[1]||""}</span>`;   // 絵文字（線画のMICONは使わない）
@@ -2299,11 +2299,12 @@ body.rtfull{overflow:hidden}
   const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
   MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
-  const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help") return true; if(k==="pay") return isAdmin(); if(k==="flash") return !$("sViewFlash").hidden;
+  const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help") return true; if(k==="pay"||k==="izakaya") return isAdmin(); if(k==="flash") return !$("sViewFlash").hidden;
     const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
   function menuOpen(k){
     if(PAGES[k]) showPage(k);
     else if(k==="help") showHelp();
+    else if(k==="izakaya"){ $("docTitle").textContent="🍶 飲み屋街マップ（試験・管理者のみ）"; $("docFrame").src="izakaya.html"; $("docView").hidden=false; document.body.style.overflow="hidden"; }
     else if(k==="flash"){ showTab(3); setView("flash"); }
     else showSub(k);
     window.scrollTo(0,0);
