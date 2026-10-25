@@ -800,7 +800,7 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="subDemand" hidden>
     <section class="card">
       <h2>運転見合わせ時の需要予想（試験・管理者のみ）</h2>
-      <div class="src">運行情報（東京メトロ・都営・JR東日本）から、運転見合わせ・大幅な遅れの路線と区間をつかみ、止まった区間の駅に点数を付けて地図に色分けします。<b style="color:#D23C2F">●赤</b>＝需要が出やすい・<b style="color:#E0A800">●黄</b>・<b style="color:#3E9B4F">●緑</b>、<b style="color:#2F6FD6">◆青</b>＝振替で混みそうな近くの他路線の駅。点数は、乗降客数・他路線の駅までの遠さ・止まっている時間・帰宅時間帯から出します（下の「点数の付け方」で変えられます）。</div>
+      <div class="src">運行情報（東京メトロ・都営・JR東日本）から、運転見合わせ・大幅な遅れの路線と区間をつかみ、止まった区間の駅に点数を付けて地図に色分けします。<b style="color:#D23C2F">●赤</b>＝需要が出やすい・<b style="color:#E0A800">●黄</b>・<b style="color:#3E9B4F">●緑</b>、<b style="color:#2F6FD6">◆ひし形（青い縁）</b>＝振替で混みそうな近くの他路線の駅（色は同じく点数）。点数は、乗降客数・他路線の駅までの遠さ・止まっている時間・帰宅時間帯から出します（下の「点数の付け方」で変えられます）。</div>
       <div class="btnrow"><button class="btn primary" id="dmReload">今の運行情報で出す</button></div>
       <div class="grp"><b>テスト（止まったことにして出す）</b>
         <div class="pair"><div class="field"><label for="dmTestLine">路線</label><select id="dmTestLine"></select></div>
@@ -818,6 +818,7 @@ body.rtfull{overflow:hidden}
         <div class="src">点数＝乗降客数×重み＋他路線の駅までの遠さ×重み＋止まっている時間×重み＋帰宅時間帯なら重み。満点が100になるよう、それぞれ0〜1に直してから重みを掛けます。</div>
         <div class="pair"><div class="field"><label for="dmWPax">乗降客数の重み</label><input type="number" id="dmWPax" inputmode="numeric"></div><div class="field"><label for="dmWDist">他路線までの遠さの重み</label><input type="number" id="dmWDist" inputmode="numeric"></div></div>
         <div class="pair"><div class="field"><label for="dmWDur">止まっている時間の重み</label><input type="number" id="dmWDur" inputmode="numeric"></div><div class="field"><label for="dmWEve">帰宅時間帯の重み</label><input type="number" id="dmWEve" inputmode="numeric"></div></div>
+        <div class="field"><label for="dmWFlow">振替先：流れ込む人の多さの重み（振替先の点数は、流れ込む人・その駅の乗降客数・止まっている時間・帰宅時間帯で出す）</label><input type="number" id="dmWFlow" inputmode="numeric"></div>
         <div class="pair"><div class="field"><label for="dmEveFrom">帰宅時間帯（から・時）</label><input type="number" id="dmEveFrom" inputmode="numeric"></div><div class="field"><label for="dmEveTo">帰宅時間帯（まで・時）</label><input type="number" id="dmEveTo" inputmode="numeric"></div></div>
         <div class="pair"><div class="field"><label for="dmThR">赤にする点数（以上）</label><input type="number" id="dmThR" inputmode="numeric"></div><div class="field"><label for="dmThY">黄にする点数（以上）</label><input type="number" id="dmThY" inputmode="numeric"></div></div>
         <div class="pair"><div class="field"><label for="dmDistMax">遠さが満点になる距離（m）</label><input type="number" id="dmDistMax" inputmode="numeric"></div><div class="field"><label for="dmDurMax">時間が満点になる長さ（分）</label><input type="number" id="dmDurMax" inputmode="numeric"></div></div>
@@ -1194,7 +1195,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 20:54</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 21:22</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2604,10 +2605,10 @@ body.rtfull{overflow:hidden}
   setupFull("evFullBtn","evMapWrap",()=>evMap); setupFull("trFullBtn","trMapWrap",()=>trMap);
 
   // ===== 運転見合わせ時の需要予想（試験・管理者のみ。2026-10-25） =====
-  const DM_DEF={wPax:40,wDist:30,wDur:20,wEve:10,eveFrom:17,eveTo:24,thR:60,thY:35,distMax:2000,durMax:180};
+  const DM_DEF={wPax:40,wDist:30,wDur:20,wEve:10,wFlow:40,eveFrom:17,eveTo:24,thR:60,thY:35,distMax:2000,durMax:180};
   let dmCfg=Object.assign({},DM_DEF); try{ Object.assign(dmCfg,JSON.parse(localStorage.getItem("tenko.dmCfg")||"{}")); }catch(e){}
   let dmMap=null, dmLayer=null, dmLast=null;
-  const DM_F=["wPax","wDist","wDur","wEve","eveFrom","eveTo","thR","thY","distMax","durMax"], dmId=k=>"dm"+k[0].toUpperCase()+k.slice(1);
+  const DM_F=["wPax","wDist","wDur","wEve","wFlow","eveFrom","eveTo","thR","thY","distMax","durMax"], dmId=k=>"dm"+k[0].toUpperCase()+k.slice(1);
   const dmFill=()=>DM_F.forEach(k=>{ $(dmId(k)).value=dmCfg[k]; });
   const dmLines=()=>[...new Set(TRAIN_ALL.map(x=>x.l))];
   // 運行情報の文から「○○駅〜○○駅間」を読んで、その路線の区間の駅にしぼる（読めなければ路線の全駅）
@@ -2641,7 +2642,14 @@ body.rtfull{overflow:hidden}
       const key=y.n, o=tr.get(key);
       if(o&&distM([o.lat,o.lng],[y.lat,y.lng])<600){ if(!o.lines.includes(y.l)) o.lines.push(y.l); o.p=Math.max(o.p||0,y.p||0); if(dm<o.dm){ o.dm=dm; o.from=a.n; } }
       else if(!o) tr.set(key,Object.assign({},y,{dm,from:a.n,lines:[y.l],same:affNames.has(y.n)})); }));
-    return {aff,tr:[...tr.values()].sort((a,b)=>(b.p||0)-(a.p||0)),hour};
+    // 振替先の点数：流れ込む人の多さ（止まった駅の乗降客数を、その駅から1km以内の振替先の数で割って足す）・その駅の乗降客数・止まっている時間・帰宅時間帯
+    const trs=[...tr.values()]; trs.forEach(y=>{ y.flow=0; });
+    aff.forEach(a=>{ const near=trs.filter(y=>distM([a.lat,a.lng],[y.lat,y.lng])<=1000); near.forEach(y=>{ y.flow+=(a.p||0)/near.length; }); });
+    const paxN=v=>Math.max(0,Math.min(1,(Math.log10(Math.max(v||0,1000))-3)/(Math.log10(500000)-3)));
+    const durMax=Math.max(...stops.map(z=>z.durMin||0),0), c=dmCfg, ef=+c.eveFrom, et=+c.eveTo, eve=et>ef?(hour>=ef&&hour<et):(hour>=ef||hour<et);
+    const tot=(+c.wFlow)+(+c.wPax)+(+c.wDur)+(+c.wEve)||1;
+    trs.forEach(y=>{ y.score=Math.round((paxN(y.flow)*c.wFlow+paxN(y.p)*c.wPax+Math.min(1,durMax/(+c.durMax||180))*c.wDur+(eve?1:0)*c.wEve)/tot*100); });
+    return {aff,tr:trs.sort((a,b)=>b.score-a.score),hour};
   }
   async function dmDraw(stops,now,label){
     const m=$("dmMsg");
@@ -2653,8 +2661,10 @@ body.rtfull{overflow:hidden}
     if(dmLayer) dmLayer.remove(); dmLayer=L.layerGroup().addTo(dmMap);
     if(!stops.length){ m.textContent=`${label}：今、運転見合わせ・大幅な遅れの路線はありません（東京メトロ・都営・JR東日本）。下のテストで試せます。`; $("dmList").innerHTML=""; return; }
     const R=dmBuild(stops,now); dmLast=R;
-    R.tr.forEach(y=>L.marker([y.lat,y.lng],{icon:L.divIcon({className:"",html:`<span style="display:block;width:14px;height:14px;background:#2F6FD6;border:2px solid #fff;transform:rotate(45deg);box-shadow:0 1px 3px rgba(0,0,0,.4)"></span>`,iconSize:[18,18],iconAnchor:[9,9]})})
-      .bindPopup(`<b>${esc(y.n)}駅</b>（${y.lines.map(l=>esc(trLabel(l))).join("・")}）<br>振替で混みそうな駅（${esc(y.from)}駅から約${Math.round(y.dm/10)*10}m）<br>乗降客数：${y.p?y.p.toLocaleString()+"人/日":"—"}`).addTo(dmLayer));
+    R.tr.slice().reverse().forEach(y=>{ const col=dmCol(y.score), sz=y.score>=+dmCfg.thR?20:y.score>=+dmCfg.thY?16:13;
+      L.marker([y.lat,y.lng],{icon:L.divIcon({className:"",html:`<span style="display:block;width:${sz}px;height:${sz}px;background:${col};border:2px solid #fff;outline:2px solid #2F6FD6;transform:rotate(45deg);box-shadow:0 1px 3px rgba(0,0,0,.4)"></span>`,iconSize:[sz+6,sz+6],iconAnchor:[(sz+6)/2,(sz+6)/2]})})
+      .bindTooltip(`◆${esc(y.n)} ${y.score}`,{permanent:y.score>=+dmCfg.thY,direction:"top",offset:[0,-10]})
+      .bindPopup(`<div style="font-size:14px;line-height:1.5"><b style="font-size:16px">${esc(y.n)}駅</b>（${y.lines.map(l=>esc(trLabel(l))).join("・")}）<br><b style="color:${col}">振替先の点数 ${y.score}</b><br>流れ込む人の目安：約${Math.round(y.flow).toLocaleString()}人/日分<br>乗降客数：${y.p?y.p.toLocaleString()+"人/日":"—"}${y.same?"":`<br>${esc(y.from)}駅から約${Math.round(y.dm/10)*10}m`}<a href="${evRoute(y)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${col};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(dmLayer); });
     R.aff.slice().reverse().forEach(x=>{ const col=dmCol(x.score);
       L.circleMarker([x.lat,x.lng],{radius:x.score>=+dmCfg.thR?13:x.score>=+dmCfg.thY?10:8,color:"#fff",weight:2,fillColor:col,fillOpacity:1,bubblingMouseEvents:false})
         .bindTooltip(`${esc(x.n)} ${x.score}`,{permanent:x.score>=+dmCfg.thY,direction:"top",offset:[0,-8]})
@@ -2663,7 +2673,7 @@ body.rtfull{overflow:hidden}
     m.textContent=`${label}：${stops.map(z=>`${z.l}（${z.status||"見合わせ"}${z.part?"・区間":""}・約${z.durMin}分）`).join("、")}　影響する駅 ${R.aff.length}・振替先 ${R.tr.length}`;
     const row=x=>`<div class="tritem" style="border-left-color:${dmCol(x.score)}"><div class="trname"><b>${esc(x.n)}<span class="trbadge" style="background:${dmCol(x.score)}">${x.score}点</span></b><small>${esc(trLabel(x.l))}・乗降 ${x.p?x.p.toLocaleString():"—"}人・他路線まで${(x.d/1000).toFixed(1)}km</small></div><a class="btn primary trroute" href="${evRoute(x)}" target="_blank" rel="noopener">ルート</a></div>`;
     $("dmList").innerHTML=`<h3 style="margin:12px 0 6px">点数の高い駅</h3><div class="trlist">${R.aff.slice(0,15).map(row).join("")}</div>`+
-      (R.tr.length?`<h3 style="margin:12px 0 6px">振替で混みそうな駅（青）</h3><div class="src">${R.tr.slice(0,15).map(y=>`<b>${esc(y.n)}</b>（${y.lines.map(l=>esc(trLabel(l))).join("・")}${y.same?"":`・${esc(y.from)}から${Math.round(y.dm/10)*10}m`}）`).join("、")}</div>`:"");
+      (R.tr.length?`<h3 style="margin:12px 0 6px">振替で混みそうな駅（◆ひし形・点数順）</h3><div class="trlist">${R.tr.slice(0,15).map(y=>`<div class="tritem" style="border-left-color:${dmCol(y.score)}"><div class="trname"><b>◆${esc(y.n)}<span class="trbadge" style="background:${dmCol(y.score)}">${y.score}点</span></b><small>${y.lines.map(l=>esc(trLabel(l))).join("・")}・流れ込む人 約${Math.round(y.flow).toLocaleString()}人/日分${y.same?"":`・${esc(y.from)}から${Math.round(y.dm/10)*10}m`}</small></div><a class="btn primary trroute" href="${evRoute(y)}" target="_blank" rel="noopener">ルート</a></div>`).join("")}</div>`:"");
   }
   // 運行情報 → 止まった路線（運転見合わせ＝sev2、大幅な遅れ＝30分以上の遅れ・「大幅」）。止まり始めの時刻は、記録があればそれ
   function dmStops(rows){
@@ -2718,7 +2728,7 @@ body.rtfull{overflow:hidden}
     const out=[];
     log.forEach(e=>{ const t0=e.start, t1=(e.end||Date.now())+60*60000;   // 見合わせの間と、そのあと1時間
       const sec=dmSection(e.l,e.text), R=dmBuild([{l:e.l,status:e.status,text:e.text,durMin:Math.round((t1-60*60000-t0)/60000)}],t0);
-      R.aff.concat(R.tr.map(y=>Object.assign({},y,{score:null,isTr:true}))).forEach(st=>{
+      R.aff.concat(R.tr.map(y=>Object.assign({},y,{isTr:true}))).forEach(st=>{
         const act=cnt(st,t0,t1); let base=0; for(let w=1;w<=8;w++) base+=cnt(st,t0-w*7*864e5,t1-w*7*864e5); base=base/8;
         if(act||base) out.push({ev:e,st,act,base,inc:act-base}); }); });
     out.sort((a,b)=>b.inc-a.inc);
