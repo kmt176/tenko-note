@@ -34,18 +34,22 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 .pop h3{margin:0 0 4px;font-size:16px}
 .pop ul{margin:6px 0 0;padding-left:18px;max-height:180px;overflow:auto}
 .pop a.go{display:block;text-align:center;background:#B3261E;color:#fff;padding:9px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px}
+.mebtn{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:1000;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .cnt{font:800 12px/1 sans-serif;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap}
 </style>
 </head>
 <body>
 <div id="map"></div>
+<button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-25 23:14</span><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-25 23:41</span><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="row"><span>含めるお店：</span>
       <label><input type="checkbox" id="cIza" checked>居酒屋（店名・cuisine）</label>
       <label><input type="checkbox" id="cPub" checked>pub（日本では居酒屋が多い）</label>
-      <label><input type="checkbox" id="cBar" checked>bar</label></div>
+      <label><input type="checkbox" id="cBar" checked>bar</label>
+      <label><input type="checkbox" id="cNight" checked>夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）</label>
+      <label><input type="checkbox" id="cFz">風俗店</label></div>
     <div class="row"><label>半径 <select id="rad"><option>100</option><option>150</option><option selected>200</option><option>300</option><option>400</option></select> m</label>
       <label>以内に <select id="num"><option>5</option><option>8</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select> 軒以上</label>
       <label><input type="checkbox" id="cDots" checked>お店の点も出す</label></div>
@@ -56,6 +60,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
       ・半径○m以内に○軒以上お店がある所を「密集エリア」として円で出します。軒数が多いほど色が濃くなります。円の中の数字が軒数です。<br>
       ・円をタップすると、軒数・最寄り駅・地名・お店の一覧と「ルート案内」が出ます。<br>
       ・「CSVで保存」は、名前・緯度・経度・軒数などの一覧です（地名は国土地理院から調べるので少し時間がかかります）。「カーナビタイム用CSV」は名称・緯度・経度・メモだけの形です。カーナビタイムの「My地点プラス」の取り込みの形と違うときは教えてください。「Googleマイマップ用（KML）」は、Googleマイマップの「インポート」でそのまま地図にできます。<br>
+      ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝風俗店（はじめは数えていません。「風俗店」にチェックで入ります）。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。
     </details>
@@ -69,7 +74,8 @@ const AREA=[[[35.68841,139.52447],[35.6901,139.52488],[35.68956,139.52663],[35.6
 const ST=[["東京",35.68127,139.76671],["有楽町",35.67504,139.76326],["新橋",35.6663,139.75847],["浜松町",35.65541,139.75713],["田町",35.64574,139.7476],["高輪ゲートウェイ",35.63538,139.74064],["品川",35.62814,139.73854],["大崎",35.61995,139.72824],["五反田",35.62606,139.7237],["目黒",35.63341,139.71573],["恵比寿",35.64668,139.71013],["渋谷",35.65808,139.70172],["原宿",35.67132,139.70271],["代々木",35.6838,139.70221],["新宿",35.68955,139.70082],["新大久保",35.70093,139.70025],["高田馬場",35.71331,139.70397],["目白",35.72039,139.70628],["池袋",35.73027,139.71108],["大塚",35.73179,139.72794],["巣鴨",35.73372,139.74035],["駒込",35.73703,139.7484],["田端",35.73748,139.76157],["西日暮里",35.73217,139.76672],["日暮里",35.72757,139.77097],["鶯谷",35.72145,139.77803],["上野",35.71377,139.77678],["御徒町",35.70719,139.77471],["秋葉原",35.69853,139.77304],["神田",35.69177,139.77087],["赤羽",35.77753,139.72115],["東十条",35.76383,139.72674],["王子",35.75232,139.73821],["上中里",35.74689,139.74629],["大井町",35.60707,139.73501],["大森",35.58885,139.72811],["蒲田",35.56249,139.71603],["板橋",35.74503,139.7192],["十条",35.76039,139.72225],["北赤羽",35.78697,139.70583],["浮間舟渡",35.79126,139.69149],["御茶ノ水",35.6996,139.76503],["四ツ谷",35.68573,139.73056],["中野",35.70575,139.66576],["高円寺",35.70533,139.64972],["阿佐ヶ谷",35.70489,139.63626],["荻窪",35.70443,139.62025],["西荻窪",35.7038,139.59971],["吉祥寺",35.70315,139.57999],["三鷹",35.70269,139.56071],["武蔵境",35.70209,139.54355],["東中野",35.70625,139.68508],["大久保",35.70063,139.69744],["千駄ヶ谷",35.68121,139.71145],["信濃町",35.67994,139.72129],["市ヶ谷",35.69116,139.73532],["飯田橋",35.70017,139.74365],["水道橋",35.702,139.75375],["浅草橋",35.69739,139.78449],["両国",35.69575,139.79335],["錦糸町",35.69673,139.81464],["亀戸",35.69733,139.82633],["平井",35.70657,139.84258],["新小岩",35.71684,139.85773],["小岩",35.73333,139.88185],["新日本橋",35.68899,139.77416],["馬喰町",35.69334,139.78239],["三河島",35.73335,139.77729],["南千住",35.73465,139.79981],["北千住",35.74885,139.80464],["綾瀬",35.76217,139.82494],["亀有",35.76654,139.84756],["金町",35.76951,139.87039],["八丁堀",35.67462,139.77819],["越中島",35.668,139.7925],["潮見",35.65886,139.81717],["新木場",35.64599,139.82684],["葛西臨海公園",35.64417,139.86148],["尾久",35.74687,139.75373],["稲荷町",35.7114,139.78212],["浅草",35.71074,139.79777],["田原町",35.70991,139.79035],["上野広小路",35.7076,139.77297],["末広町",35.70284,139.77177],["三越前",35.68715,139.77359],["日本橋",35.6819,139.77335],["赤坂見附",35.67683,139.73737],["京橋",35.6768,139.77017],["青山一丁目",35.67278,139.72412],["溜池山王",35.67155,139.74189],["銀座",35.67141,139.76528],["外苑前",35.67037,139.71783],["虎ノ門",35.67016,139.75012],["表参道",35.66506,139.71249],["新大塚",35.72609,139.72941],["茗荷谷",35.7172,139.7369],["後楽園",35.70732,139.75106],["本郷三丁目",35.70675,139.76011],["南阿佐ヶ谷",35.69946,139.63557],["東高円寺",35.69797,139.6583],["新高円寺",35.69786,139.64851],["新中野",35.69747,139.66951],["中野坂上",35.69709,139.68221],["淡路町",35.69487,139.76746],["西新宿",35.69452,139.69256],["中野新橋",35.6917,139.674],["新宿三丁目",35.69118,139.70421],["中野富士見町",35.69082,139.66816],["新宿御苑前",35.68852,139.71091],["四谷三丁目",35.68783,139.71932],["大手町",35.68677,139.76618],["方南町",35.68351,139.65794],["国会議事堂前",35.67484,139.74534],["霞ヶ関",35.67424,139.75268],["三ノ輪",35.72928,139.79117],["入谷",35.72067,139.78455],["仲御徒町",35.70665,139.77619],["小伝馬町",35.69036,139.77881],["人形町",35.68608,139.7825],["茅場町",35.67914,139.77966],["日比谷",35.67421,139.76069],["東銀座",35.66932,139.76741],["築地",35.66799,139.77255],["虎ノ門ヒルズ",35.66733,139.74777],["六本木",35.6628,139.73116],["神谷町",35.66262,139.74472],["広尾",35.65178,139.72219],["中目黒",35.64419,139.69893],["落合",35.71064,139.68597],["早稲田",35.70568,139.72219],["神楽坂",35.70387,139.73452],["九段下",35.69608,139.75126],["竹橋",35.69044,139.75767],["門前仲町",35.67183,139.79625],["東陽町",35.66959,139.81768],["木場",35.66935,139.80712],["南砂町",35.66842,139.83169],["西葛西",35.66458,139.85935],["葛西",35.66363,139.87231],["北綾瀬",35.77689,139.8321],["町屋",35.74216,139.78011],["千駄木",35.72599,139.76337],["根津",35.71733,139.76575],["湯島",35.70679,139.76998],["新御茶ノ水",35.69693,139.76545],["二重橋前",35.6805,139.76178],["赤坂",35.67211,139.73644],["明治神宮前",35.66918,139.7038],["代々木公園",35.66912,139.68965],["代々木上原",35.6689,139.67963],["乃木坂",35.66659,139.72621],["地下鉄成増",35.77674,139.63117],["地下鉄赤塚",35.77022,139.6436],["平和台",35.75756,139.6543],["氷川台",35.74962,139.66547],["小竹向原",35.74339,139.67952],["千川",35.73817,139.6894],["要町",35.73322,139.69848],["東池袋",35.72595,139.71886],["護国寺",35.71918,139.72745],["江戸川橋",35.70929,139.73413],["麹町",35.68478,139.73735],["永田町",35.67786,139.7419],["桜田門",35.67744,139.75181],["銀座一丁目",35.6745,139.76682],["新富町",35.67046,139.77377],["月島",35.6646,139.78452],["豊洲",35.65513,139.79602],["辰巳",35.64578,139.81033],["押上",35.70868,139.81369],["神保町",35.69591,139.75783],["住吉",35.6886,139.81568],["半蔵門",35.68538,139.74169],["水天宮前",35.68305,139.78513],["清澄白河",35.68212,139.79974],["赤羽岩淵",35.78336,139.72211],["志茂",35.77802,139.7325],["王子神谷",35.76509,139.7357],["西ヶ原",35.74594,139.74226],["本駒込",35.72441,139.7538],["東大前",35.71811,139.75783],["六本木一丁目",35.66508,139.7389],["麻布十番",35.65481,139.73704],["白金高輪",35.64314,139.73428],["白金台",35.63777,139.72586],["雑司が谷",35.7202,139.71472],["西早稲田",35.70799,139.70916],["東新宿",35.70011,139.7079],["北参道",35.67824,139.70564],["本所吾妻橋",35.70859,139.80447],["蔵前",35.70332,139.79107],["東日本橋",35.69171,139.78478],["宝町",35.67567,139.77209],["大門",35.65672,139.75468],["三田",35.64784,139.74934],["泉岳寺",35.63813,139.73973],["高輪台",35.63155,139.73019],["戸越",35.61442,139.71637],["中延",35.60518,139.71359],["馬込",35.59637,139.71184],["西馬込",35.58731,139.70632],["西高島平",35.79189,139.64568],["新高島平",35.79022,139.65433],["高島平",35.78894,139.66129],["西台",35.78708,139.67268],["蓮根",35.78406,139.67906],["志村三丁目",35.77746,139.68586],["志村坂上",35.77634,139.69473],["本蓮沼",35.76899,139.70211],["板橋本町",35.7611,139.7056],["板橋区役所前",35.75131,139.71006],["新板橋",35.74884,139.71937],["西巣鴨",35.74341,139.72872],["千石",35.72796,139.74474],["白山",35.72155,139.7523],["春日",35.71,139.75323],["内幸町",35.66932,139.75541],["御成門",35.66098,139.75149],["芝公園",35.65375,139.74976],["篠崎",35.70612,139.90389],["岩本町",35.69557,139.77529],["小川町",35.69517,139.76674],["瑞江",35.69339,139.89781],["曙橋",35.69233,139.72258],["馬喰横山",35.69208,139.78285],["東大島",35.68986,139.84728],["大島",35.68977,139.83438],["西大島",35.68934,139.8263],["浜町",35.68859,139.78813],["菊川",35.68841,139.8061],["森下",35.68805,139.79798],["一之江",35.68594,139.88289],["船堀",35.68379,139.86386],["光が丘",35.75847,139.62924],["練馬春日町",35.75136,139.64076],["豊島園",35.74161,139.6492],["練馬",35.73732,139.65457],["新江古田",35.73249,139.67057],["落合南長崎",35.72344,139.68346],["中井",35.71386,139.68631],["上野御徒町",35.70797,139.77291],["新御徒町",35.70701,139.78187],["牛込神楽坂",35.70092,139.73604],["牛込柳町",35.69946,139.72519],["若松河田",35.69917,139.71819],["新宿西口",35.69316,139.69916],["都庁前",35.69059,139.69262],["西新宿五丁目",35.6899,139.68466],["国立競技場",35.67989,139.71472],["築地市場",35.66496,139.76675],["汐留",35.66499,139.76133],["勝どき",35.65893,139.77713],["赤羽橋",35.65497,139.74419]];
 const MUNI={"13101":"千代田区","13102":"中央区","13103":"港区","13104":"新宿区","13105":"文京区","13106":"台東区","13107":"墨田区","13108":"江東区","13109":"品川区","13110":"目黒区","13111":"大田区","13112":"世田谷区","13113":"渋谷区","13114":"中野区","13115":"杉並区","13116":"豊島区","13117":"北区","13118":"荒川区","13119":"板橋区","13120":"練馬区","13121":"足立区","13122":"葛飾区","13123":"江戸川区","13203":"武蔵野市","13204":"三鷹市"};
 const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const KEY="izakayaMap.v1", OV=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
+const KEY="izakayaMap.v3", OV=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
+const NIGHT_RE=/キャバクラ|キャバ|ガールズバー|ガールズ|スナック|ホストクラブ|ラウンジ|ナイトクラブ/;
 const NAME_RE=/居酒屋|酒場|酒処|焼き鳥|焼鳥|やきとり|やきとん|立ち飲み|立呑|立飲|串カツ|串かつ|大衆酒|もつ焼|炉端|ろばた|おでん/;
 const BB=[35.52,139.53,35.82,139.93];
 const Q=`[out:json][timeout:150];
@@ -77,6 +83,8 @@ const Q=`[out:json][timeout:150];
  nwr["cuisine"~"izakaya|yakitori|kushikatsu|kushiage|oden",i](${BB});
  nwr["amenity"~"^(restaurant|pub|bar|fast_food|cafe)$"]["name"~"${NAME_RE.source}"](${BB});
  nwr["amenity"~"^(pub|bar)$"](${BB});
+ nwr["amenity"~"^(nightclub|stripclub|brothel)$"](${BB});
+ nwr["name"~"${NIGHT_RE.source}"](${BB});
 );
 out center tags;`;
 function distM(a,b){ const R=6371000,t=Math.PI/180,dLa=(b[0]-a[0])*t,dLo=(b[1]-a[1])*t,x=Math.sin(dLa/2)**2+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
@@ -98,7 +106,11 @@ async function fetchShops(){
     const id=e.type+e.id; if(seen.has(id)) return; seen.add(id);
     if(!inArea(la,lo)) return;
     const nm=tg.name||tg["name:ja"]||"", cu=String(tg.cuisine||"");
-    const ty=/izakaya|yakitori|kushi|oden/i.test(cu)||NAME_RE.test(nm)?"i":tg.amenity==="pub"?"p":tg.amenity==="bar"?"b":"i";
+    // 夜のお店（キャバクラ・スナックなど）を先に見分ける。種類 nightclub/stripclub、bar=hostess/snack 等、店名
+    const night=/^(nightclub|stripclub)$/.test(tg.amenity||"")||/hostess|snack|girls|host/i.test(tg.bar||"")||NIGHT_RE.test(nm);
+    const fz=tg.amenity==="brothel";   // 風俗店（はじめは数えない。画面で切り替え）
+    if(!fz&&!night&&!/^(pub|bar|restaurant|fast_food|cafe)$/.test(tg.amenity||"")&&!/izakaya|yakitori|kushi|oden/i.test(cu)) return;
+    const ty=fz?"f":night?"n":/izakaya|yakitori|kushi|oden/i.test(cu)||NAME_RE.test(nm)?"i":tg.amenity==="pub"?"p":tg.amenity==="bar"?"b":"i";
     shops.push([+la.toFixed(6),+lo.toFixed(6),nm,ty]); });
   try{ localStorage.setItem(KEY,JSON.stringify({at:Date.now(),shops})); }catch(e){}
   return true;
@@ -106,7 +118,7 @@ async function fetchShops(){
 function loadCache(){ try{ const c=JSON.parse(localStorage.getItem(KEY)||"null"); if(c&&c.shops&&c.shops.length){ shops=c.shops; return c.at; } }catch(e){} return 0; }
 // 密集エリア：半径r以内にn軒以上。多いところから順に、まだ使っていないお店で円を作る
 function compute(){
-  const r=+$("rad").value, n=+$("num").value, use={i:$("cIza").checked,p:$("cPub").checked,b:$("cBar").checked};
+  const r=+$("rad").value, n=+$("num").value, use={i:$("cIza").checked,p:$("cPub").checked,b:$("cBar").checked,n:$("cNight").checked,f:$("cFz").checked};
   const xs=shops.filter(s=>use[s[3]]);
   const cell=r/111000, grid=new Map(), key=(a,b)=>a+","+b;
   xs.forEach((s,i)=>{ const k=key(Math.floor(s[0]/cell),Math.floor(s[1]/cell)); (grid.get(k)||grid.set(k,[]).get(k)).push(i); });
@@ -123,11 +135,11 @@ function compute(){
   clusters.sort((a,b)=>b.n-a.n);
   draw(xs,r,n);
 }
-const TYN={i:"居酒屋",p:"pub",b:"bar"};
+const TYN={i:"居酒屋",p:"pub",b:"bar",n:"夜のお店",f:"風俗店"};
 function colorOf(c,n){ const k=Math.min(1,(c-n)/(n*2)); const h=36-36*k, l=55-20*k; return `hsl(${h},90%,${l}%)`; }
 function draw(xs,r,n){
   dotLayer.clearLayers(); cLayer.clearLayers();
-  if($("cDots").checked) xs.forEach(s=>L.circleMarker([s[0],s[1]],{radius:3,weight:0,fillColor:s[3]==="b"?"#7B3FA0":s[3]==="p"?"#2F6FD6":"#E8590C",fillOpacity:.8,interactive:false}).addTo(dotLayer));
+  if($("cDots").checked) xs.forEach(s=>L.circleMarker([s[0],s[1]],{radius:3,weight:0,fillColor:s[3]==="f"?"#8B1A4A":s[3]==="n"?"#E0338A":s[3]==="b"?"#7B3FA0":s[3]==="p"?"#2F6FD6":"#E8590C",fillOpacity:.8,interactive:false}).addTo(dotLayer));
   clusters.slice().reverse().forEach((c,ri)=>{ const col=colorOf(c.n,n);
     const circ=L.circle([c.lat,c.lng],{radius:r,color:col,weight:2,fillColor:col,fillOpacity:.25+Math.min(.45,(c.n-n)/(n*4))}).addTo(cLayer);
     L.marker([c.lat,c.lng],{icon:L.divIcon({className:"",html:`<span class="cnt">${c.n}</span>`,iconSize:[30,14],iconAnchor:[15,7]}),interactive:false}).addTo(cLayer);
@@ -158,7 +170,17 @@ $("kml").onclick=async()=>{ if(!clusters.length) return; await allTowns();
   save(`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>飲み屋街（半径${$("rad").value}m・${$("num").value}軒以上）</name>\n`+clusters.map(c=>`<Placemark><name>${x(nameOf(c))}</name><description>${x(c.shops.slice(0,30).map(s=>s[2]||"（名前なし）").join("、"))}</description><Point><coordinates>${c.lng.toFixed(6)},${c.lat.toFixed(6)},0</coordinates></Point></Placemark>`).join("\n")+`\n</Document></kml>`,"飲み屋街.kml","application/vnd.google-earth.kml+xml");
   $("msg").textContent=`KMLに${clusters.length}か所を書き出しました`; };
 $("reload").onclick=async()=>{ if(await fetchShops()) compute(); };
-["cIza","cPub","cBar","rad","num","cDots"].forEach(id=>$(id).addEventListener("change",compute));
+["cIza","cPub","cBar","cNight","cFz","rad","num","cDots"].forEach(id=>$(id).addEventListener("change",compute));
+// 現在地：地図を今いる場所に移して「今ここ」を出し、一番近い飲み屋街までの距離を出す
+let meMk=null;
+$("meBtn").onclick=()=>{ if(!navigator.geolocation){ $("msg").textContent="このスマホでは現在地が使えません"; return; }
+  $("meBtn").textContent="📍 調べています…";
+  navigator.geolocation.getCurrentPosition(p=>{ const ll=[p.coords.latitude,p.coords.longitude]; $("meBtn").textContent="📍 現在地";
+    if(meMk) map.removeLayer(meMk); meMk=L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(map);
+    map.setView(ll,Math.max(map.getZoom(),15));
+    let best=null; clusters.forEach(c=>{ const d=distM(ll,[c.lat,c.lng]); if(!best||d<best.d) best={c,d}; });
+    if(best) $("msg").textContent=`一番近い飲み屋街：${best.c.st?best.c.st.n+"駅の近く":""}（${best.c.n}軒）まで約${best.d>=1000?(best.d/1000).toFixed(1)+"km":Math.round(best.d/10)*10+"m"}`;
+  },()=>{ $("meBtn").textContent="📍 現在地"; $("msg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; },{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); };
 $("fold").onclick=()=>{ const h=$("pbody").hidden=!$("pbody").hidden; $("fold").textContent=h?"開く":"閉じる"; };
 (async()=>{ const at=loadCache(); if(at){ compute(); const d=new Date(at); $("msg").textContent+=`（データ：${d.getMonth()+1}/${d.getDate()}に取得）`; } else if(await fetchShops()) compute(); })();
 </script>
