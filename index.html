@@ -105,8 +105,8 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 #sImport,#iPrompt{background:var(--pink-soft);border-color:var(--pink-line)}
 .msg{font-size:15px;color:var(--ok)}
 
-.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--surface);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1600}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:1601;background:var(--surface);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
 .sheet .in{max-width:560px;margin:0 auto;display:grid;gap:14px}
 .sheet h2{margin:0;font-size:19.5px}
 .field{display:grid;gap:4px}
@@ -740,7 +740,7 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="subRest" hidden>
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>休憩場</h2><button class="btn" id="restReload">更新</button></div>
-      <div class="src">合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
+      <div class="src"><b>よい休憩場所を見つけたら、どんどん登録してください。</b>登録した場所は、みんなのアプリの地図（ここと「休憩・禁止」の地図）に出ます。合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
       <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button><button class="btn" id="restMe">現在地</button></div>
       <div id="restMap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
@@ -895,7 +895,8 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="subRest2" hidden>
     <section class="card">
       <h2>休憩ポイント・休憩禁止ポイント</h2>
-      <div class="src">マイマップ「休憩ポイント&amp;クレーム発生ポイント」の場所を地図と一覧に出します。色は、<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>・<b style="color:#D23C2F">●クレーム発生ポイント（休憩禁止）</b>です。休憩禁止は、道の線やエリアの囲みでも描いています。休憩禁止に近づいたとき（エリアの中に入ったときも）、音（ビー・ビー・ビー）とオレンジの帯で知らせます。「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
+      <div class="src">マイマップ「休憩ポイント&amp;クレーム発生ポイント」の場所と、<b style="color:#3E9B4F">●みんなが登録した休憩場</b>を地図と一覧に出します。色は、<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>・<b style="color:#D23C2F">●クレーム発生ポイント（休憩禁止）</b>です。休憩禁止は、道の線やエリアの囲みでも描いています。休憩禁止に近づいたとき（エリアの中に入ったときも）、音（ビー・ビー・ビー）とオレンジの帯で知らせます。「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
+      <div class="btnrow"><button class="btn primary" id="rsAddRest">＋ 休憩ポイントを登録する（みんなに共有）</button></div>
       <div class="btnrow"><button class="btn" id="rsTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="rsTestSnd">🔊 音だけテスト</button></div>
       <div id="rsGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="rsMapWrap" class="mapwrap">
@@ -1118,7 +1119,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-24 02:24</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 11:15</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2313,13 +2314,13 @@ body.rtfull{overflow:hidden}
     restMapObj.setView([pos.lat,pos.lng],Math.max(restMapObj.getZoom(),15));
     m.textContent="地図を今いる場所に合わせました（赤い丸が今いる場所です）";
   };
-  async function loadRest(){
-    const m=$("restMsg"); m.textContent="読み込んでいます…";
+  async function loadRest(after){   // after：登録・削除のあとに残す文（読み直しで消えないように）
+    const m=$("restMsg"); m.textContent=after?after+"（読み直しています…）":"読み込んでいます…";
     try{
       const j=await post({action:"restGet"});
       if(!j.ok){ m.textContent=j.error||"読み込めませんでした"; return; }
       restItems=j.items;
-      m.textContent=`${j.items.length}件`;
+      m.textContent=after?`${after}（全部で${j.items.length}件）`:`みんなの休憩場 ${j.items.length}件`;
       $("restMap").hidden=false;
       await loadLeaflet();
       if(!restMapObj){
@@ -2857,7 +2858,7 @@ body.rtfull{overflow:hidden}
       const j=await post({action:"restAdd",code,note:$("restNote").value.trim(),lat:pos.lat,lng:pos.lng});
       if(!j.ok){ m.textContent=j.error||"送れませんでした"; return; }
       $("restNote").value=""; restPick=null; renderRestPick(); m.textContent="追加しました";
-      loadRest();
+      loadRest("追加しました。ありがとうございます");
     }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
   };
   // ===== 接遇チェック（試験）：音声認識で唱和の言葉を、マイクの音量でドアの「バン」を拾う。何も保存しない =====
@@ -5070,16 +5071,22 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       if((x[4]||"P")==="A") L.polygon(x[2],{color:cl,weight:3,fillColor:cl,fillOpacity:.22}).bindPopup(pop).addTo(S.layer);
       else if(x[2].length>1) L.polyline(x[2],{color:cl,weight:6,opacity:.85}).bindPopup(pop).addTo(S.layer);
       else L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
+    if(k==="rest2"){   // みんなが登録した休憩場（「休憩場」の画面で登録したもの）も緑で出す
+      try{ if(!restItems||!restItems.length){ const j=await post({action:"restGet"}); if(j&&j.ok) restItems=j.items; } }catch(e){}
+      (restItems||[]).forEach(r=>L.circleMarker([r.lat,r.lng],{radius:8,color:"#fff",weight:2,fillColor:"#3E9B4F",fillOpacity:1,bubblingMouseEvents:false})
+        .bindPopup(`<div style="font-size:15px;line-height:1.5;min-width:180px"><b>${esc(r.note||"休憩場")}</b><div style="color:#3E9B4F;font-weight:700">みんなが登録した休憩場</div><a href="https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lng}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:#3E9B4F;color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(S.layer));
+    }
     const setMe=p=>{ if(S.me) S.map.removeLayer(S.me); S.me=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(S.map); };
     if(first){ const p=await getPos(); if(p){ setMe(p); S.map.setView([p.lat,p.lng],15); } else if(xs.length) S.map.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
     if(S.me){ const me=S.me.getLatLng(), near=xs.map(x=>({x,d:geoD({lat:me.lat,lng:me.lng},x)})).sort((a,b)=>a.d-b.d).slice(0,15);
       $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${col(x[1])}"><div class="trname"><b>${esc(x[0])}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="https://www.google.com/maps/dir/?api=1&destination=${x[2][0][0]},${x[2][0][1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
       $(P+"List").querySelectorAll("[data-geopin]").forEach(b=>b.onclick=()=>{ const x=S.pts[+b.dataset.geopin]; S.map.setView(x[2][0],17); $(P+"Map").scrollIntoView({behavior:"smooth",block:"center"}); }); }
     else $(P+"List").innerHTML=`<div class="src">「現在地」を押すと、近い順の一覧を出します。</div>`;
-    m.textContent=`${xs.length}か所を表示しています`;
+    m.textContent=`${xs.length}か所を表示しています`+(k==="rest2"&&restItems&&restItems.length?`（ほかに、みんなが登録した休憩場 ${restItems.length}か所）`:"");
     // 現在地・テストのボタン
     $(P+"MeBtn").onclick=async()=>{ const p=await getPos(); if(!p){ m.textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; } setMe(p); S.map.setView([p.lat,p.lng],Math.max(S.map.getZoom(),15)); renderGeoTab(k,false); };
   }
+  $("rsAddRest").onclick=()=>{ showSub("rest"); setTimeout(()=>{ $("restCode").scrollIntoView({behavior:"smooth",block:"center"}); $("restMsg").textContent="地図をタップして場所を選ぶか、そのまま「追加」で今いる場所を登録できます"; },300); };
   Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k];
     $(G.pre+"TestBan").onclick=async()=>{ if(!S.pts) await geoLoad(k,true); const x=(S.pts&&(S.pts.find(y=>!G.alertG||G.alertG(S.groups[y[1]]||""))||S.pts[0]))||["（試し）",0,[[0,0]]]; geoChime(G.chime); geoShow(k,x,+$(G.dist).value||100,true); window.scrollTo(0,0); };
     $(G.pre+"TestSnd").onclick=()=>geoChime(G.chime);
