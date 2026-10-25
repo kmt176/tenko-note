@@ -16,6 +16,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 .panel{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:1000;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-width:520px;margin:0 auto;max-height:calc(100vh - 32px);overflow:auto}
 .ph{display:flex;align-items:center;gap:8px;padding:10px 12px}
 .ph b{font-size:17px;flex:1}
+.ph .ver{font-size:12px;color:var(--muted);white-space:nowrap}
 .ph button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 12px;font-size:15px;font-weight:700}
 .pb{padding:0 12px 12px;display:grid;gap:10px}
 .pb[hidden]{display:none}   /* 「閉じる」で必ず隠れるように（display:grid より強く） */
@@ -39,7 +40,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 <body>
 <div id="map"></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-25 23:14</span><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="row"><span>含めるお店：</span>
       <label><input type="checkbox" id="cIza" checked>居酒屋（店名・cuisine）</label>
