@@ -731,7 +731,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="cmp" aria-selected="false" id="segCmp" hidden>乗務員比較（試験）</button>
     <button role="tab" data-sub="patrol" aria-selected="false" id="segPatrol">取締り</button>
     <button role="tab" data-sub="stand" aria-selected="false" id="segStand">乗り場マップ</button>
-    <button role="tab" data-sub="rest2" aria-selected="false" id="segRest2">休憩・禁止</button>
+    <button role="tab" data-sub="rest2" aria-selected="false" id="segRest2">駐車禁止</button>
     <button role="tab" data-sub="bus" aria-selected="false" id="segBus">都営バス</button>
     <button role="tab" data-sub="ship" aria-selected="false" id="segShip">竹芝の船</button>
   </div>
@@ -741,7 +741,7 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="subRest" hidden>
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>休憩場</h2><button class="btn" id="restReload">更新</button></div>
-      <div class="src"><b>よい休憩場所を見つけたら、どんどん登録してください。</b>登録した場所は、みんなのアプリの地図（ここと「休憩・禁止」の地図）に出ます。合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
+      <div class="src"><b>よい休憩場所を見つけたら、どんどん登録してください。</b>登録した場所は、みんなのアプリのこの地図に出ます（青いピン）。地図には、マイマップの<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>も出しています。合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
       <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button><button class="btn" id="restMe">現在地</button></div>
       <div id="restMap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
@@ -895,9 +895,8 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subRest2" hidden>
     <section class="card">
-      <h2>休憩ポイント・休憩禁止ポイント</h2>
-      <div class="src">マイマップ「休憩ポイント&amp;クレーム発生ポイント」の場所と、<b style="color:#3E9B4F">●みんなが登録した休憩場</b>を地図と一覧に出します。色は、<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>・<b style="color:#D23C2F">●クレーム発生ポイント（休憩禁止）</b>です。休憩禁止は、道の線やエリアの囲みでも描いています。休憩禁止に近づいたとき（エリアの中に入ったときも）、音（ビー・ビー・ビー）とオレンジの帯で知らせます。「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
-      <div class="btnrow"><button class="btn primary" id="rsAddRest">＋ 休憩ポイントを登録する（みんなに共有）</button></div>
+      <h2>駐車禁止ポイント</h2>
+      <div class="src">マイマップ「休憩ポイント&amp;クレーム発生ポイント」の<b style="color:#D23C2F">クレーム発生ポイント（駐車禁止）</b>を地図と一覧に出します。道の線やエリアの囲みでも描いています。近づいたとき（エリアの中に入ったときも）、音（ビー・ビー・ビー）とオレンジの帯で知らせます。「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。喫煙所・長時間駐車可は「休憩場」の地図に出しています。</div>
       <div class="btnrow"><button class="btn" id="rsTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="rsTestSnd">🔊 音だけテスト</button></div>
       <div id="rsGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="rsMapWrap" class="mapwrap">
@@ -1007,7 +1006,7 @@ body.rtfull{overflow:hidden}
         <div id="offBox"></div>
       <div class="field" style="margin-top:10px"><label for="patrolDist">取締りの場所を知らせる距離</label><select id="patrolDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option></select></div>
       <div class="field"><label for="standDist">専用乗り場・優良乗り場を知らせる距離</label><select id="standDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
-      <div class="field"><label for="restDist">休憩禁止ポイントを知らせる距離</label><select id="restDist"><option value="30">30m手前</option><option value="50" selected>50m手前</option><option value="100">100m手前</option><option value="200">200m手前</option></select></div>
+      <div class="field"><label for="restDist">駐車禁止ポイントを知らせる距離</label><select id="restDist"><option value="30">30m手前</option><option value="50" selected>50m手前</option><option value="100">100m手前</option><option value="200">200m手前</option></select></div>
       <div class="src">場所は、マイマップ「東京都内_公開・重点取締り」「専用乗り場・優良乗り場」「休憩ポイント&amp;クレーム発生ポイント」から読み込みます（地図が更新されると数時間で反映）。近づいている途中だけ鳴らし、同じ場所は10分間は鳴らしません。iPhoneはマナーモードだと鳴らないことがあります。</div>
       <h3 style="margin-top:12px">メニューの表示</h3>
       <div class="seg" role="tablist" aria-label="メニューの表示" id="menuStyleSeg"><button role="tab" data-ms="tile" aria-selected="true">ボタンの一覧（新）</button><button role="tab" data-ms="bar" aria-selected="false">今までの横並び</button></div>
@@ -1120,7 +1119,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 12:30</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-25 12:37</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1764,7 +1763,7 @@ body.rtfull{overflow:hidden}
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","専用乗り場・優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","休憩禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","専用乗り場・優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","駐車禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>{ const lk=k==="rzweek"&&adminLock.rzweek; return `<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}${lk?" disabled":""}>${escC(label)}${lk?`<br><small style="color:var(--warn)">管理者が全員「使わない」にしています</small>`:""}</label>`; }).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -2206,7 +2205,7 @@ body.rtfull{overflow:hidden}
   // ボタン：[キー, アイコン（Lucide・線画。ISCライセンス）, ボタンの名前（1行に入る短い名前）, 画面の見出しの名前]。グループごとにテーマ色
   const MICON={"event": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "taxi": "<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><path d=\"M10 6h4\"/><path d=\"M10 10h4\"/><path d=\"M10 14h4\"/><path d=\"M10 18h4\"/>", "train": "<path d=\"M8 3.1V7a4 4 0 0 0 8 0V3.1\"/><path d=\"m9 15-1-1\"/><path d=\"m15 15 1-1\"/><path d=\"M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z\"/><path d=\"m8 19-2 3\"/><path d=\"m16 19 2 3\"/>", "air": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "rest": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "flash": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "long": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>", "cmp": "<path d=\"M3 3v18h18\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "bus": "<path d=\"M8 6v6\"/><path d=\"M15 6v6\"/><path d=\"M2 12h19.6\"/><path d=\"M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/><path d=\"M9 18h5\"/><circle cx=\"16\" cy=\"18\" r=\"2\"/>", "ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>", "pay": "<polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/>", "set": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bk": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "help": "<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>"};
   const MENU_GROUPS=[
-    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["taxi","🏢","専用乗り場","専用乗り場"],["train","🚃","電車の乱れ","電車が止まったら"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["patrol","🚨","取締り","取締りの場所"],["stand","🚕","乗り場マップ","専用乗り場・優良乗り場"],["rest2","🚭","休憩・禁止","休憩ポイント・休憩禁止ポイント"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
+    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["taxi","🏢","専用乗り場","専用乗り場"],["train","🚃","電車の乱れ","電車が止まったら"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["patrol","🚨","取締り","取締りの場所"],["stand","🚕","乗り場マップ","専用乗り場・優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
     ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["help","📖","使い方","使い方"]]]];
@@ -2340,6 +2339,13 @@ body.rtfull{overflow:hidden}
         // 誰が書いたか（社員コード）は管理者にだけ見せる。自分の分は「あなたが追加」と出す
         const who=isAdmin()?`<br><small>${esc(x.code)}</small>`:mine?`<br><small>あなたが追加</small>`:"";
         L.marker([x.lat,x.lng]).bindPopup(`${esc(x.note||"休憩場")}${who}<div style="margin-top:8px"><a href="${gmap}" target="_blank" rel="noopener">Googleマップで開く</a></div>${mine?`<div style="margin-top:8px"><a href="#" data-restdel="${esc(x.key)}">これを消す</a></div>`:""}`).addTo(restLayer); });
+      // マイマップ「休憩ポイント&クレーム発生ポイント」の喫煙所・長時間駐車可も出す（駐車禁止は「駐車禁止」の画面）
+      try{ if(!GS.rest2.pts) await geoLoad("rest2",true);
+        const S2=GS.rest2, RC=["#8B5A2B","#2F6FD6","#7B3FA0","#3E9B4F"];
+        (S2.pts||[]).filter(x=>!GEO.rest2.alertG(S2.groups[x[1]]||"")).forEach(x=>{ const c=x[2][0], cl=RC[x[1]%RC.length];
+          L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(`<div style="font-size:15px;line-height:1.5;min-width:180px;max-width:260px"><b>${esc(x[0])}</b><div style="color:${cl};font-weight:700">${esc(S2.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}<a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(restLayer); });
+        const nSm=(S2.pts||[]).filter(x=>!GEO.rest2.alertG(S2.groups[x[1]]||"")).length; if(nSm) m.textContent+=`・マイマップの喫煙所など ${nSm}か所`;
+      }catch(e){}
       if(j.items.length) setTimeout(()=>{ restMapObj.invalidateSize(); restMapObj.fitBounds(L.latLngBounds(j.items.map(x=>[x.lat,x.lng])),{padding:[20,20],maxZoom:16}); },60);
       else{ restMapObj.setView([35.68,139.76],11); setTimeout(()=>restMapObj.invalidateSize(),60); getPos().then(p=>{ if(p&&!restPick) restMapObj.setView([p.lat,p.lng],15); }); }
       renderRestPick();
@@ -4995,8 +5001,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     stand:{act:"standPts",store:"tenko.stand",dist:"standDist",ban:"standBanner",pre:"sd",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,
       msg:(x,g,d)=>`🚕 ${g}：${x[0].replace(/^\d+_/,"")}まで約${d}m`},
     rest2:{act:"restPts",store:"tenko.rest2",dist:"restDist",ban:"restBanner",pre:"rs",col:["#8B5A2B","#2F6FD6","#D23C2F","#7B3FA0","#3E9B4F"],chime:"ponpon",route:true,
-      alertG:g=>/クレーム|禁止/.test(g),   // 知らせるのは休憩禁止（クレーム発生ポイント）だけ。喫煙所などは地図で探す
-      msg:(x,g,d)=>d===0?`🚫 休憩禁止：${x[0]}（エリアの中です）`:`🚫 休憩禁止：${x[0]}まで約${d}m`}};
+      alertG:g=>/クレーム|禁止/.test(g),   // 知らせる・この画面に出すのは駐車禁止（クレーム発生ポイント）だけ。喫煙所・長時間駐車可は「休憩場」の地図に出す
+      msg:(x,g,d)=>d===0?`🚫 駐車禁止：${x[0]}（エリアの中です）`:`🚫 駐車禁止：${x[0]}まで約${d}m`}};
   // 場所までの距離（m）：点は一番近い点、線は線のどこか、エリアは縁まで（中にいれば0）
   function geoD(p,x){
     const c=x[2], sh=x[4]||"P", P=[p.lat,p.lng];
@@ -5032,7 +5038,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
         g.gain.setValueAtTime(0.0001,now+t0); g.gain.exponentialRampToValueAtTime(v,now+t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,now+t0+d);
         o.connect(g); g.connect(a.destination); o.start(now+t0); o.stop(now+t0+d+0.05); };
       if(kind==="pipo"){ tone(988,0,0.35,0.5); tone(784,0.38,0.6,0.5); }   // ピー・ポーン（取締り）
-      else if(kind==="ponpon"){ [0,0.3,0.6].forEach(t0=>tone(740,t0,0.22,0.22,"square")); }   // ビー・ビー・ビー（休憩禁止。ブザーのような音を3回）
+      else if(kind==="ponpon"){ [0,0.3,0.6].forEach(t0=>tone(740,t0,0.22,0.22,"square")); }   // ビー・ビー・ビー（駐車禁止。ブザーのような音を3回）
       else { tone(1047,0,0.16,0.4); tone(1319,0.13,0.16,0.4); tone(1568,0.26,0.5,0.4); }   // ピ・ロ・リン（乗り場）
     }catch(e){}
   }
@@ -5069,32 +5075,27 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     setTimeout(()=>S.map.invalidateSize(),60);
     if(!S.pts){ m.textContent="場所を読み込んでいます…"; await geoLoad(k,true); if(!S.pts){ m.textContent="場所を読み込めませんでした。電波を確認してください"; return; } }
     const col=i=>G.col[i%G.col.length];
-    $(P+"Groups").innerHTML=S.groups.map((g,i)=>`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-geog="${i}" ${S.offG[i]?"":"checked"}><b style="color:${col(i)}">●</b>${esc(g)}（${S.pts.filter(x=>x[1]===i).length}）</label>`).join("");
+    const gShow=i=>!(G.alertG&&k==="rest2")||G.alertG(S.groups[i]||"");   // 駐車禁止の画面は、禁止のグループだけ
+    $(P+"Groups").innerHTML=S.groups.map((g,i)=>gShow(i)?`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-geog="${i}" ${S.offG[i]?"":"checked"}><b style="color:${col(i)}">●</b>${esc(g)}（${S.pts.filter(x=>x[1]===i).length}）</label>`:"").join("");
     $(P+"Groups").querySelectorAll("[data-geog]").forEach(b=>b.onchange=()=>{ if(b.checked) delete S.offG[b.dataset.geog]; else S.offG[b.dataset.geog]=true; try{ localStorage.setItem(G.store+"Off",JSON.stringify(S.offG)); }catch(e){} renderGeoTab(k,false); });
     if(S.layer) S.layer.remove(); S.layer=L.layerGroup().addTo(S.map);
-    const xs=S.pts.filter(x=>!S.offG[x[1]]);
+    const xs=S.pts.filter(x=>!S.offG[x[1]]&&gShow(x[1]));
     xs.forEach(x=>{ const c=x[2][0], cl=col(x[1]);
       const link=G.route?`<a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
       const pop=`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(x[0])}</b><div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
       if((x[4]||"P")==="A") L.polygon(x[2],{color:cl,weight:3,fillColor:cl,fillOpacity:.22}).bindPopup(pop).addTo(S.layer);
       else if(x[2].length>1) L.polyline(x[2],{color:cl,weight:6,opacity:.85}).bindPopup(pop).addTo(S.layer);
       else L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
-    if(k==="rest2"){   // みんなが登録した休憩場（「休憩場」の画面で登録したもの）も緑で出す
-      try{ if(!restItems||!restItems.length){ const j=await post({action:"restGet"}); if(j&&j.ok) restItems=j.items; } }catch(e){}
-      (restItems||[]).forEach(r=>L.circleMarker([r.lat,r.lng],{radius:8,color:"#fff",weight:2,fillColor:"#3E9B4F",fillOpacity:1,bubblingMouseEvents:false})
-        .bindPopup(`<div style="font-size:15px;line-height:1.5;min-width:180px"><b>${esc(r.note||"休憩場")}</b><div style="color:#3E9B4F;font-weight:700">みんなが登録した休憩場</div><a href="https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lng}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:#3E9B4F;color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(S.layer));
-    }
     const setMe=p=>{ if(S.me) S.map.removeLayer(S.me); S.me=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(S.map); };
     if(first){ const p=await getPos(); if(p){ setMe(p); S.map.setView([p.lat,p.lng],15); } else if(xs.length) S.map.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
     if(S.me){ const me=S.me.getLatLng(), near=xs.map(x=>({x,d:geoD({lat:me.lat,lng:me.lng},x)})).sort((a,b)=>a.d-b.d).slice(0,15);
       $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${col(x[1])}"><div class="trname"><b>${esc(x[0])}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="https://www.google.com/maps/dir/?api=1&destination=${x[2][0][0]},${x[2][0][1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
       $(P+"List").querySelectorAll("[data-geopin]").forEach(b=>b.onclick=()=>{ const x=S.pts[+b.dataset.geopin]; S.map.setView(x[2][0],17); $(P+"Map").scrollIntoView({behavior:"smooth",block:"center"}); }); }
     else $(P+"List").innerHTML=`<div class="src">「現在地」を押すと、近い順の一覧を出します。</div>`;
-    m.textContent=`${xs.length}か所を表示しています`+(k==="rest2"&&restItems&&restItems.length?`（ほかに、みんなが登録した休憩場 ${restItems.length}か所）`:"");
+    m.textContent=`${xs.length}か所を表示しています`;
     // 現在地・テストのボタン
     $(P+"MeBtn").onclick=async()=>{ const p=await getPos(); if(!p){ m.textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; } setMe(p); S.map.setView([p.lat,p.lng],Math.max(S.map.getZoom(),15)); renderGeoTab(k,false); };
   }
-  $("rsAddRest").onclick=()=>{ showSub("rest"); setTimeout(()=>{ $("restCode").scrollIntoView({behavior:"smooth",block:"center"}); $("restMsg").textContent="地図をタップして場所を選ぶか、そのまま「追加」で今いる場所を登録できます"; },300); };
   Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k];
     $(G.pre+"TestBan").onclick=async()=>{ if(!S.pts) await geoLoad(k,true); const x=(S.pts&&(S.pts.find(y=>!G.alertG||G.alertG(S.groups[y[1]]||""))||S.pts[0]))||["（試し）",0,[[0,0]]]; geoChime(G.chime); geoShow(k,x,+$(G.dist).value||100,true); window.scrollTo(0,0); };
     $(G.pre+"TestSnd").onclick=()=>geoChime(G.chime);
