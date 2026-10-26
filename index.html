@@ -277,6 +277,7 @@ a.flink:active{background:var(--sunk)}
 .mtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:128px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:700;line-height:1.2;padding:10px 2px;letter-spacing:-.02em;text-align:center;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06);-webkit-tap-highlight-color:transparent}
 .mtile:active{background:var(--thbg)}
 .mtile{position:relative}.mlamp{position:absolute;top:8px;right:8px;width:12px;height:12px;border-radius:50%;background:#9AA5A3;box-shadow:0 0 0 2px var(--surface)}.mlamp.on{background:#2EAD5B;box-shadow:0 0 0 2px var(--surface),0 0 8px rgba(46,173,91,.8)}
+.mg1{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:#2F6FD6;color:#fff;font:800 14px/22px sans-serif;font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--surface)}
 .mdesc{font-size:12.5px;color:var(--muted);margin:-2px 0 8px;line-height:1.5}
 .mtile .lb{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mver{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}.mver small{flex-basis:100%;color:var(--muted);font-size:12px}
@@ -1198,7 +1199,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-26 09:02</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-26 09:27</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2296,9 +2297,9 @@ body.rtfull{overflow:hidden}
   const MICON={"event": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "taxi": "<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><path d=\"M10 6h4\"/><path d=\"M10 10h4\"/><path d=\"M10 14h4\"/><path d=\"M10 18h4\"/>", "train": "<path d=\"M8 3.1V7a4 4 0 0 0 8 0V3.1\"/><path d=\"m9 15-1-1\"/><path d=\"m15 15 1-1\"/><path d=\"M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z\"/><path d=\"m8 19-2 3\"/><path d=\"m16 19 2 3\"/>", "air": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "rest": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "flash": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "long": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>", "cmp": "<path d=\"M3 3v18h18\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "bus": "<path d=\"M8 6v6\"/><path d=\"M15 6v6\"/><path d=\"M2 12h19.6\"/><path d=\"M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/><path d=\"M9 18h5\"/><circle cx=\"16\" cy=\"18\" r=\"2\"/>", "ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>", "pay": "<polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/>", "set": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bk": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "help": "<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>"};
   const MENU_GROUPS=[
     ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","🚖","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
-    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
+    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["izakaya","🍶","飲み屋街","飲み屋街マップ（試験）"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
-    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["izakaya","🍶","飲み屋街","飲み屋街マップ（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
+    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["help","📖","使い方","使い方"]]]];
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
   const micon=k=>`<span class="em" aria-hidden="true">${(MENU_ALL[k]||[])[1]||""}</span>`;   // 絵文字（線画のMICONは使わない）
@@ -2310,7 +2311,10 @@ body.rtfull{overflow:hidden}
   const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
   MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
-  const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help") return true; if(k==="pay"||k==="izakaya") return isAdmin(); if(k==="flash") return !$("sViewFlash").hidden;
+  const isGroup1=()=>isNakama()&&!!cfg.group&&cfg.group.id==="g1";
+  const G1ONLY=new Set(["izakaya"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
+  const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help") return true; if(k==="pay") return isAdmin();
+    if(k==="izakaya") return isAdmin()||isGroup1();   // 飲み屋街マップは、管理者と仲間のグループ1の人だけ（2026-10-26） if(k==="flash") return !$("sViewFlash").hidden;
     const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
   function menuOpen(k){
     if(PAGES[k]) showPage(k);
@@ -2326,7 +2330,7 @@ body.rtfull{overflow:hidden}
     // 開いている間だけ知らせる機能は、右上にランプ（緑＝知らせがオン、灰色＝オフ）
     const LAMP={patrol:"patrol",stand:"stand",yuryo:"yuryo",rest2:"rest2",train:"trainban",taxi:"taxi"};
     const lamp=k=>LAMP[k]?`<i class="mlamp${offCfg[LAMP[k]]?"":" on"}" title="${offCfg[LAMP[k]]?"知らせはオフ":"知らせはオン"}"></i>`:"";
-    const tile=x=>`<button type="button" class="mtile" data-mt="${x[0]}" aria-label="${esc(x[3])}${LAMP[x[0]]?(offCfg[LAMP[x[0]]]?"（知らせはオフ）":"（知らせはオン）"):""}">${lamp(x[0])}<span class="mi">${micon(x[0])}</span><span class="lb">${esc(x[2])}</span></button>`;
+    const tile=x=>`<button type="button" class="mtile" data-mt="${x[0]}" aria-label="${esc(x[3])}${LAMP[x[0]]?(offCfg[LAMP[x[0]]]?"（知らせはオフ）":"（知らせはオン）"):""}${G1ONLY.has(x[0])?"（グループ1限定）":""}">${lamp(x[0])}${G1ONLY.has(x[0])?`<i class="mg1" title="グループ1限定">①</i>`:""}<span class="mi">${micon(x[0])}</span><span class="lb">${esc(x[2])}</span></button>`;
     const grp=(t,th,xs,desc)=>xs.length?`<div class="${th}"><h3 class="mgrp">${t}</h3>${desc?`<div class="mdesc">${esc(desc)}</div>`:""}<div class="mtiles">${xs.map(tile).join("")}</div></div>`:"";
     const ver=(document.querySelector("#tabHelp .verpill")||{}).textContent||"";
     $("menuHome").innerHTML=`<section class="card">${grp("よく使う","th-navy",rec.map(k=>MENU_ALL[k]))}${MENU_GROUPS.map(([t,th,xs,desc])=>grp(t,th,xs.filter(x=>menuVisible(x[0])),desc)).join("")}
