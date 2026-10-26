@@ -27,7 +27,8 @@ select{font-size:16px;padding:6px 8px;border-radius:8px;border:1px solid var(--l
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:15px;font-weight:700;min-height:44px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-#msg{font-size:14px;color:var(--muted);line-height:1.5}
+#msg{font-size:14px;color:var(--muted);line-height:1.5;border-radius:8px;padding:4px 6px;margin:0 -6px;transition:background .6s}
+#msg.flash{background:#FFF1A8;color:#3A2E00;transition:none}
 details{font-size:14px;line-height:1.6;color:var(--muted)}
 details summary{font-weight:700;color:var(--ink);cursor:pointer}
 .leaflet-popup-content{font-size:14px;line-height:1.5;max-width:260px}
@@ -42,14 +43,14 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 <div id="map"></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-25 23:58</span><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-26 09:22</span><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="row"><span>含めるお店：</span>
       <label><input type="checkbox" id="cIza" checked>居酒屋（店名・cuisine）</label>
       <label><input type="checkbox" id="cPub" checked>pub（日本では居酒屋が多い）</label>
       <label><input type="checkbox" id="cBar" checked>bar</label>
       <label><input type="checkbox" id="cNight" checked>夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）</label>
-      <label><input type="checkbox" id="cFz">風俗店</label></div>
+      <label><input type="checkbox" id="cFz" checked>風〇店</label></div>
     <div class="row"><label>半径 <select id="rad"><option>100</option><option>150</option><option selected>200</option><option>300</option><option>400</option></select> m</label>
       <label>以内に <select id="num"><option>5</option><option>8</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select> 軒以上</label>
       <label><input type="checkbox" id="cDots" checked>お店の点も出す</label></div>
@@ -58,11 +59,12 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
     <div id="msg">読み込んでいます…</div>
     <details><summary>使い方</summary>
       ・はじめて開いたときに、オープンストリートマップ（無料・キー不要）から東京23区・武蔵野市・三鷹市の居酒屋などを取ってきます（1分ほどかかります）。取ったデータはこのスマホにためておき、次からはすぐ出ます。新しくしたいときは「データを取り直す」。<br>
+      ・チェックや半径・軒数を変えると、その場で計算し直します（データの取り直しはしません）。下の文が黄色く光って「表示を更新しました」と出ます。<br>
       ・半径○m以内に○軒以上お店がある所を「密集エリア」として円で出します。軒数が多いほど色が濃くなります。円の中の数字が軒数です。<br>
       ・地図を拡大すると（駅のまわりくらいの大きさ）、円は点線の縁だけになり、お店の点が大きく出ます。点を押すと店名が出ます。<br>
       ・円をタップすると、軒数・最寄り駅・地名・お店の一覧と「ルート案内」が出ます。<br>
       ・「CSVで保存」は、名前・緯度・経度・軒数などの一覧です（地名は国土地理院から調べるので少し時間がかかります）。「カーナビタイム用CSV」は名称・緯度・経度・メモだけの形です。カーナビタイムの「My地点プラス」の取り込みの形と違うときは教えてください。「Googleマイマップ用（KML）」は、Googleマイマップの「インポート」でそのまま地図にできます。<br>
-      ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝風俗店（はじめは数えていません。「風俗店」にチェックで入ります）。<br>
+      ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝風〇店。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。
     </details>
@@ -145,7 +147,7 @@ function compute(){
   clusters.sort((a,b)=>b.n-a.n);
   draw(xs,r,n);
 }
-const TYN={i:"居酒屋",p:"pub",b:"bar",n:"夜のお店",f:"風俗店"};
+const TYN={i:"居酒屋",p:"pub",b:"bar",n:"夜のお店",f:"風〇店"};
 function colorOf(c,n){ const k=Math.min(1,(c-n)/(n*2)); const h=36-36*k, l=55-20*k; return `hsl(${h},90%,${l}%)`; }
 function draw(xs,r,n){
   dotLayer.clearLayers(); cLayer.clearLayers();
@@ -157,7 +159,9 @@ function draw(xs,r,n){
     const circ=L.circle([c.lat,c.lng],{radius:r,color:col,weight:near()?3:2,dashArray:near()?"6 5":null,fillColor:col,fillOpacity:fo}).addTo(cLayer);
     L.marker([c.lat,c.lng],{icon:L.divIcon({className:"",html:`<span class="cnt">${c.n}</span>`,iconSize:[30,14],iconAnchor:[15,7]}),interactive:false}).addTo(cLayer);
     circ.bindPopup(()=>popup(c)); circ.on("popupopen",()=>{ if(c.town==null) townOf(c).then(()=>{ circ.setPopupContent(popup(c)); }); }); });
-  $("msg").textContent=(justFetched?`✅ データを取り直しました（${fmtAt(Date.now())}）。`:"")+`お店 ${xs.length}軒のうち、半径${r}m以内に${n}軒以上の密集エリア：${clusters.length}か所`; justFetched=false;
+  const kinds=[["cIza","居酒屋"],["cPub","pub"],["cBar","bar"],["cNight","夜のお店"],["cFz","風〇店"]].filter(([id])=>$(id).checked).map(([,l])=>l).join("・")||"なし";
+  $("msg").textContent=(justFetched?`✅ データを取り直しました（${fmtAt(Date.now())}）。`:changed?`🔄 表示を更新しました（${kinds}・半径${r}m・${n}軒以上）→ `:"")+`お店 ${xs.length}軒のうち、半径${r}m以内に${n}軒以上の密集エリア：${clusters.length}か所`; justFetched=false;
+  if(changed){ const m=$("msg"); m.classList.add("flash"); setTimeout(()=>m.classList.remove("flash"),700); changed=false; }
 }
 function popup(c){
   return `<div class="pop"><h3>${c.n}軒の飲み屋街</h3>最寄り駅：${esc(c.st?c.st.n:"—")}駅（約${c.st?Math.round(c.st.d/10)*10:"—"}m）<br>地名：${c.town==null?"調べています…":esc(c.town||"—")}
@@ -183,7 +187,8 @@ $("kml").onclick=async()=>{ if(!clusters.length) return; await allTowns();
   save(`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>飲み屋街（半径${$("rad").value}m・${$("num").value}軒以上）</name>\n`+clusters.map(c=>`<Placemark><name>${x(nameOf(c))}</name><description>${x(c.shops.slice(0,30).map(s=>s[2]||"（名前なし）").join("、"))}</description><Point><coordinates>${c.lng.toFixed(6)},${c.lat.toFixed(6)},0</coordinates></Point></Placemark>`).join("\n")+`\n</Document></kml>`,"飲み屋街.kml","application/vnd.google-earth.kml+xml");
   $("msg").textContent=`KMLに${clusters.length}か所を書き出しました`; };
 $("reload").onclick=async()=>{ if(await fetchShops()) compute(); };
-["cIza","cPub","cBar","cNight","cFz","rad","num","cDots"].forEach(id=>$(id).addEventListener("change",compute));
+let changed=false;   // チェック・半径・軒数を変えたときは、変えたことが分かるように知らせる
+["cIza","cPub","cBar","cNight","cFz","rad","num","cDots"].forEach(id=>$(id).addEventListener("change",()=>{ changed=true; compute(); }));
 // 現在地：地図を今いる場所に移して「今ここ」を出し、一番近い飲み屋街までの距離を出す
 let meMk=null;
 $("meBtn").onclick=()=>{ if(!navigator.geolocation){ $("msg").textContent="このスマホでは現在地が使えません"; return; }
