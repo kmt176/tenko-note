@@ -1218,7 +1218,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-26 10:01</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-26 10:20</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1750,7 +1750,8 @@ body.rtfull{overflow:hidden}
     const id=(cfg.abkId||"").trim(), pass=cfg.abkPass||""; if(!id||!pass||!cfg.url) return false;
     if(!quiet) abkMsg("預けています…");
     try{ const data=await packBackup({v:3,tenko:recs,uriage:sales},pass);
-      const j=await post({action:"abkPut",id,token:await abkToken(id,pass),data});
+      let j; try{ j=await post({action:"abkPut",id,token:await abkToken(id,pass),data}); }
+      catch(e){ abkMsg("サーバーの準備ができていないため、預けられませんでした（管理者の作業待ち）。あとで「今すぐ預ける」を押してください"); return false; }
       if(!j||!j.ok){ abkMsg((j&&j.error)||"預けられませんでした"); return false; }
       cfg.abkLast=j.at; saveCfg(); abkMsg(`✅ 預けました（${new Date(j.at).toLocaleString("ja-JP")}・サーバーには最新の${j.count}回分）`); return true;
     }catch(e){ abkMsg("通信できませんでした。電波のよいところで「今すぐ預ける」を押してください"); return false; }
@@ -1769,7 +1770,8 @@ body.rtfull{overflow:hidden}
     const id=abkNorm($("abkId").value), pass=$("abkPass").value; if(!id||!pass){ abkMsg("社員コードとパスワードを入れてください"); return; }
     abkMsg("サーバーから読んでいます…");
     try{ const ver=$("abkVer").hidden?0:+$("abkVer").value||0;
-      const j=await post({action:"abkGet",id,token:await abkToken(id,pass),ver});
+      let j; try{ j=await post({action:"abkGet",id,token:await abkToken(id,pass),ver}); }
+      catch(e){ abkMsg("サーバーの準備ができていないため、読めませんでした（管理者の作業待ち）。電波が悪いときも、このように出ます"); return; }
       if(!j||!j.ok){ abkMsg((j&&j.error)||"読めませんでした"); return; }
       if(j.list&&j.list.length>1){ $("abkVer").innerHTML=j.list.map((a,i)=>`<option value="${i}"${i===ver?" selected":""}>${new Date(a).toLocaleString("ja-JP")}${i?"":"（最新）"}</option>`).join(""); $("abkVer").hidden=false; }
       // 読んだバックアップを、ふだんの「復元」の欄に入れて、確認してから戻す（もう一度「復元」を押すと置き換え）
