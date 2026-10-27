@@ -113,6 +113,10 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 .field{display:grid;gap:4px}
 .field label{font-size:14.5px;color:var(--muted)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#rAmtPair:has(>[hidden]){grid-template-columns:1fr}
+#rTimeBox{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+#rTimeBox>summary{font-weight:700}
+#rTimeBox>summary small{font-weight:400}
 .grp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
 .grp h3{margin:0;font-size:15.5px}
 input[type=date],input[type=time]{width:100%;font:20.5px var(--num);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
@@ -1228,7 +1232,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-27 11:54</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-27 22:40</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1294,7 +1298,7 @@ body.rtfull{overflow:hidden}
     <p>売上は、<b>点呼時間に入れた勤務（出社日）ごと</b>に記録します。その日の<b>業務前点呼（実績）</b>を入れると、その勤務の売上を入力できるようになります（予定だけの日はまだ入力できません）。勤務中でないときは、直前の勤務が開きます。</p>
     <ol class="steps">
       <li>お客様が乗ったら「<b>乗車</b>」、降りたら「<b>降車</b>」を押します。<small>押した時刻・場所（〇〇町〇丁目まで）・天気（気温・降水量）を自動で記録します。初回だけ位置情報の許可が要ります。その場で押せず、あとで(社内処理のあとなど)まとめて押すときは、右の「<b>押し忘れ</b>」にチェックを付けて押してください。時刻・場所は記録せず、あとで「日報から取り込む」を使ったときに日報の内容に差し替わります</small></li>
-      <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています（連続配車モード中は、決済はネット/QRが入ります）。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき。JPNタクシーでサンキューチケットの配車だったときは「サンキューチケット」にチェックを入れると、営業分析で分けて見られます。天気はふだん自動で、直したいときだけ「天気を直す」を開きます</small></li>
+      <li>降車を押すと入力画面が開くので、<b>金額</b>と<b>決済</b>を入れて保存します。<small>内容（連続配車／配車／手上げ／乗り場）・決済は前の乗車と同じものが最初から入っています（連続配車モード中は、決済はネット/QRが入ります）。連続配車＝手上げを取らず迎車だけを受けるモード、配車＝通常の営業中に迎車の依頼が来たとき。JPNタクシーでサンキューチケットの配車だったときは「サンキューチケット」にチェックを入れると、営業分析で分けて見られます。天気はふだん自動で、直したいときだけ「天気を直す」を開きます。リピートユーザー＝病院など定期的に利用される方の目印。社内決済＝アプリ手配料200円を含む決済で、配車・連続配車でネット/QR以外は自動でチェックが入ります（ネット/QRでも社内決済のときはチェック）。乗車・降車の時刻と押し忘れは「時刻・押し忘れを直す」を押すと開きます（休憩・回送など時刻を入れる内容と、押し忘れの印があるときは最初から開いています）。押し忘れにチェックすると、その時刻・場所はスマホの記録を使わず、「日報から取り込む」で日報の内容に差し替えます</small></li>
       <li>勤務の始めは、大きなボタンが「<b>会社を出た時間</b>」になっています。会社を出るときに押すと出庫を記録し、ボタンが「乗車」に変わります。休憩・回送・入庫は、その下の小さなボタンで記録します（休憩・回送はもう一度押すと終了）。</li>
       <li>連続配車モードに入るときは「<b>連続配車 開始</b>」、やめるときは「<b>連続配車 終了</b>」を押します。<small>開始は押した時刻の1分後で記録します（会社のシステムとのずれ対策で、1回ごとに1分少なく数えます）。連続配車中に「回送」「休憩」を始めると、連続配車はその1分前に自動で終了します。モード中に乗車を押すと内容が「連続配車」になります。<b>コアタイム（朝6〜10時・夕方16〜20時）の間は、どの画面を見ていても、下のボタンの列のすぐ上に連続配車のボタンが出ます</b>（必須がまだ未達なら薄いピンク、達成していれば薄い青）。売上の上の「<b>連続配車</b>」の画面で、今週（月曜0:00〜日曜24:00）の実績と、計画を含む見込みが目標（出庫〜入庫の○%など。週ごとに「変える」で設定）に届くか、乗務ごとの必須・コアタイム（朝6〜10時90分 または 夕方16〜20時2時間、どちらか）を確かめられます。計画は15分のマスを押して作ります（基本の型と、乗務ごとの計画）。過去分は「日報から取り込む」に「出庫日:」と「連続配車: 13:12-17:37, 17:54-20:30」の形で貼り付けると入ります</small></li>
       <li>勤務が終わったら「<b>納金明細書</b>」（紙と同じ並び）に<b>売上額①</b>（日報の総営収）とETCなどを入れると、<b>納金額</b>（①−④＋⑤−⑥＋⑦アプリ手配料金−⑧B空転）が出ます。日計表の現収・未収も入れて、メーター照合がOKなら「照合済みにする」で鍵をかけます。<small>アプリ手配料金とETC合計は、空欄なら乗車の記録から計算します。乗車の金額は現収＋未収（ETC・アプリ手配料を含む）。ネット/QR（A）でも社内決済だったときは、乗車の「社内決済」にチェックを入れます</small></li>
@@ -1385,25 +1389,32 @@ body.rtfull{overflow:hidden}
       <button class="btn" id="rClose">閉じる</button>
       <button class="btn danger" id="rDel">削除</button>
     </div>
+    <!-- 降車のあとスクロールせずに終われるよう、金額・決済を一番上に。時刻と押し忘れはふだん閉じておく（2026-10-27 ユーザー指定） -->
+    <div class="pair" id="rAmtPair">
+      <div class="field"><label for="rAmt">金額（円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"></div>
+      <div class="field"><label for="rPay">決済</label>
+        <select id="rPay"><option>現金</option><option value="A:GOPAY">A:ネット/QR</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
+    </div>
+    <small class="src" id="rAmtHint" style="margin-top:-6px">金額は現収＋未収（ETC・手配料も含める）</small>
     <div class="field"><label for="rKind">内容</label>
       <select id="rKind"><option>連続配車</option><option>配車</option><option>手上げ</option><option>乗り場</option><option>CAN</option><option>B空転</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option><option>連続配車モード</option></select></div>
+    <div class="grp" id="rMoney">
+      <div class="field"><label for="rEtc">うちETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
+      <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks"><span class="chktext">サンキューチケット</span></label>
+      <label class="check"><input type="checkbox" id="rRepeat"><span class="chktext">リピートユーザー</span></label>
+      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（手配料200円を含む）</span></label>
+      <div class="live" id="rFare"></div>
+    </div>
+    <details id="rTimeBox"><summary><span id="rTimeSum">時刻・押し忘れを直す</span></summary>
     <div class="pair">
       <div class="field"><label for="rOn" id="rOnL">乗車</label><input type="time" id="rOn"><label class="check nextday"><input type="checkbox" id="rOnNext">翌日（出庫日の次の日）</label></div>
       <div class="field" id="rOffF"><label for="rOff" id="rOffL">降車</label><input type="time" id="rOff"><label class="check nextday"><input type="checkbox" id="rOffNext">翌日（出庫日の次の日）</label></div>
     </div>
     <label class="check" id="rOnUnsureBox"><input type="checkbox" id="rOnUnsure"><span class="chktext">乗車の押し忘れ<br><small>その場で押せず、あとで（社内処理の後など）まとめて押した・時刻を直したときはチェックしてください。この乗車の時刻・場所はこのスマホの記録を使わず、「日報から取り込む」を使ったときに日報の内容に差し替えます（今、記録済みの位置は消します）</small></span></label>
     <label class="check" id="rOffUnsureBox"><input type="checkbox" id="rOffUnsure"><span class="chktext">降車の押し忘れ<br><small>同じく、降車の時刻・場所を使わず、日報の取り込みで差し替えます</small></span></label>
-    <div class="grp" id="rMoney">
-      <div class="field"><label for="rAmt">金額（現収＋未収・円）</label><input type="text" class="yenin" id="rAmt" inputmode="numeric" autocomplete="off"><small class="src">ETC・アプリ手配料（社内決済の200円）を含めた金額を入れます</small></div>
-      <div class="field"><label for="rPay">決済</label>
-        <select id="rPay"><option>現金</option><option value="A:GOPAY">A:ネット/QR</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
-      <div class="field"><label for="rEtc">うちETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
-      <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks"><span class="chktext">サンキューチケット<br><small>高額になりやすい配車の目印です。乗務員にしか分からないので、降車後にチェックしてください。営業分析で分けて集計します</small></span></label>
-      <label class="check"><input type="checkbox" id="rRepeat"><span class="chktext">リピートユーザー<br><small>病院など、定期的に利用される方の目印です</small></span></label>
-      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（アプリ手配料200円を含む）<br><small>配車・連続配車でネット/QR以外は自動でチェックが入ります。ネット/QRでも社内決済のときはチェックしてください</small></span></label>
-      <div class="live" id="rFare"></div>
+    </details>
       <details id="rWxBox"><summary>天気を直す（ふだんは自動）</summary><div class="src">乗車の場所と時刻の天気を気象庁のアメダスから自動で記録します。場所が取れなかったとき・9日より前の取り込み・自動の判定を直したいときだけ選んでください。</div><div class="field"><div class="wxsel" id="rWx"><button type="button" data-w="">自動</button><button type="button" data-w="晴">晴</button><button type="button" data-w="曇">曇</button><button type="button" data-w="雨">雨</button><button type="button" data-w="雪">雪</button></div></div></details>
-    </div>
+
     <div class="field"><label for="rMemo">メモ</label><input type="text" id="rMemo" autocomplete="off"></div>
     <div class="live" id="rInfo"></div>
   </div>
@@ -4587,18 +4598,24 @@ body.rtfull{overflow:hidden}
     rInTouched=r.inhouse!=null; $("rInhouse").checked=r.inhouse!=null?r.inhouse:appAuto({kind:r.kind||"連続配車",pay:r.pay||"現金"}); rFareShown=r.fare; showFare();
     rWxSel=r.wxSel||""; markWx(); $("rWxBox").open=!!r.wxSel;
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
-    $("rInfo").innerHTML=[w?`天気：${esc(w.st)} ${esc(w.at)}の観測 ${w.t??"—"}℃・10分 ${w.p10??"—"}mm・1時間 ${w.p1h??"—"}mm`:"",pos.length?`位置：${pos.join("・")}を記録済み`:""].filter(Boolean).join("<br>")
+    $("rInfo").innerHTML=[w?`天気：<b>${r.wxSel?esc(r.wxSel)+"（手で選択）":autoWx(w)?"雨（自動）":"雨なし（自動）"}</b>　${esc(w.st)} ${esc(w.at)}の観測 ${w.t??"—"}℃・10分 ${w.p10??"—"}mm・1時間 ${w.p1h??"—"}mm`:"",pos.length?`位置：${pos.join("・")}を記録済み`:""].filter(Boolean).join("<br>")
       +(d.locked?`<div class="err">この勤務は照合済みです</div>`:"");
     $("rDel").hidden=!id; kindUI();
+    // 時刻の欄は、時刻が主な入力のとき（休憩・回送など／手で追加）と押し忘れの印があるときだけ開いておく
+    $("rTimeBox").open=isEv(r.kind||"")||!id||!!r.onUnsure||!!r.offUnsure; rTimeSum();
     $("rSheet").hidden=$("rBg").hidden=false;
     if(afterOff) setTimeout(()=>$("rAmt").focus(),50);
   }
   function kindUI(){
     const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
-    $("rMoney").hidden=ev; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k)||!(car().appFee>0)||!!offCfg.inhouse; $("rThanksBox").hidden=!isHai(k)||!car().thanks;
+    $("rMoney").hidden=ev; $("rAmtPair").hidden=ev; $("rAmtHint").hidden=ev; $("rWxBox").hidden=ev; if(ev) $("rTimeBox").open=true; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k)||!(car().appFee>0)||!!offCfg.inhouse; $("rThanksBox").hidden=!isHai(k)||!car().thanks;
     $("rOnUnsureBox").hidden=ev; $("rOffUnsureBox").hidden=ev||point;
     $("rOnL").textContent=ev?(point?"時刻":"開始"):"乗車"; $("rOffL").textContent=ev?"終了":"降車";
   }
+  // 折りたたんだ時刻の欄の見出しに、今の時刻を出す（開かなくても確かめられるように）
+  function rTimeSum(){ const a=$("rOn").value, b=$("rOffF").hidden?"":$("rOff").value, u=$("rOnUnsure").checked||$("rOffUnsure").checked;
+    $("rTimeSum").innerHTML=`時刻 <span class="num">${a||"—"}${$("rOffF").hidden?"":"〜"+(b||"—")}</span>${u?"・押し忘れ":""} <small>（直すときは押す）</small>`; }
+  ["rOn","rOff","rOnUnsure","rOffUnsure","rKind"].forEach(id=>$(id).addEventListener("change",rTimeSum));
   function markWx(){ document.querySelectorAll("#rWx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===rWxSel)); }
   document.querySelectorAll("#rWx button").forEach(b=>b.onclick=()=>{ rWxSel=b.dataset.w; markWx(); });
   $("rKind").addEventListener("change",kindUI);
@@ -5198,7 +5215,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("rClose").onclick=closeRide; $("rBg").onclick=closeRide;
   $("rSave").onclick=()=>{
     const k=sDay, d=ensureDay(k); if(!guard(d)) return;
-    const on0=toMin($("rOn").value), on=on0==null?null:on0+($("rOnNext").checked?DAY:0); if(on==null){ $("rInfo").innerHTML=`<div class="err">${isEv($("rKind").value)?"時刻":"乗車の時刻"}を入れてください</div>`; return; }
+    const on0=toMin($("rOn").value), on=on0==null?null:on0+($("rOnNext").checked?DAY:0); if(on==null){ $("rTimeBox").open=true; $("rInfo").innerHTML=`<div class="err">${isEv($("rKind").value)?"時刻":"乗車の時刻"}を入れてください</div>`; return; }
     const off0=$("rOffF").hidden?null:toMin($("rOff").value);
     let off=off0==null?null:off0+($("rOffNext").checked?DAY:0); if(off!=null&&off<on) off+=DAY;   // 降車が乗車より前なら日付をまたいだもの
     if(off==null&&$("rKind").value==="CAN") off=on;   // キャンセルは乗車中にしない
