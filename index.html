@@ -1232,7 +1232,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-27 23:48</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 07:52</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4424,7 +4424,12 @@ body.rtfull{overflow:hidden}
     $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
     if($("ckDoLock")) $("ckDoLock").onclick=()=>{ const dd=ensureDay(k); dd.locked=true; dd.lockedAt=new Date().toISOString(); saveSales(); renderSales();
-      { let ac={}; try{ ac=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); }catch(e){} if(ac.abkId&&ac.abkPass&&ac.abkOn!==false&&window.tenkoAbkPut) window.tenkoAbkPut(true).then(ok=>{ const l=$("ckLock"); if(l) l.insertAdjacentHTML("beforeend",`<small class="src" style="display:block">${ok?"✅ バックアップをサーバーに預けました":"⚠ バックアップを預けられませんでした（電波のよいところで、バックアップの「今すぐ預ける」を）"}</small>`); }); } };
+      { let ac={}; try{ ac=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); }catch(e){}
+        const note=t=>{ const l=$("ckLock"); if(l) l.insertAdjacentHTML("beforeend",`<small class="src" style="display:block">${t}</small>`); };
+        // 預けなかったときも、なぜ預けなかったかを出す（2026-10-28。黙って何もしないと、預けたつもりになってしまう）
+        if(!ac.abkId||!ac.abkPass) note("ℹ 自動バックアップの設定がまだなので、預けていません（使い方：点呼時間の画面 →「バックアップ・機種変更」→ 自動バックアップで、社員コードとパスワードを入れて「この設定で使う」）");
+        else if(ac.abkOn===false) note("ℹ 「鍵をかけたときに自動で預ける」のチェックが外れているので、預けていません");
+        else if(window.tenkoAbkPut) window.tenkoAbkPut(true).then(ok=>note(ok?"✅ バックアップをサーバーに預けました":"⚠ バックアップを預けられませんでした（電波のよいところで、バックアップの「今すぐ預ける」を）")); } };
     if($("ckUnlock")) $("ckUnlock").onclick=()=>{ if(!confirm("鍵を外しますか？")) return; const dd=ensureDay(k); dd.locked=false; saveSales(); renderSales(); };
     fillPending();
   }
