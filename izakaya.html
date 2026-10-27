@@ -7,9 +7,9 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--accent:#B3261E}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--accent:#FF8A80}}
-:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--accent:#FF8A80}
+:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--accent:#B3261E;--pk-bg:#FBE3EC;--pk-line:#EBB8CB;--pk-ink:#7A1F45}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--accent:#FF8A80;--pk-bg:#3A2230;--pk-line:#6E3E54;--pk-ink:#F6C9DA}}
+:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--accent:#FF8A80;--pk-bg:#3A2230;--pk-line:#6E3E54;--pk-ink:#F6C9DA}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
 #map{position:fixed;inset:0}
@@ -26,7 +26,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 select{font-size:16px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:15px;font-weight:700;min-height:44px}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--pk-bg);border-color:var(--pk-line);color:var(--pk-ink)}   /* 赤はどぎついので薄いピンク（2026-10-27 ユーザー指定） */
 #msg{font-size:14px;color:var(--muted);line-height:1.5;border-radius:8px;padding:4px 6px;margin:0 -6px;transition:background .6s}
 #msg.flash{background:#FFF1A8;color:#3A2E00;transition:none}
 details{font-size:14px;line-height:1.6;color:var(--muted)}
@@ -34,9 +34,9 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 .leaflet-popup-content{font-size:14px;line-height:1.5;max-width:260px}
 .pop h3{margin:0 0 4px;font-size:16px}
 .pop ul{margin:6px 0 0;padding-left:18px;max-height:180px;overflow:auto}
-.pop a.go{display:block;text-align:center;background:#B3261E;color:#fff;padding:9px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px}
+.pop a.go{display:block;text-align:center;background:var(--pk-bg);color:var(--pk-ink);border:1px solid var(--pk-line);padding:9px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px}
 .mebtn{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:1000;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.route{border:2px solid var(--accent);border-radius:12px;padding:10px;display:grid;gap:8px}
+.route{border:2px solid var(--pk-line);border-radius:12px;padding:10px;display:grid;gap:8px}
 .route>b{font-size:16px}
 .route input{font-size:16px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:10em}
 .qd button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:14px;font-weight:700}
@@ -52,7 +52,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 <div id="map"></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-27 20:26</span><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-27 20:49</span><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
