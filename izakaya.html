@@ -52,7 +52,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 <div id="map"></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-27 19:25</span><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-27 20:26</span><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
@@ -85,7 +85,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
       ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝風〇店。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
-      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うボタン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②からは、その時の現在地から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
+      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うボタン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②は①の行き先から、③は②の行き先から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
     </details>
   </div>
 </div>
@@ -261,14 +261,14 @@ function rShow(S,D,dn,r){
   r.pick.forEach((x,i)=>L.marker([x.c.lat,x.c.lng],{icon:L.divIcon({className:"",html:`<span class="wp">${i+1}</span>`,iconSize:[28,28],iconAnchor:[14,14]})}).bindTooltip(`${esc(rName(x.c))}（${x.c.n}軒）`).addTo(rLayer));
   map.fitBounds(L.latLngBounds([S,D].concat(r.pick.map(x=>[x.c.lat,x.c.lng]))),{padding:[40,40]});
   const ll=a=>a[0].toFixed(6)+","+a[1].toFixed(6);
-  // スマホのGoogleマップは経由地3か所まで（2026-10-27）。経由地＋行き先を4つずつに分けて、1本目は現在地から、2本目からは「その時の現在地」から
+  // スマホのGoogleマップは経由地3か所まで（2026-10-27）。経由地＋行き先を4つずつに分けて、1本目は出発地から、2本目からは前のナビの行き先から（ユーザー指定）
   const stops=r.pick.map(x=>[x.c.lat,x.c.lng]).concat([D]), legs=[];
   for(let i=0;i<stops.length;i+=4) legs.push(stops.slice(i,i+4));
   const legUrl=(g,k)=>{ const dst=g[g.length-1], wps=g.slice(0,-1);
-    return `https://www.google.com/maps/dir/?api=1${k===0?"&origin="+ll(S):""}&destination=${ll(dst)}${wps.length?"&waypoints="+wps.map(ll).join("%7C"):""}&travelmode=driving`; };
+    return `https://www.google.com/maps/dir/?api=1&origin=${ll(k===0?S:legs[k-1][legs[k-1].length-1])}&destination=${ll(dst)}${wps.length?"&waypoints="+wps.map(ll).join("%7C"):""}&travelmode=driving`; };
   const url=legUrl(legs[0],0), N="①②③④⑤";
   const legBtns=legs.length===1?`<a class="go" href="${url}" target="_blank" rel="noopener">🚗 Googleマップでナビ（経由地${r.pick.length}か所）</a>`
-    :`<div style="margin-top:6px">経由地が多いので、ナビを${legs.length}本に分けます。着いたら次を押してください。</div>`+legs.map((g,k)=>{ const a=k*4+1, b=Math.min(k*4+g.length,r.pick.length), last=k===legs.length-1;
+    :`<div style="margin-top:6px">経由地が多いので、ナビを${legs.length}本に分けます。②は①の行き先から、③は②の行き先から始まります。着いたら次を押してください。</div>`+legs.map((g,k)=>{ const a=k*4+1, b=Math.min(k*4+g.length,r.pick.length), last=k===legs.length-1;
       return `<a class="go" href="${legUrl(g,k)}" target="_blank" rel="noopener">🚗 ナビ${N[k]}　${a<=b?`${a}〜${b}か所目`:""}${last?"→ "+esc(dn):""}</a>`; }).join("");
   const lim=+$("rLim").value;
   $("rOut").innerHTML=r.pick.length
