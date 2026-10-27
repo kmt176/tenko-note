@@ -36,6 +36,15 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 .pop ul{margin:6px 0 0;padding-left:18px;max-height:180px;overflow:auto}
 .pop a.go{display:block;text-align:center;background:#B3261E;color:#fff;padding:9px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px}
 .mebtn{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:1000;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.route{border:2px solid var(--accent);border-radius:12px;padding:10px;display:grid;gap:8px}
+.route>b{font-size:16px}
+.route input{font-size:16px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:10em}
+.qd button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:14px;font-weight:700}
+#rOut{font-size:14px;line-height:1.6}
+#rOut ol{margin:4px 0;padding-left:22px}
+#rOut a.go{display:block;text-align:center;background:#1A73E8;color:#fff;padding:12px;border-radius:10px;font-weight:800;font-size:16px;text-decoration:none;margin-top:6px}
+.wp{display:flex;width:28px;height:28px;border-radius:50%;background:#B3261E;color:#fff;font:800 15px/1 sans-serif;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.wp.d{background:#1A73E8}
 .cnt{font:800 12px/1 sans-serif;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap}
 </style>
 </head>
@@ -43,8 +52,17 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 <div id="map"></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-26 09:27</span><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-27 19:03</span><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
+    <div class="route"><b>🧭 飲み屋街を通って戻る</b>
+      <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
+      <div class="row qd"><span>よく使う：</span><button data-q="新宿">新宿</button><button data-q="渋谷">渋谷</button><button data-q="池袋">池袋</button><button data-q="東京">東京</button><button data-q="品川">品川</button><button data-q="上野">上野</button><button data-q="六本木">六本木</button><button data-q="銀座">銀座</button></div>
+      <div class="row"><label>寄り道は線から <select id="rLim"><option value="500">500m</option><option value="1000" selected>1km</option><option value="1500">1.5km</option><option value="2000">2km</option></select> 以内</label>
+        <label>経由地 <select id="rNum"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select> か所</label></div>
+      <div class="btns"><button class="btn primary" id="rGo">現在地から探す</button><button class="btn" id="rClear">消す</button></div>
+      <div id="rOut"></div>
+    </div>
+    <datalist id="stList"></datalist>
     <div class="row"><span>含めるお店：</span>
       <label><input type="checkbox" id="cIza" checked>居酒屋（店名・cuisine）</label>
       <label><input type="checkbox" id="cPub" checked>pub（日本では居酒屋が多い）</label>
@@ -66,7 +84,8 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
       ・「CSVで保存」は、名前・緯度・経度・軒数などの一覧です（地名は国土地理院から調べるので少し時間がかかります）。「カーナビタイム用CSV」は名称・緯度・経度・メモだけの形です。カーナビタイムの「My地点プラス」の取り込みの形と違うときは教えてください。「Googleマイマップ用（KML）」は、Googleマイマップの「インポート」でそのまま地図にできます。<br>
       ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝風〇店。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
-      ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。
+      ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
+      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うボタン・地図で選ぶ）を決めて「現在地から探す」を押すと、現在地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地はGoogleマップのスマホアプリで使える3か所までです。寄り道の距離と経由地の数は、このスマホに覚えておきます。
     </details>
   </div>
 </div>
@@ -200,6 +219,59 @@ $("meBtn").onclick=()=>{ if(!navigator.geolocation){ $("msg").textContent="こ�
     let best=null; clusters.forEach(c=>{ const d=distM(ll,[c.lat,c.lng]); if(!best||d<best.d) best={c,d}; });
     if(best) $("msg").textContent=`一番近い飲み屋街：${best.c.st?best.c.st.n+"駅の近く":""}（${best.c.n}軒）まで約${best.d>=1000?(best.d/1000).toFixed(1)+"km":Math.round(best.d/10)*10+"m"}`;
   },()=>{ $("meBtn").textContent="📍 現在地"; $("msg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; },{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); };
+// ===== 飲み屋街を通って戻る（2026-10-27 ユーザー指定） =====
+// 現在地→行き先のまっすぐな線から「寄り道」の距離以内の飲み屋街を、軒数の多い順に選ぶ。選んだら線の上の順（現在地に近い順）に並べてGoogleマップのナビへ
+const RK="izakayaMap.route";
+let rDestLL=null, rTapMode=false; const rLayer=L.layerGroup().addTo(map);
+(()=>{ let c={}; try{ c=JSON.parse(localStorage.getItem(RK)||"{}")||{}; }catch(e){} if(c.lim) $("rLim").value=c.lim; if(c.num) $("rNum").value=c.num; if(c.dest) $("rDest").value=c.dest; })();
+const rSave=()=>{ try{ localStorage.setItem(RK,JSON.stringify({lim:$("rLim").value,num:$("rNum").value,dest:rDestLL?"":$("rDest").value})); }catch(e){} };
+["rLim","rNum","rDest"].forEach(id=>$(id).addEventListener("change",rSave));
+$("stList").innerHTML=[...new Set(ST.map(s=>s[0].replace(/（.*$/,"")))].map(n=>`<option value="${esc(n)}">`).join("");
+document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{ $("rDest").value=b.dataset.q; rDestLL=null; rSave(); });
+$("rDest").addEventListener("input",()=>{ rDestLL=null; });
+$("rTap").onclick=()=>{ rTapMode=true; $("pbody").hidden=true; $("fold").textContent="開く"; $("map").style.cursor="crosshair"; alert("地図で行き先をタップしてください"); };
+map.on("click",e=>{ if(!rTapMode) return; rTapMode=false; $("map").style.cursor="";
+  rDestLL=[e.latlng.lat,e.latlng.lng]; $("rDest").value="地図で選んだ場所"; $("pbody").hidden=false; $("fold").textContent="閉じる";
+  $("rOut").textContent="行き先を決めました。「現在地から探す」を押してください"; });
+function rDest(){ if(rDestLL) return {ll:rDestLL,name:"地図で選んだ場所"};
+  const v=$("rDest").value.trim().replace(/駅$/,""); if(!v) return null;
+  const h=ST.find(s=>s[0]===v)||ST.find(s=>s[0].replace(/（.*$/,"")===v)||ST.find(s=>s[0].startsWith(v));
+  return h?{ll:[h[1],h[2]],name:h[0].replace(/（.*$/,"")+"駅"}:null; }
+function rPick(S,D,lim,num){
+  const kx=111320*Math.cos(S[0]*Math.PI/180), ky=111320, P=q=>[(q[1]-S[1])*kx,(q[0]-S[0])*ky];
+  const d=P(D), L2=d[0]*d[0]+d[1]*d[1];
+  const cand=clusters.map(c=>{ const p=P([c.lat,c.lng]), t=L2?(p[0]*d[0]+p[1]*d[1])/L2:0, tc=Math.max(0,Math.min(1,t));
+      return {c,t,off:Math.hypot(p[0]-tc*d[0],p[1]-tc*d[1])}; })
+    .filter(x=>x.t>0&&x.t<1&&x.off<=lim&&distM(S,[x.c.lat,x.c.lng])>300&&distM(D,[x.c.lat,x.c.lng])>300)   // 出発・行き先のすぐそばは経由地にしない
+    .sort((a,b)=>b.c.n-a.c.n);
+  const out=[]; for(const x of cand){ if(out.length>=num) break; if(out.some(y=>distM([y.c.lat,y.c.lng],[x.c.lat,x.c.lng])<800)) continue; out.push(x); }   // 隣り合う円は1つだけ
+  return {pick:out.sort((a,b)=>a.t-b.t),cand:cand.length};
+}
+const rName=c=>`${c.st?c.st.n+"駅の近く":"飲み屋街"}`;
+const kmOf=m=>m>=1000?(m/1000).toFixed(1)+"km":Math.round(m/10)*10+"m";
+function rShow(S,D,dn,r){
+  rLayer.clearLayers();
+  L.polyline([S,D],{color:"#1A73E8",weight:3,dashArray:"8 6",opacity:.8}).addTo(rLayer);
+  L.marker(S,{icon:L.divIcon({className:"",html:'<span class="wp d">出</span>',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(rLayer);
+  L.marker(D,{icon:L.divIcon({className:"",html:'<span class="wp d">着</span>',iconSize:[28,28],iconAnchor:[14,14]})}).bindTooltip(esc(dn)).addTo(rLayer);
+  r.pick.forEach((x,i)=>L.marker([x.c.lat,x.c.lng],{icon:L.divIcon({className:"",html:`<span class="wp">${i+1}</span>`,iconSize:[28,28],iconAnchor:[14,14]})}).bindTooltip(`${esc(rName(x.c))}（${x.c.n}軒）`).addTo(rLayer));
+  map.fitBounds(L.latLngBounds([S,D].concat(r.pick.map(x=>[x.c.lat,x.c.lng]))),{padding:[40,40]});
+  const ll=a=>a[0].toFixed(6)+","+a[1].toFixed(6);
+  const url=`https://www.google.com/maps/dir/?api=1&origin=${ll(S)}&destination=${ll(D)}${r.pick.length?"&waypoints="+r.pick.map(x=>ll([x.c.lat,x.c.lng])).join("%7C"):""}&travelmode=driving`;
+  const lim=+$("rLim").value;
+  $("rOut").innerHTML=r.pick.length
+    ?`<b>${esc(dn)}まで（まっすぐで約${kmOf(distM(S,D))}）。通る飲み屋街：</b><ol>${r.pick.map(x=>`<li>${esc(rName(x.c))}　<b>${x.c.n}軒</b>　<small>線から約${kmOf(x.off)}</small></li>`).join("")}</ol><small>線から${kmOf(lim)}以内の候補 ${r.cand}か所から、軒数の多い順に選びました。</small><a class="go" href="${url}" target="_blank" rel="noopener">🚗 Googleマップでナビ（経由地${r.pick.length}か所）</a>`
+    :`線から${kmOf(lim)}以内に飲み屋街が見つかりませんでした。「寄り道」の距離を大きくするか、円の条件（半径・軒数）をゆるめてください。<a class="go" href="${url}" target="_blank" rel="noopener">🚗 寄り道なしでナビ</a>`;
+}
+$("rGo").onclick=()=>{ const D=rDest();
+  if(!D){ $("rOut").textContent="行き先の駅が見つかりません。駅名（例：新宿）を入れるか、「地図で選ぶ」で決めてください"; return; }
+  if(!clusters.length){ $("rOut").textContent="飲み屋街のデータを読み込み中です。少し待ってから押してください"; return; }
+  if(!navigator.geolocation){ $("rOut").textContent="このスマホでは現在地が使えません"; return; }
+  $("rOut").textContent="現在地を調べています…"; rSave();
+  navigator.geolocation.getCurrentPosition(p=>{ const S=[p.coords.latitude,p.coords.longitude];
+    rShow(S,D.ll,D.name,rPick(S,D.ll,+$("rLim").value,+$("rNum").value)); },
+    ()=>{ $("rOut").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; },{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); };
+$("rClear").onclick=()=>{ rLayer.clearLayers(); $("rOut").textContent=""; };
 // 拡大・縮小で、円の塗りとお店の点の大きさを切り替える
 let wasNear=near(); map.on("zoomend",()=>{ if(near()!==wasNear){ wasNear=near(); if(shops.length) compute(); } });
 $("fold").onclick=()=>{ const h=$("pbody").hidden=!$("pbody").hidden; $("fold").textContent=h?"開く":"閉じる"; };
