@@ -1232,7 +1232,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 07:52</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 08:28</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4360,6 +4360,7 @@ body.rtfull{overflow:hidden}
           <button class="btn" data-ev="入庫">入庫</button>
         </div></div>`;
       if($("bOut")) $("bOut").onclick=()=>evPress("出庫"); if($("bOn")) $("bOn").onclick=rideOn; if($("bOff")) $("bOff").onclick=rideOff; if($("bRz")) $("bRz").onclick=()=>evPress(RZ);
+      renderRzFloat();   // ピンクのボタンを出しているときは、ここの「連続配車 開始」を隠す（2つ出ないように）
       document.querySelectorAll("#sNow [data-ev]").forEach(b=>b.onclick=()=>evPress(b.dataset.ev));
     } else $("sNow").innerHTML=act||simple||k===activeDay()||!activeDay()?"":`<button class="btn" id="bToday">${shiftNow()?"今の勤務":"直前の勤務"}（${md(activeDay())}出庫）に戻る</button>`;
     if($("bToday")) $("bToday").onclick=()=>renderSales(true);
@@ -4557,12 +4558,16 @@ body.rtfull{overflow:hidden}
   let rzFloatTest=false;   // 連続配車の浮かせたボタンを、コアタイム以外でも確認用に出す（保存されない・画面を開き直すと元に戻る）
   let rzDoneTest=false;    // 浮かせたボタンを、達成済みの色（薄い青）で確認用に出す（保存されない・画面を開き直すと元に戻る）
   function inCoreTime(){ if(rzFloatTest) return true; const now=new Date(), m=now.getHours()*60+now.getMinutes(); return RZ_WIN.some(([a,b])=>m>=a&&m<b); }
-  function renderRzFloat(){
+  // ピンクの浮かせたボタンを出している間（コアタイム中）は、乗車ボタン横のもともとの「連続配車 開始」を隠す。
+  // ピンクを出さないとき（コアタイム以外）は、もともとのボタンだけを出す（2026-10-28 ユーザー指定。記録の仕方は同じ）
+  function renderRzFloat(){ renderRzFloat0(); const b=$("bRz"), el=$("rzFloat"); if(b) b.hidden=!!el&&!el.hidden; }
+  function renderRzFloat0(){
     const el=$("rzFloat"); if(!el) return;
     // テスト表示のときは、勤務中でなくても、今見ている勤務（なければ直前の勤務）で出す（勤務中だけだと、押しても何も出ないように見えるため）
     const k=shiftNow()||(rzFloatTest?(sDay||activeDay()):null);
     const wkMode=!offCfg.rzweek;   // 週の目標（60%など）を使うときは、コアタイムではなく週の目標で出す（2026-10-23 ユーザー指定：60%をやるときはコアタイムは必ず満たすので管理不要）
-    if(!car().rz||offCfg.buttons||!k||getDay(k).mode==="simple"||(!wkMode&&!inCoreTime()&&!rzFloatTest)){ el.hidden=true; return; }
+    // 週の目標（60%など）を使うときも、ピンクのボタンはコアタイム中だけ出す（2026-10-28 ユーザー指定。それ以外の時間は、もともとのボタン）
+    if(!car().rz||offCfg.buttons||!k||getDay(k).mode==="simple"||(!inCoreTime()&&!rzFloatTest)){ el.hidden=true; return; }
     if(wkMode){
       const d0=getDay(k), open0=d0.rides.find(r=>r.kind===RZ&&r.on!=null&&r.off==null), n0=nowMin(k);
       const w=weekOf(nowAbsMin()), W=rzWeekCalc(w), PC=rzPlanCalc(w), ra=rate(W.act), goal=W.rule.pct/100, diff=PC.toNow.d?W.act.n-PC.toNow.n:null;
