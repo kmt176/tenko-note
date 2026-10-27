@@ -52,14 +52,14 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 <div id="map"></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-27 19:18</span><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-27 19:25</span><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
       <div class="row qd"><span>よく使う：</span><button data-q="新宿">新宿</button><button data-q="渋谷">渋谷</button><button data-q="池袋">池袋</button><button data-q="東京">東京</button><button data-q="品川">品川</button><button data-q="上野">上野</button><button data-q="六本木">六本木</button><button data-q="銀座">銀座</button></div>
       <div class="row"><label>寄り道は線から <select id="rLim"><option value="500">500m</option><option value="1000" selected>1km</option><option value="1500">1.5km</option><option value="2000">2km</option></select> 以内</label>
         <label>経由地 <select id="rNum"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select> か所</label></div>
-      <div class="btns"><button class="btn primary" id="rGo">現在地から探す</button><button class="btn" id="rClear">消す</button></div>
+      <div class="btns"><button class="btn primary" id="rGo">現在地から探す</button><button class="btn primary" id="rGoMap">地図上から探す</button><button class="btn" id="rClear">消す</button></div>
       <div id="rOut"></div>
     </div>
     <datalist id="stList"></datalist>
@@ -85,7 +85,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
       ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝風〇店。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
-      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うボタン・地図で選ぶ）を決めて「現在地から探す」を押すと、現在地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②からは、その時の現在地から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
+      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うボタン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②からは、その時の現在地から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
     </details>
   </div>
 </div>
@@ -229,10 +229,14 @@ const rSave=()=>{ try{ localStorage.setItem(RK,JSON.stringify({lim:$("rLim").val
 $("stList").innerHTML=[...new Set(ST.map(s=>s[0].replace(/（.*$/,"")))].map(n=>`<option value="${esc(n)}">`).join("");
 document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{ $("rDest").value=b.dataset.q; rDestLL=null; rSave(); });
 $("rDest").addEventListener("input",()=>{ rDestLL=null; });
-$("rTap").onclick=()=>{ rTapMode=true; $("pbody").hidden=true; $("fold").textContent="開く"; $("map").style.cursor="crosshair"; alert("地図で行き先をタップしてください"); };
-map.on("click",e=>{ if(!rTapMode) return; rTapMode=false; $("map").style.cursor="";
-  rDestLL=[e.latlng.lat,e.latlng.lng]; $("rDest").value="地図で選んだ場所"; $("pbody").hidden=false; $("fold").textContent="閉じる";
-  $("rOut").textContent="行き先を決めました。「現在地から探す」を押してください"; });
+// 地図をタップして決める：rTapMode="dest"＝行き先、"start"＝出発地（「地図上から探す」。2026-10-27 ユーザー指定）
+const rTapStart=(mode,msg)=>{ rTapMode=mode; $("pbody").hidden=true; $("fold").textContent="開く"; $("map").style.cursor="crosshair"; alert(msg); };
+$("rTap").onclick=()=>rTapStart("dest","地図で行き先をタップしてください");
+map.on("click",e=>{ if(!rTapMode) return; const mode=rTapMode; rTapMode=false; $("map").style.cursor="";
+  const ll=[e.latlng.lat,e.latlng.lng]; $("pbody").hidden=false; $("fold").textContent="閉じる";
+  if(mode==="start"){ const D=rDest(); rShow(ll,D.ll,D.name,rPick(ll,D.ll,+$("rLim").value,+$("rNum").value)); return; }
+  rDestLL=ll; $("rDest").value="地図で選んだ場所";
+  $("rOut").textContent="行き先を決めました。「現在地から探す」か「地図上から探す」を押してください"; });
 function rDest(){ if(rDestLL) return {ll:rDestLL,name:"地図で選んだ場所"};
   const v=$("rDest").value.trim().replace(/駅$/,""); if(!v) return null;
   const h=ST.find(s=>s[0]===v)||ST.find(s=>s[0].replace(/（.*$/,"")===v)||ST.find(s=>s[0].startsWith(v));
@@ -271,9 +275,10 @@ function rShow(S,D,dn,r){
     ?`<b>${esc(dn)}まで（まっすぐで約${kmOf(distM(S,D))}）。通る飲み屋街：</b><ol>${r.pick.map(x=>`<li>${esc(rName(x.c))}　<b>${x.c.n}軒</b>　<small>線から約${kmOf(x.off)}</small></li>`).join("")}</ol><small>線から${kmOf(lim)}以内の候補 ${r.cand}か所から、軒数の多い順に選びました。${r.pick.length<+$("rNum").value?`（決めた${$("rNum").value}か所に足りないときは、寄り道の距離を大きくしてください）`:""}</small>${legBtns}`
     :`線から${kmOf(lim)}以内に飲み屋街が見つかりませんでした。「寄り道」の距離を大きくするか、円の条件（半径・軒数）をゆるめてください。<a class="go" href="${url}" target="_blank" rel="noopener">🚗 寄り道なしでナビ</a>`;
 }
-$("rGo").onclick=()=>{ const D=rDest();
-  if(!D){ $("rOut").textContent="行き先の駅が見つかりません。駅名（例：新宿）を入れるか、「地図で選ぶ」で決めてください"; return; }
-  if(!clusters.length){ $("rOut").textContent="飲み屋街のデータを読み込み中です。少し待ってから押してください"; return; }
+const rReady=()=>{ if(!rDest()){ $("rOut").textContent="行き先の駅が見つかりません。駅名（例：新宿）を入れるか、「地図で選ぶ」で決めてください"; return false; }
+  if(!clusters.length){ $("rOut").textContent="飲み屋街のデータを読み込み中です。少し待ってから押してください"; return false; } rSave(); return true; };
+$("rGoMap").onclick=()=>{ if(rReady()) rTapStart("start","地図で出発地をタップしてください"); };
+$("rGo").onclick=()=>{ const D=rDest(); if(!rReady()) return;
   if(!navigator.geolocation){ $("rOut").textContent="このスマホでは現在地が使えません"; return; }
   $("rOut").textContent="現在地を調べています…"; rSave();
   navigator.geolocation.getCurrentPosition(p=>{ const S=[p.coords.latitude,p.coords.longitude];
