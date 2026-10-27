@@ -114,9 +114,6 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 .field label{font-size:14.5px;color:var(--muted)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #rAmtPair:has(>[hidden]){grid-template-columns:1fr}
-#rAmtPair.old{grid-template-columns:1fr}
-#rTimeBox.old{border:0;padding:0}
-#rTimeBox.old>summary{display:none}
 #rTimeBox{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 #rTimeBox>summary{font-weight:700}
 #rTimeBox>summary small{font-weight:400}
@@ -1235,7 +1232,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-27 23:24</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-27 23:48</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1403,9 +1400,9 @@ body.rtfull{overflow:hidden}
       <select id="rKind"><option>連続配車</option><option>配車</option><option>手上げ</option><option>乗り場</option><option>CAN</option><option>B空転</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option><option>連続配車モード</option></select></div>
     <div class="grp" id="rMoney">
       <div class="field"><label for="rEtc">うちETC（円）</label><input type="text" class="yenin" id="rEtc" inputmode="numeric" autocomplete="off"></div>
-      <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks"><span class="chktext">サンキューチケット<small class="oldtx"><br>高額になりやすい配車の目印です。乗務員にしか分からないので、降車後にチェックしてください。営業分析で分けて集計します</small></span></label>
-      <label class="check"><input type="checkbox" id="rRepeat"><span class="chktext">リピートユーザー<small class="oldtx"><br>病院など、定期的に利用される方の目印です</small></span></label>
-      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（手配料200円を含む）<small class="oldtx"><br>配車・連続配車でネット/QR以外は自動でチェックが入ります。ネット/QRでも社内決済のときはチェックしてください</small></span></label>
+      <label class="check" id="rThanksBox"><input type="checkbox" id="rThanks"><span class="chktext">サンキューチケット</span></label>
+      <label class="check"><input type="checkbox" id="rRepeat"><span class="chktext">リピートユーザー</span></label>
+      <label class="check" id="rInhouseBox"><input type="checkbox" id="rInhouse"><span class="chktext">社内決済（手配料200円を含む）</span></label>
       <div class="live" id="rFare"></div>
     </div>
     <details id="rTimeBox"><summary><span id="rTimeSum">時刻・押し忘れを直す</span></summary>
@@ -4603,21 +4600,11 @@ body.rtfull{overflow:hidden}
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
     $("rInfo").innerHTML=[w?`天気：<b>${r.wxSel?esc(r.wxSel)+"（手で選択）":autoWx(w)?"雨（自動）":"雨なし（自動）"}</b>　${esc(w.st)} ${esc(w.at)}の観測 ${w.t??"—"}℃・10分 ${w.p10??"—"}mm・1時間 ${w.p1h??"—"}mm`:"",pos.length?`位置：${pos.join("・")}を記録済み`:""].filter(Boolean).join("<br>")
       +(d.locked?`<div class="err">この勤務は照合済みです</div>`:"");
-    $("rDel").hidden=!id; rLayout(); kindUI();
+    $("rDel").hidden=!id; kindUI();
     // 時刻の欄は、時刻が主な入力のとき（休憩・回送など／手で追加）と押し忘れの印があるときだけ開いておく
-    $("rTimeBox").open=!isAdmin()||isEv(r.kind||"")||!id||!!r.onUnsure||!!r.offUnsure; rTimeSum();
+    $("rTimeBox").open=isEv(r.kind||"")||!id||!!r.onUnsure||!!r.offUnsure; rTimeSum();
     $("rSheet").hidden=$("rBg").hidden=false;
     if(afterOff) setTimeout(()=>$("rAmt").focus(),50);
-  }
-  // 新しい並び（金額・決済が一番上、時刻は折りたたみ）は、まず管理者だけ（2026-10-27 ユーザー指定）。ほかの人は前の並び（内容→時刻→金額）のまま
-  function rLayout(){
-    const nw=isAdmin(), box=$("rTimeBox"), par=box.parentNode, kindF=$("rKind").closest(".field"), pair=$("rAmtPair"), hint=$("rAmtHint"), money=$("rMoney");
-    if(nw){ par.insertBefore(pair,kindF); par.insertBefore(hint,kindF); par.insertBefore(box,$("rWxBox")); }
-    else { par.insertBefore(kindF,pair); par.insertBefore(box,pair); }
-    box.classList.toggle("old",!nw); pair.classList.toggle("old",!nw); if(!nw) box.open=true;
-    hint.textContent=nw?"金額は現収＋未収（ETC・手配料も含める）":"金額（現収＋未収）は、ETC・アプリ手配料（社内決済の200円）を含めた金額を入れます";
-    money.querySelectorAll(".oldtx").forEach(e=>e.hidden=nw);
-    $("rTimeBox").querySelectorAll(".oldtx").forEach(e=>e.hidden=nw);
   }
   function kindUI(){
     const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
