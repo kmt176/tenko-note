@@ -451,8 +451,9 @@ body.rtfull{overflow:hidden}
 #patrolBannerText .pb2{font-size:68px;font-weight:900;line-height:1.08;word-break:break-all}
 #patrolBannerText .pb3{font-size:22px;font-weight:800}
 #patrolBannerText .pbx{font-size:.5em;font-weight:900;margin-left:.15em;white-space:nowrap}
-#patrolBannerText .pb4{font-size:26px;font-weight:900;color:#B3261E;line-height:1.25;display:flex;flex-direction:column}
+#patrolBannerText .pb4{font-size:26px;font-weight:900;color:#C62828;line-height:1.15;display:flex;flex-direction:column}
 #patrolBannerText .pb4 span{white-space:nowrap}   /* 違反の種類は1つずつ1行で（長い方に合わせて大きさをそろえる） */
+#patrolBannerText .pbhw{align-self:flex-start;margin-top:4px;font-size:19px;font-weight:900;padding:8px 14px;border:2px solid #5A4300;border-radius:10px;background:#fff;color:#5A4300;line-height:1.2}
 #patrolBannerText .pbtest{font-style:normal;font-size:16px;margin-left:10px;padding:1px 8px;border:2px solid #5A4300;border-radius:999px}
 #patrolBannerClose{font-size:44px!important;padding:0 6px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
@@ -952,7 +953,10 @@ body.rtfull{overflow:hidden}
     <section class="card">
       <h2>取締りの場所</h2>
       <div class="src">マイマップ「東京都内_公開・重点取締り」の場所を地図と一覧に出します。色は、<b style="color:#D23C2F">●重点取締場所</b>・<b style="color:#E8890C">●速度取締り</b>・<b style="color:#7B3FA0">●8月重点取締り</b>です。近づいたときの音と黄色の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
-      <div class="btnrow"><button class="btn" id="ptTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="ptTestSnd">🔊 音だけテスト</button></div>
+      <div class="btnrow"><button class="btn" id="ptTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="ptTestSnd">🔊 音だけテスト</button><button class="btn" id="ptTestCd">📏 近づく様子をテスト</button></div>
+      <div class="btnrow"><button class="btn" id="ptHwBtn">🛣 高速利用中（取締りの通知を止める）</button></div>
+      <div class="msg" id="ptHwMsg" role="status"></div>
+      <div class="src">300m・200m・100mを切ったときに1回ずつ音で知らせ、帯の残りの距離は約10mごとに変わります。一番近づいたところから離れると（通り過ぎた・曲がった）帯は消えます。高速道路では下の一般道の取締りで鳴らないよう、速く走っている間は自動で止めます。渋滞などで遅いときは「高速利用中」ボタンで止めてください（決めた時間がたつと自動で戻ります）。</div>
       <div id="ptGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="ptMapWrap" class="mapwrap">
         <div id="ptMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
@@ -1103,7 +1107,12 @@ body.rtfull{overflow:hidden}
         <h3>画面に出す機能</h3>
         <div class="src">使わない機能のチェックを外すと、画面に出なくなります。記録や計算、データはそのまま残るので、あとでチェックを付ければ元に戻ります。このスマホだけの設定です。</div>
         <div id="offBox"></div>
-      <div class="field" style="margin-top:10px"><label for="patrolDist">取締りの場所を知らせる距離</label><select id="patrolDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option></select></div>
+      <div class="field" style="margin-top:10px"><label for="patrolStart">取締りの場所を知らせる距離（そこから100mごとにもう一度）</label><select id="patrolStart"><option value="300" selected>300m手前から（300・200・100m）</option><option value="200">200m手前から（200・100m）</option><option value="100">100m手前だけ</option></select></div>
+      <div class="field"><label for="patrolSpd">取締りの通知を止める速さ（高速道路の走行中に、下の一般道の取締りで鳴らないように）</label><select id="patrolSpd"><option value="40">時速40km以上</option><option value="50">時速50km以上</option><option value="60" selected>時速60km以上</option><option value="70">時速70km以上</option><option value="80">時速80km以上</option><option value="999">速さでは止めない</option></select></div>
+      <div class="field"><label for="patrolSpdSec">その速さが何秒続いたら止めるか</label><select id="patrolSpdSec"><option value="3" selected>3秒</option><option value="5">5秒</option><option value="10">10秒</option><option value="20">20秒</option></select></div>
+      <div class="field"><label for="patrolHwMin">「高速利用中」ボタンが自動で戻るまでの時間</label><select id="patrolHwMin"><option value="15">15分</option><option value="30" selected>30分</option><option value="60">60分</option><option value="90">90分</option><option value="120">120分</option></select></div>
+      <div class="field"><label for="patrolLeave">取締りの帯を消す距離（一番近づいたところから、これだけ離れたら消す）</label><select id="patrolLeave"><option value="20">20m</option><option value="30" selected>30m</option><option value="50">50m</option><option value="80">80m</option></select></div>
+      <div class="src">速さで止めたときは、決めた速さ未満が1分続くと自動で戻ります。帯がすぐ消えてしまうとき（GPSのずれ）は、消す距離を大きくしてください。</div>
       <div class="field"><label for="standDist">日交乗り場を知らせる距離</label><select id="standDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
       <div class="field"><label for="yuryoDist">優良乗り場を知らせる距離</label><select id="yuryoDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
       <div class="field"><label for="restDist">駐車禁止ポイントを知らせる距離</label><select id="restDist"><option value="30">30m手前</option><option value="50" selected>50m手前</option><option value="100">100m手前</option><option value="200">200m手前</option></select></div>
@@ -1219,7 +1228,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-26 10:42</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-27 11:54</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5308,7 +5317,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // ===== 近づいたら知らせる場所（取締り・専用乗り場/優良乗り場。どちらもマイマップから。2026-10-24） =====
   // 決めた距離に「近づいている途中で」入ったら、音と画面の帯。同じ場所は10分間は鳴らさない。アプリを開いている間だけ位置を見る
   const GEO={
-    patrol:{act:"patrolPts",store:"tenko.patrol",dist:"patrolDist",ban:"patrolBanner",pre:"pt",col:["#D23C2F","#E8890C","#7B3FA0","#2F6FD6","#3E9B4F"],chime:"pipo",route:false,
+    patrol:{act:"patrolPts",store:"tenko.patrol",dist:"patrolStart",ban:"patrolBanner",pre:"pt",col:["#D23C2F","#E8890C","#7B3FA0","#2F6FD6","#3E9B4F"],chime:"pipo",route:false,
       msg:(x,g,d)=>`⚠ 取締り：${geoPlace("patrol",x).place}（${g}）まで約${d}m`},
     stand:{act:"standPts",store:"tenko.stand",dist:"standDist",ban:"standBanner",pre:"sd",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:g=>!/優良/.test(g),
       msg:(x,g,d)=>`🚕 ${g}：${x[0].replace(/^\d+_/,"")}まで約${d}m`},
@@ -5359,28 +5368,97 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     }catch(e){}
   }
   // 取締りの「8月重点取締り」は、名前が違反の種類（○○違反多発地点）で、場所（交差点・住所）は説明に入っている。そのときは説明を場所として出す
+  // 違反名は「○○違反多発地点」を1つずつ取り出して「多発地点」を外す。場所は「交差点名_違反名」の前の部分、名前が違反名だけなら説明から（2026-10-27）
+  // 速度取締りは説明の「内容: 速度取締り」を違反名の代わりにする。マイマップの誤字（通交・ポ進路…）は直して出す
+  const PT_FIX={"ポ進路変更禁止違反":"進路変更禁止違反","通交禁止違反":"通行禁止違反"}, PT_VR=/[^\s_\/（]+?(?:（[^）]*）)?多発地点/g;
+  const ptTidy=s=>String(s||"").replace(/\s+/g," ").replace(/^[?？\s]+/,"").replace(/([UＵ])\s+ターン/g,"$1ターン").replace(/\s+(違反|多発地点)/g,"$1").replace(/U/g,"Ｕ").trim();
+  const ptVio=s=>(ptTidy(s).match(PT_VR)||[]).map(v=>{ v=v.replace(/多発地点$/,""); return PT_FIX[v]||v; });
   function geoPlace(k,x){ const n=String(x[0]||"").replace(/\s+/g," ").trim(), d=String(x[3]||"").trim();
-    if(k==="patrol"&&d&&/違反|多発/.test(n)) return {place:d,kind:n}; return {place:n,kind:""}; }
-  function geoShow(k,x,d,test){
+    if(k!=="patrol") return {place:n,kind:"",kinds:[]};
+    const tn=ptTidy(n), ks=[...new Set(ptVio(tn).concat(ptVio(d)))];
+    const rest=tn.replace(PT_VR,"").replace(/（[^）]*）/g,"").replace(/^[\s_]+|[\s_]+$/g,"");
+    let place;
+    if(tn.includes("_")) place=tn.split("_")[0].trim();
+    else if(ks.length&&!rest){ const ws=ptTidy(d).replace(PT_VR," ").replace(/（[^）]*）/g," ").trim().split(/\s+/).filter(Boolean); place=ws.find(w=>/交差点$/.test(w))||ws[0]||""; }
+    else place=rest||tn;
+    if(!ks.length){ const m=/内容[:：]\s*(\S+)/.exec(d); ks.push(m?m[1]:"重点取締りポイント"); }   // 違反名がない場所は「重点取締りポイント」（2026-10-27 ユーザー指定）
+    return {place,kind:ks.join(" "),kinds:ks}; }
+  function geoShow(k,x,d,test,hold){
     const G=GEO[k], S=GS[k], dd=d<=0?0:Math.max(10,Math.round(d/10)*10);
     if(k==="patrol"){   // 取締りは運転中でも見えるよう、大きな太字で3段（2026-10-25 ユーザー指定：4倍以上）
       // 名前が長いときは、3行に収まるまで小さくする（短い名前は68px。最小でも36px）
       // 「○○交差点」は「交差点」だけ小さくして、名前の部分をなるべく1行で大きく（2026-10-25 ユーザー指定）
-      const gp=geoPlace(k,x), nm=gp.place, avail=Math.max(200,window.innerWidth-110), km=/^(.+?)\s*(交差点)(.*)$/.exec(nm);
+      // 違反名を赤字で先に大きく、その下に交差点名（2026-10-27 ユーザー指定）。違反名がない場所は、今までどおり場所を大きく
+      const gp=geoPlace(k,x), nm=gp.place, ks=gp.kinds, avail=Math.max(200,window.innerWidth-110), km=/^(.+?)\s*(交差点)(.*)$/.exec(nm);
+      const cap=ks.length?38:68, low=ks.length?24:36;
       let nameHtml, fs;
-      if(km){ const base=km[1], rest=km[3]; fs=Math.max(36,Math.min(68,Math.floor(avail/(base.length+2+rest.length*0.55))));
+      if(km){ const base=km[1], rest=km[3]; fs=Math.max(low,Math.min(cap,Math.floor(avail/(base.length+2+rest.length*0.55))));
         nameHtml=`${esc(base)}<small class="pbx">交差点${esc(rest)}</small>`; }
-      else { fs=Math.max(36,Math.min(68,Math.floor(avail*3/Math.max(1,nm.length)))); nameHtml=esc(nm); }
-      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span><span class="pb2" style="font-size:${fs}px">${nameHtml}</span>${gp.kind?(()=>{ const ks=gp.kind.split(/\s+/).filter(Boolean), mx=Math.max(...ks.map(z=>z.length)), fk=Math.max(16,Math.min(26,Math.floor(avail/Math.max(1,mx))));
-        return `<span class="pb4" style="font-size:${fk}px">${ks.map(z=>`<span>${esc(z)}</span>`).join("")}</span>`; })():""}<span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span>`;
-      $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000); return;
+      else { fs=Math.max(low,Math.min(cap,Math.floor(avail*(ks.length?2:3)/Math.max(1,nm.length)))); nameHtml=esc(nm); }
+      const mx=Math.max(1,...ks.map(z=>z.length)), fk=Math.max(26,Math.min(58,Math.floor((window.innerWidth-80)/mx)));   // 違反名は1つ1行で、幅いっぱいに大きく
+      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span>${ks.length?`<span class="pb4" style="font-size:${fk}px">${ks.map(z=>`<span>${esc(z)}</span>`).join("")}</span>`:""}${nm?`<span class="pb2" style="font-size:${fs}px">${nameHtml}</span>`:""}<span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button>`;
+      $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; S.cur=null; },hold||20000); return;
     }
     $(G.ban+"Text").textContent=G.msg(x,S.groups[x[1]]||"",dd)+(test?"　※テスト表示":"");
     $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000);
   }
+  // ===== 取締りの通知を止める・数える（2026-10-27 ユーザー指定） =====
+  // ①速さ：時速○km以上が○秒続いたら止める（首都高などで、下の一般道の取締りで鳴らないように）。○km未満が1分続いたら戻す
+  // ②手動：「高速利用中」ボタン（渋滞で遅いときも確実に止める）。○分たつと自動で戻る（戻し忘れ防止）
+  const PT_SET={patrolSpd:60,patrolSpdSec:3,patrolHwMin:30,patrolLeave:30};
+  const ptSet=k=>+$(k).value||PT_SET[k];
+  let spHi=0, spLo=0, spMute=false, spLast=null, hwUntil=0;
+  try{ hwUntil=+(localStorage.getItem("tenko.patrolHwUntil")||0); }catch(e){}
+  const ptMuted=()=>spMute||Date.now()<hwUntil;
+  function ptSpeedCheck(p){   // GPSの速さ（なければ前の位置からの計算）で判定。km/h
+    let v=(p.spd!=null&&p.spd>=0)?p.spd*3.6:null;
+    if(v==null&&spLast&&p.t-spLast.t>=1000) v=distM([spLast.lat,spLast.lng],[p.lat,p.lng])/((p.t-spLast.t)/1000)*3.6;
+    spLast={lat:p.lat,lng:p.lng,t:p.t}; if(v==null) return;
+    if(v>=ptSet("patrolSpd")){ spLo=0; if(!spHi) spHi=p.t; if(!spMute&&p.t-spHi>=ptSet("patrolSpdSec")*1000){ spMute=true; ptHide(); ptHwRender(); } }
+    else { spHi=0; if(spMute){ if(!spLo) spLo=p.t; if(p.t-spLo>=60e3){ spMute=false; spLo=0; ptHwRender(); } } }
+  }
+  function ptHide(){ const S=GS.patrol; $("patrolBanner").hidden=true; S.cur=null; S.curD=null; S.cd={}; S.prev={}; }
+  function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) ptHide(); ptHwRender(); }
+  function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
+    b.textContent=man?"🛣 高速利用中を終える（取締りの通知を戻す）":"🛣 高速利用中（取締りの通知を止める）"; b.classList.toggle("primary",man);
+    m.textContent=man?`取締りの通知を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
+      :spMute?`速く走っているので（高速道路とみなして）、取締りの通知を止めています。時速${ptSet("patrolSpd")}km未満が1分続くと戻ります`:"取締りの通知はオンです"; }
+  Object.keys(PT_SET).forEach(k=>{ try{ const v=localStorage.getItem("tenko."+k); if(v) $(k).value=v; }catch(e){}
+    $(k).addEventListener("change",()=>{ try{ localStorage.setItem("tenko."+k,$(k).value); }catch(e){} ptHwRender(); }); });
+  $("ptHwBtn").onclick=()=>ptHwSet(!(Date.now()<hwUntil));
+  $("patrolBanner").addEventListener("click",e=>{ if(e.target.closest("[data-pthw]")) ptHwSet(true); });
+  $("patrolBannerClose").addEventListener("click",()=>{ GS.patrol.dis=GS.patrol.cur; });   // ×で閉じた場所は、次の100mまで出し直さない
+  setInterval(()=>{ if(hwUntil&&Date.now()>=hwUntil){ hwUntil=0; try{ localStorage.removeItem("tenko.patrolHwUntil"); }catch(e){} } ptHwRender(); },30e3);
+  ptHwRender();
+  // ③数える：300m・200m・100mを切ったときに1回ずつ鳴らす。帯の残りの距離は約10mごとに書き直す
+  // ④離れたら消す：一番近づいた距離から○m離れたら（通過・右左折）消す。同じ場所は10分間は鳴らさない
+  function ptCheck(p,now,dLat,dLng){
+    const S=GS.patrol; S.cd=S.cd||{};
+    if(ptMuted()){ if(S.cur!=null||Object.keys(S.cd).length) ptHide(); return; }
+    const start=+$("patrolStart").value||300, leave=ptSet("patrolLeave"), marks=[300,200,100].filter(m=>m<=start);
+    let show=null, fired=false;
+    S.pts.forEach((x,i)=>{
+      const bb=geoBB(x);
+      if(p.lat<bb[0]-dLat||p.lat>bb[1]+dLat||p.lng<bb[2]-dLng||p.lng>bb[3]+dLng){ delete S.prev[i];
+        if(S.cd[i]){ if(S.cd[i].act) S.last[i]=now; delete S.cd[i]; if(S.cur===i) ptHide(); } return; }
+      const d=geoD(p,x), prev=S.prev[i]; S.prev[i]=d;
+      const st=S.cd[i]||(S.cd[i]={done:0,min:Infinity,act:false});   // done＝最後に知らせた距離（0＝まだ）
+      if(st.act){ st.min=Math.min(st.min,d);
+        if(d>=st.min+leave){ delete S.cd[i]; S.last[i]=now; if(S.cur===i){ $("patrolBanner").hidden=true; S.cur=null; S.curD=null; } return; } }
+      if(prev!=null&&d<prev-2&&!(S.last[i]&&now-S.last[i]<10*60e3)){
+        const ms=marks.filter(m=>d<=m&&(!st.done||m<st.done));
+        if(ms.length){ st.done=Math.min(...ms); st.act=true; st.min=Math.min(st.min,d); fired=true; if(S.dis===i) S.dis=null; } }   // 一度に2つ越えたときは1回だけ鳴らす
+      if(st.act&&S.dis!==i&&(!show||d<show.d)) show={x,i,d};
+    });
+    if(fired) geoChime("pipo");
+    if(show){ const dd=Math.max(10,Math.round(show.d/10)*10);
+      if(fired||S.cur!==show.i||S.curD!==dd||$("patrolBanner").hidden&&fired){ geoShow("patrol",show.x,show.d,false,5*60e3); S.cur=show.i; S.curD=dd; } }
+  }
   function geoCheck(p){
     const now=Date.now(), dLat=0.004, dLng=0.005;   // 約400m四方だけ細かく測る
+    if(!offCfg.patrol&&GS.patrol.pts) ptSpeedCheck(p);
     Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k]; if(!S.pts||offCfg[k]) return;
+      if(k==="patrol"){ ptCheck(p,now,dLat,dLng); return; }
       const th=+$(G.dist).value||100;
       S.pts.forEach((x,i)=>{
         if(G.alertG&&!G.alertG(S.groups[x[1]]||"")) return;
@@ -5392,7 +5470,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   function geoWatch(){
     const on=Object.keys(GEO).some(k=>!offCfg[k]&&GS[k].pts&&GS[k].pts.length)&&navigator.geolocation&&document.visibilityState==="visible";
-    if(on&&geoWid==null){ geoWid=navigator.geolocation.watchPosition(pos=>geoCheck({lat:pos.coords.latitude,lng:pos.coords.longitude}),()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:20000}); }
+    if(on&&geoWid==null){ geoWid=navigator.geolocation.watchPosition(pos=>geoCheck({lat:pos.coords.latitude,lng:pos.coords.longitude,spd:pos.coords.speed,t:pos.timestamp||Date.now()}),()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:20000}); }
     else if(!on&&geoWid!=null){ navigator.geolocation.clearWatch(geoWid); geoWid=null; Object.values(GS).forEach(S=>{ S.prev={}; }); }
   }
   document.addEventListener("visibilitychange",geoWatch);
@@ -5415,7 +5493,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     xs.forEach(x=>{ const c=x[2][0], cl=col(x[1]);
       const link=G.route?`<a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
       const gp=geoPlace(k,x);
-      const pop=`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(gp.place)}</b>${gp.kind?`<div style="font-weight:700">${esc(gp.kind)}</div>`:""}<div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${!gp.kind&&x[3]&&x[3]!==x[0]?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
+      const pop=`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(gp.place)}</b>${gp.kind?`<div style="font-weight:700">${esc(gp.kind)}</div>`:""}<div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]&&x[3]!==gp.place&&!/多発地点/.test(x[3])?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
       if((x[4]||"P")==="A") L.polygon(x[2],{color:cl,weight:3,fillColor:cl,fillOpacity:.22}).bindPopup(pop).addTo(S.layer);
       else if(x[2].length>1) L.polyline(x[2],{color:cl,weight:6,opacity:.85}).bindPopup(pop).addTo(S.layer);
       else L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
@@ -5439,6 +5517,12 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       if(k==="patrol"){ const gi=S.groups.findIndex(g=>/8月/.test(g)); x=(S.pts||[]).find(y=>geoPlace(k,y).place==="御成門交差点")||["信号無視違反多発地点 指定通行区分違反多発地点",gi<0?0:gi,[[35.65956,139.75156]],"御成門交差点","P"]; }
       geoChime(G.chime); geoShow(k,x,+$(G.dist).value||100,true); window.scrollTo(0,0); };
     $(G.pre+"TestSnd").onclick=()=>geoChime(G.chime);
+    if(k==="patrol") $("ptTestCd").onclick=async()=>{ if(!S.pts) await geoLoad(k,true);
+      const gi=S.groups.findIndex(g=>/8月/.test(g)), x=(S.pts||[]).find(y=>geoPlace(k,y).place==="御成門交差点")||["信号無視違反多発地点 指定通行区分違反多発地点",gi<0?0:gi,[[35.65956,139.75156]],"御成門交差点","P"];
+      clearInterval(S.testIv); let d=330; window.scrollTo(0,0);
+      S.testIv=setInterval(()=>{ d-=10; if(d===300||d===200||d===100) geoChime("pipo");
+        if(d<30){ clearInterval(S.testIv); setTimeout(()=>{ $("patrolBanner").hidden=true; },1200); return; }
+        geoShow(k,x,d,true,60e3); },350); };
     setupFull(G.pre+"FullBtn",G.pre+"MapWrap",()=>S.map); });
   // 電車の帯：運転中でも見えるよう、大きな太字で3段（2026-10-25 ユーザー指定。取締りの帯と同じ形）
   function trBig(head,xs,foot,test){
