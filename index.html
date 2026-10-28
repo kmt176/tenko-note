@@ -1012,7 +1012,7 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="subRest2" hidden>
     <section class="card">
       <h2>駐車禁止ポイント</h2>
-      <div class="src">マイマップ「休憩ポイント&amp;クレーム発生ポイント」の<b style="color:#D23C2F">クレーム発生ポイント（駐車禁止）</b>を地図と一覧に出します。道の線やエリアの囲みでも描いています。近づいたとき（エリアの中に入ったときも）、音（ビー・ビー・ビー）とオレンジの帯で知らせます。「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。喫煙所・長時間駐車可は「休憩場」の地図に出しています。</div>
+      <div class="src">マイマップ「休憩ポイント&amp;クレーム発生ポイント」の<b style="color:#8E24AA">クレーム発生ポイント（駐車禁止）</b>を地図と一覧に出します。道の線やエリアの囲みでも描いています。近づいたとき（エリアの中に入ったときも）、音（ビー・ビー・ビー）とオレンジの帯で知らせます。「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。喫煙所・長時間駐車可は「休憩場」の地図に出しています。</div>
       <div class="btnrow"><button class="btn" id="rsTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="rsTestSnd">🔊 音だけテスト</button></div>
       <div id="rsGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="rsMapWrap" class="mapwrap">
@@ -1252,7 +1252,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 21:59</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 22:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5569,7 +5569,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       msg:(x,g,d)=>`🚕 ${g}：${x[0].replace(/^\d+_/,"")}まで約${d}m`},
     yuryo:{act:"standPts",store:"tenko.yuryo",dist:"yuryoDist",ban:"yuryoBanner",pre:"yr",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:g=>/優良/.test(g),
       msg:(x,g,d)=>`【優】優良乗り場：${x[0].replace(/優良タクシー乗り場|タクシー乗り場|優良/g,"").trim()||x[0]}まで約${d}m`},
-    rest2:{act:"restPts",store:"tenko.rest2",dist:"restDist",ban:"restBanner",pre:"rs",col:["#8B5A2B","#2F6FD6","#D23C2F","#7B3FA0","#3E9B4F"],chime:"ponpon",route:true,
+    rest2:{act:"restPts",store:"tenko.rest2",dist:"restDist",ban:"restBanner",pre:"rs",col:["#8B5A2B","#2F6FD6","#8E24AA","#7B3FA0","#3E9B4F"],   /* 駐車禁止は紫（地図の赤い家並みと見分けやすいように。2026-10-28 ユーザー指定） */chime:"ponpon",route:true,
       alertG:g=>/クレーム|禁止/.test(g),   // 知らせる・この画面に出すのは駐車禁止（クレーム発生ポイント）だけ。喫煙所・長時間駐車可は「休憩場」の地図に出す
       msg:(x,g,d)=>d===0?`🚫 駐車禁止：${x[0]}（エリアの中です）`:`🚫 駐車禁止：${x[0]}まで約${d}m`}};
   // 場所までの距離（m）：点は一番近い点、線は線のどこか、エリアは縁まで（中にいれば0）
