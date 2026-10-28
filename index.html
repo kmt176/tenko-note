@@ -1232,7 +1232,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 08:28</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 09:01</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3608,6 +3608,16 @@ body.rtfull{overflow:hidden}
       else { plan.n+=sumIv(rz,a,b); plan.d+=ovl(x,y,a,b); if(e>a){ toNow.n+=sumIv(rz,a,e); toNow.d+=ovl(x,y,a,e); } } });
     return {plan,toNow};
   }
+  // 1乗務ごとに、計画の連続配車に対して何%できたか（2026-10-28 ユーザー指定：毎日100%できているかを見る）
+  // 終わった乗務は乗務全体、勤務中は今の時刻までの計画と比べる。週の目標が「8〜10時の○%」の週は8〜10時だけで数える
+  function rzDayPlan(s,rule){
+    const k=s.k, base=dayNo(k)*DAY, pl=planOf(k), x=base+pl.out, y=base+pl.in, P=pl.rz.map(([p,q])=>[base+p,base+q]);
+    const sw=(iv,a,b)=>rule.type==="am"?winSum(iv,a,b,RZ_AM):sumIv(iv,a,b);
+    if(s.state==="plan") return {state:"plan",plan:sw(P,x,y)};
+    const end=s.state==="now"?Math.min(y,nowAbsMin()):y, act=s.state==="now"?sw(s.act.rz,s.a,s.act.b):sw(s.rz,s.a,s.b), plan=sw(P,x,end);
+    return {state:s.state,act,plan,r:plan>0?act/plan:null};
+  }
+  const dayPlanTxt=q=>q.state==="plan"?`計画 ${hm(q.plan)}`:q.r==null?"計画なし":`<b>${pct(q.r)}</b> ${q.r>=1?"✅":"❌"}<br><small>${hm(q.act)}／${hm(q.plan)}</small>`;
   const pm=v=>(v>=0?"＋":"−")+hm(Math.abs(v));   // 計画との差の表示
   const rate=o=>o.d?o.n/o.d:null;
   // 目標に届くには、あと何分の連続配車が要るか（分母はそのまま）
@@ -3627,6 +3637,7 @@ body.rtfull{overflow:hidden}
       <div class="sumgrid">
         <div><span class="h">この乗務の連続配車</span><span class="v num">${hm(ren)}<small style="display:block;font-size:13px;color:var(--muted)">${z.n}回</small></span></div>
         <div><span class="h">出庫〜入庫</span><span class="v num">${hm(span)}<small style="display:block;font-size:13px;color:var(--muted)">${span>0?pct(ren/span):"—"}</small></span></div>
+        ${offCfg.rzweek?"":(()=>{ const q=rzDayPlan(s,ruleOf(weekOf(dayNo(k)*DAY))); return q.state==="plan"?"":`<div><span class="h">この乗務の計画に対して</span><span class="v num">${q.r==null?"—":pct(q.r)+(q.r>=1?" ✅":" ❌")}<small style="display:block;font-size:13px;color:var(--muted)">${hm(q.act)}／計画 ${hm(q.plan)}${q.state==="now"?"（今まで）":""}</small></span></div>`; })()}
         ${offCfg.rzweek?"":(()=>{ const w=weekOf(nowAbsMin()), W=rzWeekCalc(w), PC=rzPlanCalc(w), ra=rate(W.act); return `<div><span class="h">今週の計画との差</span><span class="v num">${PC.toNow.d?pm(W.act.n-PC.toNow.n):"—"}<small style="display:block;font-size:13px;color:var(--muted)">今週の実績 ${ra!=null?pct(ra):"—"}（目標 ${W.rule.pct}%）</small></span></div>`; })()}
         ${!offCfg.rzweek?"":`<div><span class="h">必須・コアタイム（朝か夕方、どちらか）</span><span class="v num">${mActAm>=MUST_AM()||mActPm>=MUST_PM()?"✅":"❌"}<small style="display:block;font-size:13px;color:var(--muted)">朝(6〜10時) ${hm(mActAm)}${mActAm>=MUST_AM()?"✅":`（あと${hm(MUST_AM()-mActAm)}）`}・夕(16〜20時) ${hm(mActPm)}${mActPm>=MUST_PM()?"✅":`（あと${hm(MUST_PM()-mActPm)}）`}</small></span></div>`}
       </div>`;
@@ -3645,7 +3656,7 @@ body.rtfull{overflow:hidden}
         <td class="num">${hm(ren)}／${hm(wk)}</td>
         <td class="num">${(a=>a!=null?`実績 ${hm(a)}`:"")(restAct(s.k))}${!useWk?(restAct(s.k)!=null?"":"—"):restAct(s.k)!=null&&s.state==="done"?"":`${restAct(s.k)!=null?"<br>":""}計画 ${hm(restPlan(planOf(s.k)))}`}</td>
         ${useWk?"":`<td class="num">${mAm>=MUST_AM()||mPm>=MUST_PM()?"✅":"❌"}<br><small>朝 ${hm(mAm)}${mAm>=MUST_AM()?"✅":""}・夕 ${hm(mPm)}${mPm>=MUST_PM()?"✅":""}</small></td>`}
-        ${useWk?`<td>${s.state!=="done"?`<button class="btn" data-plan="${s.k}">計画</button>`:""}</td>`:""}</tr>`; }).join("");
+        ${useWk?`<td class="num">${dayPlanTxt(rzDayPlan(s,r))}${s.state!=="done"?`<br><button class="btn" data-plan="${s.k}" style="margin-top:4px">計画</button>`:""}</td>`:""}</tr>`; }).join("");
     // 記録のある週の一覧（新しい順・実績だけ）
     const weeks=[...new Set(Object.keys(sales.days).filter(k=>hasRz(sales.days[k])).map(k=>{ const zz=rzSpan(k); return zz?weekOf(zz.from):null; }).filter(x=>x!=null))].sort((a,b)=>b-a);
     $("sRzView").innerHTML=`
@@ -3678,8 +3689,9 @@ body.rtfull{overflow:hidden}
     </section>
     <section class="card">
       <h2>${useWk?"乗務ごと":"乗務ごと（必須・コアタイム：朝6〜10時90分 または 夕方16〜20時2時間、どちらか）"}</h2>
-      <div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>出庫日</td><td>連続配車／出庫〜入庫</td><td>休憩</td>${useWk?"<td></td>":"<td>必須（朝or夕）</td>"}</tr></thead><tbody>${sh||`<tr><td colspan="4">この週の乗務がありません（点呼時間に予定を入れると、計画で見込みを出します）</td></tr>`}</tbody></table></div>
-      ${useWk?`<div class="src">勤務中の乗務は、今までの実績とこれからの計画を足しています。計画は「基本の型」を使い、乗務ごとに変えることもできます。</div>
+      <div style="overflow-x:auto"><table class="cmpt"><thead><tr><td>出庫日</td><td>連続配車／出庫〜入庫</td><td>休憩</td>${useWk?"<td>計画に対して</td>":"<td>必須（朝or夕）</td>"}</tr></thead><tbody>${sh||`<tr><td colspan="4">この週の乗務がありません（点呼時間に予定を入れると、計画で見込みを出します）</td></tr>`}</tbody></table></div>
+      ${useWk?`<div class="src">「計画に対して」は、その乗務の計画の連続配車に対して何%できたかです（100%以上で✅）。勤務中は、今の時刻までの計画と比べます。計画を直すと、終わった乗務の%も変わります。</div>
+      <div class="src">勤務中の乗務は、今までの実績とこれからの計画を足しています。計画は「基本の型」を使い、乗務ごとに変えることもできます。</div>
       <div class="btnrow"><button class="btn" id="rzTplBtn">基本の型（毎回の計画）を直す</button></div>`:""}
     </section>
     <section class="card" id="rzEdCard" hidden></section>
