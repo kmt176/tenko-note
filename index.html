@@ -341,7 +341,8 @@ a.flink:active{background:var(--sunk)}
 .rzfloat{position:fixed;left:10px;right:10px;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:4}
 .rzfloat .rzbtn{width:100%;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .rzfloat .rzbtn.rzneed{background:var(--pink-soft);border-color:var(--pink-line);color:var(--bad)}
-.rzfloat .rzbtn.rzhalf{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.pbrow{border-top:1px solid var(--line);padding:8px 0}.pbrow.pbdone{opacity:.75}
+  .rzfloat .rzbtn.rzhalf{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
 .rzfloat .rzbtn.rzdone{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .ride{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px;text-align:left;width:100%}
 .ride.open{border-color:var(--ok);border-width:2px}
@@ -1206,6 +1207,15 @@ body.rtfull{overflow:hidden}
     </div>
   </details>
 
+  <section class="card" id="placeCard" hidden>
+    <h2>施設名をまとめて確かめる（管理者・グループ1）</h2>
+    <div class="src">月を選ぶと、手上げ以外で乗せた場所を、近いところ（40m以内）どうしでまとめて、乗せた回数の多い順に出します。病院・駅・ホテルなどの施設なら「✅ 合っている」か「名前を入れる」を押してください。施設でない場所（家の前など）は、何も押さずに飛ばして大丈夫です。ホテル・乗り場・駅・空港の近くと、確かめ済みの場所は出しません。<span id="pbWho"></span></div>
+    <div class="pair"><div class="field"><label for="pbMonth">月</label><input type="month" id="pbMonth"></div><div class="field" style="align-self:end"><button class="btn primary" id="pbLoad">一覧を作る</button></div></div>
+    <div class="msg" id="pbMsg" role="status"></div>
+    <div id="pbList"></div>
+    <div class="btnrow"><button type="button" class="btn" id="pbMoreBtn" hidden>次の20か所を出す</button></div>
+  </section>
+
   <section class="card" id="payDiffCard" hidden>
     <h2>月次 売上差額チェック（管理者のみ）</h2>
     <div class="src">給与明細の「実営業収入」と、アプリの総営収の差を月度ごとに見ます。給与明細と同じ条件にそろえるため、日報の総営収を税抜（÷1.1）にし、公休出勤（公出）の勤務は除いています（公出営収は会社が平均の売上から別に出すため）。公出の勤務は、点呼時間の勤務の画面で「公休出勤（公出）」に印を付けてください。給与明細の実営業収入はこのスマホの中だけに保存されます（バックアップには入ります）。障害者割引は、補填されるはずの額として参考に出します（日報の公的割引×10円）。</div>
@@ -1233,7 +1243,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 13:27</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 13:46</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2386,21 +2396,22 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["izakaya","🍶","飲み屋街","飲み屋街マップ（試験）"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
     ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
-    ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["help","📖","使い方","使い方"]]]];
+    ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","施設名","施設名をまとめて確かめる"],["help","📖","使い方","使い方"]]]];
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
   const micon=k=>{ const ic=(MENU_ALL[k]||[])[1]||""; return /^[\u4e00-\u9fff]$/.test(ic)?`<span class="emtx" aria-hidden="true">${ic}</span>`:`<span class="em" aria-hidden="true">${ic}</span>`; };   // 漢字1文字は、色つきの四角に白い文字で出す   // 絵文字（線画のMICONは使わない）
   // ボタンで開くページ（中身は、もとの場所から移してくる）
   const PAGES={
     set:{t:"⚙️ 設定",d:"合言葉・車種・画面に出す機能・メニューの表示・計算の設定と、管理者からのお知らせです。",ids:["noticeCard","cfgBox","calcBox"]},
     bk:{t:"💾 バックアップ",d:"点呼と売上をまとめたバックアップを作る・戻すところです。機種変更のときもここから。",ids:["bkBox"]},
-    pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]}};
+    pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]},
+    place:{t:"🏥 施設名をまとめて確かめる",d:"乗せた場所の施設名を、一覧でまとめて確かめます（管理者とグループ1の人だけ）。",ids:["placeCard"]}};
   const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
   MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
   const isGroup1=()=>isNakama()&&!!cfg.group&&cfg.group.id==="g1";
-  const G1ONLY=new Set(["izakaya"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
+  const G1ONLY=new Set(["izakaya","place"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
   const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help") return true; if(k==="pay") return isAdmin();
-    if(k==="izakaya") return isAdmin()||isGroup1();   // 飲み屋街マップは、管理者と仲間のグループ1の人だけ（2026-10-26）
+    if(k==="izakaya"||k==="place") return isAdmin()||isGroup1();   // 飲み屋街マップは、管理者と仲間のグループ1の人だけ（2026-10-26）
     if(k==="flash") return !$("sViewFlash").hidden;
     const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
   function menuOpen(k){
@@ -2441,6 +2452,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("setHead").textContent=pg.t; $("setDesc").textContent=pg.d;
     curSub=k; $("subSet").hidden=false; $("menuBack").hidden=false; $("menuBackTitle").textContent=pg.t;
     if(k==="pay"&&typeof renderPayDiff==="function") renderPayDiff();
+    if(k==="place") pbOpen();
   }
   const showSet=()=>showPage("set");
   function showHelp(){ showTab(0); $("helpBack").hidden=menuStyle!=="tile"; }
@@ -4703,6 +4715,80 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ rNames[key]=j.names[key]||{n:"",src:""}; draw(rNames[key].n,rNames[key].src); } else if(rPlaceKey===key) el.hidden=true; })
       .catch(()=>{ if(rPlaceKey===key) el.hidden=true; });
   }
+  // ===== 施設名をまとめて確かめる（2026-10-28 ユーザー指定：管理者とグループ1の人だけ）=====
+  // その月の乗車（手上げ・イベント・一覧の場所を除く）を40m以内の近い場所どうしでまとめ、乗せた回数の多い順に並べる。
+  // 管理者は全員のデータ（fullGet）、グループ1の人はこのスマホの自分の記録。Googleで候補を調べるのは画面に出した分だけ（20か所ずつ）
+  let pbList=[], pbShown=0, pbBusy=false;
+  const PB_STEP=20;
+  function pbOpen(){ const c=$("placeCard"); c.hidden=!(isAdmin()||isGroup1()); if(c.hidden) return;
+    if(!$("pbMonth").value){ const n=new Date(); $("pbMonth").value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); }
+    $("pbWho").textContent=isAdmin()?"管理者なので、全員の乗車（社員コードと仲間の合言葉を入れている人）から作ります。":"このスマホに入っている自分の乗車から作ります。"; }
+  $("pbLoad").onclick=async()=>{
+    const m=$("pbMsg"), mon=$("pbMonth").value; if(!mon||pbBusy) return;
+    if(!cfg.url){ m.textContent="サーバーの設定がまだです"; return; }
+    pbBusy=true; m.textContent="読み込んでいます…"; $("pbList").innerHTML=""; $("pbMoreBtn").hidden=true; pbList=[]; pbShown=0;
+    try{
+      let rs=[];
+      if(isAdmin()){ const j=await post({action:"fullGet",adminPass:cfg.apass,month:mon}); if(!j||!j.ok){ m.textContent=(j&&j.error)||"読み込めませんでした"; return; }
+        rs=(j.items||[]).map(x=>({lat:+x.onLat,lng:+x.onLng,kind:x.kind||"",from:x.from||""})); }
+      else Object.keys(sales.days).filter(k=>k.slice(0,7)===mon).forEach(k=>(sales.days[k].rides||[]).forEach(r=>{ if(r.onPos) rs.push({lat:+r.onPos.lat,lng:+r.onPos.lng,kind:r.kind||"",from:r.onAddr||""}); }));
+      rs=rs.filter(x=>x.lat&&x.lng&&x.kind!=="手上げ"&&x.kind!=="CAN"&&x.kind!=="B空転"&&!isEv(x.kind)&&!cmpOwn(x.lat,x.lng));
+      // 近い場所（40m以内）どうしでまとめる
+      const cl=[];
+      rs.forEach(x=>{ const P=[x.lat,x.lng], k=cmpKey(x.lat,x.lng);
+        let c=cl.find(c=>Math.abs(c.p[0]-x.lat)<0.0005&&Math.abs(c.p[1]-x.lng)<0.0006&&distM(P,c.p)<=40);
+        if(!c){ c={p:P,key:k,n:0,keys:new Set(),towns:{}}; cl.push(c); }
+        c.n++; c.keys.add(k); if(x.from){ const t=cmpArea(x.from); c.towns[t]=(c.towns[t]||0)+1; } });
+      if(!cl.length){ m.textContent="この月は、確かめる場所がありません（手上げ以外の乗車で、場所が分かるもの）"; return; }
+      // 確かめ済みの名前（手入力）を読む（Googleには問い合わせない）
+      const all=[...new Set(cl.flatMap(c=>[...c.keys]))], saved={};
+      for(let i=0;i<all.length;i+=60){ const j=await post(Object.assign({action:"placeNames",pts:all.slice(i,i+60),saved:true},rPlaceAuth()));
+        if(!j||!j.ok){ m.textContent=(j&&j.error)||"確かめ済みの名前を読めませんでした"; return; }
+        Object.assign(saved,j.names||{}); }
+      Object.entries(saved).forEach(([k,v])=>{ if(v&&v.n&&v.src==="手入力") cmpNames[k]=rNames[k]=v; });
+      const done=cl.filter(c=>[...c.keys].some(k=>saved[k]&&saved[k].n));
+      pbList=cl.filter(c=>!done.includes(c)).sort((a,b)=>b.n-a.n);
+      m.textContent=`${cl.length}か所（乗車${rs.length}回）。確かめ済み ${done.length}か所、まだ ${pbList.length}か所です。回数の多い順に出します。`;
+      pbBusy=false; await pbMore();
+    }catch(e){ m.textContent="通信できませんでした。電波のよいところでもう一度"; }
+    finally{ pbBusy=false; }
+  };
+  $("pbMoreBtn").onclick=()=>pbMore();
+  async function pbMore(){
+    if(pbBusy) return; const part=pbList.slice(pbShown,pbShown+PB_STEP); if(!part.length) return;
+    pbBusy=true; $("pbMoreBtn").hidden=true; const wait=document.createElement("div"); wait.className="src"; wait.textContent="候補の施設名を調べています…"; $("pbList").appendChild(wait);
+    let names={}, note="";
+    try{ const j=await post(Object.assign({action:"placeNames",pts:part.map(c=>c.key)},rPlaceAuth()));
+      if(j&&j.ok){ names=j.names||{}; note=j.gErr?`Googleで候補を調べられませんでした（${j.gErr}）。名前を入れることはできます`:j.gLeft===0?"今日のGoogleの上限（無料の範囲）に届きました。候補が出ないところは、明日以降にもう一度開くと出ます（名前を入れることはできます）":""; }
+      else note=(j&&j.error)||"候補を調べられませんでした"; }
+    catch(e){ note="候補を調べられませんでした（電波が悪いとき）。名前を入れることはできます"; }
+    wait.remove();
+    part.forEach((c,i)=>{ const no=pbShown+i+1, cand=names[c.key]&&names[c.key].src!=="手入力"?names[c.key]:null, n=cand&&cand.n||"";
+      const town=Object.entries(c.towns).sort((a,b)=>b[1]-a[1]).map(x=>x[0])[0]||"";
+      const row=document.createElement("div"); row.className="pbrow";
+      row.innerHTML=`<div><b>${no}.</b> ${c.n}回　${esc(town)} <a href="https://www.google.com/maps/search/?api=1&query=${c.p[0]},${c.p[1]}" target="_blank" rel="noopener">地図</a></div>
+        <div>${n?`候補：<b>${esc(n)}</b>${cand.src==="Google"?" <small>Google Maps</small>":cand.src==="Yahoo"?" <small>Web Services by Yahoo! JAPAN</small>":""}`:`<small>候補なし</small>`}</div>
+        <div class="btnrow">${n?`<button type="button" class="btn primary" data-pb="ok">✅ 合っている</button>`:""}<button type="button" class="btn" data-pb="in">名前を入れる</button></div>
+        <div data-pb="box" hidden><input type="text" maxlength="40" autocomplete="off" placeholder="正しい施設名（例：○○病院）"><div class="btnrow"><button type="button" class="btn primary" data-pb="save">この名前にする</button></div></div>
+        <div data-pb="res"></div>`;
+      const q=s=>row.querySelector(`[data-pb="${s}"]`), inp=row.querySelector("input");
+      const send=async(name,confirm)=>{ row.querySelectorAll("button").forEach(b=>b.disabled=true); q("res").innerHTML="";
+        try{ const j=await post(Object.assign({action:"placeFix",key:c.key,keys:[...c.keys],name,confirm,code:cfg.empCode||""},rPlaceAuth()));
+          if(j&&j.ok){ c.keys.forEach(k=>{ cmpNames[k]=rNames[k]={n:name,src:"手入力"}; }); row.classList.add("pbdone");
+            q("res").innerHTML=`✅ 「${esc(name)}」にしました（${c.n}回の乗車）`; q("box").hidden=true; q("in").textContent="名前を直す"; q("in").disabled=false; return; }
+          q("res").innerHTML=`<span class="err">${esc((j&&j.error)||"保存できませんでした")}</span>`; }
+        catch(e){ q("res").innerHTML=`<span class="err">通信できませんでした。電波のよいところでもう一度</span>`; }
+        row.querySelectorAll("button").forEach(b=>b.disabled=false); };
+      if(q("ok")) q("ok").onclick=()=>send(n,true);
+      q("in").onclick=()=>{ q("box").hidden=false; inp.value=n; inp.focus(); };
+      q("save").onclick=()=>{ const v=inp.value.trim(); if(v) send(v,false); };
+      $("pbList").appendChild(row); });
+    if(note){ const d=document.createElement("div"); d.className="src"; d.textContent=note; $("pbList").appendChild(d); }
+    pbShown+=part.length; const rest=pbList.length-pbShown;
+    $("pbMoreBtn").hidden=rest<=0; $("pbMoreBtn").textContent=`次の${Math.min(PB_STEP,rest)}か所を出す（のこり${rest}か所）`;
+    pbBusy=false;
+  }
+  try{ pbOpen(); }catch(e){}
   function kindUI(){
     const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
     $("rMoney").hidden=ev; $("rAmtPair").hidden=ev; $("rAmtHint").hidden=ev; $("rWxBox").hidden=ev; if(ev) $("rTimeBox").open=true; $("rOffF").hidden=point; $("rInhouseBox").hidden=!isHai(k)||!(car().appFee>0)||!!offCfg.inhouse; $("rThanksBox").hidden=!isHai(k)||!car().thanks;
