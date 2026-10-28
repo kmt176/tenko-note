@@ -76,7 +76,7 @@ body.full .panel{display:none}
     <div class="row"><label>半径 <select id="rad"><option>100</option><option>150</option><option selected>200</option><option>300</option><option>400</option></select> m</label>
       <label>以内に <select id="num"><option>5</option><option>8</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select> 軒以上</label>
       <label><input type="checkbox" id="cDots" checked>お店の点も出す</label></div>
-    <div class="btns"><button class="btn" id="csv">CSVで保存</button><button class="btn" id="navi">カーナビタイム用CSV</button><button class="btn" id="kml">Googleマイマップ用（KML）</button><button class="btn" id="reload">データを取り直す</button></div>
+    <div class="btns"><button class="btn" id="csv" hidden>CSVで保存</button><button class="btn" id="navi" hidden>カーナビタイム用CSV</button><button class="btn" id="kml" hidden>Googleマイマップ用（KML）</button><button class="btn" id="reload">データを取り直す</button></div>
     <div id="dataInfo" style="font-size:13px;color:var(--muted)"></div>
     <div id="msg">読み込んでいます…</div>
     <details><summary>使い方</summary>
@@ -85,7 +85,7 @@ body.full .panel{display:none}
       ・半径○m以内に○軒以上お店がある所を「密集エリア」として円で出します。軒数が多いほど色が濃くなります。円の中の数字が軒数です。<br>
       ・地図を拡大すると（駅のまわりくらいの大きさ）、円は点線の縁だけになり、お店の点が大きく出ます。点を押すと店名が出ます。<br>
       ・円をタップすると、軒数・最寄り駅・地名・お店の一覧と「ルート案内」が出ます。<br>
-      ・「CSVで保存」は、名前・緯度・経度・軒数などの一覧です（地名は国土地理院から調べるので少し時間がかかります）。「カーナビタイム用CSV」は名称・緯度・経度・メモだけの形です。カーナビタイムの「My地点プラス」の取り込みの形と違うときは教えてください。「Googleマイマップ用（KML）」は、Googleマイマップの「インポート」でそのまま地図にできます。<br>
+      <span id="expHelp" hidden>・「CSVで保存」は、名前・緯度・経度・軒数などの一覧です（地名は国土地理院から調べるので少し時間がかかります）。「カーナビタイム用CSV」は名称・緯度・経度・メモだけの形です。カーナビタイムの「My地点プラス」の取り込みの形と違うときは教えてください。「Googleマイマップ用（KML）」は、Googleマイマップの「インポート」でそのまま地図にできます。<br></span>
       ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝その他。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
@@ -95,6 +95,9 @@ body.full .panel{display:none}
 </div>
 <script>
 // 2026-10-28 から全員が使える（ユーザー指定。前は管理者とグループ1の人だけ）
+// 書き出し（CSV・カーナビタイム用・KML）は管理者だけに出す（2026-10-28 ユーザー指定）
+(function(){ let adm=false; try{ const c=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); adm=c.admin===true&&!!c.apass; }catch(e){}
+  ["csv","navi","kml","expHelp"].forEach(id=>{ const el=document.getElementById(id); if(el) el.hidden=!adm; }); })();
 // 全画面：設定の枠を隠し、アプリの中で開いているときはアプリの見出しも隠してもらう
 function setFull(on){ document.body.classList.toggle("full",on); document.getElementById("fullOff").hidden=!on;
   try{ if(window.parent!==window) window.parent.postMessage({izFull:on},location.origin); }catch(e){} }
