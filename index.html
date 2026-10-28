@@ -1277,7 +1277,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 00:49</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 01:02</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2253,7 +2253,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   function applyRole(){
     const mem=isMember(); if(typeof renderCarSeg==="function") renderCarSeg();
-    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin(); $("segDemand").hidden=!isAdmin(); $("segHosp").hidden=!isAdmin();   // 乗務員比較・病院（試験）は管理者だけ
+    $("segLong").hidden=!mem; $("segCmp").hidden=!isAdmin(); $("segDemand").hidden=!isAdmin(); $("segHosp").hidden=!(isAdmin()||(isNakama()&&!!cfg.group&&cfg.group.id==="g1"));   // 乗務員比較は管理者だけ。病院（試験）は管理者とグループ1の人だけ
     if(!isAdmin()&&typeof curSub!=="undefined"&&(curSub==="cmp"||curSub==="hosp")) showSub("rest");
     $("segSv").hidden=true; if(typeof curSub!=="undefined"&&curSub==="sv") showSub("wx");   // 接遇は売上 → 勤務 の中に移した
     document.querySelectorAll(".member-only").forEach(e=>e.hidden=!mem);
@@ -2476,13 +2476,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
   MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
   const isGroup1=()=>isNakama()&&!!cfg.group&&cfg.group.id==="g1";
-  const G1ONLY=new Set(["place"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
+  const G1ONLY=new Set(["place","ame","shin","hosp","akabus"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
   const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help"||k==="othello"||k==="mahjong") return true; if(k==="pay") return isAdmin();
     if(k==="izakaya") return true;   // 飲み屋街マップは全員（2026-10-28 ユーザー指定）
-    if(k==="ame") return isAdmin();
-    if(k==="shin") return isAdmin();   // 新幹線 最終便・始発は試験中なので管理者だけ（2026-10-29）   // エリア別 雨予報は試験中なので管理者だけ（2026-10-29）
-    if(k==="hosp") return isAdmin();   // 病院の外来終了時間マップも試験中なので管理者だけ（2026-10-29）
-    if(k==="akabus") return isAdmin();   // 帰りのバス（地下鉄赤塚・下赤塚）は試験中なので管理者だけ（2026-10-28 ユーザー指定）
+    if(k==="ame"||k==="shin"||k==="hosp"||k==="akabus") return isAdmin()||isGroup1();   // 試験中の4つは、管理者とグループ1の人だけ（2026-10-29 ユーザー指定）
     if(k==="place") return isAdmin()||isGroup1();   // 施設名をまとめて確かめるのは、管理者とグループ1の人だけ
     if(k==="flash") return !$("sViewFlash").hidden;
     const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
@@ -2659,7 +2656,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 休憩場の地図に、別のレイヤーとして重ねる（休憩場の登録・削除には触らない）
   const PK_ON="#E07A00", PK_OFF="#9AA0A6";
   let pkData=null, pkLayer=null, pkMarks={};
-  const restShow=()=>cfg.restShow||"both";   // both：両方　rest：休憩場だけ　pk：パーキングだけ
+  const pkOk=()=>isAdmin()||isGroup1();   // パーキングは試験中なので、管理者とグループ1の人だけ（2026-10-29 ユーザー指定）。ほかの人は休憩場だけ
+  const restShow=()=>pkOk()?(cfg.restShow||"both"):"rest";   // both：両方　rest：休憩場だけ　pk：パーキングだけ
   async function loadPk(){
     if(!pkData){ const r=await fetch("parking.json",{cache:"no-cache"}); if(!r.ok) throw new Error(r.status); pkData=await r.json(); }
     return pkData;
@@ -2696,7 +2694,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   setInterval(()=>{ if(pkLayer&&!$("subRest").hidden&&document.visibilityState==="visible"&&restShow()!=="rest"&&!(restMapObj._popup&&restMapObj._popup.isOpen())) drawPk(); },60000);   // 吹き出しを開いている間は描き直さない（閉じてしまうので）
   async function applyRestShow(){
-    const v=restShow();
+    const v=restShow(); $("restShowSeg").hidden=!pkOk();
     document.querySelectorAll("#restShowSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.show===v));
     $("pkBox").hidden=v==="rest";
     if(!restMapObj) return;
@@ -2708,7 +2706,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("pkDate").textContent=`データは警視庁の${pkData.upd.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1年$2月$3日")}更新分（${pkData.items.length}区間、${pkData.made.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1年$2月$3日")}に取り込み）。`+(new Date().toISOString().slice(0,10)>last.slice(0,4)+"-12-31"?"祝日の表が古くなっています（管理者がデータを作り直してください）。":"");
   }
   document.querySelectorAll("#restShowSeg button").forEach(b=>b.onclick=()=>{ cfg.restShow=b.dataset.show; saveCfg(); applyRestShow(); });
-  $("pkBox").hidden=restShow()==="rest";
+  $("pkBox").hidden=restShow()==="rest"; $("restShowSeg").hidden=!pkOk();
   document.querySelectorAll("#restShowSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.show===restShow()));
   // 区間の線までのいちばん近い距離（m）。近い範囲なので、緯度経度を平面とみなして線分への垂線で測る
   function pkDist(p,x){
@@ -2720,7 +2718,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       best=Math.min(best,Math.hypot(ax+t*dx,ay+t*dy)); }));
     return best;
   }
-  $("pkNear").onclick=async()=>{
+  $("pkNear").onclick=async()=>{ if(!pkOk()) return;
     const box=$("pkList"); box.innerHTML=`<div class="geo">今の場所を調べています…</div>`;
     try{ await loadPk(); }catch(e){ box.innerHTML=`<div class="geo">パーキングのデータを読み込めませんでした</div>`; return; }
     const pos=await getPos();
