@@ -34,7 +34,7 @@ progress{width:100%}
   <h1>勤務予定表の取り込み（運行管理者の方へ）</h1>
   <section class="card" id="loginCard">
     <h2>① パスワード</h2>
-    <div class="src">自分の番号（運行管理者1〜3。アプリの管理者から聞いた番号）を選んで、予定表のパスワードを入れてください。最初は 0000 です。</div>
+    <div class="src">自分の番号（運行管理者1〜3。アプリの管理者から聞いた番号）を選んで、予定表のパスワードを入れてください。最初は 0000 です。パスワードは https（暗号化された通信）で安全に送り、サーバーには元に戻せない形（ハッシュ）でしか保存しません。アプリの管理者にも見えません。</div>
     <label for="slot">運行管理者の番号</label>
     <select id="slot" style="font-size:17px;padding:8px;border-radius:8px"><option value="1">運行管理者1</option><option value="2">運行管理者2</option><option value="3">運行管理者3</option></select>
     <label for="pass">予定表のパスワード</label>
@@ -52,7 +52,7 @@ progress{width:100%}
   </section>
   <section class="card" id="fileCard" hidden>
     <h2>② 予定表のファイル</h2>
-    <div class="src">会社の「勤務予定表」のPDF（1か月分）を選んでください。読み取りはこの画面の中だけで行い、PDFや氏名はどこにも送りません。送るのは社員コードと日ごとの印（出・公など）だけです。</div>
+    <div class="src">会社の「勤務予定表」のPDF（1か月分）を選んでください。読み取りはこの画面の中だけで行い、PDFや氏名はどこにも送りません。送るのは社員コードと日ごとの印（出・公など）だけです。サーバーとの通信は https（暗号化された通信）で、安全に行います。</div>
     <label for="file">PDFファイル</label>
     <input type="file" id="file" accept="application/pdf,.pdf">
     <progress id="prog" value="0" max="1" hidden></progress>

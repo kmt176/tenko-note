@@ -506,6 +506,8 @@ body.rtfull{overflow:hidden}
     <button class="iconbtn" id="nextP" aria-label="次の月度">▶</button>
   </div>
 
+  <div class="note" id="schNotice" hidden></div>
+
   <section class="next" id="nextCard" aria-live="polite"></section>
 
   <section class="meter" id="meter"></section>
@@ -1245,7 +1247,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 17:17</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 18:01</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1869,15 +1871,27 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       const j=await res.json();
       if(!j.ok){ if(!silent) m.textContent=j.error||"予定表が見つかりませんでした"; return; }
       const outMin=toMin(out), pb=clock(((outMin-10)%1440+1440)%1440), pa=clock((outMin+1190)%1440);
-      let added=0, kd=0; const kode=new Set(j.kode||[]);   // 予定表の「公」＝公休出勤（公出）の印を付ける（2026-10-28 ユーザー指定）
+      // 予定表の「公」＝公休出勤（公出）の印を付ける（2026-10-28 ユーザー指定）。印は kodeSch で「予定表が付けた」と覚えておく
+      let added=0; const kode=new Set(j.kode||[]), work=new Set(j.dates||[]), chg=[];
+      const md2=d=>(+d.slice(5,7))+"/"+(+d.slice(8,10));
       (j.dates||[]).forEach(d=>{
         const ex=recs.find(r=>r.date===d);
-        if(ex){ if(kode.has(d)&&!ex.kode&&!ex.ab){ ex.kode=true; kd++; } return; }   // まだ業務前点呼をしていない勤務だけ
-        recs.push(Object.assign({id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),date:d,pb,pa,ab:"",aa:""},kode.has(d)?{kode:true}:{}));
-        added++; if(kode.has(d)) kd++;
+        if(ex){ if(kode.has(d)&&!ex.kode&&!ex.ab){ ex.kode=true; ex.kodeSch=true; chg.push(md2(d)+"（公出に変更）"); } return; }   // まだ業務前点呼をしていない勤務だけ
+        recs.push(Object.assign({id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),date:d,pb,pa,ab:"",aa:"",sch:true},kode.has(d)?{kode:true,kodeSch:true}:{}));
+        added++;
       });
-      if(added||kd){ save(); render(); }
-      if(!silent) m.textContent=added||kd?`${added}日分の計画を追加しました${kd?`（うち公出の印 ${kd}日）`:""}`:"追加する日はありませんでした（すでに全部入っています、または予定表にまだ登録されていません）";
+      // 予定表が直されて、休みになった日・公出でなくなった日（2026-10-28 ユーザー指定）。
+      // 消すのは、予定表が取り込まれている期間の今日以降で、まだ業務前点呼をしていない・売上もない、予定表から入った計画だけ（自分で入れた勤務や実績のある日は残す）
+      const inCover=d=>(j.cover||[]).some(([a,b])=>d>=a&&d<=b), today=(t=>t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"))(new Date());
+      const fromSch=r=>r.sch||(r.pb===pb&&r.pa===pa);
+      const hasSales=d=>{ const s=sales.days[d]; return !!(s&&s.rides&&s.rides.length); };
+      for(let i=recs.length-1;i>=0;i--){ const r=recs[i];
+        if(r.ab||r.aa||!inCover(r.date)||r.date<today) continue;
+        if(!work.has(r.date)&&fromSch(r)&&!hasSales(r.date)){ recs.splice(i,1); chg.push(md2(r.date)+"（休みに変更）"); continue; }
+        if(r.kode&&r.kodeSch&&!kode.has(r.date)){ r.kode=false; delete r.kodeSch; chg.push(md2(r.date)+"（公出でなくなった）"); } }
+      if(added||chg.length){ save(); render(); }
+      if(chg.length){ const n=$("schNotice"); n.hidden=false; n.innerHTML=`会社の予定表が変わったので、計画を直しました：${esc(chg.join("、"))} <button type="button" class="btn" id="schNoticeOk">かしこまりました</button>`; $("schNoticeOk").onclick=()=>{ n.hidden=true; }; }
+      if(!silent) m.textContent=added||chg.length?`${added}日分の計画を追加しました${chg.length?`。予定表の変更 ${chg.length}件を反映しました`:""}`:"追加する日はありませんでした（すでに全部入っています、または予定表にまだ登録されていません）";
     }catch(e){ if(!silent) m.textContent="通信できませんでした。電波を確認してください"; }
   }
   $("schCode").addEventListener("change",()=>{ cfg.empCode=$("schCode").value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); saveCfg(); applySchLock(); });
