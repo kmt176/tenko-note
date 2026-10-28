@@ -136,8 +136,16 @@ async function readPage(pdf,i){
     G=gray(x2.getImageData(0,0,W,H).data,W,H);
   }
   // 罫線（長い線）を探す
-  const ys=peaks(longRuns(G,W,H,true),W/5), xs=peaks(longRuns(G,W,H,false),H/6);
+  // 横の罫線を先に探し、縦の罫線は「表の一番上から一番下まで」続く線を探す（直した人だけの、1〜数行のPDFでも読めるように。2026-10-28）
+  const ys=peaks(longRuns(G,W,H,true),W/5);
+  if(ys.length<3) return {err:"表の罫線が見つかりません。予定表の形が変わったかもしれません"};
   const pick=(a,lo,hi)=>a.find(v=>v>lo&&v<hi);
+  const need=a=>[pick(a,700,770),pick(a,2690,2760),pick(a,280,340),pick(a,2880,2960),a.find(v=>v>3300)].every(v=>v!=null);
+  let xs=peaks(longRuns(G,W,H,false),H/6);   // ふつうの（全員分の）予定表
+  if(!need(xs)){   // 短い表：表の一番上から一番下まで続く縦線
+    const yT=ys[0], yB=ys[ys.length-1], colN=new Float64Array(W);
+    for(let x=0;x<W;x++){ let n=0; for(let y=yT;y<=yB;y++) if(G[y*W+x]<150) n++; colN[x]=n; }
+    xs=peaks(colN,(yB-yT)*0.9); }
   const x0=pick(xs,700,770), xe=pick(xs,2690,2760), xc=pick(xs,280,340), xsum=pick(xs,2880,2960), xend=xs.find(v=>v>3300), hy=pick(ys,440,500);
   if([x0,xe,xc,xsum,xend,hy].some(v=>v==null)) return {err:"表の罫線が見つかりません。予定表の形が変わったかもしれません"};
   const dx=(xe-x0)/30;
