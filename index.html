@@ -1253,7 +1253,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 22:40</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 22:44</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2575,7 +2575,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       await loadLeaflet();
       if(!restMapObj){
         restMapObj=L.map("restMap",{zoomControl:true,attributionControl:true});
-        L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(restMapObj);
+        L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(restMapObj);
         // 地図をタップ（クリック）した場所を、追加する場所として選べる
         restMapObj.on("click",e=>{ restPick={lat:+e.latlng.lat.toFixed(6),lng:+e.latlng.lng.toFixed(6)}; renderRestPick(); $("restMsg").textContent="地図で選んだ場所に追加します。社員コードを入れて「追加」を押してください"; });
       }
@@ -2686,7 +2686,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const m=$("trMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
     if(!trMap){ trMap=L.map("trMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(trMap);
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(trMap);
       trMap.setView([35.69,139.75],11);
       addAreaMask(trMap); }
     setTimeout(()=>trMap.invalidateSize(),60);
@@ -2725,7 +2725,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const m=$("evMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
     if(!evMap){ evMap=L.map("evMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(evMap);
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(evMap);
       evMap.setView([35.68,139.76],11); addAreaMask(evMap); }
     setTimeout(()=>evMap.invalidateSize(),60);
     if(first){ m.textContent="イベントを読み込んでいます…"; await evFetch(); }
@@ -2833,7 +2833,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const m=$("dmMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした"; return; }
     if(!dmMap){ dmMap=L.map("dmMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(dmMap);
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(dmMap);
       dmMap.setView([35.69,139.75],11); addAreaMask(dmMap); }
     setTimeout(()=>dmMap.invalidateSize(),60);
     if(dmLayer) dmLayer.remove(); dmLayer=L.layerGroup().addTo(dmMap);
@@ -2967,7 +2967,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   ["cmpDow","cmpHour","cmpOff"].forEach(id=>$(id).addEventListener("change",()=>cmpRender()));
   $("cmpDate").addEventListener("change",()=>{ cmpWhoCode=null; cmpRender(); });
   async function cmpMapInit(id,old){ await loadLeaflet(); if(old) return old; const m=L.map(id,{zoomControl:true,attributionControl:true});
-    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
     m.setView([35.68,139.74],11); addAreaMask(m); return m; }
   async function cmpRender(){
     if(!cmpData) return;
@@ -5111,7 +5111,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     loadLeaflet().then(()=>{
       if(!rtMapObj){
         rtMapObj=L.map("rtMap",{zoomControl:true,attributionControl:true});
-        L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(rtMapObj);
+        L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(rtMapObj);
       }
       if(rtLayer) rtLayer.remove();
       rtLayer=L.layerGroup().addTo(rtMapObj);
@@ -5730,8 +5730,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const G=GEO[k], S=GS[k], P=G.pre, m=$(P+"Msg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
     if(!S.map){ S.map=L.map(P+"Map",{zoomControl:true,attributionControl:true});
-      // 駐車禁止の地図は、飲み屋街マップと同じ白っぽい地図（淡色地図）にして、紫の印を見やすくする（2026-10-28 ユーザー指定）
-      L.tileLayer(`https://cyberjapandata.gsi.go.jp/xyz/${k==="rest2"?"pale":"std"}/{z}/{x}/{y}.png`,{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(S.map);
+      // 地図は、飲み屋街マップと同じ白っぽい地図（淡色地図）。優良乗り場だけは元の色の地図（2026-10-28 ユーザー指定）
+      L.tileLayer(`https://cyberjapandata.gsi.go.jp/xyz/${k==="yuryo"?"std":"pale"}/{z}/{x}/{y}.png`,{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(S.map);
       S.map.setView([35.69,139.75],12); addAreaMask(S.map); }
     setTimeout(()=>S.map.invalidateSize(),60);
     if(!S.pts){ m.textContent="場所を読み込んでいます…"; await geoLoad(k,true); if(!S.pts){ m.textContent="場所を読み込めませんでした。電波を確認してください"; return; } }
