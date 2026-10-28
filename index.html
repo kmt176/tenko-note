@@ -1233,7 +1233,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 10:41</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 11:33</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2867,6 +2867,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     CMP_HOTELS.forEach(h=>near(h[0],[h[1],h[2]],80));
     try{ (GS.stand.pts||[]).forEach(x=>{ if((x[4]||"P")==="P"&&x[2]&&x[2][0]) near(String(x[0]).replace(/^\d+_/,""),x[2][0],60); }); }catch(e){}
     TRAIN_ALL.forEach(st=>near(st.n+"駅",[st.lat,st.lng],120));
+    Object.values(AIR_TERM).forEach(ap=>Object.values(ap).forEach(([la,ln,n])=>near(n,[la,ln],400)));   // 羽田・成田の第1〜第3ターミナル（ターミナルは大きいので400m。2026-10-28 ユーザー指定）
     return best?best.n:null; }
   function cmpPlace(x){ if(!(x.onLat&&x.onLng)) return null; const o=cmpOwn(+x.onLat,+x.onLng); if(o) return {n:o,src:"一覧"};
     const c=cmpNames[cmpKey(x.onLat,x.onLng)]; return c&&c.n?c:null; }
