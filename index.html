@@ -802,7 +802,8 @@ body.rtfull{overflow:hidden}
       <div class="infohead"><h2>休憩場</h2><button class="btn" id="restReload">更新</button></div>
       <div class="src"><b>よい休憩場所を見つけたら、どんどん登録してください。</b>登録した場所は、みんなのアプリのこの地図に出ます（青いピン）。地図には、マイマップの<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>も出しています。合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
       <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button><button class="btn" id="restMe">現在地</button></div>
-      <div id="restMap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
+      <div id="restMapWrap" class="mapwrap" hidden><div id="restMap" class="bigmap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
+        <div class="evmapbtns"><button class="btn" id="restFullBtn">全画面</button></div></div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
       <div class="field"><label for="restCode">社員コード</label><input type="text" id="restCode" inputmode="numeric" autocomplete="off"></div>
       <div class="field"><label for="restNote">メモ（場所の名前など・省略できます）</label><input type="text" id="restNote" maxlength="60" autocomplete="off"></div>
@@ -1251,7 +1252,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 20:58</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 21:59</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2566,7 +2567,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(!j.ok){ m.textContent=j.error||"読み込めませんでした"; return; }
       restItems=j.items;
       m.textContent=after?`${after}（全部で${j.items.length}件）`:`みんなの休憩場 ${j.items.length}件`;
-      $("restMap").hidden=false;
+      $("restMapWrap").hidden=false; $("restMap").hidden=false;
       await loadLeaflet();
       if(!restMapObj){
         restMapObj=L.map("restMap",{zoomControl:true,attributionControl:true});
@@ -2764,6 +2765,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       w.classList.toggle("evfull",on); $(btn).textContent=on?"閉じる":"全画面"; document.body.style.overflow=on?"hidden":"";
       const m=getMap(); setTimeout(()=>m&&m.invalidateSize(),80); setTimeout(()=>m&&m.invalidateSize(),400); }; }
   setupFull("evFullBtn","evMapWrap",()=>evMap); setupFull("trFullBtn","trMapWrap",()=>trMap);
+  setupFull("restFullBtn","restMapWrap",()=>restMapObj);   // 休憩場の地図も全画面にできる（2026-10-28 ユーザー指定）
 
   // ===== 運転見合わせ時の需要予想（試験・管理者のみ。2026-10-25） =====
   const DM_DEF={oneDir:50,wPax:40,wDist:30,wDur:20,wEve:10,wFlow:40,eveFrom:17,eveTo:24,thR:60,thY:35,distMax:2000,durMax:180};
