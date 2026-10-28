@@ -34,7 +34,7 @@ progress{width:100%}
   <h1>勤務予定表の取り込み（運行管理者の方へ）</h1>
   <section class="card" id="loginCard">
     <h2>① パスワード</h2>
-    <div class="src">自分の番号（運行管理者1〜3。アプリの管理者から聞いた番号）を選んで、予定表のパスワードを入れてください。最初は 0000 です。パスワードは https（暗号化された通信）で安全に送り、サーバーには元に戻せない形（ハッシュ）でしか保存しません。アプリの管理者にも見えません。3回まちがえると、その番号はロックされます（アプリの管理者に0000に戻してもらうと外れます）。</div>
+    <div class="src">自分の番号（運行管理者1〜3。アプリの開発者から聞いた番号）を選んで、予定表のパスワードを入れてください。はじめて開くときのパスワード（初期のパスワード）は、アプリの開発者に確認してください。パスワードは https（暗号化された通信）で安全に送り、サーバーには元に戻せない形（ハッシュ）でしか保存しません。アプリの開発者にも見えません。3回まちがえると、その番号はロックされます（アプリの開発者に初期のパスワードに戻してもらうと外れます）。</div>
     <label for="slot">運行管理者の番号</label>
     <select id="slot" style="font-size:17px;padding:8px;border-radius:8px"><option value="1">運行管理者1</option><option value="2">運行管理者2</option><option value="3">運行管理者3</option></select>
     <label for="pass">予定表のパスワード</label>
@@ -44,7 +44,7 @@ progress{width:100%}
   </section>
   <section class="card" id="newCard" hidden>
     <h2>新しいパスワードを決めてください</h2>
-    <div class="src">最初のパスワード（0000）のままでは取り込めません。0000のまま2週間たつと、この番号は使えなくなります。6文字以上で、ほかの人に分からないものにしてください。忘れたときは、アプリの管理者に「運行管理者○番を0000に戻して」と頼んでください（管理者にも、決めたパスワードは見えません）。</div>
+    <div class="src">初期のパスワードのままでは取り込めません。初期のパスワードのまま2週間たつと、この番号は使えなくなります。6文字以上で、ほかの人に分からないものにしてください。忘れたときは、アプリの開発者に「運行管理者○番のパスワードを初期に戻して」と頼んでください（開発者にも、決めたパスワードは見えません）。</div>
     <label for="newPass">新しいパスワード</label><input type="password" id="newPass" autocomplete="new-password">
     <label for="newPass2">もう一度</label><input type="password" id="newPass2" autocomplete="new-password">
     <button class="btn primary" id="newBtn">このパスワードにする</button>
@@ -245,8 +245,8 @@ function show(all,period){
   const firstTime=known.size<50, look=Object.keys(seen).filter(c=>(!firstTime&&!known.has(c))||all.some(x=>x.code===c&&x.unsure));
   $("resSum").innerHTML=st?`<div>期間：<b>${st.getMonth()+1}/${st.getDate()}〜${end.getMonth()+1}/${end.getDate()}</b>（${st.getFullYear()}年${end.getMonth()+1}月度）</div><div>取り込める人：<b>${lines.length}人</b>${problems.length?`、<span class="err">確かめが必要な人：${problems.length}人</span>`:`（全員、表の「勤務」の日数と一致しました）`}</div>`
     :`<div class="err">予定表の期間（見出しの日付）が読めませんでした。会社の勤務予定表か確かめてください</div>`;
-  $("resProb").innerHTML=(problems.length?`<h2 class="err" style="margin-top:12px">確かめが必要な人（取り込みません）</h2><div class="src">PDFを見て、正しい内容をアプリの管理者に伝えてください。</div><table>${problems.map(p=>`<tr><td><img class="crop" src="${p.r.img}" alt=""></td><td>${p.r.page}ページ<br>${esc(p.why.join("／"))}<br><span class="mono">${esc(p.r.code)} ${esc(p.r.days)}</span></td></tr>`).join("")}</table>`:"")
-    +(look.length?`<h2 class="warn" style="margin-top:12px">念のため見てほしい社員コード（${look.length}人・取り込みます）</h2><div class="src">${firstTime?"":"初めて出てくるコード（新しく入った人ならそのままで大丈夫です）と、"}数字の形が少し見分けにくかったコードです。左の画像と右の数字が同じか見てください。違っていたら、アプリの管理者に伝えてください。</div><table>${look.map(c=>{ const r=all.find(x=>x.code===c); return `<tr><td><img class="crop" src="${r.img}" alt=""></td><td class="mono">${esc(c)}</td></tr>`; }).join("")}</table>`:"");
+  $("resProb").innerHTML=(problems.length?`<h2 class="err" style="margin-top:12px">確かめが必要な人（取り込みません）</h2><div class="src">PDFを見て、正しい内容をアプリの開発者に伝えてください。</div><table>${problems.map(p=>`<tr><td><img class="crop" src="${p.r.img}" alt=""></td><td>${p.r.page}ページ<br>${esc(p.why.join("／"))}<br><span class="mono">${esc(p.r.code)} ${esc(p.r.days)}</span></td></tr>`).join("")}</table>`:"")
+    +(look.length?`<h2 class="warn" style="margin-top:12px">念のため見てほしい社員コード（${look.length}人・取り込みます）</h2><div class="src">${firstTime?"":"初めて出てくるコード（新しく入った人ならそのままで大丈夫です）と、"}数字の形が少し見分けにくかったコードです。左の画像と右の数字が同じか見てください。違っていたら、アプリの開発者に伝えてください。</div><table>${look.map(c=>{ const r=all.find(x=>x.code===c); return `<tr><td><img class="crop" src="${r.img}" alt=""></td><td class="mono">${esc(c)}</td></tr>`; }).join("")}</table>`:"");
   $("resText").textContent=lines.join("\n");
   $("saveBtn").disabled=!st||!lines.length;
 }
