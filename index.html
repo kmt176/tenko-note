@@ -1233,7 +1233,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 10:06</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 10:41</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2856,7 +2856,31 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let cmpData=null, cmpCrew=[], cmpMap=null, cmpLayer=null, cmpMap2=null, cmpLayer2=null, cmpTab="1", cmpWhoCode=null;
   const CMP_COLORS=["#D23C2F","#E8742A","#E0A100","#3E9B4F","#2F8FB0","#6B6FB8","#9A6FB0","#8A8F8E"];
   const cmpColor=i=>CMP_COLORS[Math.min(i,CMP_COLORS.length-1)];
-  const cmpArea=a=>String(a||"").replace(/[0-9０-９\-－丁目番地号]+.*$/,"")||"（住所なし）";   // 「港区六本木7」→「港区六本木」
+  const cmpArea=a=>String(a||"").replace(/[0-9０-９一二三四五六七八九十]+丁目.*$|[0-9０-９].*$/,"")||"（住所なし）";   // 「目黒区」の「目」で切れないよう、数字から先だけ切る（2026-10-28）   // 「港区六本木7」→「港区六本木」
+  // 乗った場所の名前（2026-10-28 ユーザー指定）：①ホテル・乗り場・駅の一覧の近くなら、その名前（お金も外への送信もなし）
+  // ②一覧にない場所は、サーバーの「施設名」シート（Google・Yahooで調べてためたもの）。調べるのは手上げ以外で、開いた画面の分だけ
+  const CMP_HOTELS=[["アワーズイン阪急",35.606041,139.734039],["新宿ワシントンホテル（本館）",35.686401,139.69368],["アパホテル＆リゾート〈両国駅前タワー〉",35.697393,139.794328],["アパホテル〈六本木SIX〉",35.666233,139.737255],["ホテルグレイスリー新宿",35.694897,139.702133],["相鉄グランドフレッサ 東京ベイ有明",35.632458,139.790283],["東京ベイ有明ワシントンホテル",35.632969,139.79425],["ホテルメトロポリタン（池袋）",35.727894,139.70816],["ホテル ヴィラフォンテーヌ グランド 東京有明",35.636929,139.791077],["アパホテル〈東新宿 歌舞伎町タワー〉",35.697938,139.703809],["アパホテル＆リゾート〈西新宿五丁目駅前タワー〉",35.689683,139.683572],["アパホテル＆リゾート〈東京ベイ潮見〉",35.65782,139.818609],["アパホテル＆リゾート〈六本木駅東〉",35.661731,139.737492],["ホテルメトロポリタン エドモント",35.700504,139.749054],["ホテルサンルートプラザ新宿",35.687294,139.699326],["アパホテル〈新宿 歌舞伎町タワー〉",35.695745,139.701186],["アパホテル〈山手大塚駅前タワー〉",35.731539,139.726642],["アパホテル〈品川 泉岳寺駅前〉",35.638045,139.739237],["アパホテル〈浅草 田原町駅前〉",35.710234,139.790121],["ニューオータニイン東京",35.621071,139.729202],["アパホテル〈上野駅前〉",35.7103,139.7771],["アパホテル〈新宿御苑前〉",35.688744,139.708868],["三井ガーデンホテル汐留イタリア街",35.660374,139.757278],["秋葉原ワシントンホテル",35.697304,139.773041],["三井ガーデンホテル神宮外苑の杜プレミア",35.680084,139.715607],["三井ガーデンホテル銀座プレミア",35.667496,139.763458],["ホテルメトロポリタン丸の内",35.683498,139.767944],["アパホテル〈京成上野駅前南〉",35.708674,139.772924],["第一ホテル両国",35.698616,139.796814],["アパホテル〈浅草駅前〉",35.708279,139.795485]];   // ホテル一覧_300室以上（2026-10-28）の30軒
+  const cmpNames={}; let cmpNameBusy=false, cmpNameMsg="";
+  const cmpKey=(a,b)=>(+a).toFixed(4)+","+(+b).toFixed(4);
+  function cmpOwn(lat,lng){ const P=[lat,lng]; let best=null;
+    const near=(n,q,r)=>{ const d=distM(P,q); if(d<=r&&(!best||d<best.d)) best={n,d}; };
+    CMP_HOTELS.forEach(h=>near(h[0],[h[1],h[2]],80));
+    try{ (GS.stand.pts||[]).forEach(x=>{ if((x[4]||"P")==="P"&&x[2]&&x[2][0]) near(String(x[0]).replace(/^\d+_/,""),x[2][0],60); }); }catch(e){}
+    TRAIN_ALL.forEach(st=>near(st.n+"駅",[st.lat,st.lng],120));
+    return best?best.n:null; }
+  function cmpPlace(x){ if(!(x.onLat&&x.onLng)) return null; const o=cmpOwn(+x.onLat,+x.onLng); if(o) return {n:o,src:"一覧"};
+    const c=cmpNames[cmpKey(x.onLat,x.onLng)]; return c&&c.n?c:null; }
+  const cmpLabel=x=>{ const p=cmpPlace(x); return p?`${p.n}（${cmpArea(x.from)}）`:cmpArea(x.from); };   // 施設名のあとに町名をかっこで添える（2026-10-28 ユーザー指定）
+  async function cmpFetchNames(rs){
+    if(cmpNameBusy) return;
+    const need=[...new Set(rs.filter(x=>x.onLat&&x.onLng&&x.kind!=="手上げ"&&!cmpOwn(+x.onLat,+x.onLng)).map(x=>cmpKey(x.onLat,x.onLng)).filter(k=>!(k in cmpNames)))];
+    if(!need.length) return; cmpNameBusy=true;
+    try{ const j=await post({action:"placeNames",adminPass:cfg.apass,pts:need});
+      if(j&&j.ok){ need.forEach(k=>{ cmpNames[k]=j.names[k]||{n:"",src:""}; });
+        cmpNameMsg=j.gErr?`Googleで施設名を調べられませんでした（${j.gErr}）`:j.gLeft===0?"今日のGoogleの上限（無料の範囲）に届いたので、残りの施設名は明日以降に調べます":""; }
+      else { need.forEach(k=>cmpNames[k]={n:"",src:""}); cmpNameMsg=(j&&j.error)||"施設名を調べられませんでした"; }
+    }catch(e){ need.forEach(k=>cmpNames[k]={n:"",src:""}); cmpNameMsg="施設名を調べられませんでした（サーバーの準備がまだか、電波が悪いとき）"; }
+    cmpNameBusy=false; if(cmpTab==="2") cmpRender(); }
   (()=>{ const h=$("cmpHour"); for(let i=0;i<24;i+=2) h.insertAdjacentHTML("beforeend",`<option value="${i}">${i}〜${i+2}時</option>`); h.value="18";
     const n=new Date(); $("cmpMonth").value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); })();
   function cmpOpen(){ if(!cmpData) $("cmpMsg").textContent="月を選んで「読み込む」を押してください"; else cmpRender(); }
@@ -2915,15 +2939,18 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       cmpMap2=await cmpMapInit("cmpMap2",cmpMap2); setTimeout(()=>cmpMap2.invalidateSize(),60);
       if(cmpLayer2) cmpLayer2.remove(); cmpLayer2=L.layerGroup().addTo(cmpMap2);
       if(!c||!rs.length){ $("cmpFlow").innerHTML=`<div class="geo">この日の記録がありません</div>`; return; }
-      const path=[]; rs.forEach((x,i)=>{ if(x.onLat&&x.onLng){ path.push([+x.onLat,+x.onLng]); L.marker([+x.onLat,+x.onLng],{icon:L.divIcon({className:"",html:`<div style="background:${cmpColor(c.rank)};color:#fff;border:2px solid #fff;border-radius:50%;width:24px;height:24px;line-height:20px;text-align:center;font-size:12px;font-weight:700">${i+1}</div>`,iconSize:[24,24],iconAnchor:[12,12]})}).bindPopup(`${i+1}. ${tm2(x.at)} ${esc(x.kind)} ${yen(x.amt)}円<br>${esc(x.from||"")} → ${esc(x.to||"")}`).addTo(cmpLayer2); }
+      const path=[]; rs.forEach((x,i)=>{ if(x.onLat&&x.onLng){ path.push([+x.onLat,+x.onLng]); L.marker([+x.onLat,+x.onLng],{icon:L.divIcon({className:"",html:`<div style="background:${cmpColor(c.rank)};color:#fff;border:2px solid #fff;border-radius:50%;width:24px;height:24px;line-height:20px;text-align:center;font-size:12px;font-weight:700">${i+1}</div>`,iconSize:[24,24],iconAnchor:[12,12]})}).bindPopup(`${i+1}. ${tm2(x.at)} ${esc(x.kind)} ${yen(x.amt)}円<br>${(o=>o?`<b>${esc(o)}</b> `:"")(cmpOwn(+x.onLat,+x.onLng))}${esc(x.from||"")} → ${esc(x.to||"")}`).addTo(cmpLayer2); }
         if(x.offLat&&x.offLng) path.push([+x.offLat,+x.offLng]); });
       if(path.length>1){ L.polyline(path,{color:cmpColor(c.rank),weight:3,opacity:.7,dashArray:"6 6"}).addTo(cmpLayer2); cmpMap2.fitBounds(L.latLngBounds(path),{padding:[30,30],maxZoom:15}); }
       // 時間帯ごとに、どのエリアで乗せたか（乗車した順＝昼の出庫から翌朝の順に並べる）
       const byH={}; rs.forEach(x=>{ const h=new Date(x.at).getHours(); (byH[h]=byH[h]||[]).push(x); });
-      const first=rs[0], last=rs[rs.length-1];
+      const first=rs[0], last=rs[rs.length-1], wasOpen=!!($("cmpFlow").querySelector("details")||{}).open;
+      const srcs=new Set(rs.map(x=>(cmpPlace(x)||{}).src));
       $("cmpFlow").innerHTML=`<div class="src">${esc(c.label)}：${md(day)}の売上 ${yen(tot[cmpWhoCode])}円・${rs.length}回・${tm2(first.at)}〜${tm2(last.offAt||last.at)}（最初の乗車〜最後の降車）</div>
-        <table class="cmpt"><thead><tr><td>時間帯</td><td>乗せたエリア</td><td>回数・売上</td></tr></thead><tbody>${[...new Set(rs.map(x=>new Date(x.at).getHours()))].map(h=>{ const g=byH[h]; return `<tr><td class="num">${h}時台</td><td>${[...new Set(g.map(x=>cmpArea(x.from)))].map(esc).join("、")}</td><td class="num">${g.length}回 ${yen(g.reduce((a,x)=>a+(+x.amt),0))}円</td></tr>`; }).join("")}</tbody></table>
-        <details><summary>乗車ごと（${rs.length}回）</summary><table class="cmpt"><tbody>${rs.map((x,i)=>`<tr><td class="num">${i+1}</td><td class="num">${tm2(x.at)}</td><td>${esc(x.kind)}</td><td>${esc(cmpArea(x.from))}→${esc(cmpArea(x.to))}</td><td class="num">${yen(x.amt)}</td></tr>`).join("")}</tbody></table></details>`;
+        <table class="cmpt"><thead><tr><td>時間帯</td><td>乗せたエリア</td><td>回数・売上</td></tr></thead><tbody>${[...new Set(rs.map(x=>new Date(x.at).getHours()))].map(h=>{ const g=byH[h]; return `<tr><td class="num">${h}時台</td><td>${[...new Set(g.map(cmpLabel))].map(esc).join("、")}</td><td class="num">${g.length}回 ${yen(g.reduce((a,x)=>a+(+x.amt),0))}円</td></tr>`; }).join("")}</tbody></table>
+        <details${wasOpen?" open":""}><summary>乗車ごと（${rs.length}回）</summary><table class="cmpt"><tbody>${rs.map((x,i)=>`<tr><td class="num">${i+1}</td><td class="num">${tm2(x.at)}</td><td>${esc(x.kind)}</td><td>${esc(cmpLabel(x))}→${esc(cmpArea(x.to))}</td><td class="num">${yen(x.amt)}</td></tr>`).join("")}</tbody></table></details>
+        <div class="src">乗せた場所は、ホテル・乗り場・駅の近くならその名前、それ以外（手上げを除く）は施設名を調べて出します（見つからなければ町名）。${cmpNameBusy?"施設名を調べています…":""}${cmpNameMsg?`<br>${esc(cmpNameMsg)}`:""}${srcs.has("Google")?`<br>施設名の一部：Google Maps`:""}${srcs.has("Yahoo")?`<br><a href="https://developer.yahoo.co.jp/sitemap/" target="_blank" rel="noopener">Web Services by Yahoo! JAPAN</a>`:""}</div>`;
+      cmpFetchNames(rs);
     }
     if(cmpTab==="3"){
       // 分析3：乗務員ごとの、手上げ・配車・乗り場の割合と平均単価。自分と上位の人を並べる
