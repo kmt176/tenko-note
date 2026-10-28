@@ -1233,7 +1233,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 09:30</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 09:37</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3691,7 +3691,9 @@ body.rtfull{overflow:hidden}
       <div class="row" style="margin-top:6px"><span>計画を含む見込み</span><span class="total num">${rp!=null?pct(rp):"—"}</span></div>
       <div class="bar">${bar(rp,"p")}</div>
       <div class="src num">${r.type==="am"?"8〜10時の":""}連続配車 ${hm(W.all.n)}／${r.type==="am"?"8〜10時の勤務":"出庫〜入庫"} ${hm(W.all.d)}</div>
-      <div class="checks">${rp==null?"":rp>=goal?`<span class="pill ok">🟢 今のペースで計画どおり進めば、目標（${r.pct}%）に届きます</span>`:`<span class="pill warn">🔴 目標（${r.pct}%）まで、あと ${hm(short(W.all,r))} の連続配車が必要</span>`}</div>`:""}
+      <div class="checks">${rp==null?"":rp>=goal?`<span class="pill ok">🟢 今のペースで計画どおり進めば、目標（${r.pct}%）に届きます</span>`:(()=>{ const need=short(W.all,r), left=W.shifts.filter(s=>s.state!=="done").length;
+        return left?`<span class="pill warn">🔴 目標（${r.pct}%）には、今の計画に加えて、あと ${hm(need)} の連続配車が必要です（残りの乗務 ${left}回 → 1乗務あたり あと ${hm(Math.ceil(need/left))}）</span>`
+          :`<span class="pill warn">🔴 目標（${r.pct}%）に、あと ${hm(need)} 届きませんでした</span>`; })()}</div>`:""}
     </section>
     <section class="card">
       <h2>${useWk?"乗務ごと":"乗務ごと（必須・コアタイム：朝6〜10時90分 または 夕方16〜20時2時間、どちらか）"}</h2>
