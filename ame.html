@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>エリア別 雨予報</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--grid:#E3E9E8;--acc-bg:#E3F0F4;--acc-line:#A9CCD7;--acc-ink:#1D4F5E;--warn:#9A5B00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--grid:#26312F;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--warn:#F0B35A}}
+:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--grid:#26312F;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--warn:#F0B35A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:720px;margin:0 auto;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 32px);display:grid;gap:14px}
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+h2{margin:0 0 8px;font-size:17px}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--acc-line);background:var(--acc-bg);color:var(--acc-ink);border-radius:10px;padding:10px 14px;font-size:16px;font-weight:800}
+.btn.sub{background:var(--surface);color:var(--ink);border-color:var(--line);font-weight:700}
+.btn:disabled{opacity:.5}
+#msg{font-size:14px;color:var(--muted);line-height:1.5;width:100%}
+#msg.warn{color:var(--warn);font-weight:700}
+/* エリア別のまとめ */
+.ar{display:grid;gap:4px;padding:8px 0;border-top:1px solid var(--grid)}
+.ar:first-of-type{border-top:none;padding-top:0}
+.ar .hd{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.ar .hd b{font-size:16px;min-width:3em}
+.ar .hd span{font-size:14px;line-height:1.4}
+.ar .hd small{color:var(--muted);font-size:12px}
+.strip{display:grid;grid-template-columns:repeat(24,1fr);gap:1px}
+.strip i{height:14px;border-radius:2px;background:var(--grid)}
+.ticks{display:grid;grid-template-columns:repeat(24,1fr);font-size:10px;color:var(--muted)}
+/* 地図 */
+#map{height:min(62vh,440px);border-radius:10px;border:1px solid var(--line)}
+.bb{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;border-radius:9px;border:1.5px solid rgba(0,0,0,.35);font:700 10px/1.1 sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.bb b{font-size:12px}
+.bb.me{border:2.5px solid #D23C2F}
+.sl{display:flex;align-items:center;gap:8px;margin-top:10px}
+.sl input{flex:1;height:32px}
+.sl button{min-width:44px;padding:8px 0}
+#slT{font-size:16px;font-weight:800;text-align:center;margin-top:4px}
+/* 一覧表 */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px}
+.seg button{border:none;background:var(--surface);color:var(--ink);padding:8px 14px;font-size:15px;font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--acc-bg);color:var(--acc-ink)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:separate;border-spacing:0;font-size:11px}
+th,td{height:26px;min-width:30px;text-align:center;border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);padding:0 2px;white-space:nowrap}
+thead th{background:var(--surface);font-weight:700;cursor:pointer;position:sticky;top:0}
+th.nm{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:0 6px;min-width:58px;font-size:13px;border-right:1px solid var(--line)}
+thead th.nm{z-index:3}
+tr.ag th.nm{background:var(--bg);color:var(--muted);font-size:12px}
+tr.ag td{background:var(--bg)}
+.d0{border-left:2px solid var(--muted)}
+th small{display:block;font-size:9px;color:var(--muted);font-weight:400;line-height:1}
+.sel{box-shadow:inset 0 0 0 2px var(--ink)}
+.lg{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
+.lg i{display:inline-block;width:16px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:3px;border:1px solid var(--line)}
+details{font-size:14px;line-height:1.7;color:var(--muted)}
+details summary{font-weight:700;color:var(--ink);cursor:pointer}
+.lock{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;font-size:16px;line-height:1.6;text-align:center;background:var(--bg)}
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <div class="top">
+      <button class="btn" id="get">☔ 最新の予報を取る</button>
+      <button class="btn sub" id="meBtn">📍 現在地も見る</button>
+      <div id="msg"></div>
+    </div>
+  </section>
+  <section class="card" id="sum"><h2>エリア別のまとめ（24時間）</h2><div id="sumBody"></div></section>
+  <section class="card">
+    <h2>地図</h2>
+    <div id="map"></div>
+    <div class="sl"><button class="btn sub" id="prev" aria-label="1時間前">◀</button><input type="range" id="slider" min="0" max="23" value="0" aria-label="時刻"><button class="btn sub" id="next" aria-label="1時間後">▶</button></div>
+    <div id="slT"></div>
+  </section>
+  <section class="card">
+    <h2>一覧表</h2>
+    <div class="seg"><button data-m="mm" aria-pressed="true">雨量（mm）</button><button data-m="q" aria-pressed="false">降水確率（%）</button></div>
+    <div class="tw"><table id="tbl"></table></div>
+    <div class="lg" id="lg"></div>
+  </section>
+  <details class="card"><summary>使い方</summary>
+    ・出庫のときに「最新の予報を取る」を押すと、東京23区と武蔵野市・三鷹市の、今から24時間の1時間ごとの雨量と降水確率を出します。開いたときも、同じ時間帯の予報が残っていればそれを、なければ自動で取り直します。<br>
+    ・各区・市の雨は、区役所・市役所の近くの1か所の予報です。広い区（大田・世田谷・練馬など）は、端のほうで違うことがあります。<br>
+    ・「14時」の列は14時〜15時の1時間に降る量です。1mm未満はぱらつく程度、1〜5mmは傘が要る雨、5mm以上は強い雨の目安です。<br>
+    ・地図は、下の目盛りを動かすとその時刻の雨量に変わります。一覧表の時刻を押しても同じです。<br>
+    ・「現在地も見る」を押すと、今いる場所の予報を一覧表の一番上と地図（赤い枠）に足します。<br>
+    ・予報は先の時間ほど外れやすくなります。乗務中は空や雨雲レーダーで答え合わせしてください。<br>
+    ・予報は Open-Meteo（無料の天気予報サービス、気象庁などのデータ）から取っています。
+  </details>
+</main>
+<script>
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// 試験中は管理者だけ（帰りのバスと同じ確かめ方）
+(function(){ let adm=false; try{ const c=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); adm=c.admin===true&&!!c.apass; }catch(e){}
+  if(!adm){ document.body.innerHTML='<div class="lock">このページは今、管理者だけが使えます（試験中）。</div>'; throw new Error("not admin"); } })();
+
+// 代表地点（区役所・市役所の近く）。[名前, エリア, 緯度, 経度]
+const PTS=[["千代田","都心",35.6940,139.7536],["中央","都心",35.6706,139.7720],["港","都心",35.6581,139.7516],["新宿","都心",35.6938,139.7034],["渋谷","都心",35.6640,139.6982],["文京","都心",35.7081,139.7524],
+  ["板橋","北部",35.7512,139.7093],["練馬","北部",35.7356,139.6517],["北","北部",35.7528,139.7337],["豊島","北部",35.7326,139.7158],["荒川","北部",35.7361,139.7834],["足立","北部",35.7750,139.8044],
+  ["台東","東部",35.7126,139.7800],["墨田","東部",35.7107,139.8016],["江東","東部",35.6727,139.8170],["葛飾","東部",35.7435,139.8472],["江戸川","東部",35.7068,139.8683],
+  ["品川","南部",35.6092,139.7302],["目黒","南部",35.6414,139.6982],["大田","南部",35.5613,139.7160],["世田谷","南部",35.6464,139.6533],
+  ["中野","西部",35.7074,139.6637],["杉並","西部",35.6995,139.6364],["武蔵野","西部",35.7178,139.5661],["三鷹","西部",35.6835,139.5595]];
+const AREAS=["都心","北部","東部","南部","西部"], RAIN=0.1, KEY="tenko.ame";
+let D=null, mode="mm", sel=0, map=null, mkLayer=null;
+
+// 今の時（日本時間）を Open-Meteo の時刻の書き方で。例 "2026-10-29T14:00"
+const jstHour=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,13)+":00";
+const baseH=()=>+D.h0.slice(11,13);
+const colH=j=>(baseH()+j)%24, nextDay=j=>baseH()+j>=24;
+const hl=j=>(nextDay(j)?"翌":"")+colH(j)+"時";
+const fmt=v=>v==null?"－":v<RAIN?"":v<1?String(v.toFixed(1)).replace(/^0/,""):v<10?v.toFixed(1):String(Math.round(v));
+// 雨量の色：0は白、1mm未満は薄い水色、1〜5mmは青、5〜10mmは濃い青、10mm以上は紫
+function mmCol(v){ if(v==null||v<RAIN) return ["var(--surface)","var(--ink)"]; if(v<1) return ["#CDEBFA","#17201E"]; if(v<5) return ["#4A9EF0","#fff"]; if(v<10) return ["#1F4FC2","#fff"]; return ["#7A2BC2","#fff"]; }
+function qCol(q){ if(q==null||q<30) return ["var(--surface)","var(--ink)"]; if(q<50) return ["#E3EBF4","#17201E"]; if(q<70) return ["#B4C8E0","#17201E"]; return ["#6F8FBE","#fff"]; }
+const sty=c=>`background:${c[0]};color:${c[1]}`;
+
+// 予報を取る。Open-Meteo の雨量・確率は「その時刻までの1時間」の値なので、1つ後ろの時刻を「その時の1時間」として使う
+async function om(pts){
+  const u="https://api.open-meteo.com/v1/forecast?latitude="+pts.map(p=>p[0].toFixed(4)).join(",")+"&longitude="+pts.map(p=>p[1].toFixed(4)).join(",")
+    +"&hourly=precipitation,precipitation_probability&timezone=Asia%2FTokyo&forecast_days=2";
+  const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),20000);
+  try{
+    const r=await fetch(u,{signal:ac.signal}); if(!r.ok) throw new Error("予報を取れませんでした（"+r.status+"）");
+    let j=await r.json(); if(!Array.isArray(j)) j=[j];
+    const h0=jstHour();
+    return {h0,rows:j.map(x=>{ const i=x.hourly.time.indexOf(h0); if(i<0) throw new Error("予報の時刻が合いません");
+      const s=k=>x.hourly[k].slice(i+1,i+25); return {p:s("precipitation"),q:s("precipitation_probability")}; })};
+  }catch(e){ throw e.name==="AbortError"?new Error("予報の取得に時間がかかりすぎました。電波のよい所でもう一度押してください"):e; }
+  finally{ clearTimeout(tm); }
+}
+async function load(){
+  $("get").disabled=true; $("msg").className=""; $("msg").textContent="予報を取っています…";
+  try{
+    const me=D&&D.me?[D.me.lat,D.me.lon]:null, pts=PTS.map(p=>[p[2],p[3]]).concat(me?[me]:[]);
+    const r=await om(pts);
+    D={t:Date.now(),h0:r.h0,rows:r.rows.slice(0,PTS.length)};
+    if(me) D.me={lat:me[0],lon:me[1],...r.rows[PTS.length]};
+    try{ localStorage.setItem(KEY,JSON.stringify(D)); }catch(e){}
+    sel=0; render();
+  }catch(e){ const old=!!(D&&D.rows); $("msg").className="warn"; $("msg").textContent=e.message+(old?"（前に取った予報を出しています）":""); if(old) render(false); }
+  finally{ $("get").disabled=false; }
+}
+function age(){
+  if(!D) return;
+  const m=Math.round((Date.now()-D.t)/60000), t=new Date(D.t+9*3600e3).toISOString().slice(11,16);
+  if($("msg").className!=="warn") $("msg").textContent=`取得 ${t}（${m<1?"今":m+"分前"}）・${hl(0)}から24時間`;
+}
+
+function render(keepMsg){
+  if(keepMsg!==false) $("msg").className="";
+  renderSum(); renderTable(); renderMap(); age();
+}
+function renderSum(){
+  $("sumBody").innerHTML=AREAS.map(a=>{
+    const idx=PTS.map((p,i)=>p[1]===a?i:-1).filter(i=>i>=0);
+    const mx=[...Array(24)].map((_,j)=>{ let m=0,w=""; idx.forEach(i=>{ const v=D.rows[i].p[j]; if(v>m){ m=v; w=PTS[i][0]; } }); return {m,w}; });
+    const qmax=Math.max(0,...idx.flatMap(i=>D.rows[i].q.filter(q=>q!=null)));
+    const on=mx.map(x=>x.m>=RAIN), a0=on.indexOf(true);
+    let txt;
+    if(a0<0) txt=`雨の予報なし<small>（降水確率 最大${qmax}%）</small>`;
+    else { let a1=a0; while(a1+1<24&&on[a1+1]) a1++;
+      const pk=mx.slice(a0,a1+1).reduce((b,x)=>x.m>b.m?x:b);
+      txt=`<b style="min-width:0">${a0===0?"今":hl(a0)}〜${a1===23?"":hl(a1+1)} ${pk.m<1?"小雨":pk.m<5?"雨":"強い雨"}</b> <small>最大 ${pk.m.toFixed(1)}mm（${esc(pk.w)}）${on.slice(a1+1).includes(true)?"・そのあとも降る時間あり":""}</small>`; }
+    const strip=mx.map((x,j)=>`<i style="background:${x.m>=RAIN?mmCol(x.m)[0]:"var(--grid)"}" title="${hl(j)} ${x.m.toFixed(1)}mm"></i>`).join("");
+    const ticks=[...Array(24)].map((_,j)=>`<span>${j%3===0?colH(j):""}</span>`).join("");
+    return `<div class="ar"><div class="hd"><b>${a}</b><span>${txt}</span></div><div class="strip">${strip}</div><div class="ticks">${ticks}</div><small style="color:var(--muted);font-size:12px">${idx.map(i=>PTS[i][0]).join("・")}</small></div>`;
+  }).join("");
+}
+function renderTable(){
+  const cols=[...Array(24).keys()];
+  const head=`<thead><tr><th class="nm">時</th>${cols.map(j=>`<th data-c="${j}" class="${j===sel?"sel ":""}${colH(j)===0&&j?"d0":""}">${colH(j)}${colH(j)===0&&j?"<small>翌</small>":j===0?"<small>今</small>":""}</th>`).join("")}</tr></thead>`;
+  const row=(nm,r)=>`<tr><th class="nm">${nm}</th>${cols.map(j=>{ const v=mode==="mm"?r.p[j]:r.q[j], c=mode==="mm"?mmCol(v):qCol(v);
+    return `<td class="${j===sel?"sel ":""}${colH(j)===0&&j?"d0":""}" style="${sty(c)}">${mode==="mm"?fmt(v):v==null?"－":v}</td>`; }).join("")}</tr>`;
+  let body=D.me?row("📍現在地",D.me):"";
+  AREAS.forEach(a=>{ body+=`<tr class="ag"><th class="nm">${a}</th><td colspan="24"></td></tr>`;
+    PTS.forEach((p,i)=>{ if(p[1]===a) body+=row(p[0],D.rows[i]); }); });
+  $("tbl").innerHTML=head+"<tbody>"+body+"</tbody>";
+  $("tbl").querySelectorAll("thead [data-c]").forEach(th=>th.onclick=()=>setSel(+th.dataset.c));
+  $("lg").innerHTML=mode==="mm"
+    ?[["#CDEBFA","1mm未満"],["#4A9EF0","1〜5mm"],["#1F4FC2","5〜10mm"],["#7A2BC2","10mm以上"]].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join("")+"<span>空欄＝降らない</span>"
+    :[["#E3EBF4","30〜40%"],["#B4C8E0","50〜60%"],["#6F8FBE","70%以上"]].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join("");
+}
+function renderMap(){
+  if(!map){
+    map=L.map("map",{zoomControl:true,attributionControl:true});
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>｜予報 <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>'}).addTo(map);
+    map.fitBounds(PTS.map(p=>[p[2],p[3]]),{padding:[18,18]});
+    mkLayer=L.layerGroup().addTo(map);
+  }
+  mkLayer.clearLayers();
+  const bub=(ll,nm,v,me)=>{ const c=mmCol(v);
+    L.marker(ll,{interactive:false,icon:L.divIcon({className:"",iconSize:[40,28],iconAnchor:[20,14],html:`<div class="bb${me?" me":""}" style="${sty(c)}">${esc(nm)}<b>${v==null?"－":v<RAIN?"0":fmt(v)}</b></div>`})}).addTo(mkLayer); };
+  PTS.forEach((p,i)=>bub([p[2],p[3]],p[0],D.rows[i].p[sel],false));
+  if(D.me) bub([D.me.lat,D.me.lon],"現在地",D.me.p[sel],true);
+  $("slider").value=sel;
+  const wet=PTS.filter((p,i)=>(D.rows[i].p[sel]||0)>=RAIN).length;
+  $("slT").textContent=`${sel===0?"今の1時間":hl(sel)+"台"}（${colH(sel)}:00〜${(colH(sel)+1)%24}:00）・降る区市 ${wet}/${PTS.length}`;
+}
+function setSel(j){ sel=Math.max(0,Math.min(23,j)); renderMap();
+  $("tbl").querySelectorAll(".sel").forEach(e=>e.classList.remove("sel"));
+  $("tbl").querySelectorAll("tr").forEach(tr=>{ const c=tr.children[sel+1]; if(c&&!c.hasAttribute("colspan")) c.classList.add("sel"); }); }
+
+$("slider").oninput=e=>setSel(+e.target.value);
+$("prev").onclick=()=>setSel(sel-1); $("next").onclick=()=>setSel(sel+1);
+document.querySelectorAll(".seg [data-m]").forEach(b=>b.onclick=()=>{ mode=b.dataset.m;
+  document.querySelectorAll(".seg [data-m]").forEach(x=>x.setAttribute("aria-pressed",x===b)); if(D) renderTable(); });
+$("get").onclick=load;
+$("meBtn").onclick=()=>{
+  if(!navigator.geolocation){ $("msg").textContent="このスマホでは現在地が使えません"; return; }
+  $("msg").className=""; $("msg").textContent="現在地を調べています…";
+  navigator.geolocation.getCurrentPosition(p=>{ D=D||{}; D.me={lat:p.coords.latitude,lon:p.coords.longitude}; load(); },
+    ()=>{ $("msg").className="warn"; $("msg").textContent="現在地が分かりませんでした（位置情報の許可を確かめてください）"; },{enableHighAccuracy:false,timeout:15000,maximumAge:120000});
+};
+// 開いたとき：同じ時の予報が残っていればそれを出す。時が変わっていたら取り直す
+try{ D=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ D=null; }
+if(D&&D.h0===jstHour()&&D.rows&&D.rows.length===PTS.length) render(); else load();
+setInterval(()=>{ if(!D||!D.rows) return; if(D.h0!==jstHour()&&!document.hidden) load(); else age(); },60000);
+</script>
+</body>
+</html>
