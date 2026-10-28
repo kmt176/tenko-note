@@ -1233,7 +1233,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 11:33</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 11:51</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1397,6 +1397,7 @@ body.rtfull{overflow:hidden}
         <select id="rPay"><option>現金</option><option value="A:GOPAY">A:ネット/QR</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
     </div>
     <small class="src" id="rAmtHint" style="margin-top:-6px">金額は現収＋未収（ETC・手配料も含める）</small>
+    <div class="src" id="rPlace" hidden></div>
     <div class="field"><label for="rKind">内容</label>
       <select id="rKind"><option>連続配車</option><option>配車</option><option>手上げ</option><option>乗り場</option><option>CAN</option><option>B空転</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option><option>連続配車モード</option></select></div>
     <div class="grp" id="rMoney">
@@ -4665,11 +4666,36 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const w=r.wx, pos=[r.onPos&&"乗車地",r.offPos&&"降車地"].filter(Boolean);
     $("rInfo").innerHTML=[w?`天気：<b>${r.wxSel?esc(r.wxSel)+"（手で選択）":autoWx(w)?"雨（自動）":"雨なし（自動）"}</b>　${esc(w.st)} ${esc(w.at)}の観測 ${w.t??"—"}℃・10分 ${w.p10??"—"}mm・1時間 ${w.p1h??"—"}mm`:"",pos.length?`位置：${pos.join("・")}を記録済み`:""].filter(Boolean).join("<br>")
       +(d.locked?`<div class="err">この勤務は照合済みです</div>`:"");
-    $("rDel").hidden=!id; kindUI();
+    $("rDel").hidden=!id; kindUI(); rPlaceShow(id?r:null);
     // 時刻の欄は、時刻が主な入力のとき（休憩・回送など／手で追加）と押し忘れの印があるときだけ開いておく
     $("rTimeBox").open=isEv(r.kind||"")||!id||!!r.onUnsure||!!r.offUnsure; rTimeSum();
     $("rSheet").hidden=$("rBg").hidden=false;
     if(afterOff) setTimeout(()=>$("rAmt").focus(),50);
+  }
+  // 乗車地の施設名（2026-10-28 ユーザー指定：管理者とグループ1の人だけ）。違っていれば、その場で正しい名前に直せる。
+  // 直した名前はサーバーの「施設名」シートに「手入力」で残り、次からは全員の乗務員比較にもその名前が出る。手上げは出さない
+  let rPlaceKey=null;
+  const rPlaceAuth=()=>isAdmin()?{adminPass:cfg.apass}:{passcode:cfg.npass};
+  function rPlaceShow(r){
+    const el=$("rPlace"); rPlaceKey=null; el.hidden=true; el.innerHTML="";
+    if(!(isAdmin()||isGroup1())||!r||!r.onPos||isEv(r.kind||"")||r.kind==="手上げ"||!cfg.url) return;
+    const lat=+r.onPos.lat, lng=+r.onPos.lng, key=cmpKey(lat,lng), own=cmpOwn(lat,lng); rPlaceKey=key;
+    const draw=(n,src)=>{ if(rPlaceKey!==key) return; el.hidden=false;
+      el.innerHTML=`乗車地：<b>${n?esc(n):"（施設名が分かりません）"}</b>${src==="Google"?" <small>Google Maps</small>":src==="Yahoo"?" <small>Web Services by Yahoo! JAPAN</small>":""}
+        ${src==="一覧"?"":`<button type="button" class="btn" id="rPlaceFix" style="margin-left:6px">${n?"施設名が違う":"施設名を入れる"}</button>
+        <div id="rPlaceBox" hidden style="margin-top:6px"><input type="text" id="rPlaceIn" maxlength="40" autocomplete="off" placeholder="正しい施設名（例：○○病院）"><div class="btnrow"><button type="button" class="btn primary" id="rPlaceSave">この名前にする</button></div></div>`}`;
+      if(!$("rPlaceFix")) return;
+      $("rPlaceFix").onclick=()=>{ $("rPlaceBox").hidden=false; $("rPlaceIn").value=n||""; $("rPlaceIn").focus(); };
+      $("rPlaceSave").onclick=async()=>{ const v=$("rPlaceIn").value.trim(); if(!v) return; $("rPlaceSave").disabled=true;
+        try{ const j=await post(Object.assign({action:"placeFix",key,name:v,code:cfg.empCode||""},rPlaceAuth()));
+          if(j&&j.ok){ cmpNames[key]={n:v,src:"手入力"}; draw(v,"手入力"); el.insertAdjacentHTML("beforeend",`<div>✅ 直しました。次からはこの名前になります</div>`); }
+          else { el.insertAdjacentHTML("beforeend",`<div class="err">${esc((j&&j.error)||"直せませんでした")}</div>`); $("rPlaceSave").disabled=false; } }
+        catch(e){ el.insertAdjacentHTML("beforeend",`<div class="err">通信できませんでした。電波のよいところでもう一度</div>`); $("rPlaceSave").disabled=false; } }; };
+    if(own){ draw(own,"一覧"); return; }   // ホテル・乗り場・駅・空港の一覧で分かる場所（直すボタンは出さない）
+    if(key in cmpNames){ draw(cmpNames[key].n,cmpNames[key].src); return; }
+    el.hidden=false; el.textContent="乗車地の施設名を調べています…";
+    post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ cmpNames[key]=j.names[key]||{n:"",src:""}; draw(cmpNames[key].n,cmpNames[key].src); } else if(rPlaceKey===key) el.hidden=true; })
+      .catch(()=>{ if(rPlaceKey===key) el.hidden=true; });
   }
   function kindUI(){
     const k=$("rKind").value, ev=isEv(k), point=k==="出庫"||k==="入庫";
