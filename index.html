@@ -1191,7 +1191,7 @@ body.rtfull{overflow:hidden}
           <div class="src">「月度の初日 コード: 印」の形（例 2026-10-27 682: 夜・有・出…）は、同じ月度を置き換えます。印は 出・昼・夜＝出勤、公＝公休出勤（公出の印が付きます）、有・研・欠・特・「・」＝出勤しない日。氏名は取り込みません。「コード: 日付」の形は、すでにある日付に追加されます。</div>
           <div class="btnrow"><button class="btn primary" id="aSchSave">予定表を取り込む</button></div>
           <div class="msg" id="aSchMsg" role="status"></div>
-          <div class="src">運行管理者の方は、専用のページ <a href="yotei.html" target="_blank" rel="noopener">yotei.html</a> で、会社の予定表のPDFを選ぶだけで取り込めます（運行管理者1〜3の3人分。パスワードはどれも最初は 0000 で、初めて開いたときに本人が自分で変えます）。<span id="aSchLast"></span></div>
+          <div class="src">運行管理者の方は、専用のページ <a href="yotei.html" target="_blank" rel="noopener">yotei.html</a> で、会社の予定表のPDFを選ぶだけで取り込めます（運行管理者1〜3の3人分。パスワードはどれも最初は 0000 で、初めて開いたときに本人が自分で変えます。0000のまま2週間たつと、その番号は自動で使えなくなります）。<span id="aSchLast"></span></div>
           <div id="aSchSlots"></div>
           <h3 style="margin-top:14px">全員のデータ（管理者のみ・社員コード登録済みの人だけが対象）</h3>
           <div class="src">仲間の速報と同じく、社員コードと仲間の合言葉を入れている人だけが対象です。金額のしきい値や3日の期限はなく、すべての乗車をCSVで書き出せます。</div>
@@ -1247,7 +1247,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 18:01</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 18:37</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2117,7 +2117,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     cfg.svTitle=j.svTitle||""; cfg.svDesc=j.svDesc||""; saveCfg(); applySvText();
     $("aSchInfo").textContent=`登録されている社員コード：${j.scheduleCodes||0}件`;
     const sl=j.schedLast; $("aSchLast").textContent=sl?`最後の取り込み：運行管理者${sl.slot}・${new Date(sl.at).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}・${sl.n}人分`:"";
-    $("aSchSlots").innerHTML=(j.schedSlots||[false,false,false]).map((set,i)=>`<div class="row" style="align-items:center;gap:8px;margin-top:6px"><span>運行管理者${i+1}：${set?"本人が決めたパスワード":"<b>最初のパスワード（0000）のまま</b>"}</span><button class="btn" data-schreset="${i+1}">0000 に戻す</button></div>`).join("");
+    // 番号ごとの状態：本人が決めた／0000のまま（2週間たつと自動で使えなくなる）／使えない（2026-10-28 ユーザー指定）
+    const slotTxt=x=>{ if(x&&x.st==="locked") return `<b>ロック中</b>（パスワードを3回まちがえました。「0000に戻す」で外れます）`; if(x===true||(x&&x.st==="set")) return "本人が決めたパスワード";
+      if(x&&x.st==="open"){ const d=new Date(x.until); return `<b>0000のまま</b>（${d.getMonth()+1}/${d.getDate()}までに決めないと使えなくなります）`; }
+      return `<b>使えません</b>（使うときは「0000に戻す」）`; };
+    $("aSchSlots").innerHTML=(j.schedSlots||[null,null,null]).map((x,i)=>`<div class="row" style="align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap"><span>運行管理者${i+1}：${slotTxt(x)}</span><button class="btn" data-schreset="${i+1}" data-op="schedReset">0000 に戻す</button>${x&&(x.st==="closed"||x.st==="locked")?"":`<button class="btn" data-schreset="${i+1}" data-op="schedStop">止める</button>`}</div>`).join("");
     $("aSchSlots").querySelectorAll("[data-schreset]").forEach(b=>b.onclick=()=>schReset(b));
     $("adminBox").hidden=false; $("aForget").hidden=false;
     drawCars(j.cars!==undefined?j.cars:carsCfg);
@@ -2146,10 +2150,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   };
   async function schReset(b){   // 2回押すと、その運行管理者のパスワードを 0000 に戻す（忘れたとき）。ほかの人のパスワードはそのまま
     const m=$("aSchMsg"), slot=+b.dataset.schreset;
-    if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="もう一度押すと 0000 に戻します"; return; }
-    try{ const j=await post({action:"admin",op:"schedReset",slot,adminPass:cfg.apass});
-      if(!j.ok){ m.textContent=j.error||"戻せませんでした"; return; }
-      drawAdmin(j); m.textContent=`運行管理者${slot}のパスワードを 0000 に戻しました。次に開いたときに、本人に新しいパスワードを決めてもらってください`; }
+    const stop=b.dataset.op==="schedStop";
+    if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent=stop?"もう一度押すと止めます":"もう一度押すと 0000 に戻します"; return; }
+    try{ const j=await post({action:"admin",op:b.dataset.op,slot,adminPass:cfg.apass});
+      if(!j.ok){ m.textContent=j.error||"できませんでした"; return; }
+      drawAdmin(j); m.textContent=stop?`運行管理者${slot}を止めました（パスワードも消しました）。また使うときは「0000 に戻す」を押してください`:`運行管理者${slot}のパスワードを 0000 に戻しました。今日から2週間のうちに、本人に新しいパスワードを決めてもらってください`; }
     catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
   }
   $("aFullMonth").value=(()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); })();
