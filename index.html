@@ -811,7 +811,7 @@ body.rtfull{overflow:hidden}
         <div class="legend" style="margin-top:8px"><span><b style="background:#E07A00"></b>P 今使えるパーキング</span><span><b style="background:#9AA0A6"></b>P 時間外・使えない日</span></div>
         <div class="btnrow"><button class="btn" id="pkNear">近いパーキング5件</button><label style="display:flex;align-items:center;gap:6px;font-size:15px"><input type="checkbox" id="pkOnlyOk" checked>今使える区間だけ</label></div>
         <div id="pkList"></div>
-        <div class="src" id="pkSrc">パーキング・メーター／チケット（時間制限駐車区間）の線とPの印です。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br>出典：警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成（町名は国土地理院の逆ジオコーダで付けています）</div>
+        <div class="src" id="pkSrc">パーキング・メーター／チケット（時間制限駐車区間）の線とPの印です。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br>出典：警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成（町名は国土地理院の逆ジオコーダで、通り名はマイマップ「東京通り名マップ」の大きな通り沿いの区間だけに付けています）</div>
       </div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
       <div class="field"><label for="restCode">社員コード</label><input type="text" id="restCode" inputmode="numeric" autocomplete="off"></div>
@@ -1277,7 +1277,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 01:02</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 01:26</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2679,7 +2679,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const st=pkNow(x,new Date()), cl=st.ok?PK_ON:PK_OFF;
     const day=["日曜・休日・1月1日〜3日は使えません","毎日（1月1日〜3日を除く）","土曜・日曜・休日・1月1日〜3日は使えません"][x.day];
     const veh=[x.fl&1?"普通車":"",x.fl&4?"二輪車":"",x.fl&2?"貨物車用の枠あり":"",x.fl&8?"標章車専用の枠あり":""].filter(Boolean).join("・");
-    return `<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b>パーキング・${x.k?"チケット":"メーター"}</b><div style="font-size:13px">${esc(x.t)}</div><div style="color:${st.ok?PK_ON:"#5F6368"};font-weight:700">${st.ok?"今使えます":"今は使えません"}（${esc(st.why)}）</div><div>時間 ${esc(x.h.replace("-","〜"))}</div><div style="font-size:13px">${day}</div><div>制限 <b>${x.lim}分</b>・${x.fee}円</div><div style="font-size:13px">${veh}</div><a href="https://www.google.com/maps/dir/?api=1&destination=${x.c[0]},${x.c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`;
+    return `<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b>パーキング・${x.k?"チケット":"メーター"}</b><div style="font-size:13px">${esc(x.t)}${x.r?`・<b>${esc(x.r)}</b>`:""}</div><div style="color:${st.ok?PK_ON:"#5F6368"};font-weight:700">${st.ok?"今使えます":"今は使えません"}（${esc(st.why)}）</div><div>時間 ${esc(x.h.replace("-","〜"))}</div><div style="font-size:13px">${day}</div><div>制限 <b>${x.lim}分</b>・${x.fee}円</div><div style="font-size:13px">${veh}</div><a href="https://www.google.com/maps/dir/?api=1&destination=${x.c[0]},${x.c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`;
   }
   const pkIcon=cl=>L.divIcon({className:"",html:`<div style="width:20px;height:20px;border-radius:5px;background:${cl};color:#fff;font:700 13px/20px sans-serif;text-align:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)">P</div>`,iconSize:[24,24],iconAnchor:[12,12]});
   // 今の時刻で色を決めて描き直す（時間外は灰色）。表示中は1分ごとに描き直す
@@ -2727,7 +2727,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const xs=pkData.items.filter(x=>x.fl&1).map(x=>({x,st:pkNow(x,now),d:pkDist(pos,x)})).filter(o=>!onlyOk||o.st.ok).sort((a,b)=>a.d-b.d).slice(0,5);
     if(!xs.length){ box.innerHTML=`<div class="geo">${onlyOk?"今使える区間がありません（時間外・日曜など）。「今使える区間だけ」を外すと、時間外の区間も出します":"見つかりませんでした"}</div>`; return; }
     const dtxt=d=>d>=1000?"約"+r1(d/1000)+"km":"約"+Math.round(d)+"m";
-    box.innerHTML=`<table class="cmpt" style="font-size:14.5px;margin-top:6px"><tbody>${xs.map(o=>`<tr data-pk="${o.x.id}" style="cursor:pointer"><td class="num">${dtxt(o.d)}</td><td><b style="color:${o.st.ok?PK_ON:"#5F6368"}">${o.st.ok?"使える":"使えない"}</b> ${esc(o.x.t)}<br><small>${o.x.k?"チケット":"メーター"}・${o.x.lim}分${o.x.fee}円・${esc(o.st.why)}</small></td><td class="num"><a href="https://www.google.com/maps/dir/?api=1&destination=${o.x.c[0]},${o.x.c[1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a></td></tr>`).join("")}</tbody></table><div class="geo" style="font-size:13px">距離はまっすぐ測ったものです。行をタップすると地図で見られます。</div>`;
+    box.innerHTML=`<table class="cmpt" style="font-size:14.5px;margin-top:6px"><tbody>${xs.map(o=>`<tr data-pk="${o.x.id}" style="cursor:pointer"><td class="num">${dtxt(o.d)}</td><td><b style="color:${o.st.ok?PK_ON:"#5F6368"}">${o.st.ok?"使える":"使えない"}</b> ${esc(o.x.t)}${o.x.r?`・${esc(o.x.r)}`:""}<br><small>${o.x.k?"チケット":"メーター"}・${o.x.lim}分${o.x.fee}円・${esc(o.st.why)}</small></td><td class="num"><a href="https://www.google.com/maps/dir/?api=1&destination=${o.x.c[0]},${o.x.c[1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a></td></tr>`).join("")}</tbody></table><div class="geo" style="font-size:13px">距離はまっすぐ測ったものです。行をタップすると地図で見られます。</div>`;
     if(restMapObj){
       if(restMeMarker) restMapObj.removeLayer(restMeMarker);
       restMeMarker=L.circleMarker([pos.lat,pos.lng],{radius:9,color:"#fff",weight:3,fillColor:"#D23C2F",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(restMapObj);

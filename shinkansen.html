@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>新幹線 最終便・始発</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--grid:#E3E9E8;--acc-bg:#E3F0F4;--acc-line:#A9CCD7;--acc-ink:#1D4F5E;--warn:#9A5B00;--warn-bg:#FFF1DC;--red:#D23C2F;--red-bg:#FCE5E2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--grid:#26312F;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--warn:#F0B35A;--warn-bg:#3A2B12;--red:#FF7A6E;--red-bg:#3E1E1B}}
+:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--grid:#26312F;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--warn:#F0B35A;--warn-bg:#3A2B12;--red:#FF7A6E;--red-bg:#3E1E1B}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:720px;margin:0 auto;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 32px);display:grid;gap:14px}
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+h2{margin:0 0 8px;font-size:17px}
+h3{margin:12px 0 4px;font-size:14px;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--acc-line);background:var(--acc-bg);color:var(--acc-ink);border-radius:10px;padding:10px 14px;font-size:16px;font-weight:800;text-decoration:none;display:inline-block}
+.btn.sub{background:var(--surface);color:var(--ink);border-color:var(--line);font-weight:700}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;width:100%}
+.seg button{flex:1;border:none;background:var(--surface);color:var(--ink);padding:10px 8px;font-size:16px;font-weight:800}
+.seg button[aria-pressed="true"]{background:var(--acc-bg);color:var(--acc-ink)}
+#msg{font-size:14px;color:var(--muted);line-height:1.5;width:100%}
+#msg.warn{color:var(--warn);font-weight:700}
+.daybar{font-size:14px;line-height:1.6;color:var(--muted)}
+.daybar b{color:var(--ink);font-size:15px}
+/* 遅れ */
+.dl{border-radius:10px;padding:8px 10px;font-size:14px;line-height:1.5;margin-top:8px;background:var(--warn-bg);color:var(--ink)}
+.dl.red{background:var(--red-bg)}
+.dl b{color:var(--warn)}
+.dl.red b{color:var(--red)}
+.man{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:8px;font-size:14px;align-items:center}
+.man select{font-size:15px;padding:4px}
+/* 地図 */
+#map{height:min(52vh,380px);border-radius:10px;border:1px solid var(--line)}
+.pin{background:var(--surface);color:var(--ink);border:2px solid #1D6A80;border-radius:9px;padding:2px 6px;font:700 12px/1.25 sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35);text-align:center}
+.pin small{display:block;font-size:11px;font-weight:700;color:var(--muted)}
+.pin.red{border-color:var(--red)}
+.pin.red small{color:var(--red)}
+.pop{font-size:14px;line-height:1.5;min-width:210px}
+.pop b.h{font-size:16px}
+.pop .r{display:flex;gap:6px}
+.pop .r span:first-child{font-weight:800;min-width:3.2em}
+/* 一覧 */
+.ln{margin-top:10px;border-top:1px solid var(--grid);padding-top:6px}
+.ln:first-of-type{border-top:none;margin-top:4px;padding-top:0}
+.ln>b{font-size:14px}
+.tr{display:grid;grid-template-columns:4.2em 1fr;gap:2px 8px;padding:7px 4px;border-radius:8px;cursor:pointer}
+.tr+.tr{border-top:1px dashed var(--grid)}
+.tr .tm{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.tr .tm small{display:block;font-size:12px;font-weight:700;color:var(--warn)}
+.tr .nm{font-size:15px;line-height:1.35}
+.tr .nm small{color:var(--muted);font-size:12px}
+.tr .bd{grid-column:2;display:flex;flex-wrap:wrap;gap:4px}
+.tr.done{opacity:.45}
+.tr.hot{background:var(--red-bg)}
+.tr .det{grid-column:1/-1;font-size:13px;color:var(--muted);line-height:1.6;display:none;padding-top:4px}
+.tr.open .det{display:block}
+.bg{display:inline-block;border-radius:6px;padding:1px 6px;font-size:12px;font-weight:800;border:1px solid var(--line);color:var(--muted)}
+.bg.red{background:var(--red);border-color:var(--red);color:#fff}
+.bg.or{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.bg.tk{border-style:dashed}
+.next{border:2px solid var(--red);border-radius:12px;padding:10px 12px;line-height:1.5}
+.next b{font-size:18px}
+details{font-size:14px;line-height:1.7;color:var(--muted)}
+details summary{font-weight:700;color:var(--ink);cursor:pointer}
+.lt{width:100%;border-collapse:collapse;font-size:13px}
+.lt td{padding:3px 4px;border-bottom:1px solid var(--grid);vertical-align:top}
+.lt td:nth-child(2){font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.lock{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;font-size:16px;line-height:1.6;text-align:center;background:var(--bg)}
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <div class="seg" role="group" aria-label="表示"><button data-m="arr" aria-pressed="true">🌙 最終便（到着）</button><button data-m="dep" aria-pressed="false">🌅 始発（出発）</button></div>
+    <div class="top" style="margin-top:10px">
+      <div class="daybar" id="dayBar" style="flex:1;min-width:0"></div>
+      <button class="btn sub" id="reload">更新</button>
+    </div>
+    <div id="msg"></div>
+    <div id="delayBox"></div>
+  </section>
+  <section class="card" id="nextCard" hidden></section>
+  <section class="card">
+    <h2>地図</h2>
+    <div id="map"></div>
+    <div class="daybar" style="margin-top:6px">駅のピンを押すと、最終の到着と始発の出発を出します。</div>
+  </section>
+  <div id="list" style="display:grid;gap:14px"></div>
+  <details class="card"><summary>在来線（JR）の終電・始発</summary><div id="locBox"></div></details>
+  <details class="card"><summary>使い方・注意</summary>
+    ・<b>最終便</b>は、東京・品川・上野・大宮に着く新幹線の最後の数本です。着いた時刻から<b>在来線の終電</b>（その駅を出る最後の電車）と比べて、乗り継げない方面があれば<span class="bg or">乗り継げない</span>、全部の終電が出たあとなら<span class="bg red">終電後</span>を付けます。乗換の余裕（初期値10分）を足して比べています。<br>
+    ・<b>始発</b>は、その駅を出る最初の数本です。駅の在来線の始発から一定の時間（初期値90分）より前に出る便に<span class="bg red">電車では間に合いにくい</span>を付けます。郊外から始発電車で来る人は、この便に間に合いにくい目安です。<br>
+    ・<span class="bg tk">臨時</span>は、決まった日だけ走る列車です。今日走らない臨時列車は出しません。<br>
+    ・遅れは、JR東日本の運行情報に「◯分の遅れ」とあれば、その分を足した<b>見込みの時刻</b>を出します。東海道新幹線（JR東海）の遅れは取れないので、JR東海の運行情報を見て「遅れを手で入れる」で入れてください（今夜だけ覚えます）。<br>
+    ・行を押すと、乗り継げない方面の一覧を開きます。<br>
+    ・時刻は、管理者のスプレッドシート（点呼ノート_新幹線時刻）から読みます。ダイヤ改正（毎年3月ごろ）のときに作り直します。在来線はJRだけで、地下鉄・私鉄は入っていません。<br>
+    ・土休日の時刻表は、土曜・日曜・祝日と12/30〜1/3に使います。
+  </details>
+</main>
+<script>
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// 試験中は管理者だけ（雨予報・帰りのバスと同じ確かめ方）
+(function(){ let adm=false; try{ const c=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); adm=(c.admin===true&&!!c.apass)||(c.nakama===true&&!!c.group&&c.group.id==="g1"); }catch(e){}   // 管理者とグループ1の人だけ（2026-10-29 ユーザー指定）
+  if(!adm){ document.body.innerHTML='<div class="lock">このページは今、管理者とグループ1の人だけが使えます（試験中）。</div>'; throw new Error("not admin"); } })();
+
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzaCheINzPr7VXonUOs9CnwTCXCbRy0XqeMmaNw1vlNagiPqg_LyUDEQvrZA5axfnHPQQ/exec";   // build.py が本番のURLを入れる
+const KEY="tenko.shin", MAN_KEY="tenko.shinMan", NEXT_KEY="tenko.shinNext";
+// 駅：[名前, 緯度, 経度, ルート案内の行き先]
+const ST=[["東京",35.6812,139.7671,"東京駅"],["品川",35.6285,139.7387,"品川駅"],["上野",35.7138,139.7773,"上野駅"],["大宮",35.9064,139.6239,"大宮駅"]];
+const LINES=["東海道","東北","上越","北陸"], LINE_NAME={東海道:"東海道新幹線",東北:"東北新幹線（山形・秋田・北海道を含む）",上越:"上越新幹線",北陸:"北陸新幹線"};
+// 祝日（土休日の時刻表を使う日）。毎年の作り直しのときに足す
+const HOLI=new Set(["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-07-20","2026-08-11","2026-09-21","2026-09-22","2026-09-23","2026-10-12","2026-11-03","2026-11-23",
+  "2027-01-01","2027-01-11","2027-02-11","2027-02-23","2027-03-21","2027-03-22","2027-04-29","2027-05-03","2027-05-04","2027-05-05","2027-07-19","2027-08-11","2027-09-20","2027-09-23","2027-10-11","2027-11-03","2027-11-23"]);
+
+let D=null, mode="arr", map=null, pinLayer=null, delay={}, man={};
+
+// ===== 日付と時刻（スマホの時計の地域に関係なく、日本時間で数える） =====
+const J=ms=>new Date(ms+9*3600e3);   // getUTC〜 が日本時間になる
+const ymdOf=ms=>J(ms).toISOString().slice(0,10);
+const dayMs=ymd=>Date.parse(ymd+"T00:00:00+09:00");
+const nowMin=base=>Math.round((Date.now()-dayMs(base))/60000);   // その日の0時からの分（翌日の深夜は24時を超える）
+const hm=m=>`${Math.floor(m/60)%24}:${String(m%60).padStart(2,"0")}`;
+const toMin=s=>{ const x=/(\d{1,2}):(\d{2})/.exec(String(s||"")); if(!x) return null; let h=+x[1]; if(h<4) h+=24; return h*60+ +x[2]; };
+const WD="日月火水木金土";
+function dayType(ymd){ const d=new Date(dayMs(ymd)+9*3600e3), w=d.getUTCDay(), md=ymd.slice(5);
+  return (w===0||w===6||HOLI.has(ymd)||md>="12-30"||md<="01-03")?"土休日":"平日"; }
+const isKyujitsu=ymd=>{ const w=new Date(dayMs(ymd)+9*3600e3).getUTCDay(); return w===0||HOLI.has(ymd); };   // 「休日」＝日曜・祝日
+const label=ymd=>{ const d=new Date(dayMs(ymd)+9*3600e3); return `${d.getUTCMonth()+1}/${d.getUTCDate()}（${WD[d.getUTCDay()]}${HOLI.has(ymd)?"・祝":""}）`; };
+// 見る日：最終便＝4時より前は前の日の夜。始発＝昼を過ぎたら次の日の朝
+const arrDate=()=>ymdOf(Date.now()-4*3600e3), depDate=()=>ymdOf(Date.now()+12*3600e3);
+
+// ===== 運転日（「10月25・31日・11月1・7日運転」「…は運休」「休日と…は運休」） =====
+function nearYear(m,d,base){ const by=+base.slice(0,4); let best=null;
+  for(const y of [by-1,by,by+1]){ const s=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`, diff=Math.abs(dayMs(s)-dayMs(base)); if(!best||diff<best.diff) best={s,diff}; }
+  return best.s; }
+function parseUnten(text,base){
+  const t=String(text||"").trim(); if(!t) return {ok:true};
+  const r={dates:new Set(),except:/運休/.test(t),kyu:/^休日と/.test(t),change:/^時変/.test(t),bad:false};
+  let cm=null;
+  t.replace(/^時変\s*/,"").replace(/^休日と/,"").replace(/(は運休|運転|はこの時刻に変更)$/,"").split("・").forEach(p=>{
+    const x=/^(?:(\d+)月)?(\d+)日?(?:～(?:(\d+)月)?(\d+)日?)?$/.exec(p.trim()); if(!x){ r.bad=true; return; }
+    if(x[1]) cm=+x[1]; if(cm==null){ r.bad=true; return; }
+    const a=nearYear(cm,+x[2],base);
+    if(!x[4]){ r.dates.add(a); return; }
+    if(x[3]) cm=+x[3];
+    let b=nearYear(cm,+x[4],base); if(dayMs(b)<dayMs(a)) b=nearYear(cm,+x[4],ymdOf(dayMs(a)+200*864e5));
+    for(let ms=dayMs(a);ms<=dayMs(b)+1;ms+=864e5) r.dates.add(ymdOf(ms));
+  });
+  return r;
+}
+// その日に走るか：true / false / null（運転日が読めない）
+function runs(row,ymd){ const u=parseUnten(row.un,ymd); if(u.ok) return true; if(u.bad) return null;
+  if(u.except) return !(u.dates.has(ymd)||(u.kyu&&isKyujitsu(ymd))); return u.dates.has(ymd); }
+
+// ===== データ =====
+function parseCsv(s){ const out=[]; let row=[],f="",q=false; s=s.replace(/^﻿/,"");
+  for(let i=0;i<s.length;i++){ const c=s[i];
+    if(q){ if(c==='"'){ if(s[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if(c==='"') q=true; else if(c===","){ row.push(f); f=""; } else if(c==="\n"){ row.push(f); out.push(row); row=[]; f=""; } else if(c!=="\r") f+=c; }
+  if(f||row.length){ row.push(f); out.push(row); } return out; }
+function fromRows(rows){
+  const o={rows:[],transfer:10,margin:90,updated:""};
+  rows.forEach((r,i)=>{ if(i===0&&r[0]==="種類") return; const k=String(r[0]||"").trim(); if(!k) return;
+    if(k==="情報"){ o.updated=String(r[8]||"").trim(); return; }
+    if(k==="設定"){ const v=Number(r[4]); if(/乗換/.test(r[2])&&v>=0) o.transfer=v; if(/始発/.test(r[2])&&v>=0) o.margin=v; return; }
+    const m=toMin(r[4]); if(m==null) return;
+    o.rows.push({k,st:String(r[1]||"").trim(),line:String(r[2]||"").trim(),day:String(r[3]||"").trim()||"平日",m,train:String(r[5]||"").trim(),od:String(r[6]||"").trim(),un:String(r[7]||"").trim(),memo:String(r[8]||"").trim()}); });
+  return o; }
+async function post(body){ const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),20000);
+  try{ const r=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(body),signal:ac.signal}); return await r.json(); } finally{ clearTimeout(tm); } }
+async function load(){
+  $("msg").className=""; $("msg").textContent="読み込んでいます…";
+  let got=null, note="", lastDelay=null;
+  if(SCRIPT_URL){ try{ const j=await post({action:"shinGet"}); if(j&&j.ok&&j.rows){ got=fromRows(j.rows); got.src="sheet"; got.delay=j.delay||[]; got.delayAt=j.delayAt||""; if(j.sheetAt) got.sheetAt=j.sheetAt;
+        if(!got.rows.length){ note="スプレッドシートが空です"; lastDelay=got; got=null; } } else note=(j&&j.error)||""; }catch(e){ note="サーバーにつながりませんでした"; } }
+  if(!got){ try{ const r=await fetch("shinkansen.csv?v="+Date.now()); if(r.ok){ got=fromRows(parseCsv(await r.text())); got.src="file"; got.delay=lastDelay?lastDelay.delay:[]; got.delayAt=lastDelay?lastDelay.delayAt:""; } }catch(e){} }
+  if(got&&got.rows.length){ got.t=Date.now(); D=got; try{ localStorage.setItem(KEY,JSON.stringify(D)); }catch(e){} }
+  else if(!D){ $("msg").className="warn"; $("msg").textContent="時刻を読み込めませんでした。電波のよい所で「更新」を押してください"; return; }
+  else { $("msg").className="warn"; $("msg").textContent="新しい時刻を読み込めませんでした（前に読んだ分を出しています）"; }
+  if(D.src==="file"&&!$("msg").className) $("msg").textContent=(note&&note!=="不明な操作です"?note+"。":"")+"スプレッドシートの代わりに、アプリに入っている時刻表を出しています（遅れの情報はありません）";
+  else if(!$("msg").className) $("msg").textContent="";
+  render(); saveNext();
+}
+
+// ===== 遅れ：JR東日本の運行情報（サーバーが取り次ぐ）＋ 手で入れた分 =====
+function delayOf(line){
+  const auto=(D.delay||[]).filter(x=>x.line===line);
+  let min=0, stop=false, txt=[];
+  auto.forEach(x=>{ const s=(x.status||"")+" "+(x.text||""); if(/見合わせ|運休/.test(s)) stop=true;
+    const ms=[...s.matchAll(/(\d+)\s*分(?:程度|前後|ほど|以上)?の?遅れ/g)].map(a=>+a[1]); if(ms.length) min=Math.max(min,...ms); txt.push(x.text||x.status); });
+  const mm=+(man[line]||0); if(mm>min) min=mm;
+  return {min,stop,txt,auto:auto.length>0,man:mm}; }
+function renderDelay(){
+  const ls=LINES.map(l=>({l,...delayOf(l)})).filter(x=>x.min||x.stop||x.txt.length);
+  const parts=ls.map(x=>`<div class="dl${x.stop||x.min>=30?" red":""}"><b>${esc(LINE_NAME[x.l].replace(/（.*）/,""))}</b> ${x.stop?"運転見合わせ・運休あり":""}${x.min?` 遅れ 約${x.min}分${x.man&&x.man>=x.min?"（手で入力）":""}`:""}${x.txt.length?`<br><small>${esc(x.txt.join(" / "))}</small>`:""}</div>`);
+  const sel=l=>`<label>${esc(l)} <select data-man="${l}">${[0,5,10,15,20,30,45,60,90,120].map(v=>`<option value="${v}"${+(man[l]||0)===v?" selected":""}>${v?"+"+v+"分":"なし"}</option>`).join("")}</select></label>`;
+  const at=D.delayAt?new Date(D.delayAt):null;
+  $("delayBox").innerHTML=(mode==="arr"?parts.join(""):"")+(mode==="arr"?`<details style="margin-top:8px"><summary>遅れを手で入れる（東海道新幹線など）</summary><div class="man">${LINES.map(sel).join("")}</div>
+    <div style="margin-top:6px"><a href="https://traininfo.jr-central.co.jp/shinkansen/sp/ja/index.html" target="_blank" rel="noopener">JR東海の運行情報</a>・<a href="https://traininfo.jreast.co.jp/train_info/shinkansen.aspx" target="_blank" rel="noopener">JR東日本の新幹線の運行情報</a>${at?`<br><small>JR東日本の運行情報 ${hm(J(+at).getUTCHours()*60+J(+at).getUTCMinutes())}時点${D.delay&&D.delay.length?"":"：遅れの知らせなし"}</small>`:""}</div></details>`:"");
+  $("delayBox").querySelectorAll("[data-man]").forEach(s=>s.onchange=()=>{ man[s.dataset.man]=+s.value; try{ localStorage.setItem(MAN_KEY,JSON.stringify({d:arrDate(),man})); }catch(e){} render(); });
+}
+
+// ===== 計算 =====
+const rowsFor=(k,st,ymd)=>{ const dt=dayType(ymd); let xs=D.rows.filter(r=>r.k===k&&r.st===st&&r.day===dt);
+  if(!xs.length&&k.startsWith("在来線")) xs=D.rows.filter(r=>r.k===k&&r.st===st&&r.day==="平日");
+  return xs; };
+// 在来線は、その日の曜日の表がない路線だけ平日の表で埋める
+function locals(k,st,ymd){ const dt=dayType(ymd), own=D.rows.filter(r=>r.k===k&&r.st===st&&r.day===dt), have=new Set(own.map(r=>r.line));
+  return own.concat(D.rows.filter(r=>r.k===k&&r.st===st&&r.day==="平日"&&!have.has(r.line))); }
+function arrivals(st,ymd){
+  const last=locals("在来線終電",st,ymd);
+  return rowsFor("新幹線着",st,ymd).map(r=>({r,run:runs(r,ymd)})).filter(x=>x.run!==false).map(({r,run})=>{
+    const dl=delayOf(r.line), eta=r.m+dl.min, need=eta+D.transfer;
+    const miss=last.filter(l=>l.m<need).sort((a,b)=>b.m-a.m);
+    return {r,run,eta,dl,miss,all:last.length>0&&miss.length===last.length,nLoc:last.length}; }).sort((a,b)=>a.eta-b.eta); }
+function departures(st,ymd){
+  const first=locals("在来線始発",st,ymd), f0=first.length?Math.min(...first.map(l=>l.m)):null;
+  return rowsFor("新幹線発",st,ymd).map(r=>({r,run:runs(r,ymd)})).filter(x=>x.run!==false).map(({r,run})=>{
+    const gap=f0==null?null:r.m-f0; return {r,run,gap,f0,hard:gap!=null&&gap<=D.margin}; }).sort((a,b)=>a.r.m-b.r.m); }
+
+// ===== 表示 =====
+function badges(x){ const b=[];
+  if(x.r.un) b.push(`<span class="bg tk">${x.run==null?"運転日注意":"臨時"}</span>`);
+  if(mode==="arr"){ if(x.all) b.push(`<span class="bg red">終電後</span>`); else if(x.miss.length) b.push(`<span class="bg or">乗り継げない ${x.miss.length}/${x.nLoc}方面</span>`);
+    if(x.dl.stop) b.push(`<span class="bg red">見合わせあり</span>`); }
+  else if(x.hard) b.push(`<span class="bg red">電車では間に合いにくい</span>`);
+  return b.join(""); }
+function rowHtml(x,base){
+  const now=nowMin(base), done=mode==="arr"?x.eta<now-5:x.r.m<now-1;
+  const late=mode==="arr"&&x.eta!==x.r.m;
+  const det=mode==="arr"
+    ?(x.miss.length?`乗り継げない方面（${hm(x.eta)}着＋乗換${D.transfer}分で比べています）：<br>${x.miss.map(l=>`${esc(l.line)} 終電${hm(l.m)}（${esc(l.od)}行き）`).join("<br>")}`:`在来線の終電にはすべて間に合う見込みです（乗換${D.transfer}分）`)
+    :(x.f0!=null?`この駅の在来線の始発 ${hm(x.f0)} から ${x.gap}分後に出ます（目安 ${D.margin}分以内で「間に合いにくい」）`:"在来線の始発の時刻がありません");
+  return `<div class="tr${done?" done":""}${!done&&(mode==="arr"?x.all||x.dl.stop:x.hard)?" hot":""}">
+    <div class="tm">${hm(x.r.m)}${late?`<small>→${hm(x.eta)}見込み</small>`:""}</div>
+    <div class="nm">${esc(x.r.train)} <small>${mode==="arr"?esc(x.r.od)+"から":esc(x.r.od)+"行き"}${done?(mode==="arr"?"・到着済み":"・発車済み"):""}</small></div>
+    <div class="bd">${badges(x)}</div>
+    <div class="det">${det}${x.r.un?`<br>運転日：${esc(x.r.un)}`:""}${x.r.memo?`<br>${esc(x.r.memo)}`:""}</div></div>`; }
+function stationHtml(s,base){
+  const xs=mode==="arr"?arrivals(s[0],base):departures(s[0],base);
+  if(!xs.length) return "";
+  const gl=LINES.filter(l=>xs.some(x=>x.r.line===l));
+  const body=gl.map(l=>{ let ys=xs.filter(x=>x.r.line===l);
+      ys=mode==="arr"?ys.slice(-5):ys.slice(0,4);   // 最終は後ろの5本、始発は前の4本
+      return `<div class="ln"><b>${esc(LINE_NAME[l])}</b>${ys.map(x=>rowHtml(x,base)).join("")}</div>`; }).join("");
+  const gm=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s[3])}&travelmode=driving`;
+  return `<section class="card" id="st_${s[0]}"><div class="top" style="justify-content:space-between"><h2 style="margin:0">${esc(s[0])}駅 ${mode==="arr"?"に着く最終便":"を出る始発"}</h2><a class="btn sub" style="padding:6px 10px;font-size:14px" href="${gm}" target="_blank" rel="noopener">ルート</a></div>${body}</section>`; }
+function render(){
+  const base=mode==="arr"?arrDate():depDate();
+  document.querySelectorAll(".seg [data-m]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===mode));
+  const up=D.updated?esc(D.updated.replace(/（.*$/,"")):"";
+  $("dayBar").innerHTML=`<b>${label(base)} ${mode==="arr"?"の夜":"の朝"}</b>・${dayType(base)}の時刻表${up?`<br>${up}`:""}${D.src==="file"?"（アプリに入っている分）":""}`;
+  renderDelay();
+  $("list").innerHTML=ST.map(s=>stationHtml(s,base)).join("")||`<section class="card">この日の時刻がありません</section>`;
+  $("list").querySelectorAll(".tr").forEach(t=>t.onclick=e=>{ if(e.target.closest("a,select")) return; t.classList.toggle("open"); });
+  renderNext(); renderMap(); renderLoc(base);
+}
+// 早朝（3時〜7時半）は、次に出る始発を一番上に
+function renderNext(){
+  const h=J(Date.now()).getUTCHours()+J(Date.now()).getUTCMinutes()/60, base=depDate(), now=nowMin(base);
+  if(mode!=="dep"||h<3||h>=7.5){ $("nextCard").hidden=true; return; }
+  const all=ST.flatMap(s=>departures(s[0],base).map(x=>({...x,st:s[0]}))).filter(x=>x.r.m>=now).sort((a,b)=>a.r.m-b.r.m).slice(0,3);
+  if(!all.length){ $("nextCard").hidden=true; return; }
+  $("nextCard").hidden=false;
+  $("nextCard").innerHTML=`<div class="next"><small>次に出る始発</small><br>${all.map(x=>`<b>${hm(x.r.m)}</b> ${esc(x.st)}駅 ${esc(x.r.train)}（${esc(x.r.od)}行き）${x.hard?' <span class="bg red">電車では間に合いにくい</span>':""} <small>あと${x.r.m-now}分</small>`).join("<br>")}</div>`; }
+function renderMap(){
+  if(!window.L){ $("map").textContent="地図を読み込めませんでした"; return; }
+  if(!map){
+    map=L.map("map",{zoomControl:true,attributionControl:true});
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(map);
+    map.fitBounds(ST.map(s=>[s[1],s[2]]),{padding:[30,30]});
+    pinLayer=L.layerGroup().addTo(map);
+  }
+  pinLayer.clearLayers();
+  const ab=arrDate(), db=depDate();
+  ST.forEach(s=>{
+    const a=arrivals(s[0],ab), d=departures(s[0],db), la=a[a.length-1], fd=d[0];
+    const main=mode==="arr"?(la?`最終 ${hm(la.eta)}`:""):(fd?`始発 ${hm(fd.r.m)}`:"");
+    const red=mode==="arr"?a.some(x=>x.all||x.dl.stop):d.some(x=>x.hard);
+    const r=(x,t)=>`<div class="r"><span>${t}</span><span>${esc(x.r.train)} ${esc(x.r.od)}${x.r.un?"（臨時）":""}</span></div>`;
+    const pop=`<div class="pop"><b class="h">${esc(s[0])}駅</b>
+      <div style="margin-top:6px"><b>最終の到着</b>（${label(ab)}の夜）</div>${a.slice(-3).map(x=>r(x,hm(x.eta)+(x.eta!==x.r.m?"見込":""))).join("")||"なし"}
+      <div style="margin-top:6px"><b>始発の出発</b>（${label(db)}の朝）</div>${d.slice(0,3).map(x=>r(x,hm(x.r.m))).join("")||"なし"}
+      <div style="margin-top:8px"><a href="#st_${s[0]}" data-go="${s[0]}">一覧で見る</a>・<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s[3])}&travelmode=driving" target="_blank" rel="noopener">ルート</a></div></div>`;
+    L.marker([s[1],s[2]],{icon:L.divIcon({className:"",iconSize:null,iconAnchor:[30,16],html:`<div class="pin${red?" red":""}">${esc(s[0])}<small>${main}</small></div>`})}).bindPopup(pop).addTo(pinLayer);
+  });
+}
+function renderLoc(base){
+  $("locBox").innerHTML=ST.map(s=>{ const L1=locals("在来線終電",s[0],base).sort((a,b)=>b.m-a.m), F=locals("在来線始発",s[0],depDate()).sort((a,b)=>a.m-b.m);
+    if(!L1.length&&!F.length) return "";
+    return `<h3>${esc(s[0])}駅</h3><table class="lt">${L1.map(l=>`<tr><td>終電</td><td>${hm(l.m)}</td><td>${esc(l.line)}（${esc(l.od)}行き）</td></tr>`).join("")}${F.slice(0,3).map(l=>`<tr><td>始発</td><td>${hm(l.m)}</td><td>${esc(l.line)}</td></tr>`).join("")}</table>`; }).join("")
+    +`<div style="margin-top:6px">${dayType(base)}の時刻表（JR東日本の駅の時刻表から。特急は除く）。始発は早い3本だけ出しています。</div>`; }
+// 点呼ノートのメニューに「次の始発」を出すため、今日から7日分の始発（各駅の最初の2本）を覚えておく
+function saveNext(){ try{ const days={};
+  for(let i=0;i<7;i++){ const ymd=ymdOf(Date.now()+i*864e5);
+    days[ymd]=ST.flatMap(s=>departures(s[0],ymd).slice(0,2).map(x=>({st:s[0],m:x.r.m,train:x.r.train,od:x.r.od,hard:x.hard}))).sort((a,b)=>a.m-b.m); }
+  localStorage.setItem(NEXT_KEY,JSON.stringify({t:Date.now(),days})); }catch(e){} }
+
+document.querySelectorAll(".seg [data-m]").forEach(b=>b.onclick=()=>{ mode=b.dataset.m; if(D) render(); });
+$("reload").onclick=load;
+document.addEventListener("click",e=>{ const a=e.target.closest("[data-go]"); if(!a) return; e.preventDefault(); const el=$("st_"+a.dataset.go); if(el) el.scrollIntoView({behavior:"smooth"}); });
+// 開いたとき：夜（19時〜4時）は最終便、朝（4時〜12時）は始発を先に出す
+(function(){ const h=J(Date.now()).getUTCHours(); mode=h>=4&&h<12?"dep":"arr"; })();
+try{ const m=JSON.parse(localStorage.getItem(MAN_KEY)||"null"); if(m&&m.d===arrDate()) man=m.man||{}; }catch(e){}
+try{ D=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ D=null; }
+if(D&&D.rows) render();
+load();
+setInterval(()=>{ if(D&&!document.hidden) render(); },60000);                 // 「到着済み」「あと何分」を進める
+setInterval(()=>{ if(!document.hidden&&mode==="arr") load(); },180000);       // 夜は3分ごとに遅れを取り直す
+</script>
+</body>
+</html>
