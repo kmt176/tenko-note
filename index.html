@@ -285,6 +285,10 @@ a.flink:active{background:var(--sunk)}
 .mtile{position:relative}.mlamp{position:absolute;top:8px;right:8px;width:12px;height:12px;border-radius:50%;background:#9AA5A3;box-shadow:0 0 0 2px var(--surface)}.mlamp.on{background:#2EAD5B;box-shadow:0 0 0 2px var(--surface),0 0 8px rgba(46,173,91,.8)}
 .mg1{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:#2F6FD6;color:#fff;font:800 14px/22px sans-serif;font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--surface)}
 .mdesc{font-size:12.5px;color:var(--muted);margin:-2px 0 8px;line-height:1.5}
+/* 押すと開く欄（コミュニケーション）。見出しだけ出しておき、押すとボタンが出る（2026-10-28 ユーザー指定） */
+.mfold>summary{list-style:none;cursor:pointer;-webkit-tap-highlight-color:transparent}.mfold>summary::-webkit-details-marker{display:none}
+.mfold>summary .mgrp{margin-bottom:8px}.mfold>summary .mgrp::after{content:"▾";margin-left:4px;font-size:13px;color:var(--muted)}.mfold[open]>summary .mgrp::after{content:"▴"}
+.mfold>summary:focus-visible{outline:2px solid var(--th);outline-offset:2px;border-radius:6px}
 .mtile .lb{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mver{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}.mver small{flex-basis:100%;color:var(--muted);font-size:12px}
 .mtile .mi{width:72px;height:72px;border-radius:19px;background:var(--thbg);color:var(--th);display:flex;align-items:center;justify-content:center}
@@ -1247,7 +1251,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 20:38</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-28 20:58</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2466,7 +2470,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const LAMP={patrol:"patrol",stand:"stand",yuryo:"yuryo",rest2:"rest2",train:"trainban",taxi:"taxi"};
     const lamp=k=>LAMP[k]?`<i class="mlamp${offCfg[LAMP[k]]?"":" on"}" title="${offCfg[LAMP[k]]?"知らせはオフ":"知らせはオン"}"></i>`:"";
     const tile=x=>`<button type="button" class="mtile" data-mt="${x[0]}" aria-label="${esc(x[3])}${LAMP[x[0]]?(offCfg[LAMP[x[0]]]?"（知らせはオフ）":"（知らせはオン）"):""}${G1ONLY.has(x[0])?"（グループ1限定）":""}">${lamp(x[0])}${G1ONLY.has(x[0])?`<i class="mg1" title="グループ1限定">①</i>`:""}<span class="mi">${micon(x[0])}</span><span class="lb">${esc(x[2])}</span></button>`;
-    const grp=(t,th,xs,desc)=>xs.length?`<div class="${th}"><h3 class="mgrp">${t}</h3>${desc?`<div class="mdesc">${esc(desc)}</div>`:""}<div class="mtiles">${xs.map(tile).join("")}</div></div>`:"";
+    const FOLD=new Set(["コミュニケーション"]);   // 見出しだけ出して、押すと開く欄
+    const grp=(t,th,xs,desc)=>!xs.length?"":FOLD.has(t)
+      ?`<details class="${th} mfold"><summary><h3 class="mgrp">${t}</h3></summary>${desc?`<div class="mdesc">${esc(desc)}</div>`:""}<div class="mtiles">${xs.map(tile).join("")}</div></details>`
+      :`<div class="${th}"><h3 class="mgrp">${t}</h3>${desc?`<div class="mdesc">${esc(desc)}</div>`:""}<div class="mtiles">${xs.map(tile).join("")}</div></div>`;
     const ver=(document.querySelector("#tabHelp .verpill")||{}).textContent||"";
     $("menuHome").innerHTML=`<section class="card">${grp("よく使う","th-navy",rec.map(k=>MENU_ALL[k]))}${MENU_GROUPS.map(([t,th,xs,desc])=>grp(t,th,xs.filter(x=>menuVisible(x[0])),desc)).join("")}
       <div class="mver"><span class="verpill">${esc(ver.trim())}</span><button type="button" class="btn" id="menuReload">更新</button><small>新しい版が出ているのに古いままのときに押します（データは消えません）</small></div></section>`;
