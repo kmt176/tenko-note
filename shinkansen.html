@@ -105,8 +105,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 <script>
 const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 // 試験中は管理者だけ（雨予報・帰りのバスと同じ確かめ方）
-(function(){ let adm=false; try{ const c=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); adm=(c.admin===true&&!!c.apass)||(c.nakama===true&&!!c.group&&c.group.id==="g1"); }catch(e){}   // 管理者とグループ1の人だけ（2026-10-29 ユーザー指定）
-  if(!adm){ document.body.innerHTML='<div class="lock">このページは今、管理者とグループ1の人だけが使えます（試験中）。</div>'; throw new Error("not admin"); } })();
+// 2026-10-29 ユーザー指定：全員に公開（前は管理者とグループ1の人だけ）
 
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzaCheINzPr7VXonUOs9CnwTCXCbRy0XqeMmaNw1vlNagiPqg_LyUDEQvrZA5axfnHPQQ/exec";   // build.py が本番のURLを入れる
 const KEY="tenko.shin", MAN_KEY="tenko.shinMan", NEXT_KEY="tenko.shinNext";
