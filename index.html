@@ -990,6 +990,11 @@ body.rtfull{overflow:hidden}
         <a href="https://www.seiburailway.jp/railwayinfo/" target="_blank" rel="noopener">西武鉄道<br>運行情報</a>
       </div>
       <div class="src">この3社の運行情報は、アプリの中に読み込んで出すことが認められていないため、公式サイトを開きます。</div>
+      <details style="margin-top:10px"><summary>このアプリで運行情報が出る路線・出ない路線</summary>   <!-- 2026-10-29 ユーザー指定：区域（23区・武蔵野市・三鷹市）を通る路線のまとめ -->
+        <div class="src" style="margin-top:6px"><b>出る路線</b><br>・東京メトロ 全9路線<br>・都営地下鉄（浅草線・三田線・新宿線・大江戸線）、都電荒川線、日暮里・舎人ライナー<br>・JR東日本の主な路線（山手線・京浜東北線・埼京線・中央線・総武線・常磐線・京葉線・宇都宮線・高崎線・東海道線）</div>
+        <div class="src" style="margin-top:8px"><b>出ない路線</b>（公式サイトや、Yahoo!路線情報などのアプリで確かめてください）<br>・東武鉄道：東上線、スカイツリーライン（伊勢崎線）、亀戸線、大師線<br>・西武鉄道：池袋線、新宿線、有楽町線、豊島線、多摩川線<br>・京王電鉄：京王線、井の頭線<br>・小田急電鉄：小田原線<br>・東急電鉄：東横線、田園都市線、目黒線、大井町線、池上線、東急多摩川線、世田谷線<br>・京急電鉄：本線、空港線<br>・京成電鉄：本線、押上線、金町線、成田スカイアクセス線<br>・その他：北総線、つくばエクスプレス、りんかい線、ゆりかもめ、東京モノレール<br>・JR東日本：横須賀線、湘南新宿ライン</div>
+        <div class="src" style="margin-top:8px">・営業所の近くでは、<b>東武東上線</b>と<b>西武池袋線</b>が特に関わります。<br>・JR東日本の運行情報は、期間が決まったデータを使っているため、取れなくなることがあります。上に「JR東日本の運行情報は、いまは取れていません」と出たら、JRも公式サイトなどで確かめてください。<br>・出ない路線は、上の「止まった路線」の一覧にも入っていません（駅の地図はJR・メトロ・都営だけです）。</div>
+      </details>
       <div class="src">駅の位置は国土数値情報（鉄道データ）、乗降客数は国土数値情報（駅別乗降客数・2023年度の1日あたり。JRは乗車人員の2倍）から。距離は駅の中心どうしの直線距離です。</div>
     </section>
   </div>
@@ -1284,7 +1289,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 10:37</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 10:59</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
