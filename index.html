@@ -1289,7 +1289,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 10:59</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 11:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5823,9 +5823,9 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   const GEO={
     patrol:{act:"patrolPts",store:"tenko.patrol",dist:"patrolStart",ban:"patrolBanner",pre:"pt",col:["#D23C2F","#E8890C","#7B3FA0","#2F6FD6","#3E9B4F"],chime:"pipo",route:false,
       msg:(x,g,d)=>`⚠ 取締り：${geoPlace("patrol",x).place}（${g}）まで約${d}m`},
-    stand:{act:"standPts",store:"tenko.stand",dist:"standDist",ban:"standBanner",pre:"sd",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:g=>!/優良/.test(g),
+    stand:{act:"standPts",store:"tenko.stand",dist:"standDist",ban:"standBanner",pre:"sd",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:(g,x)=>!/優良/.test(g)&&!(x&&/優良/.test(x[0])),
       msg:(x,g,d)=>`🚕 ${g}：${x[0].replace(/^\d+_/,"")}まで約${d}m`},
-    yuryo:{act:"standPts",store:"tenko.yuryo",dist:"yuryoDist",ban:"yuryoBanner",pre:"yr",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:g=>/優良/.test(g),
+    yuryo:{act:"standPts",store:"tenko.yuryo",dist:"yuryoDist",ban:"yuryoBanner",pre:"yr",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:(g,x)=>/優良/.test(g)||!!(x&&/優良/.test(x[0])),
       msg:(x,g,d)=>`【優】優良乗り場：${x[0].replace(/優良タクシー乗り場|タクシー乗り場|優良/g,"").trim()||x[0]}まで約${d}m`},
     rest2:{act:"restPts",store:"tenko.rest2",dist:"restDist",ban:"restBanner",pre:"rs",col:["#8B5A2B","#2F6FD6","#8E24AA","#7B3FA0","#3E9B4F"],   /* 駐車禁止は紫（地図の赤い家並みと見分けやすいように。2026-10-28 ユーザー指定） */chime:"ponpon",route:true,
       alertG:g=>/クレーム|禁止/.test(g),   // 知らせる・この画面に出すのは駐車禁止（クレーム発生ポイント）だけ。喫煙所・長時間駐車可は「休憩場」の地図に出す
@@ -5966,7 +5966,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       const th=+$(G.dist).value||100;
       S.pts.forEach((x,i)=>{
         if(G.alertG&&!G.alertG(S.groups[x[1]]||"")) return;
-        if(G.grpF&&!G.grpF(S.groups[x[1]]||"")) return;
+        if(G.grpF&&!G.grpF(S.groups[x[1]]||"",x)) return;
         const bb=geoBB(x); if(p.lat<bb[0]-dLat||p.lat>bb[1]+dLat||p.lng<bb[2]-dLng||p.lng>bb[3]+dLng){ delete S.prev[i]; return; }
         const d=geoD(p,x), prev=S.prev[i]; S.prev[i]=d;
         if(d<=th&&prev!=null&&(d<prev-2||(d===0&&prev>0))&&!(S.last[i]&&now-S.last[i]<10*60e3)){ S.last[i]=now; geoChime(G.chime); geoShow(k,x,d,false); }
@@ -5989,12 +5989,13 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       S.map.setView([35.69,139.75],12); addAreaMask(S.map); }
     setTimeout(()=>S.map.invalidateSize(),60);
     if(!S.pts){ m.textContent="場所を読み込んでいます…"; await geoLoad(k,true); if(!S.pts){ m.textContent="場所を読み込めませんでした。電波を確認してください"; return; } }
+    else if(first){ let at=0; try{ at=+(localStorage.getItem(G.store+"At")||0); }catch(e){} if(Date.now()-at>30*60e3) geoLoad(k,true).then(()=>{ if(curSub===k) renderGeoTab(k,false); }); }   // 開いたとき、30分より古ければ読み直す
     const col=i=>G.col[i%G.col.length];
-    const gShow=i=>(!(G.alertG&&k==="rest2")||G.alertG(S.groups[i]||""))&&(!G.grpF||G.grpF(S.groups[i]||""));   // 駐車禁止＝禁止だけ、日交乗り場＝優良以外、優良乗り場＝優良だけ
+    const gShow=(i,x)=>(!(G.alertG&&k==="rest2")||G.alertG(S.groups[i]||""))&&(!G.grpF||G.grpF(S.groups[i]||"",x));   // 駐車禁止＝禁止だけ、日交乗り場＝優良以外、優良乗り場＝優良だけ
     $(P+"Groups").innerHTML=S.groups.map((g,i)=>gShow(i)?`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-geog="${i}" ${S.offG[i]?"":"checked"}><b style="color:${col(i)}">●</b>${esc(g)}（${S.pts.filter(x=>x[1]===i).length}）</label>`:"").join("");
     $(P+"Groups").querySelectorAll("[data-geog]").forEach(b=>b.onchange=()=>{ if(b.checked) delete S.offG[b.dataset.geog]; else S.offG[b.dataset.geog]=true; try{ localStorage.setItem(G.store+"Off",JSON.stringify(S.offG)); }catch(e){} renderGeoTab(k,false); });
     if(S.layer) S.layer.remove(); S.layer=L.layerGroup().addTo(S.map);
-    const xs=S.pts.filter(x=>!S.offG[x[1]]&&gShow(x[1]));
+    const xs=S.pts.filter(x=>!S.offG[x[1]]&&gShow(x[1],x));
     xs.forEach(x=>{ const c=x[2][0], cl=col(x[1]);
       const link=G.route?`<a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
       const gp=geoPlace(k,x);
@@ -6015,7 +6016,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k];
     $(G.pre+"TestBan").onclick=async()=>{ if(!S.pts) await geoLoad(k,true);
       // テストは本番と同じ形で出す。場所は、現在地が分かれば一番近いもの（なければ最初のもの）
-      const cand=(S.pts||[]).filter(y=>(!G.alertG||G.alertG(S.groups[y[1]]||""))&&(!G.grpF||G.grpF(S.groups[y[1]]||"")));
+      const cand=(S.pts||[]).filter(y=>(!G.alertG||G.alertG(S.groups[y[1]]||""))&&(!G.grpF||G.grpF(S.groups[y[1]]||"",y)));
       let x=cand[0]||["（試し）",0,[[0,0]]];
       if(S.me&&cand.length){ const me=S.me.getLatLng(); x=cand.map(y=>({y,d:geoD({lat:me.lat,lng:me.lng},y)})).sort((a,b)=>a.d-b.d)[0].y; }
       // 取締りのテストは、いつも「御成門交差点」で出す（2026-10-25 ユーザー指定）。地図にないときも、この名前で出す
