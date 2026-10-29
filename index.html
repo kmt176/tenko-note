@@ -1289,7 +1289,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 11:07</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 11:16</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5989,7 +5989,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       S.map.setView([35.69,139.75],12); addAreaMask(S.map); }
     setTimeout(()=>S.map.invalidateSize(),60);
     if(!S.pts){ m.textContent="場所を読み込んでいます…"; await geoLoad(k,true); if(!S.pts){ m.textContent="場所を読み込めませんでした。電波を確認してください"; return; } }
-    else if(first){ let at=0; try{ at=+(localStorage.getItem(G.store+"At")||0); }catch(e){} if(Date.now()-at>30*60e3) geoLoad(k,true).then(()=>{ if(curSub===k) renderGeoTab(k,false); }); }   // 開いたとき、30分より古ければ読み直す
+    else if(first){ let at=0; try{ at=+(localStorage.getItem(G.store+"At")||0); }catch(e){} if(Date.now()-at>60e3) geoLoad(k,true).then(()=>{ if(curSub===k) renderGeoTab(k,false); }); }   // 画面を開くたびに裏で読み直す（1分以内に読んだばかりのときは除く）。古い記録のせいで駐車禁止が0か所・日交乗り場に優良が混ざる、を防ぐ（2026-10-29）
     const col=i=>G.col[i%G.col.length];
     const gShow=(i,x)=>(!(G.alertG&&k==="rest2")||G.alertG(S.groups[i]||""))&&(!G.grpF||G.grpF(S.groups[i]||"",x));   // 駐車禁止＝禁止だけ、日交乗り場＝優良以外、優良乗り場＝優良だけ
     $(P+"Groups").innerHTML=S.groups.map((g,i)=>gShow(i)?`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-geog="${i}" ${S.offG[i]?"":"checked"}><b style="color:${col(i)}">●</b>${esc(g)}（${S.pts.filter(x=>x[1]===i).length}）</label>`:"").join("");
