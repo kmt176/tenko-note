@@ -799,20 +799,26 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subSv" hidden></div>
 
+  <div class="wrap" id="subPark" hidden>
+    <section class="card" aria-live="polite">
+      <h2>パーキング（試験）</h2>
+      <div class="btnrow"><button class="btn primary" id="pkNear">近いパーキング5件</button><button class="btn" id="pkMe">現在地</button><label style="display:flex;align-items:center;gap:6px;font-size:15px"><input type="checkbox" id="pkOnlyOk" checked>今使える区間だけ</label></div>
+      <div class="msg" id="pkMsg" role="status"></div>
+      <div id="pkMapWrap" class="mapwrap"><div id="pkMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
+        <div class="evmapbtns"><button class="btn" id="pkFullBtn">全画面</button></div></div>
+      <div class="legend" style="margin-top:8px"><span><b style="background:#E07A00"></b>P 今使えるパーキング</span><span><b style="background:#9AA0A6"></b>P 時間外・使えない日</span></div>
+      <div id="pkList"></div>
+      <div class="src" id="pkSrc">パーキング・メーター／チケット（時間制限駐車区間）の線とPの印です。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br>出典：警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成（町名は国土地理院の逆ジオコーダで、通り名はマイマップ「東京通り名マップ」の大きな通り沿いの区間だけに付けています）</div>
+    </section>
+  </div>
+
   <div class="wrap" id="subRest" hidden>
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>休憩場</h2><button class="btn" id="restReload">更新</button></div>
       <div class="src"><b>よい休憩場所を見つけたら、どんどん登録してください。</b>登録した場所は、みんなのアプリのこの地図に出ます（青いピン）。地図には、マイマップの<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>も出しています。合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
       <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button><button class="btn" id="restMe">現在地</button></div>
-      <div class="seg" role="tablist" aria-label="地図に出すもの" id="restShowSeg" style="margin:10px 0"><button role="tab" data-show="both" aria-selected="true">両方</button><button role="tab" data-show="rest" aria-selected="false">休憩場だけ</button><button role="tab" data-show="pk" aria-selected="false">パーキングだけ</button></div>
       <div id="restMapWrap" class="mapwrap" hidden><div id="restMap" class="bigmap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="restFullBtn">全画面</button></div></div>
-      <div id="pkBox">
-        <div class="legend" style="margin-top:8px"><span><b style="background:#E07A00"></b>P 今使えるパーキング</span><span><b style="background:#9AA0A6"></b>P 時間外・使えない日</span></div>
-        <div class="btnrow"><button class="btn" id="pkNear">近いパーキング5件</button><label style="display:flex;align-items:center;gap:6px;font-size:15px"><input type="checkbox" id="pkOnlyOk" checked>今使える区間だけ</label></div>
-        <div id="pkList"></div>
-        <div class="src" id="pkSrc">パーキング・メーター／チケット（時間制限駐車区間）の線とPの印です。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br>出典：警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成（町名は国土地理院の逆ジオコーダで、通り名はマイマップ「東京通り名マップ」の大きな通り沿いの区間だけに付けています）</div>
-      </div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
       <div class="field"><label for="restCode">社員コード</label><input type="text" id="restCode" inputmode="numeric" autocomplete="off"></div>
       <div class="field"><label for="restNote">メモ（場所の名前など・省略できます）</label><input type="text" id="restNote" maxlength="60" autocomplete="off"></div>
@@ -1289,7 +1295,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-30 12:02</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-30 12:21</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1391,7 +1397,7 @@ body.rtfull{overflow:hidden}
     <h2>休憩場・専用乗り場</h2>
     <p>「メニュー」の上のボタンで切り替えます。どちらも合言葉なしで使えます。</p>
     <dl class="explain">
-      <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。「現在地」を押すと、地図が今いる場所に移り、赤い丸で示します。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。地図には、警視庁のパーキング・メーター／チケットの区間も出します（オレンジのP＝今使える、灰色＝時間外・使えない日）。「両方／休憩場だけ／パーキングだけ」で切り替えられ、「近いパーキング5件」で近い順に見られます。</dd>
+      <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。「現在地」を押すと、地図が今いる場所に移り、赤い丸で示します。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd><dt>パーキング（試験）</dt><dd>警視庁のパーキング・メーター／チケットの区間を地図に出します（オレンジのP＝今使える、灰色＝時間外・使えない日）。「近いパーキング5件」で近い順に見られます。管理者とグループ1の人だけ。</dd>
       <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（1km以内）にいるときに台数が足りないと、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
     </dl>
   </section>
@@ -2434,7 +2440,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   };
 
   // ===== メニュー（ロング判定・天気・電車・到着便） =====
-  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip",patrol:"subPatrol",stand:"subStand",yuryo:"subYuryo",rest2:"subRest2",demand:"subDemand",hosp:"subHosp"};
+  const SUBS={long:"subLong",wx:"subWx",rail:"subRail",fl:"subFl",sv:"subSv",rest:"subRest",taxi:"subTaxi",event:"subEvent",train:"subTrain",cmp:"subCmp",air:"subAir",bus:"subBus",ship:"subShip",patrol:"subPatrol",stand:"subStand",yuryo:"subYuryo",rest2:"subRest2",demand:"subDemand",hosp:"subHosp",park:"subPark"};
   const KIND={wx:"weather",rail:"rail",fl:"flight"};
   const info={};          // 種類ごとの最後の結果と取得時刻
   let airport="HND", curSub="long";
@@ -2443,6 +2449,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(s==="wx"||s==="rail"||s==="fl") s="rest";   // 天気・電車・到着便はいったん非表示にしたので、古い保存値が残っていても休憩場へ
     if(s==="long"&&!isMember()) s="rest";
     if((s==="cmp"||s==="demand")&&!isAdmin()) s="rest";
+    if(s==="park"&&!pkOk()) s="rest";   // パーキングは試験中なので、管理者とグループ1の人だけ
 
     curSub=s;
     Object.keys(SUBS).forEach(k=>{ $(SUBS[k]).hidden=k!==s; });
@@ -2453,6 +2460,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(s==="rest"&&!$("tabLong").hidden&&typeof loadRest==="function") loadRest();
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
     if(s==="hosp"&&!$("tabLong").hidden&&typeof renderHosp==="function") renderHosp(true);
+    if(s==="park"&&!$("tabLong").hidden&&typeof openPark==="function") openPark();
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
     if(s==="demand"&&!$("tabLong").hidden&&typeof dmOpen==="function") dmOpen();
@@ -2469,7 +2477,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const MICON={"event": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "taxi": "<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><path d=\"M10 6h4\"/><path d=\"M10 10h4\"/><path d=\"M10 14h4\"/><path d=\"M10 18h4\"/>", "train": "<path d=\"M8 3.1V7a4 4 0 0 0 8 0V3.1\"/><path d=\"m9 15-1-1\"/><path d=\"m15 15 1-1\"/><path d=\"M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z\"/><path d=\"m8 19-2 3\"/><path d=\"m16 19 2 3\"/>", "air": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "rest": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "flash": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "long": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>", "cmp": "<path d=\"M3 3v18h18\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "bus": "<path d=\"M8 6v6\"/><path d=\"M15 6v6\"/><path d=\"M2 12h19.6\"/><path d=\"M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/><path d=\"M9 18h5\"/><circle cx=\"16\" cy=\"18\" r=\"2\"/>", "ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>", "pay": "<polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/>", "set": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bk": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "help": "<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>"};
   const MENU_GROUPS=[
     ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
-    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["izakaya","🍶","飲み屋街","飲み屋街マップ（試験）"],["ame","☔","雨予報","エリア別 雨予報（試験）"],["hosp","🏥","病院外来","病院の外来終了時間（試験）"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]],
+    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["air","✈️","飛行機","飛行機"],["rest","☕","休憩場","休憩場"],["park","🅿️","パーキング","パーキング（試験）"],["flash","👥","仲間の速報","仲間の速報"],["izakaya","🍶","飲み屋街","飲み屋街マップ（試験）"],["ame","☔","雨予報","エリア別 雨予報（試験）"],["hosp","🏥","病院外来","病院の外来終了時間（試験）"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]],
     ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
     ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"]]],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","施設名","施設名をまとめて確かめる"],["help","📖","使い方","使い方"]]],
@@ -2488,11 +2496,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
   MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
   const isGroup1=()=>isNakama()&&!!cfg.group&&cfg.group.id==="g1";
-  const G1ONLY=new Set(["place","akabus"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
+  const G1ONLY=new Set(["place","akabus","park"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
   const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help"||k==="othello"||k==="mahjong") return true; if(k==="pay") return isAdmin();
     if(k==="izakaya") return true;   // 飲み屋街マップは全員（2026-10-28 ユーザー指定）
     if(k==="ame"||k==="shin"||k==="hosp") return true;   // 雨予報・病院外来・新幹線は全員（2026-10-29 ユーザー指定）
-    if(k==="akabus") return isAdmin()||isGroup1();   // 帰りのバスは試験中なので、管理者とグループ1の人だけ（2026-10-29 ユーザー指定）
+    if(k==="akabus"||k==="park") return isAdmin()||isGroup1();   // 帰りのバスは試験中なので、管理者とグループ1の人だけ（2026-10-29 ユーザー指定）
     if(k==="place") return isAdmin()||isGroup1();   // 施設名をまとめて確かめるのは、管理者とグループ1の人だけ
     if(k==="flash") return !$("sViewFlash").hidden;
     const b=document.querySelector(`#tabLong > .seg [data-sub="${k}"]`); return !!b&&!b.hidden; };
@@ -2658,7 +2666,6 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(j.items.length) setTimeout(()=>{ restMapObj.invalidateSize(); restMapObj.fitBounds(L.latLngBounds(j.items.map(x=>[x.lat,x.lng])),{padding:[20,20],maxZoom:16}); },60);
       else{ restMapObj.setView([35.68,139.76],11); setTimeout(()=>restMapObj.invalidateSize(),60); getPos().then(p=>{ if(p&&!restPick) restMapObj.setView([p.lat,p.lng],15); }); }
       renderRestPick();
-      applyRestShow();
     }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
   }
   $("restMap").addEventListener("click",async e=>{
@@ -2676,11 +2683,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("restReload").onclick=loadRest;
 
   // ---- 時間制限駐車区間（パーキング・メーター／チケット）。警視庁のオープンデータ（CC BY 4.0）を src/parking_fetch.py で parking.json にしたもの ----
-  // 休憩場の地図に、別のレイヤーとして重ねる（休憩場の登録・削除には触らない）
+  // 「パーキング」の画面（2026-10-30 に休憩場から分けた）。自分の地図 pkMapObj に描く
   const PK_ON="#E07A00", PK_OFF="#9AA0A6";
-  let pkData=null, pkLayer=null, pkMarks={};
+  let pkData=null, pkLayer=null, pkMarks={}, pkMapObj=null, pkMeMarker=null;
   const pkOk=()=>isAdmin()||isGroup1();   // パーキングは試験中なので、管理者とグループ1の人だけ（2026-10-29 ユーザー指定）。ほかの人は休憩場だけ
-  const restShow=()=>pkOk()?(cfg.restShow||"both"):"rest";   // both：両方　rest：休憩場だけ　pk：パーキングだけ
   async function loadPk(){
     if(!pkData){ const r=await fetch("parking.json",{cache:"no-cache"}); if(!r.ok) throw new Error(r.status); pkData=await r.json(); }
     return pkData;
@@ -2707,30 +2713,37 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const pkIcon=cl=>L.divIcon({className:"",html:`<div style="width:20px;height:20px;border-radius:5px;background:${cl};color:#fff;font:700 13px/20px sans-serif;text-align:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)">P</div>`,iconSize:[24,24],iconAnchor:[12,12]});
   // 今の時刻で色を決めて描き直す（時間外は灰色）。表示中は1分ごとに描き直す
   function drawPk(){
-    if(!restMapObj||!pkData) return;
+    if(!pkMapObj||!pkData) return;
     if(pkLayer) pkLayer.remove(); pkLayer=L.layerGroup(); pkMarks={};
     const now=new Date(), ren=L.canvas({padding:.5}), icOn=pkIcon(PK_ON), icOff=pkIcon(PK_OFF);
     pkData.items.forEach(x=>{ const ok=pkNow(x,now).ok, cl=ok?PK_ON:PK_OFF;
       L.polyline(x.ln,{renderer:ren,color:cl,weight:5,opacity:.85,bubblingMouseEvents:false}).bindPopup(()=>pkPop(x)).addTo(pkLayer);
       pkMarks[x.id]=L.marker(x.c,{icon:ok?icOn:icOff,zIndexOffset:ok?0:-500}).bindPopup(()=>pkPop(x)).addTo(pkLayer); });
-    if(restShow()!=="rest") pkLayer.addTo(restMapObj);
+    pkLayer.addTo(pkMapObj);
   }
-  setInterval(()=>{ if(pkLayer&&!$("subRest").hidden&&document.visibilityState==="visible"&&restShow()!=="rest"&&!(restMapObj._popup&&restMapObj._popup.isOpen())) drawPk(); },60000);   // 吹き出しを開いている間は描き直さない（閉じてしまうので）
-  async function applyRestShow(){
-    const v=restShow(); $("restShowSeg").hidden=!pkOk();
-    document.querySelectorAll("#restShowSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.show===v));
-    $("pkBox").hidden=v==="rest";
-    if(!restMapObj) return;
-    if(restLayer){ if(v==="pk") restLayer.remove(); else restLayer.addTo(restMapObj); }
-    if(v==="rest"){ if(pkLayer) pkLayer.remove(); return; }
-    try{ await loadPk(); }catch(e){ $("pkDate").textContent="（パーキングのデータを読み込めませんでした。上の「更新」でやり直してください）"; return; }
+  setInterval(()=>{ if(pkLayer&&pkMapObj&&!$("subPark").hidden&&document.visibilityState==="visible"&&!(pkMapObj._popup&&pkMapObj._popup.isOpen())) drawPk(); },60000);   // 吹き出しを開いている間は描き直さない（閉じてしまうので）
+  const setPkMe=p=>{ if(pkMeMarker) pkMapObj.removeLayer(pkMeMarker);
+    pkMeMarker=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#D23C2F",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(pkMapObj); };
+  async function openPark(){
+    const m=$("pkMsg");
+    try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
+    let first=false;
+    if(!pkMapObj){ first=true; pkMapObj=L.map("pkMap",{zoomControl:true,attributionControl:true});
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(pkMapObj);
+      pkMapObj.setView([35.69,139.75],13); }
+    setTimeout(()=>pkMapObj.invalidateSize(),60);
+    m.textContent="パーキングのデータを読み込んでいます…";
+    try{ await loadPk(); }catch(e){ m.textContent=""; $("pkDate").textContent="（パーキングのデータを読み込めませんでした。開き直してください）"; return; }
+    m.textContent="";
+    if(first){ getPos().then(p=>{ if(p){ setPkMe(p); pkMapObj.setView([p.lat,p.lng],16); } }); }
     drawPk();
     const last=pkData.hol[pkData.hol.length-1]||"";
     $("pkDate").textContent=`データは警視庁の${pkData.upd.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1年$2月$3日")}更新分（${pkData.items.length}区間、${pkData.made.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1年$2月$3日")}に取り込み）。`+(new Date().toISOString().slice(0,10)>last.slice(0,4)+"-12-31"?"祝日の表が古くなっています（管理者がデータを作り直してください）。":"");
   }
-  document.querySelectorAll("#restShowSeg button").forEach(b=>b.onclick=()=>{ cfg.restShow=b.dataset.show; saveCfg(); applyRestShow(); });
-  $("pkBox").hidden=restShow()==="rest"; $("restShowSeg").hidden=!pkOk();
-  document.querySelectorAll("#restShowSeg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.show===restShow()));
+  $("pkMe").onclick=async()=>{ if(!pkMapObj) await openPark(); const p=await getPos(true);
+    if(!p){ $("pkMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; }
+    $("pkMsg").textContent=""; setPkMe(p); pkMapObj.setView([p.lat,p.lng],Math.max(pkMapObj.getZoom(),16)); };
+  setupFull("pkFullBtn","pkMapWrap",()=>pkMapObj);
   // 区間の線までのいちばん近い距離（m）。近い範囲なので、緯度経度を平面とみなして線分への垂線で測る
   function pkDist(p,x){
     const kx=Math.cos(p.lat*Math.PI/180)*111320, ky=110950, xy=q=>[(q[1]-p.lng)*kx,(q[0]-p.lat)*ky];
@@ -2744,25 +2757,25 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("pkNear").onclick=async()=>{ if(!pkOk()) return;
     const box=$("pkList"); box.innerHTML=`<div class="geo">今の場所を調べています…</div>`;
     try{ await loadPk(); }catch(e){ box.innerHTML=`<div class="geo">パーキングのデータを読み込めませんでした</div>`; return; }
-    const pos=await getPos();
+    if(!pkMapObj) await openPark();
+    const pos=await getPos(true);
     if(!pos){ box.innerHTML=`<div class="geo">場所が取れませんでした。位置情報の許可を確認してください</div>`; return; }
     const now=new Date(), onlyOk=$("pkOnlyOk").checked;
     const xs=pkData.items.filter(x=>x.fl&1).map(x=>({x,st:pkNow(x,now),d:pkDist(pos,x)})).filter(o=>!onlyOk||o.st.ok).sort((a,b)=>a.d-b.d).slice(0,5);
     if(!xs.length){ box.innerHTML=`<div class="geo">${onlyOk?"今使える区間がありません（時間外・日曜など）。「今使える区間だけ」を外すと、時間外の区間も出します":"見つかりませんでした"}</div>`; return; }
     const dtxt=d=>d>=1000?"約"+r1(d/1000)+"km":"約"+Math.round(d)+"m";
     box.innerHTML=`<table class="cmpt" style="font-size:14.5px;margin-top:6px"><tbody>${xs.map(o=>`<tr data-pk="${o.x.id}" style="cursor:pointer"><td class="num">${dtxt(o.d)}</td><td><b style="color:${o.st.ok?PK_ON:"#5F6368"}">${o.st.ok?"使える":"使えない"}</b> ${esc(o.x.t)}${o.x.r?`・${esc(o.x.r)}`:""}<br><small>${o.x.k?"チケット":"メーター"}・${o.x.lim}分${o.x.fee}円・${esc(o.st.why)}</small></td><td class="num"><a href="https://www.google.com/maps/dir/?api=1&destination=${o.x.c[0]},${o.x.c[1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a></td></tr>`).join("")}</tbody></table><div class="geo" style="font-size:13px">距離はまっすぐ測ったものです。行をタップすると地図で見られます。</div>`;
-    if(restMapObj){
-      if(restMeMarker) restMapObj.removeLayer(restMeMarker);
-      restMeMarker=L.circleMarker([pos.lat,pos.lng],{radius:9,color:"#fff",weight:3,fillColor:"#D23C2F",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(restMapObj);
+    if(pkMapObj){
+      setPkMe(pos);
       if(!pkLayer) drawPk();
-      restMapObj.fitBounds(L.latLngBounds([[pos.lat,pos.lng],...xs.map(o=>o.x.c)]),{padding:[30,30],maxZoom:17});
+      pkMapObj.fitBounds(L.latLngBounds([[pos.lat,pos.lng],...xs.map(o=>o.x.c)]),{padding:[30,30],maxZoom:17});
     }
   };
   $("pkList").addEventListener("click",e=>{
     if(e.target.closest("a")) return;
-    const tr=e.target.closest("[data-pk]"), mk=tr&&pkMarks[tr.dataset.pk]; if(!mk||!restMapObj) return;
-    $("restMapWrap").scrollIntoView({behavior:"smooth",block:"center"});
-    restMapObj.setView(mk.getLatLng(),Math.max(restMapObj.getZoom(),17)); mk.openPopup();
+    const tr=e.target.closest("[data-pk]"), mk=tr&&pkMarks[tr.dataset.pk]; if(!mk||!pkMapObj) return;
+    $("pkMapWrap").scrollIntoView({behavior:"smooth",block:"center"});
+    pkMapObj.setView(mk.getLatLng(),Math.max(pkMapObj.getZoom(),17)); mk.openPopup();
   });
 
   // ===== イベント地図（CSVで読み込んだ会場をピンで出す。カーナビタイム My地点プラスと同じ形式：地点名,緯度,経度,住所,電話番号,メモ） =====
