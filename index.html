@@ -1289,7 +1289,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-29 11:16</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-30 12:02</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2591,20 +2591,30 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     }
   }
   $("restPickClear").onclick=()=>{ restPick=null; renderRestPick(); $("restMsg").textContent="選択を取り消しました。今いる場所に追加します"; };
-  let restItems=[];
+  let restItems=[], restMeMarker=null;
+  // 比べる場所：みんなの休憩場 ＋ マイマップの喫煙所・長時間駐車可（地図に出しているものと同じ。駐車禁止は入れない）
+  const restCands=()=>restItems.map(x=>({name:x.note||"休憩場",kind:"みんなの休憩場",lat:+x.lat,lng:+x.lng}))
+    .concat((GS.rest2.pts||[]).filter(x=>!GEO.rest2.alertG(GS.rest2.groups[x[1]]||"")).map(x=>({name:x[0],kind:GS.rest2.groups[x[1]]||"",lat:+x[2][0][0],lng:+x[2][0][1]})))
+    .filter(x=>isFinite(x.lat)&&isFinite(x.lng));
   $("restNearest").onclick=async()=>{
     const m=$("restMsg");
-    if(!restItems.length){ m.textContent="休憩場がまだ登録されていません"; return; }
-    m.textContent="今の場所を調べています…";
-    const pos=await getPos();
+    if(!GS.rest2.pts) await geoLoad("rest2",true);
+    const cs=restCands();
+    if(!cs.length){ m.textContent="休憩場がまだ登録されていません"; return; }
+    m.textContent="今の場所を調べ直しています…";
+    const pos=await getPos(true);   // 押したときに取り直す（前の位置は使わない）
     if(!pos){ m.textContent="場所が取れませんでした。位置情報の許可を確認してください"; return; }
-    let best=null, bestD=Infinity;
-    restItems.forEach(x=>{ const dm=distM([pos.lat,pos.lng],[x.lat,x.lng]); if(dm<bestD){ bestD=dm; best=x; } });
-    m.textContent=`一番近い休憩場（約${bestD>=1000?r1(bestD/1000)+"km":Math.round(bestD)+"m"}・${esc(best.note||"メモなし")}）をGoogleマップで開きます`;
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${best.lat},${best.lng}&travelmode=driving`,"_blank","noopener");
+    const near=cs.map(x=>({x,d:distM([pos.lat,pos.lng],[x.lat,x.lng])})).sort((a,b)=>a.d-b.d), best=near[0].x, bestD=near[0].d;   // 距離の近い順に並べて一番上
+    const fd=d=>d>=1000?r1(d/1000)+"km":Math.round(d/10)*10+"m", url=`https://www.google.com/maps/dir/?api=1&destination=${best.lat},${best.lng}&travelmode=driving`;
+    if(restMapObj){ if(restMeMarker) restMapObj.removeLayer(restMeMarker);
+      restMeMarker=L.circleMarker([pos.lat,pos.lng],{radius:9,color:"#fff",weight:3,fillColor:"#D23C2F",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(restMapObj);
+      restMapObj.fitBounds(L.latLngBounds([[pos.lat,pos.lng],[best.lat,best.lng]]),{padding:[40,40],maxZoom:16}); }
+    m.innerHTML=`一番近い休憩場：<b>${esc(best.name)}</b>（${esc(best.kind)}）<br>現在地から<b>約${fd(bestD)}</b>（まっすぐの距離）`+
+      ((n2=>n2?`<br><small>次に近いのは ${esc(n2.x.name)}（約${fd(n2.d)}）</small>`:"")(near.find(y=>y.x.name!==best.name)))+   // 同じ名前の重なり（マイマップの2回登録）は飛ばす
+      `<br><a class="btn primary" style="margin-top:6px;display:inline-block" href="${url}" target="_blank" rel="noopener">Googleマップで道案内</a>`;
+    window.open(url,"_blank","noopener");
   };
   // 現在地：地図を今いる場所に合わせて、赤い丸の印（今ここ）を出す
-  let restMeMarker=null;
   $("restMe").onclick=async()=>{
     const m=$("restMsg");
     if(!restMapObj){ m.textContent="地図を読み込んでから押してください（上の「更新」）"; return; }
@@ -4531,11 +4541,12 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("fGroupSel").addEventListener("change",()=>{ if(lastFlash&&drawFlash) drawFlash(lastFlash); });
 
   // ---- 位置・住所・天気（どれも無料。取れなかったら後で埋める） ----
-  function getPos(){
+  let lastPos=null;   // 最後に取れた位置（時刻つき）。取り直せないときの最後の頼り
+  function getPos(fresh){
     return new Promise(res=>{
       if(!navigator.geolocation) return res(null);
-      navigator.geolocation.getCurrentPosition(p=>res({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)}),
-        ()=>res(null),{enableHighAccuracy:true,timeout:10000,maximumAge:30000});
+      navigator.geolocation.getCurrentPosition(p=>{ const q={lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)}; lastPos=Object.assign({t:Date.now()},q); res(q); },
+        ()=>fresh?getPos(false).then(q=>res(q||(lastPos&&Date.now()-lastPos.t<60e3?lastPos:null))):res(null),{enableHighAccuracy:true,timeout:fresh?8000:10000,maximumAge:fresh?0:30000});   // 取り直せないとき（屋内など）は、30秒以内の位置、なければ1分以内に取れた位置を使う
     });
   }
   async function townOf(p){   // 国土地理院の逆ジオコーダ：〇〇区〇〇町〇丁目まで
@@ -5974,7 +5985,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   function geoWatch(){
     const on=Object.keys(GEO).some(k=>!offCfg[k]&&GS[k].pts&&GS[k].pts.length)&&navigator.geolocation&&document.visibilityState==="visible";
-    if(on&&geoWid==null){ geoWid=navigator.geolocation.watchPosition(pos=>geoCheck({lat:pos.coords.latitude,lng:pos.coords.longitude,spd:pos.coords.speed,t:pos.timestamp||Date.now()}),()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:20000}); }
+    if(on&&geoWid==null){ geoWid=navigator.geolocation.watchPosition(pos=>{ lastPos={t:Date.now(),lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6),acc:Math.round(pos.coords.accuracy)}; geoCheck({lat:pos.coords.latitude,lng:pos.coords.longitude,spd:pos.coords.speed,t:pos.timestamp||Date.now()}); },()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:20000}); }
     else if(!on&&geoWid!=null){ navigator.geolocation.clearWatch(geoWid); geoWid=null; Object.values(GS).forEach(S=>{ S.prev={}; }); }
   }
   document.addEventListener("visibilitychange",geoWatch);
