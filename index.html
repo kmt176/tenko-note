@@ -830,7 +830,7 @@ body.rtfull{overflow:hidden}
           <label style="display:flex;align-items:center;gap:6px;margin-top:4px"><input type="radio" name="wcShopMode" value="all">すべてのお店（みんなで「あり・なし」を付ける）</label>
           <div style="font-size:13px;color:#5F6368;margin-top:2px">すべてにすると：緑のふち＝駐車場あり、白い丸＝まだ分からない、灰色＝駐車場なし。印を押して、駐車場と喫煙所の「あり／なし」を選んで「登録する」を押してください</div></div>
         <input type="search" id="wcShopQ" placeholder="店名で絞る（例：セブン、早宮）" autocomplete="off" style="margin-top:8px;width:100%;box-sizing:border-box;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
-        <div class="btnrow"><button class="btn" id="wcShopLoad">🔍 この範囲のお店を検索</button><button class="btn" id="wcShopCsv" hidden>CSVで保存（管理者）</button></div>
+        <div class="btnrow"><button class="btn" id="wcShopLoad">🔍 地図に見えている範囲を検索</button><button class="btn" id="wcShopCsv" hidden>CSVで保存（管理者）</button></div>
         <div class="geo" id="wcShopMsg" style="font-size:13.5px"></div>
       </div>
       <div class="msg" id="wcMsg" role="status"></div>
@@ -1325,7 +1325,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-31 11:25</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-31 11:41</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3042,10 +3042,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function loadShops(auto){
     const m=$("wcShopMsg");
     if(!wcMapObj||!wcOpt.shop||shopBusy) return;
-    if(wcMapObj.getZoom()<SHOP_Z){ m.textContent="地図をもう少し拡大すると、見えている範囲のお店を読み込みます"; return; }
+    if(wcMapObj.getZoom()<SHOP_Z){ m.textContent="地図をもう少し拡大すると、見えている範囲のお店を読み込みます（「地図に見えている範囲を検索」を押すと、自動で拡大します）"; return; }
     const bb=wcMapObj.getBounds();
     if(auto&&shopBoxes.some(x=>x.contains(bb))){ return; }   // もう読んだ範囲
-    shopBusy=true; m.textContent="この範囲のお店を読み込んでいます…";
+    shopBusy=true; m.textContent="見えている範囲のお店を読み込んでいます…";
     const f=v=>v.toFixed(5), b=`${f(bb.getSouth())},${f(bb.getWest())},${f(bb.getNorth())},${f(bb.getEast())}`,
       b2=`${f(bb.getSouth()-.0025)},${f(bb.getWest()-.003)},${f(bb.getNorth()+.0025)},${f(bb.getEast()+.003)}`, re=shopRe.source.replace(/"/g,"");
     const q=`[out:json][timeout:30];(nwr["shop"="convenience"](${b});nwr["amenity"="fast_food"](${b});nwr["amenity"="restaurant"]["cuisine"~"ramen|beef_bowl|gyudon|burger"](${b});nwr["amenity"="restaurant"]["name"~"${re}",i](${b});nwr["amenity"="restaurant"]["brand"~"${re}",i](${b}););out center tags;nwr["amenity"="parking"]["access"!~"^(private|no)$"](${b2});out center tags;`;
@@ -3058,8 +3058,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       shopBoxes.push(bb);
       drawShops();
       const inV=Object.values(shopEls).filter(x=>bb.contains([x.lat,x.lng])), ok=inV.filter(x=>shopJudge(x).ok);
-      m.textContent=`この範囲のお店${inV.length}件（コンビニ${inV.filter(x=>x.kind==="cvs").length}件）のうち、駐車場ありと決めたお店は${ok.length}件です（種類をオフにしたものも数えています）`;
-    }catch(e){ m.textContent="お店のデータを読み込めませんでした（オープンストリートマップのサーバーが混んでいます）。少し待ってから「この範囲のお店を検索」を押してください"; }
+      m.textContent=`見えている範囲のお店${inV.length}件（コンビニ${inV.filter(x=>x.kind==="cvs").length}件）のうち、駐車場ありと決めたお店は${ok.length}件です（種類をオフにしたものも数えています）`;
+    }catch(e){ m.textContent="お店のデータを読み込めませんでした（オープンストリートマップのサーバーが混んでいます）。少し待ってから「地図に見えている範囲を検索」を押してください"; }
     finally{ shopBusy=false; }
   }
   function shopOpen(){
@@ -3074,7 +3074,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("wcShopM").value=wcOpt.shopM||50; $("wcShopMv").textContent=`${wcOpt.shopM||50}m以内`;
   $("wcShopM").oninput=()=>{ wcOpt.shopM=+$("wcShopM").value; $("wcShopMv").textContent=`${wcOpt.shopM}m以内`; wcSave(); drawShops(); };
   $("wcShowShop").onchange=()=>{ wcOpt.shop=$("wcShowShop").checked; wcSave(); $("wcShopBox").hidden=!wcOpt.shop; $("wcShopMsg").textContent=""; if(wcOpt.shop){ shopOpen(); drawShops(); } else drawShops(); };
-  $("wcShopLoad").onclick=()=>loadShops(false);
+  // 広く見すぎているときは、地図のまん中を中心に拡大してから検索する（拡大し終わると、地図が動いたときの自動の検索で読み込む）
+  $("wcShopLoad").onclick=()=>{ if(wcMapObj&&wcMapObj.getZoom()<SHOP_Z){ $("wcShopMsg").textContent="地図を拡大して、見えている範囲を検索します…"; wcMapObj.setZoom(SHOP_Z+1); return; } loadShops(false); };
   $("wcShopOwn").checked=wcOpt.own; $("wcShopOwn").onchange=()=>{ wcOpt.own=$("wcShopOwn").checked; wcSave(); drawShops(); };
   // ===== コンビニの駐車場・喫煙所のあるなし（みんなで確認して共有。2026-10-31 ユーザー指定）。サーバーの cvsGet / cvsSet、シート「コンビニ確認」 =====
   let cvsChk={}, cvsChkAt=0, shopMarks={};
