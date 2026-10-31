@@ -813,6 +813,9 @@ body.rtfull{overflow:hidden}
       <div id="wcShopBox" hidden style="margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px">
         <div id="wcShopTypes" style="display:flex;flex-wrap:wrap;gap:4px 14px"></div>
         <div style="margin-top:8px;display:flex;align-items:center;gap:8px"><label for="wcShopM" style="white-space:nowrap">駐車場までの距離</label><input type="range" id="wcShopM" min="10" max="200" step="10" style="flex:1 1 auto;width:0;min-width:0;margin:0"><b id="wcShopMv" style="white-space:nowrap">50m以内</b></div>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:6px"><input type="checkbox" id="wcShopOwn">お店専用の駐車場があるお店だけ（お客さん用の駐車場・お店の名前の駐車場）</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="wcShopSm">喫煙所ありと確認されたコンビニだけ</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="wcShopNo">「駐車場なし」と確認されたお店も灰色で出す</label>
         <div class="btnrow"><button class="btn" id="wcShopLoad">この範囲のお店を読み込む</button><button class="btn" id="wcShopCsv" hidden>CSVで保存（管理者）</button></div>
         <div class="geo" id="wcShopMsg" style="font-size:13.5px"></div>
       </div>
@@ -821,7 +824,7 @@ body.rtfull{overflow:hidden}
         <div class="evmapbtns"><button class="btn" id="wcFullBtn">全画面</button></div></div>
       <div class="legend" style="margin-top:8px"><span><b style="background:#1E8E3E;border-radius:50%"></b>24時間使えるトイレ</span><span><b style="background:#2F6FD6;border-radius:50%"></b>そのほかのトイレ（時間が分からないものも）</span><span><b style="background:#E07A00"></b>P 今使えるパーキング</span><span><b style="background:#9AA0A6"></b>P 時間外・使えない日</span><span><b style="background:#8E44AD;border-radius:50%"></b>コンビニ</span><span><b style="background:#C0392B;border-radius:50%"></b>飲食店</span><span><b style="background:#6D4C41;border-radius:50%"></b>ガソリンスタンド</span></div>
       <div id="wcPkList"></div>
-      <div class="src"><b>トイレ</b>：地図を広く見ているときは、近くのトイレをまとめて数字で出します。拡大すると1つずつ出ます。トイレの印の右上の<b style="color:#E07A00">P</b>は、50m以内に駐車場か、今使えるパーキングメーターがあるという印です。印をタップすると、名前・住所・利用時間・車椅子・近くの駐車場までの距離が出ます。分からない項目は「情報なし」と出します（推測では埋めていません）。<b>公園のトイレは夜に閉まることがあります。</b>利用時間が「情報なし」のときは、現地で確かめてください。駐車場は、近くにあっても止められるとは限りません（月極・満車・時間外など）。距離はまっすぐ測ったものです。<span id="wcDate"></span><br><br><b>パーキングメーター</b>：パーキング・メーター／チケット（時間制限駐車区間）のPの印です。拡大すると区間の線も出ます。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br><br><b>駐車場のあるお店</b>：地図に見えている範囲のお店を、その場でオープンストリートマップから読み込みます（地図をある程度拡大したときだけ）。お店の情報に「駐車場あり」と書いてあればそれを使い、書いていなければ、お店から決めた距離（初めは50m）の中に駐車場があるお店を出します。オープンストリートマップには駐車場が登録されていないお店も多いので、止められるのに出てこないお店や、近くの別の駐車場で「あり」になるお店もあります。止められるかは現地で確かめてください。<br><br>出典：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>（ODbL）、警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成。町名は国土地理院の逆ジオコーダで、通り名はマイマップ「東京通り名マップ」の大きな通り沿いの区間だけに付けています</div>
+      <div class="src"><b>トイレ</b>：地図を広く見ているときは、近くのトイレをまとめて数字で出します。拡大すると1つずつ出ます。トイレの印の右上の<b style="color:#E07A00">P</b>は、50m以内に駐車場か、今使えるパーキングメーターがあるという印です。印をタップすると、名前・住所・利用時間・車椅子・近くの駐車場までの距離が出ます。分からない項目は「情報なし」と出します（推測では埋めていません）。<b>公園のトイレは夜に閉まることがあります。</b>利用時間が「情報なし」のときは、現地で確かめてください。駐車場は、近くにあっても止められるとは限りません（月極・満車・時間外など）。距離はまっすぐ測ったものです。<span id="wcDate"></span><br><br><b>パーキングメーター</b>：パーキング・メーター／チケット（時間制限駐車区間）のPの印です。拡大すると区間の線も出ます。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br><br><b>駐車場のあるお店</b>：地図に見えている範囲のお店を、その場でオープンストリートマップから読み込みます（地図をある程度拡大したときだけ）。お店の情報に「駐車場あり」と書いてあればそれを使い、書いていなければ、お店から決めた距離（初めは50m）の中に駐車場があるお店を出します。「お店専用の駐車場があるお店だけ」に入れると、お客さん用の駐車場か、名前にお店の名前が入っている駐車場がある場合だけにします（専用の駐車場でも、そう登録されていなければ出ません）。休憩場の地図の喫煙所・長時間駐車可にあるコンビニは、駐車場があるお店として、いつも出します（金色のふちと「休」の札）。<br><br><b>みんなの確認（コンビニ）</b>：コンビニの印を押すと、「駐車場」「喫煙所」の<b>あり／なし</b>を付けられます。付けた確認は全員の地図に出ます（社員コードが必要です。間違えたら「取り消し」か付け直してください）。駐車場ありと確認したお店は緑のふち、駐車場なしと確認したお店は地図から消えます（下のチェックで灰色で出せます）。喫煙所ありは「煙」の札が付きます。オープンストリートマップには駐車場が登録されていないお店も多いので、止められるのに出てこないお店や、近くの別の駐車場で「あり」になるお店もあります。止められるかは現地で確かめてください。<br><br>出典：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>（ODbL）、警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成。町名は国土地理院の逆ジオコーダで、通り名はマイマップ「東京通り名マップ」の大きな通り沿いの区間だけに付けています</div>
     </section>
   </div>
 
@@ -1308,7 +1311,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-31 09:14</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-31 10:18</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1410,7 +1413,7 @@ body.rtfull{overflow:hidden}
     <h2>休憩場・専用乗り場</h2>
     <p>「メニュー」の上のボタンで切り替えます。どちらも合言葉なしで使えます。</p>
     <dl class="explain">
-      <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。「現在地」を押すと、地図が今いる場所に移り、赤い丸で示します。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd><dt>マップ</dt><dd>公衆トイレとパーキングメーターの地図です。トイレは緑＝24時間、青＝そのほか、右上のP＝50m以内に駐車場か今使えるパーキングメーターがあるもの。パーキングメーターはオレンジのP＝今使える、灰色＝時間外・使えない日（「今使えるパーキングだけ」で灰色を消せます）。「一番近いトイレへ行く」で、押した場所から一番近いトイレをGoogleマップの道案内で開きます。「近いパーキング5件」で近い順に見られます。「駐車場のあるお店」に入れると、コンビニ・牛丼・ラーメン・ファミレス・ファストフード・ガソリンスタンドのうち、駐車場があるお店も出します（地図を拡大したとき、見えている範囲をその場で読み込みます）。</dd>
+      <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。「現在地」を押すと、地図が今いる場所に移り、赤い丸で示します。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd><dt>マップ</dt><dd>公衆トイレとパーキングメーターの地図です。トイレは緑＝24時間、青＝そのほか、右上のP＝50m以内に駐車場か今使えるパーキングメーターがあるもの。パーキングメーターはオレンジのP＝今使える、灰色＝時間外・使えない日（「今使えるパーキングだけ」で灰色を消せます）。「一番近いトイレへ行く」で、押した場所から一番近いトイレをGoogleマップの道案内で開きます。「近いパーキング5件」で近い順に見られます。「駐車場のあるお店」に入れると、コンビニ・牛丼・ラーメン・ファミレス・ファストフード・ガソリンスタンドのうち、駐車場があるお店も出します（地図を拡大したとき、見えている範囲をその場で読み込みます）。コンビニの印を押すと、駐車場・喫煙所の「あり／なし」を付けられ、全員の地図に出ます。</dd>
       <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（1km以内）にいるときに台数が足りないと、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
     </dl>
   </section>
@@ -2741,7 +2744,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // トイレの「P」は、駐車場が50m以内か、今の時刻で使えるパーキングメーターが50m以内にあるとき
   const WC_24="#1E8E3E", WC_ETC="#2F6FD6", WC_PK_M=50, WC_POP={autoPanPaddingTopLeft:[52,60],autoPanPaddingBottomRight:[10,10]};   // 吹き出しが左上の＋−・右上の全画面のボタンに隠れないように
   let wcData=null, wcMapObj=null, wcLayer=null, wcMeMarker=null, wcMarks={}, clusterP=null, wcMeters=null, wcPkMk=null, wcPkLn=null, wcPkMarks={};
-  const wcOpt={wc:true,pk:true,ok:true,shop:false,shopM:50,st:{}}; try{ Object.assign(wcOpt,JSON.parse(localStorage.getItem("tenko.wcOpt")||"{}")); }catch(e){}
+  const wcOpt={wc:true,pk:true,ok:true,shop:false,shopM:50,st:{},own:false,smOnly:false,showNo:false}; try{ Object.assign(wcOpt,JSON.parse(localStorage.getItem("tenko.wcOpt")||"{}")); }catch(e){}
   $("wcShowWc").checked=wcOpt.wc; $("wcShowPk").checked=wcOpt.pk; $("wcPkOk").checked=wcOpt.ok;
   function loadCluster(){   // ピンをまとめる部品（Leaflet.markercluster）
     if(window.L&&L.markerClusterGroup) return Promise.resolve();
@@ -2887,26 +2890,55 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   // お店の情報に書いてある駐車場：1 あり　0 なし　null 書いていない
   const shopPkTag=t=>{ const v=t.parking||t["parking:car"]||t.car_parking||""; return !v?null:v==="no"?0:1; };
-  const shopNear=x=>{ let best=Infinity; for(const k in shopPks){ const p=shopPks[k]; if(Math.abs(p[0]-x.lat)>.003||Math.abs(p[1]-x.lng)>.004) continue; const d=distM([x.lat,x.lng],p); if(d<best) best=d; } return best; };
-  function shopJudge(x){ const tg=shopPkTag(x.t), d=shopNear(x), M=wcOpt.shopM||50;
-    if(tg===1) return {ok:true,src:"data",d}; if(tg===0) return {ok:false,src:"data",d}; return {ok:d<=M,src:"near",d}; }
+  // 名前を比べやすく（空白・記号を除き、カタカナの「ー」「-」をそろえる）
+  const shopNorm=v=>(v||"").normalize("NFKC").replace(/[\s\-‐－ー・･]/g,"").toLowerCase();
+  // お店専用の駐車場か：お客さん用（access=customers）か、駐車場の名前・運営者にお店の名前（ブランド）が入っている
+  const shopOwnPk=(x,p)=>{ if(p.cust) return true; const b=shopNorm(x.t.brand||(x.t.name||"").split(/[\s　]/)[0]); return b.length>=2&&p.nm.includes(b); };
+  // 一番近い駐車場（d）と、一番近いお店専用の駐車場（dOwn）
+  const shopNear=x=>{ let d=Infinity, dOwn=Infinity; for(const k in shopPks){ const p=shopPks[k]; if(Math.abs(p.c[0]-x.lat)>.003||Math.abs(p.c[1]-x.lng)>.004) continue; const v=distM([x.lat,x.lng],p.c); if(v<d) d=v; if(v<dOwn&&shopOwnPk(x,p)) dOwn=v; } return {d,dOwn}; };
+  function shopJudge(x){ const tg=shopPkTag(x.t), {d,dOwn}=shopNear(x), M=wcOpt.shopM||50;
+    const ck=x.kind==="cvs"&&cvsChk[x.id];   // みんなの確認（いちばん新しい確認を使う）
+    if(ck&&ck.pk==="なし") return {ok:false,src:"chkno",d,dOwn}; if(ck&&ck.pk==="あり") return {ok:true,src:"chk",d,dOwn};
+    if(x.rest) return {ok:true,src:"rest",d,dOwn};   // 休憩場（喫煙所・長時間駐車可）のコンビニは、駐車場があると分かっているお店
+    if(tg===1) return {ok:true,src:"data",d,dOwn}; if(tg===0) return {ok:false,src:"data",d,dOwn};
+    if(wcOpt.own) return {ok:dOwn<=M,src:"own",d,dOwn};
+    return {ok:d<=M,src:dOwn<=M?"own":"near",d,dOwn}; }
   const shopTOn=k=>wcOpt.st[k]!==false;
-  const shopIcon={}; const shopIc=k=>{ if(shopIcon[k]) return shopIcon[k]; const T=SHOP_T.find(a=>a[0]===k);
-    return shopIcon[k]=L.divIcon({className:"",html:`<div style="width:22px;height:22px;border-radius:50%;background:${T[3]};color:#fff;font:700 12px/22px sans-serif;text-align:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45)">${T[2]}</div>`,iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-10]}); };
+  // 印：休憩場のコンビニは金色のふちと「休」、みんなの確認で駐車場ありは緑のふち・なしは灰色、喫煙所ありは「煙」の札
+  const shopIcon={}; const shopIc=(k,o)=>{ o=o||{}; const key=k+(o.rest?"R":"")+(o.pk||"")+(o.sm?"S":""); if(shopIcon[key]) return shopIcon[key]; const T=SHOP_T.find(a=>a[0]===k);
+    const bd=o.pk==="なし"?"#fff":o.pk==="あり"?"#1E8E3E":o.rest?"#F2B705":"#fff", bg=o.pk==="なし"?"#9AA0A6":T[3], badge=(t,bgc,fg,pos)=>`<span style="position:absolute;${pos};width:15px;height:15px;border-radius:3px;background:${bgc};color:${fg};font:700 10px/15px sans-serif;border:1px solid #fff">${t}</span>`;
+    return shopIcon[key]=L.divIcon({className:"",html:`<div style="position:relative;width:22px;height:22px;border-radius:50%;background:${bg};color:#fff;font:700 12px/22px sans-serif;text-align:center;border:${o.pk==="あり"?3:2}px solid ${bd};box-shadow:0 1px 3px rgba(0,0,0,.45)">${T[2]}${o.rest?badge("休","#F2B705","#3a2a00","right:-9px;top:-9px"):""}${o.sm?badge("煙","#444","#fff","right:-9px;bottom:-9px"):""}</div>`,iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-10]}); };
   const fdm=d=>d>=1000?r1(d/1000)+"km":Math.round(d)+"m";
   function shopPop(x,j){
     const T=SHOP_T.find(a=>a[0]===x.kind), nm=x.t.name||x.t.brand||"（名前の登録なし）";
-    const pk=(j.src==="data"?"お店の情報に「駐車場あり」<br>":"")+(isFinite(j.d)?`一番近い駐車場 <b>約${fdm(j.d)}</b>`:"近くに駐車場の登録なし");
-    return `<div style="font-size:15px;line-height:1.55;min-width:170px;max-width:220px"><b>${esc(nm)}</b><div><span style="color:#5F6368">種類</span>　${esc(T[1])}</div><div><span style="color:#5F6368">駐車場</span>　${pk}</div><div style="font-size:12.5px;color:#5F6368">オープンストリートマップの情報です。止められるかは現地で確かめてください</div>`+
+    const pk=(j.src==="chk"?"<b style=\"color:#1E8E3E\">みんなの確認で駐車場あり</b><br>":j.src==="chkno"?"<b style=\"color:#C0392B\">みんなの確認で駐車場なし</b><br>":"")+(j.src==="rest"?`<b>休憩場（${esc(x.grp)}）に登録あり</b>：駐車場があるお店<br>`:"")+(j.src==="data"?"お店の情報に「駐車場あり」<br>":"")+(isFinite(j.dOwn)&&j.dOwn<=300?`お店専用の駐車場 <b>約${fdm(j.dOwn)}</b><br>`:"")+(isFinite(j.d)?`一番近い駐車場 <b>約${fdm(j.d)}</b>`:"近くに駐車場の登録なし");
+    return `<div style="font-size:15px;line-height:1.55;min-width:170px;max-width:220px"><b>${esc(nm)}</b><div><span style="color:#5F6368">種類</span>　${esc(T[1])}</div><div><span style="color:#5F6368">駐車場</span>　${pk}</div><div style="font-size:12.5px;color:#5F6368">オープンストリートマップの情報です。止められるかは現地で確かめてください</div>${x.kind==="cvs"?cvsBox(x):""}`+
       `<a href="https://www.google.com/maps/dir/?api=1&destination=${x.lat},${x.lng}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${T[3]};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">Googleマップで道案内</a></div>`;
   }
   // 出すお店（駐車場ありと決めたもの・種類がオンのもの）
-  const shopShown=()=>Object.values(shopEls).filter(x=>shopTOn(x.kind)).map(x=>({x,j:shopJudge(x)})).filter(o=>o.j.ok);
+  const shopShown=()=>{ const all=Object.values(shopEls), rs=all.filter(x=>x.rest);
+    return all.filter(x=>shopTOn(x.kind)&&(x.rest||x.kind!=="cvs"||!rs.some(r=>Math.abs(r.lat-x.lat)<.0006&&distM([r.lat,r.lng],[x.lat,x.lng])<40))).map(x=>({x,j:shopJudge(x)})).filter(o=>o.j.ok||(wcOpt.showNo&&o.j.src==="chkno"))
+      .filter(o=>!wcOpt.smOnly||(o.x.kind==="cvs"&&(cvsChk[o.x.id]||{}).sm==="あり")); };
+  // 休憩場の地図（マイマップ）の喫煙所・長時間駐車可にあるコンビニを、お店に足す（クレーム発生ポイントは除く。2026-10-31 ユーザー指定）
+  const SHOP_CV_RE=/ファミリーマート|ファミマ|セブン|ローソン|ミニストップ|デイリー|ニューデイズ|NewDays|スリーエフ|ポプラ|マイバスケット|コンビニ/i;
+  let shopRestDone=false;
+  async function shopRestLoad(){
+    if(shopRestDone) return;
+    try{ if(!GS.rest2.pts) await geoLoad("rest2",true); }catch(e){}
+    const S=GS.rest2; if(!S.pts) return; shopRestDone=true;
+    S.pts.forEach((x,i)=>{ const g=S.groups[x[1]]||""; if(GEO.rest2.alertG(g)||!SHOP_CV_RE.test(x[0])) return;
+      const la=+x[2][0][0], ln=+x[2][0][1]; if(!isFinite(la)||!isFinite(ln)) return;
+      if(Object.values(shopEls).some(y=>y.rest&&y.t.name===x[0]&&distM([la,ln],[y.lat,y.lng])<15)) return;   // 同じ場所を2回登録してあるもの
+      const id="r:"+x[0]+"@"+la.toFixed(5)+","+ln.toFixed(5); shopEls[id]={id,lat:la,lng:ln,t:{name:x[0]},kind:"cvs",rest:true,grp:g}; });
+    drawShops();
+  }
   function drawShops(){
     if(shopLayer){ shopLayer.remove(); shopLayer=null; }
     if(!wcMapObj||!wcOpt.shop) return;
     shopLayer=L.layerGroup();
-    shopShown().forEach(({x,j})=>L.marker([x.lat,x.lng],{icon:shopIc(x.kind),zIndexOffset:300}).bindPopup(()=>shopPop(x,shopJudge(x)),WC_POP).addTo(shopLayer));
+    shopMarks={};
+    shopShown().forEach(({x})=>{ const ck=cvsChk[x.id]||{};
+      shopMarks[x.id]=L.marker([x.lat,x.lng],{icon:shopIc(x.kind,{rest:x.rest,pk:x.kind==="cvs"?ck.pk:"",sm:x.kind==="cvs"&&ck.sm==="あり"}),zIndexOffset:x.rest||ck.pk?400:300}).bindPopup(()=>shopPop(x,shopJudge(x)),Object.assign({maxHeight:300},WC_POP)).addTo(shopLayer); });   // 長いときは吹き出しの中をスクロール（地図の下で切れないように）
     shopLayer.addTo(wcMapObj);
   }
   async function shopFetch(q){
@@ -2926,12 +2958,12 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     shopBusy=true; m.textContent="この範囲のお店を読み込んでいます…";
     const f=v=>v.toFixed(5), b=`${f(bb.getSouth())},${f(bb.getWest())},${f(bb.getNorth())},${f(bb.getEast())}`,
       b2=`${f(bb.getSouth()-.0025)},${f(bb.getWest()-.003)},${f(bb.getNorth()+.0025)},${f(bb.getEast()+.003)}`, re=shopRe.source.replace(/"/g,"");
-    const q=`[out:json][timeout:30];(nwr["shop"="convenience"](${b});nwr["amenity"="fuel"](${b});nwr["amenity"="fast_food"](${b});nwr["amenity"="restaurant"]["cuisine"~"ramen|beef_bowl|gyudon|burger"](${b});nwr["amenity"="restaurant"]["name"~"${re}",i](${b});nwr["amenity"="restaurant"]["brand"~"${re}",i](${b}););out center tags;nwr["amenity"="parking"]["access"!~"^(private|no)$"](${b2});out ids center qt;`;
+    const q=`[out:json][timeout:30];(nwr["shop"="convenience"](${b});nwr["amenity"="fuel"](${b});nwr["amenity"="fast_food"](${b});nwr["amenity"="restaurant"]["cuisine"~"ramen|beef_bowl|gyudon|burger"](${b});nwr["amenity"="restaurant"]["name"~"${re}",i](${b});nwr["amenity"="restaurant"]["brand"~"${re}",i](${b}););out center tags;nwr["amenity"="parking"]["access"!~"^(private|no)$"](${b2});out center tags;`;
     try{
       const els=await shopFetch(q);
       els.forEach(e=>{ const la=e.lat!=null?e.lat:e.center&&e.center.lat, ln=e.lon!=null?e.lon:e.center&&e.center.lon; if(la==null) return;
         const id=e.type[0]+e.id;
-        if(!e.tags){ shopPks[id]=[la,ln]; return; }   // 駐車場（位置だけ取っている）
+        if(e.tags.amenity==="parking"){ const t=e.tags; shopPks[id]={c:[la,ln],cust:t.access==="customers",nm:shopNorm([t.name,t.operator,t.brand,t["name:ja"]].filter(Boolean).join(" "))}; return; }   // 駐車場：位置・お客さん用か・名前
         const k=shopKind(e.tags); if(k) shopEls[id]={id,lat:la,lng:ln,t:e.tags,kind:k}; });
       shopBoxes.push(bb);
       drawShops();
@@ -2943,7 +2975,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function shopOpen(){
     $("wcShopBox").hidden=!wcOpt.shop; $("wcShopCsv").hidden=!isAdmin();
     if(wcMapObj&&!shopMoveOn){ shopMoveOn=true; wcMapObj.on("moveend",()=>{ clearTimeout(shopMoveT); if(wcOpt.shop) shopMoveT=setTimeout(()=>loadShops(true),1200); }); }
-    if(wcOpt.shop) loadShops(true);
+    if(wcOpt.shop){ shopRestLoad(); cvsLoad(); loadShops(true); }
   }
   const wcSave=()=>{ try{ localStorage.setItem("tenko.wcOpt",JSON.stringify(wcOpt)); }catch(e){} };
   $("wcShowShop").checked=wcOpt.shop; $("wcShopBox").hidden=!wcOpt.shop;
@@ -2953,12 +2985,47 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("wcShopM").oninput=()=>{ wcOpt.shopM=+$("wcShopM").value; $("wcShopMv").textContent=`${wcOpt.shopM}m以内`; wcSave(); drawShops(); };
   $("wcShowShop").onchange=()=>{ wcOpt.shop=$("wcShowShop").checked; wcSave(); $("wcShopBox").hidden=!wcOpt.shop; $("wcShopMsg").textContent=""; if(wcOpt.shop){ shopOpen(); drawShops(); } else drawShops(); };
   $("wcShopLoad").onclick=()=>loadShops(false);
+  $("wcShopOwn").checked=wcOpt.own; $("wcShopOwn").onchange=()=>{ wcOpt.own=$("wcShopOwn").checked; wcSave(); drawShops(); };
+  // ===== コンビニの駐車場・喫煙所のあるなし（みんなで確認して共有。2026-10-31 ユーザー指定）。サーバーの cvsGet / cvsSet、シート「コンビニ確認」 =====
+  let cvsChk={}, cvsChkAt=0, shopMarks={};
+  async function cvsLoad(){
+    if(!cfg.url||Date.now()-cvsChkAt<60e3) return; cvsChkAt=Date.now();
+    try{ const j=await post({action:"cvsGet"}); if(!j.ok){ cvsChkAt=0; return; }
+      cvsChk={}; (j.items||[]).forEach(c=>{ cvsChk[c.key]=c;
+        if(!shopEls[c.key]&&isFinite(c.lat)&&isFinite(c.lng)) shopEls[c.key]={id:c.key,lat:c.lat,lng:c.lng,t:{name:c.name},kind:"cvs",chk:true}; });   // まだ読んでいない範囲の確認済みのお店も出す
+      drawShops(); }catch(e){ cvsChkAt=0; }
+  }
+  function cvsBox(x){
+    const c=cvsChk[x.id]||{}, dt=v=>{ if(!v) return ""; const d=new Date(v); return ` <small style="color:#5F6368">（${d.getMonth()+1}/${d.getDate()}確認）</small>`; };
+    const row=(f,lab)=>{ const v=c[f]||"";
+      return `<div style="margin-top:5px">${lab}：<b style="color:${v==="あり"?"#1E8E3E":v==="なし"?"#C0392B":"#5F6368"}">${v||"まだ確認なし"}</b>${v?dt(c[f+"At"]):""}<div style="display:flex;gap:6px;margin-top:3px">${["あり","なし",""].map(a=>`<button type="button" data-cvs="${f}|${a}" data-cvskey="${esc(x.id)}" style="flex:1;padding:8px 0;border-radius:8px;border:1px solid #bbb;background:${a&&v===a?"#E6F4EA":"#fff"};font-size:14px;font-weight:${a&&v===a?700:400};color:#222">${a||"取り消し"}</button>`).join("")}</div></div>`; };
+    return `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #ddd"><b>みんなの確認</b>${row("pk","駐車場")}${row("sm","喫煙所")}<div style="font-size:12px;color:#5F6368;margin-top:4px">押すと全員の地図に出ます（社員コードが必要です）</div></div>`;
+  }
+  // 吹き出しの中のボタン（地図が押した合図を止めるので、先に受け取る）
+  document.addEventListener("click",async e=>{
+    const b=e.target.closest&&e.target.closest("[data-cvs]"); if(!b) return;
+    e.preventDefault(); e.stopPropagation();
+    const [f,v]=b.dataset.cvs.split("|"), key=b.dataset.cvskey, x=shopEls[key]; if(!x||b.disabled) return;
+    let code=(cfg.empCode||"").trim();
+    if(!code){ code=(prompt("社員コードを入れてください（誰が確認したか分かるようにするためです）")||"").trim(); if(!code) return; cfg.empCode=code; saveCfg(); if($("restCode")) $("restCode").value=code; }
+    if(!cfg.url){ alert("サーバーにつながっていません。電波を確認してください"); return; }
+    const was=b.textContent; b.textContent="保存中…"; b.disabled=true;
+    try{
+      const j=await post({action:"cvsSet",key,field:f,val:v,code,name:x.t.name||x.t.brand||"",lat:x.lat,lng:x.lng});
+      if(!j.ok) throw new Error(j.error||"保存できませんでした");
+      const c=cvsChk[key]||(cvsChk[key]={key,name:x.t.name||x.t.brand||"",lat:x.lat,lng:x.lng}); c[f]=v; c[f+"At"]=v?j.at:"";
+      drawShops(); const mk=shopMarks[key];
+      if(mk) mk.openPopup(); else $("wcShopMsg").textContent=`保存しました（${f==="pk"?"駐車場":"喫煙所"}：${v||"取り消し"}）。このお店は今の条件では地図に出ません`;
+    }catch(err){ b.disabled=false; b.textContent=was; alert(err.message||"保存できませんでした。電波を確認してください"); }
+  },true);
+  $("wcShopSm").checked=wcOpt.smOnly; $("wcShopSm").onchange=()=>{ wcOpt.smOnly=$("wcShopSm").checked; wcSave(); drawShops(); };
+  $("wcShopNo").checked=wcOpt.showNo; $("wcShopNo").onchange=()=>{ wcOpt.showNo=$("wcShopNo").checked; wcSave(); drawShops(); };
   // CSVで保存（管理者だけ）。今地図に出しているお店（駐車場ありと決めたもの・オンの種類）
   $("wcShopCsv").onclick=()=>{
     if(!isAdmin()) return;
     const xs=shopShown(); if(!xs.length){ $("wcShopMsg").textContent="保存するお店がありません。先にお店を読み込んでください"; return; }
     const q=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
-    const rows=[["店名","種類","緯度","経度","駐車場の決め方","一番近い駐車場まで(m)","オープンストリートマップの番号"]].concat(xs.map(({x,j})=>[x.t.name||x.t.brand||"",SHOP_T.find(a=>a[0]===x.kind)[1],x.lat,x.lng,j.src==="data"?"お店の情報に駐車場あり":`${wcOpt.shopM}m以内に駐車場`,isFinite(j.d)?Math.round(j.d):"",x.id]));
+    const rows=[["店名","種類","緯度","経度","駐車場の決め方","一番近い駐車場まで(m)","オープンストリートマップの番号","駐車場（みんなの確認）","喫煙所（みんなの確認）"]].concat(xs.map(({x,j})=>[x.t.name||x.t.brand||"",SHOP_T.find(a=>a[0]===x.kind)[1],x.lat,x.lng,j.src==="chk"?"みんなの確認で駐車場あり":j.src==="chkno"?"みんなの確認で駐車場なし":j.src==="rest"?"休憩場に登録あり":j.src==="data"?"お店の情報に駐車場あり":j.src==="own"?`${wcOpt.shopM}m以内にお店専用の駐車場`:`${wcOpt.shopM}m以内に駐車場`,isFinite(j.d)?Math.round(j.d):"",x.id,(cvsChk[x.id]||{}).pk||"",(cvsChk[x.id]||{}).sm||""]));
     const blob=new Blob(["﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv"}), a=document.createElement("a"), d=new Date();
     a.href=URL.createObjectURL(blob); a.download=`駐車場のあるお店_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.csv`;
     document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
