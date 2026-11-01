@@ -1346,7 +1346,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 18:00</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 18:04</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5475,9 +5475,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       $("rPlaceSave").onclick=()=>{ const v=$("rPlaceIn").value.trim(); if(v) send({name:v},"保存しました。次からはこの名前になります",{n:v,src:"手入力"}); }; };
     if(own){ draw(own,"一覧"); return; }
     if(key in rNames){ draw(rNames[key].n,rNames[key].src); return; }
-    el.hidden=false; el.textContent="乗車地の施設名を調べています…";
-    post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ rNames[key]=j.names[key]||{n:"",src:""}; draw(rNames[key].n,rNames[key].src); } else if(rPlaceKey===key) el.hidden=true; })
-      .catch(()=>{ if(rPlaceKey===key) el.hidden=true; });
+    // 最初は「路上」と出し、「施設名を確認」を押したときだけ調べる（施設でない乗車の方が多いため。2026-11-01 ユーザー指定）
+    el.hidden=false; el.innerHTML=`乗車地：<b>路上</b><div class="btnrow"><button type="button" class="btn" id="rPlaceAsk">🏥 施設名を確認</button></div>`;
+    $("rPlaceAsk").onclick=()=>{ el.textContent="乗車地の施設名を調べています…";
+      post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ rNames[key]=j.names[key]||{n:"",src:""}; draw(rNames[key].n,rNames[key].src); } else if(rPlaceKey===key) el.innerHTML=`<span class="err">${esc((j&&j.error)||"施設名を調べられませんでした")}</span>`; })
+        .catch(()=>{ if(rPlaceKey===key) el.innerHTML=`<span class="err">通信できませんでした。電波のよいところでもう一度</span>`; }); };
   }
   // ===== 施設名をまとめて確かめる（2026-10-28 ユーザー指定：管理者とグループ1の人だけ）=====
   // その月の乗車（手上げ・イベント・一覧の場所を除く）を40m以内の近い場所どうしでまとめ、乗せた回数の多い順に並べる。
