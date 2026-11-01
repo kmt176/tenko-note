@@ -1337,7 +1337,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 16:17</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 17:20</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3240,6 +3240,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const evClock=d=>d?`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`:"—";
   // メモの「集客見込み 約1.4万人」を取り出す（吹き出しと一覧で目立たせる）
   const evCap=e=>{ const m=/集客見込み[:：]?\s*([^\s、。（(]+)/.exec(e.memo||""); return m?m[1]:""; };
+  // 並べ替え用に人数を数にする（「約1.4万人」→14000、「3,000人」→3000、「1〜2万人」は最初の数）。書いていなければ -1
+  const evCapN=e=>{ const m=/([\d.,０-９．，]+)\s*(万|千)?/.exec(evCap(e).replace(/[０-９．，]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0))); if(!m) return -1;
+    const n=parseFloat(m[1].replace(/,/g,"")); return isNaN(n)?-1:n*(m[2]==="万"?1e4:m[2]==="千"?1e3:1); };
+  // 一覧の並び：開催中（まもなく終了なども）→開始前→終了。その中は集客見込みの多い順（2026-11-01 ユーザー指定）
+  const evGrp=st=>st.l==="終了"?2:st.l==="開始前"?1:0;
   const evRoute=e=>`https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lng}&travelmode=driving`;
   function evPopup(e,st){ return `<div style="font-size:15px;line-height:1.5;min-width:200px"><b style="font-size:16px">${esc(e.name)}</b>
       ${st.l?`<div style="color:${st.c};font-weight:700">${esc(st.l)}</div>`:""}
@@ -3336,7 +3341,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       $("evCal").innerHTML=h+"</div></div>";
       $("evCal").querySelectorAll("[data-evcal]").forEach(b=>b.onclick=()=>{ evDay=b.dataset.evcal; $("evCal").hidden=true; renderEv(false,true); }); }
     $("evDaySeg").querySelectorAll("[data-evday]").forEach(b=>b.onclick=()=>{ evDay=b.dataset.evday; renderEv(false,true); });
-    const rows=all.map((e,i)=>({e,i,st:evState(e)})).filter(x=>evDayOf(x.e)===evDay).sort((a,b)=>(a.st.l==="終了")-(b.st.l==="終了")||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
+    const rows=all.map((e,i)=>({e,i,st:evState(e)})).filter(x=>evDayOf(x.e)===evDay).sort((a,b)=>evGrp(a.st)-evGrp(b.st)||evCapN(b.e)-evCapN(a.e)||((a.st.E||a.st.S||0)-(b.st.E||b.st.S||0)));
     rows.forEach(({e,i,st})=>{ evMarks[i]=L.circleMarker([e.lat,e.lng],{radius:12,color:"#fff",weight:3,fillColor:st.c,fillOpacity:1,bubblingMouseEvents:false})
       .bindTooltip(esc(e.name),{permanent:true,direction:"top",offset:[0,-10]}).bindPopup(evPopup(e,st)).addTo(evLayer); });
     m.textContent=rows.length?`${dd.getMonth()+1}/${dd.getDate()}（${wd}）のイベント ${rows.length}件`:`${dd.getMonth()+1}/${dd.getDate()}（${wd}）のイベントはまだありません。Claudeに頼むか、下の「CSVファイルを選ぶ」から読み込めます`;
