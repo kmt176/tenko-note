@@ -1346,7 +1346,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 18:47</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 19:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1511,6 +1511,7 @@ body.rtfull{overflow:hidden}
     </div>
     <small class="src" id="rAmtHint" style="margin-top:-6px">金額は現収＋未収（ETC・手配料も含める）</small>
     <div class="src" id="rPlace" hidden></div>
+    <div class="src" id="rPlaceOff" hidden></div>
     <div class="field"><label for="rKind">内容</label>
       <select id="rKind"><option>連続配車</option><option>配車</option><option>手上げ</option><option>乗り場</option><option>CAN</option><option>B空転</option><option>出庫</option><option>入庫</option><option>休憩</option><option>回送</option><option>連続配車モード</option></select></div>
     <div class="grp" id="rMoney">
@@ -2333,8 +2334,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(!j.ok){ m.textContent=j.error||"取得できませんでした"; return; }
       if(!j.items.length){ m.textContent="データがありませんでした"; return; }
       const saved=await placeSavedList();
-      const rows=[["社員コード","名前","乗車日時","降車日時","出庫日","内容","金額","決済","乗車地","乗車地の施設名","降車地","車種","乗車位置の種類","降車位置の種類","押し忘れ"]];
-      j.items.forEach(x=>rows.push([x.code,x.name,x.at,x.offAt||"",x.date,x.kind,x.amt,x.pay,x.from,placeLabel(x.onLat,x.onLng,saved),x.to,x.car,x.onSrc,x.offSrc,x.unsure]));
+      const rows=[["社員コード","名前","乗車日時","降車日時","出庫日","内容","金額","決済","乗車地","乗車地の施設名","降車地","降車地の施設名","車種","乗車位置の種類","降車位置の種類","押し忘れ"]];
+      j.items.forEach(x=>rows.push([x.code,x.name,x.at,x.offAt||"",x.date,x.kind,x.amt,x.pay,x.from,placeLabel(x.onLat,x.onLng,saved),x.to,placeLabel(x.offLat,x.offLng,saved),x.car,x.onSrc,x.offSrc,x.unsure]));
       const csv="﻿"+toCsv(rows), name=`全員データ_${month}${code?"_"+code:""}.csv`;
       const file=new File([csv],name,{type:"text/csv"});
       if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file]}); m.textContent="書き出しました"; return; }catch(e){} }
@@ -4747,13 +4748,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function monthCsvRows(saved){
     const P=PERIODS[mIdx];
     const keys=Object.keys(sales.days).filter(k=>k>=P.start&&k<=P.end).sort();
-    const rows=[["出庫日","No","内容","乗車時刻","降車時刻","金額","決済","ETC","社内決済","乗車地","乗車地の施設名","降車地","メモ","営業分","待ち分","営業分単価","実単価"]];
+    const rows=[["出庫日","No","内容","乗車時刻","降車時刻","金額","決済","ETC","社内決済","乗車地","乗車地の施設名","降車地","降車地の施設名","メモ","営業分","待ち分","営業分単価","実単価"]];
     keys.forEach(k=>{
       const d=sales.days[k]; if(!d||d.mode==="simple"||!d.rides||!d.rides.length) return;
       dayCalc(d).rows.forEach(r=>{
         if(isEv(r.kind)) return;
         const fare=fareOf(r), eig=r._eig, wait=r._wait, inh=r.inhouse!=null?r.inhouse:appAuto(r);
-        rows.push([k,r._no,r.kind,tm(r.on),r.off!=null?tm(r.off):"",r.amt||"",r.pay||"",r.etc||"",inh?"1":"",r.onAddr||"",r.onPos?placeLabel(r.onPos.lat,r.onPos.lng,saved):"",r.offAddr||"",r.memo||"",
+        rows.push([k,r._no,r.kind,tm(r.on),r.off!=null?tm(r.off):"",r.amt||"",r.pay||"",r.etc||"",inh?"1":"",r.onAddr||"",r.onPos?placeLabel(r.onPos.lat,r.onPos.lng,saved):"",r.offAddr||"",r.offPos?placeLabel(r.offPos.lat,r.offPos.lng,saved):"",r.memo||"",
           eig!=null?eig:"",wait!=null?wait:"",eig>0?Math.round(fare/eig):"",(eig!=null&&wait!=null&&eig+wait>0)?Math.round(fare/(eig+wait)):""]);
       });
     });
@@ -5466,51 +5467,59 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 乗車地の施設名（2026-10-28 ユーザー指定：管理者とグループ1の人だけ）。Googleで調べた「候補」を出し、
   // 病院・駅などの施設で乗せたときだけ「この施設で合っている」を押す（施設でない乗車の方が多いので、何も押さなければ町名のまま）。
   // 押した・入れた名前はサーバーの「施設名」シートに「手入力」で残り、次からは全員の乗務員比較にその名前が出る。手上げは出さない
-  let rPlaceKey=null; const rNames={};
+  const rNames={};
   const rPlaceAuth=()=>isAdmin()?{adminPass:cfg.apass}:{passcode:cfg.npass};
+  // 乗車地・降車地の欄（2026-11-01 ユーザー指定：降車地も同じ考え方で）。場所ごとの名前の辞書は乗車・降車で共通
   function rPlaceShow(r){
-    const el=$("rPlace"); rPlaceKey=null; el.hidden=true; el.innerHTML="";
-    if(!(isAdmin()||isGroup1())||!r||!r.onPos||isEv(r.kind||"")||r.kind==="手上げ"||!cfg.url) return;
-    const lat=+r.onPos.lat, lng=+r.onPos.lng, key=cmpKey(lat,lng), own=cmpOwn(lat,lng); rPlaceKey=key; let hitKey=key;
-    const send=async(body,okMsg,v)=>{ el.querySelectorAll("button").forEach(b=>b.disabled=true);
+    const ok=(isAdmin()||(isNakama()&&!!cfg.npass))&&r&&!isEv(r.kind||"")&&cfg.url;   // 合言葉のある全員（2026-11-01 ユーザー指定。CSVとまとめて確かめる画面は管理者とグループ1だけ）
+    placeBox($("rPlace"),ok&&r.kind!=="手上げ"?r.onPos:null,"乗車地","乗せた");   // 手上げの乗車地は出さない（家の前などが多い）
+    placeBox($("rPlaceOff"),ok?r.offPos:null,"降車地","降ろした");
+  }
+  function placeBox(el,pos,L,V){
+    el.hidden=true; el.innerHTML=""; el.dataset.k="";
+    if(!pos) return;
+    const lat=+pos.lat, lng=+pos.lng, key=cmpKey(lat,lng), own=cmpOwn(lat,lng); el.dataset.k=key; let hitKey=key;
+    const live=()=>el.dataset.k===key, q=s=>el.querySelector(s);
+    const send=async(body,okMsg,v)=>{
+      if(body.name&&/様|宅|さん/.test(body.name)){ el.insertAdjacentHTML("beforeend",`<div class="err">お客様の名前や家は入れられません。施設の名前だけを入れてください</div>`); return; }   // 全員で共通の辞書なので
+      el.querySelectorAll("button").forEach(b=>b.disabled=true);
       try{ const j=await post(Object.assign({action:"placeFix",key,code:cfg.empCode||""},body,rPlaceAuth()));
         if(j&&j.ok){ rNames[key]=cmpNames[key]=v; draw(v.n,v.src); el.insertAdjacentHTML("beforeend",`<div>✅ ${okMsg}</div>`); return; }
         el.insertAdjacentHTML("beforeend",`<div class="err">${esc((j&&j.error)||"保存できませんでした")}</div>`); }
       catch(e){ el.insertAdjacentHTML("beforeend",`<div class="err">通信できませんでした。電波のよいところでもう一度</div>`); }
       el.querySelectorAll("button").forEach(b=>b.disabled=false); };
     const PH="正しい施設名（例：○○病院、羽田 第2ターミナル（職員通用口））";
-    const draw=(n,src)=>{ if(rPlaceKey!==key) return; el.hidden=false;
-      if(src==="一覧"||src==="路上"){   // 一覧で分かる場所（ターミナルなど）と「路上」。その場所だけ名前を入れられる（2026-11-01 ユーザー指定）
-        el.innerHTML=`乗車地：<b>${esc(n)}</b><div class="btnrow">${src==="路上"?`<button type="button" class="btn" id="rPlaceAsk">🏥 施設名を確認</button>`:""}<button type="button" class="btn" id="rPlaceFix">✏️ 名前を入れる</button></div>
-          <div id="rPlaceBox" hidden style="margin-top:6px"><input type="text" id="rPlaceIn" maxlength="40" autocomplete="off" placeholder="${PH}"><div class="src">入れた名前は、この場所から約30m以内で乗せたときだけ出ます</div><div class="btnrow"><button type="button" class="btn primary" id="rPlaceSave">この名前にする</button></div></div>`;
-        if($("rPlaceAsk")) $("rPlaceAsk").onclick=ask;
-        $("rPlaceFix").onclick=()=>{ $("rPlaceBox").hidden=false; $("rPlaceIn").value=src==="一覧"?n:""; $("rPlaceIn").focus(); };
-        $("rPlaceSave").onclick=()=>{ const v=$("rPlaceIn").value.trim(); if(v) send({name:v},"保存しました。次からこの場所の近く（約30m）ではこの名前になります",{n:v,src:"手入力"}); };
+    const box=`<div data-pl="box" hidden style="margin-top:6px"><input type="text" data-pl="in" maxlength="40" autocomplete="off" placeholder="${PH}"><div class="src">施設の名前だけを入れてください（お客様の名前や家は入れない）。入れた名前は全員で共通で、この場所から約30m以内で乗せた・降ろしたときに出ます</div><div class="btnrow"><button type="button" class="btn primary" data-pl="save">この名前にする</button></div></div>`;
+    const draw=(n,src)=>{ if(!live()) return; el.hidden=false;
+      if(src==="一覧"||src==="路上"){   // 一覧で分かる場所（ターミナルなど）と「路上」。その場所だけ名前を入れられる
+        el.innerHTML=`${L}：<b>${esc(n)}</b><div class="btnrow">${src==="路上"?`<button type="button" class="btn" data-pl="ask">🏥 施設名を確認</button>`:""}<button type="button" class="btn" data-pl="fix">✏️ 名前を入れる</button></div>${box}`;
+        if(q('[data-pl=ask]')) q('[data-pl=ask]').onclick=ask;
+        q('[data-pl=fix]').onclick=()=>{ q('[data-pl=box]').hidden=false; q('[data-pl=in]').value=src==="一覧"?n:""; q('[data-pl=in]').focus(); };
+        q('[data-pl=save]').onclick=()=>{ const v=q('[data-pl=in]').value.trim(); if(v) send({name:v},"保存しました。次からこの場所の近く（約30m）ではこの名前になります",{n:v,src:"手入力"}); };
         return; }
       const done=src==="手入力";
-      el.innerHTML=(done?`乗車地：<b>${esc(n)}</b>（確かめ済み）`
-          :n?`乗車地の候補：<b>${esc(n)}</b>${src==="Google"?" <small>Google Maps</small>":src==="Yahoo"?" <small>Web Services by Yahoo! JAPAN</small>":""}<br><small>病院・駅・ホテルなどの施設で乗せたときだけ押してください。施設でなければ何も押さなくて大丈夫です</small>`
-          :`乗車地の施設名の候補はありません<br><small>施設で乗せたときだけ、名前を入れてください</small>`)
-        +`<div class="btnrow">${!done&&n?`<button type="button" class="btn primary" id="rPlaceOk">✅ この施設で合っている</button>`:""}<button type="button" class="btn" id="rPlaceFix">${done?"名前を直す":"名前を入れる"}</button>${done?`<button type="button" class="btn" id="rPlaceClr">施設ではない</button>`:""}</div>
-        <div id="rPlaceBox" hidden style="margin-top:6px"><input type="text" id="rPlaceIn" maxlength="40" autocomplete="off" placeholder="${PH}"><div class="btnrow"><button type="button" class="btn primary" id="rPlaceSave">この名前にする</button></div></div>`;
-      if($("rPlaceOk")) $("rPlaceOk").onclick=()=>send({name:n,confirm:true},"確かめました。次からはこの名前になります",{n,src:"手入力"});
-      if($("rPlaceClr")) $("rPlaceClr").onclick=()=>send({clear:true,key:hitKey},"施設ではない場所にしました（町名で出ます）",{n:"",src:""});   // 近くのます目の名前を出していたときは、そのます目の名前を消す
-      $("rPlaceFix").onclick=()=>{ $("rPlaceBox").hidden=false; $("rPlaceIn").value=n||""; $("rPlaceIn").focus(); };
-      $("rPlaceSave").onclick=()=>{ const v=$("rPlaceIn").value.trim(); if(v) send({name:v},"保存しました。次からはこの名前になります",{n:v,src:"手入力"}); }; };
-    // 出す順（2026-11-01 ユーザー指定）：①乗せた場所から約30m以内で誰かが入れた名前（手入力。職員通用口など）
+      el.innerHTML=(done?`${L}：<b>${esc(n)}</b>（確かめ済み）`
+          :n?`${L}の候補：<b>${esc(n)}</b>${src==="Google"?" <small>Google Maps</small>":src==="Yahoo"?" <small>Web Services by Yahoo! JAPAN</small>":""}<br><small>病院・駅・ホテルなどの施設で${V}ときだけ押してください。施設でなければ何も押さなくて大丈夫です</small>`
+          :`${L}の施設名の候補はありません<br><small>施設で${V}ときだけ、名前を入れてください</small>`)
+        +`<div class="btnrow">${!done&&n?`<button type="button" class="btn primary" data-pl="ok">✅ この施設で合っている</button>`:""}<button type="button" class="btn" data-pl="fix">${done?"名前を直す":"名前を入れる"}</button>${done?`<button type="button" class="btn" data-pl="clr">施設ではない</button>`:""}</div>${box}`;
+      if(q('[data-pl=ok]')) q('[data-pl=ok]').onclick=()=>send({name:n,confirm:true},"確かめました。次からはこの名前になります",{n,src:"手入力"});
+      if(q('[data-pl=clr]')) q('[data-pl=clr]').onclick=()=>send({clear:true,key:hitKey},"施設ではない場所にしました（町名で出ます）",{n:"",src:""});   // 近くのます目の名前を出していたときは、そのます目の名前を消す
+      q('[data-pl=fix]').onclick=()=>{ q('[data-pl=box]').hidden=false; q('[data-pl=in]').value=n||""; q('[data-pl=in]').focus(); };
+      q('[data-pl=save]').onclick=()=>{ const v=q('[data-pl=in]').value.trim(); if(v) send({name:v},"保存しました。次からはこの名前になります",{n:v,src:"手入力"}); }; };
+    // 出す順（2026-11-01 ユーザー指定）：①その場所から約30m以内で誰かが入れた名前（手入力。職員通用口など）
     // ②一覧で分かる場所（羽田・成田のターミナルの建物、ホテル・乗り場・駅） ③それ以外は「路上」。Googleで調べるのは「施設名を確認」を押したときだけ
-    if(key in rNames&&rNames[key].src!=="近く") draw(rNames[key].n,rNames[key].src);
+    if(key in rNames) draw(rNames[key].n,rNames[key].src);
     else if(own) draw(own,"一覧");
     else draw("路上","路上");
     if(rNames[key]&&rNames[key].src==="手入力") return;
     // 約30m以内のます目（緯度・経度の小数4けた＝約10m）をまとめて、確かめ済みの名前だけ聞く（Googleには聞かない）
-    const ks=[]; for(let i=-3;i<=3;i++) for(let j=-3;j<=3;j++){ const k=cmpKey(lat+i*1e-4,lng+j*1e-4), q=k.split(",").map(Number); if(distM([lat,lng],q)<=30) ks.push(k); }
-    post(Object.assign({action:"placeNames",pts:ks,saved:true},rPlaceAuth())).then(j=>{ if(!(j&&j.ok&&j.names)||rPlaceKey!==key) return;
+    const ks=[]; for(let i=-3;i<=3;i++) for(let j=-3;j<=3;j++){ const k=cmpKey(lat+i*1e-4,lng+j*1e-4), qq=k.split(",").map(Number); if(distM([lat,lng],qq)<=30) ks.push(k); }
+    post(Object.assign({action:"placeNames",pts:ks,saved:true},rPlaceAuth())).then(j=>{ if(!(j&&j.ok&&j.names)||!live()) return;
       const hit=Object.keys(j.names).filter(k=>j.names[k]&&j.names[k].n).map(k=>({k,n:j.names[k].n,d:distM([lat,lng],k.split(",").map(Number))})).sort((a,b)=>a.d-b.d)[0];
       if(hit&&!(rNames[key]&&rNames[key].src==="手入力")){ hitKey=hit.k; rNames[key]={n:hit.n,src:"手入力"}; draw(hit.n,"手入力"); } }).catch(()=>{});
-    function ask(){ el.textContent="乗車地の施設名を調べています…";
-      post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ rNames[key]=j.names[key]||{n:"",src:""}; draw(rNames[key].n,rNames[key].src); } else if(rPlaceKey===key) el.innerHTML=`<span class="err">${esc((j&&j.error)||"施設名を調べられませんでした")}</span>`; })
-        .catch(()=>{ if(rPlaceKey===key) el.innerHTML=`<span class="err">通信できませんでした。電波のよいところでもう一度</span>`; }); }
+    function ask(){ el.textContent=`${L}の施設名を調べています…`;
+      post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ rNames[key]=j.names[key]||{n:"",src:""}; draw(rNames[key].n,rNames[key].src); } else if(live()) el.innerHTML=`<span class="err">${esc((j&&j.error)||"施設名を調べられませんでした")}</span>`; })
+        .catch(()=>{ if(live()) el.innerHTML=`<span class="err">通信できませんでした。電波のよいところでもう一度</span>`; }); }
   }
   // ===== 施設名をまとめて確かめる（2026-10-28 ユーザー指定：管理者とグループ1の人だけ）=====
   // その月の乗車（手上げ・イベント・一覧の場所を除く）を40m以内の近い場所どうしでまとめ、乗せた回数の多い順に並べる。
