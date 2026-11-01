@@ -1346,7 +1346,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 18:22</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 18:47</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2332,8 +2332,9 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       const j=await post({action:"fullGet",adminPass:cfg.apass,code,month});
       if(!j.ok){ m.textContent=j.error||"取得できませんでした"; return; }
       if(!j.items.length){ m.textContent="データがありませんでした"; return; }
-      const rows=[["社員コード","名前","乗車日時","降車日時","出庫日","内容","金額","決済","乗車地","降車地","車種","乗車位置の種類","降車位置の種類","押し忘れ"]];
-      j.items.forEach(x=>rows.push([x.code,x.name,x.at,x.offAt||"",x.date,x.kind,x.amt,x.pay,x.from,x.to,x.car,x.onSrc,x.offSrc,x.unsure]));
+      const saved=await placeSavedList();
+      const rows=[["社員コード","名前","乗車日時","降車日時","出庫日","内容","金額","決済","乗車地","乗車地の施設名","降車地","車種","乗車位置の種類","降車位置の種類","押し忘れ"]];
+      j.items.forEach(x=>rows.push([x.code,x.name,x.at,x.offAt||"",x.date,x.kind,x.amt,x.pay,x.from,placeLabel(x.onLat,x.onLng,saved),x.to,x.car,x.onSrc,x.offSrc,x.unsure]));
       const csv="﻿"+toCsv(rows), name=`全員データ_${month}${code?"_"+code:""}.csv`;
       const file=new File([csv],name,{type:"text/csv"});
       if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file]}); m.textContent="書き出しました"; return; }catch(e){} }
@@ -3648,16 +3649,29 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     // 羽田・成田の第1〜第3ターミナルは、建物の形（オープンストリートマップ）の中か、縁から150m以内で一番近いもの（建物が1km以上と長く、真ん中からの円では端で外れたり隣と混ざったりしたため。2026-11-01 ユーザー指定）
     AIR_POLY.forEach(([n,g])=>{ const d=geoD({lat,lng},[n,0,g,"","A"]); if(d<=150&&(!best||d<best.d)) best={n,d}; });
     return best?best.n:null; }
-  function cmpPlace(x){ if(!(x.onLat&&x.onLng)) return null; const o=cmpOwn(+x.onLat,+x.onLng); if(o) return {n:o,src:"一覧"};
-    const c=cmpNames[cmpKey(x.onLat,x.onLng)]; return c&&c.n&&c.src==="手入力"?c:null; }   // Googleの候補のままの名前は出さない（家の前の乗車に近くの店名が付くため。2026-10-28 ユーザー指定）
+  // CSVの「乗車地の施設名」（2026-11-01 ユーザー指定）：①約30m以内で乗務員が入れた名前 ②一覧（羽田・成田のターミナル、ホテル・乗り場・駅） ③なければ空
+  // 書き出すときの辞書で付けるので、辞書が育つと過去の分にも名前が付く。Googleの候補のままの名前は使わない
+  async function placeSavedList(){
+    if(!cfg.url||!(isAdmin()||isGroup1())) return null;
+    try{ const j=await post(Object.assign({action:"placeSaved"},rPlaceAuth()));
+      if(j&&j.ok&&Array.isArray(j.list)) return j.list.map(([k,n])=>{ const q=String(k).split(",").map(Number); return {lat:q[0],lng:q[1],n}; }); }catch(e){}
+    return null; }
+  function placeLabel(lat,lng,saved){ lat=+lat; lng=+lng; if(!lat||!lng) return ""; let best=null;
+    (saved||[]).forEach(s=>{ if(Math.abs(s.lat-lat)>4e-4||Math.abs(s.lng-lng)>5e-4) return; const d=distM([lat,lng],[s.lat,s.lng]); if(d<=30&&(!best||d<best.d)) best={n:s.n,d}; });
+    return best?best.n:(cmpOwn(lat,lng)||""); }
+  function cmpPlace(x){ if(!(x.onLat&&x.onLng)) return null;
+    const c=cmpNames[cmpKey(x.onLat,x.onLng)]; if(c&&c.n&&c.src==="手入力") return c;   // 乗務員が入れた名前（職員通用口など）を、一覧（ターミナルなど）より先に（2026-11-01 ユーザー指定）
+    const o=cmpOwn(+x.onLat,+x.onLng); return o?{n:o,src:"一覧"}:null; }   // Googleの候補のままの名前は出さない（家の前の乗車に近くの店名が付くため。2026-10-28 ユーザー指定）
   const cmpLabel=x=>{ const p=cmpPlace(x); return p?`${p.n}（${cmpArea(x.from)}）`:cmpArea(x.from); };   // 施設名のあとに町名をかっこで添える（2026-10-28 ユーザー指定）
   async function cmpFetchNames(rs){
     if(cmpNameBusy) return;
-    const need=[...new Set(rs.filter(x=>x.onLat&&x.onLng&&x.kind!=="手上げ"&&!cmpOwn(+x.onLat,+x.onLng)).map(x=>cmpKey(x.onLat,x.onLng)).filter(k=>!(k in cmpNames)))];
+    const need=[...new Set(rs.filter(x=>x.onLat&&x.onLng&&x.kind!=="手上げ").map(x=>cmpKey(x.onLat,x.onLng)).filter(k=>!(k in cmpNames)))];
     if(!need.length) return; cmpNameBusy=true;
-    try{ const j=await post({action:"placeNames",adminPass:cfg.apass,pts:need,saved:true});   // 確かめ済みの名前だけ（Googleには問い合わせない）
-      if(j&&j.ok){ need.forEach(k=>{ cmpNames[k]=j.names[k]||{n:"",src:""}; }); cmpNameMsg=""; }
-      else { need.forEach(k=>cmpNames[k]={n:"",src:""}); cmpNameMsg=(j&&j.error)||"施設名を調べられませんでした"; }
+    try{ let bad=null;
+      for(let i=0;i<need.length;i+=60){ const part=need.slice(i,i+60);   // サーバーは1回60か所まで
+        const j=await post({action:"placeNames",adminPass:cfg.apass,pts:part,saved:true});   // 確かめ済みの名前だけ（Googleには問い合わせない）
+        if(j&&j.ok) part.forEach(k=>{ cmpNames[k]=j.names[k]||{n:"",src:""}; }); else { part.forEach(k=>cmpNames[k]={n:"",src:""}); bad=(j&&j.error)||"施設名を調べられませんでした"; } }
+      cmpNameMsg=bad||"";
     }catch(e){ need.forEach(k=>cmpNames[k]={n:"",src:""}); cmpNameMsg="施設名を調べられませんでした（サーバーの準備がまだか、電波が悪いとき）"; }
     cmpNameBusy=false; if(cmpTab==="2") cmpRender(); }
   (()=>{ const h=$("cmpHour"); for(let i=0;i<24;i+=2) h.insertAdjacentHTML("beforeend",`<option value="${i}">${i}〜${i+2}時</option>`); h.value="18";
@@ -4730,16 +4744,16 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   $("mList").addEventListener("click",e=>{ const b=e.target.closest("[data-k]"); if(!b) return; sDay=b.dataset.k; setView("day"); });
   // CSV書き出し（管理者だけ。この月度の乗車明細を日ごとにまとめて出す）
-  function monthCsvRows(){
+  function monthCsvRows(saved){
     const P=PERIODS[mIdx];
     const keys=Object.keys(sales.days).filter(k=>k>=P.start&&k<=P.end).sort();
-    const rows=[["出庫日","No","内容","乗車時刻","降車時刻","金額","決済","ETC","社内決済","乗車地","降車地","メモ","営業分","待ち分","営業分単価","実単価"]];
+    const rows=[["出庫日","No","内容","乗車時刻","降車時刻","金額","決済","ETC","社内決済","乗車地","乗車地の施設名","降車地","メモ","営業分","待ち分","営業分単価","実単価"]];
     keys.forEach(k=>{
       const d=sales.days[k]; if(!d||d.mode==="simple"||!d.rides||!d.rides.length) return;
       dayCalc(d).rows.forEach(r=>{
         if(isEv(r.kind)) return;
         const fare=fareOf(r), eig=r._eig, wait=r._wait, inh=r.inhouse!=null?r.inhouse:appAuto(r);
-        rows.push([k,r._no,r.kind,tm(r.on),r.off!=null?tm(r.off):"",r.amt||"",r.pay||"",r.etc||"",inh?"1":"",r.onAddr||"",r.offAddr||"",r.memo||"",
+        rows.push([k,r._no,r.kind,tm(r.on),r.off!=null?tm(r.off):"",r.amt||"",r.pay||"",r.etc||"",inh?"1":"",r.onAddr||"",r.onPos?placeLabel(r.onPos.lat,r.onPos.lng,saved):"",r.offAddr||"",r.memo||"",
           eig!=null?eig:"",wait!=null?wait:"",eig>0?Math.round(fare/eig):"",(eig!=null&&wait!=null&&eig+wait>0)?Math.round(fare/(eig+wait)):""]);
       });
     });
@@ -4747,7 +4761,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   const toCsv=rows=>rows.map(r=>r.map(v=>{ const s=String(v??""); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(",")).join("\r\n");
   $("mCsv").onclick=async()=>{
-    const P=PERIODS[mIdx], csv="﻿"+toCsv(monthCsvRows()), name=`乗車明細_${P.y}-${String(P.m).padStart(2,"0")}.csv`;
+    const P=PERIODS[mIdx], csv="﻿"+toCsv(monthCsvRows(await placeSavedList())), name=`乗車明細_${P.y}-${String(P.m).padStart(2,"0")}.csv`;
     const file=new File([csv],name,{type:"text/csv"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file]}); return; }catch(e){} }
     const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download=name; a.click();
@@ -5457,33 +5471,43 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function rPlaceShow(r){
     const el=$("rPlace"); rPlaceKey=null; el.hidden=true; el.innerHTML="";
     if(!(isAdmin()||isGroup1())||!r||!r.onPos||isEv(r.kind||"")||r.kind==="手上げ"||!cfg.url) return;
-    const lat=+r.onPos.lat, lng=+r.onPos.lng, key=cmpKey(lat,lng), own=cmpOwn(lat,lng); rPlaceKey=key;
+    const lat=+r.onPos.lat, lng=+r.onPos.lng, key=cmpKey(lat,lng), own=cmpOwn(lat,lng); rPlaceKey=key; let hitKey=key;
     const send=async(body,okMsg,v)=>{ el.querySelectorAll("button").forEach(b=>b.disabled=true);
       try{ const j=await post(Object.assign({action:"placeFix",key,code:cfg.empCode||""},body,rPlaceAuth()));
         if(j&&j.ok){ rNames[key]=cmpNames[key]=v; draw(v.n,v.src); el.insertAdjacentHTML("beforeend",`<div>✅ ${okMsg}</div>`); return; }
         el.insertAdjacentHTML("beforeend",`<div class="err">${esc((j&&j.error)||"保存できませんでした")}</div>`); }
       catch(e){ el.insertAdjacentHTML("beforeend",`<div class="err">通信できませんでした。電波のよいところでもう一度</div>`); }
       el.querySelectorAll("button").forEach(b=>b.disabled=false); };
+    const PH="正しい施設名（例：○○病院、羽田 第2ターミナル（職員通用口））";
     const draw=(n,src)=>{ if(rPlaceKey!==key) return; el.hidden=false;
-      if(src==="一覧"){ el.innerHTML=`乗車地：<b>${esc(n)}</b>`; return; }   // ホテル・乗り場・駅・空港の一覧で分かる場所（ボタンは出さない）
+      if(src==="一覧"||src==="路上"){   // 一覧で分かる場所（ターミナルなど）と「路上」。その場所だけ名前を入れられる（2026-11-01 ユーザー指定）
+        el.innerHTML=`乗車地：<b>${esc(n)}</b><div class="btnrow">${src==="路上"?`<button type="button" class="btn" id="rPlaceAsk">🏥 施設名を確認</button>`:""}<button type="button" class="btn" id="rPlaceFix">✏️ 名前を入れる</button></div>
+          <div id="rPlaceBox" hidden style="margin-top:6px"><input type="text" id="rPlaceIn" maxlength="40" autocomplete="off" placeholder="${PH}"><div class="src">入れた名前は、この場所から約30m以内で乗せたときだけ出ます</div><div class="btnrow"><button type="button" class="btn primary" id="rPlaceSave">この名前にする</button></div></div>`;
+        if($("rPlaceAsk")) $("rPlaceAsk").onclick=ask;
+        $("rPlaceFix").onclick=()=>{ $("rPlaceBox").hidden=false; $("rPlaceIn").value=src==="一覧"?n:""; $("rPlaceIn").focus(); };
+        $("rPlaceSave").onclick=()=>{ const v=$("rPlaceIn").value.trim(); if(v) send({name:v},"保存しました。次からこの場所の近く（約30m）ではこの名前になります",{n:v,src:"手入力"}); };
+        return; }
       const done=src==="手入力";
       el.innerHTML=(done?`乗車地：<b>${esc(n)}</b>（確かめ済み）`
           :n?`乗車地の候補：<b>${esc(n)}</b>${src==="Google"?" <small>Google Maps</small>":src==="Yahoo"?" <small>Web Services by Yahoo! JAPAN</small>":""}<br><small>病院・駅・ホテルなどの施設で乗せたときだけ押してください。施設でなければ何も押さなくて大丈夫です</small>`
           :`乗車地の施設名の候補はありません<br><small>施設で乗せたときだけ、名前を入れてください</small>`)
         +`<div class="btnrow">${!done&&n?`<button type="button" class="btn primary" id="rPlaceOk">✅ この施設で合っている</button>`:""}<button type="button" class="btn" id="rPlaceFix">${done?"名前を直す":"名前を入れる"}</button>${done?`<button type="button" class="btn" id="rPlaceClr">施設ではない</button>`:""}</div>
-        <div id="rPlaceBox" hidden style="margin-top:6px"><input type="text" id="rPlaceIn" maxlength="40" autocomplete="off" placeholder="正しい施設名（例：○○病院）"><div class="btnrow"><button type="button" class="btn primary" id="rPlaceSave">この名前にする</button></div></div>`;
+        <div id="rPlaceBox" hidden style="margin-top:6px"><input type="text" id="rPlaceIn" maxlength="40" autocomplete="off" placeholder="${PH}"><div class="btnrow"><button type="button" class="btn primary" id="rPlaceSave">この名前にする</button></div></div>`;
       if($("rPlaceOk")) $("rPlaceOk").onclick=()=>send({name:n,confirm:true},"確かめました。次からはこの名前になります",{n,src:"手入力"});
-      if($("rPlaceClr")) $("rPlaceClr").onclick=()=>send({clear:true},"施設ではない場所にしました（町名で出ます）",{n:"",src:""});
+      if($("rPlaceClr")) $("rPlaceClr").onclick=()=>send({clear:true,key:hitKey},"施設ではない場所にしました（町名で出ます）",{n:"",src:""});   // 近くのます目の名前を出していたときは、そのます目の名前を消す
       $("rPlaceFix").onclick=()=>{ $("rPlaceBox").hidden=false; $("rPlaceIn").value=n||""; $("rPlaceIn").focus(); };
       $("rPlaceSave").onclick=()=>{ const v=$("rPlaceIn").value.trim(); if(v) send({name:v},"保存しました。次からはこの名前になります",{n:v,src:"手入力"}); }; };
-    if(own){ draw(own,"一覧"); return; }
-    if(key in rNames){ draw(rNames[key].n,rNames[key].src); return; }
-    // 最初は「路上」と出し、「施設名を確認」を押したときだけGoogleなどで調べる（施設でない乗車の方が多いため。2026-11-01 ユーザー指定）
-    // ただし、誰かが「この施設で合っている」を押した（手入力の）場所は、Googleに聞かずにその名前を最初から出す
-    const road=()=>{ if(rPlaceKey!==key) return; el.hidden=false; el.innerHTML=`乗車地：<b>路上</b><div class="btnrow"><button type="button" class="btn" id="rPlaceAsk">🏥 施設名を確認</button></div>`; $("rPlaceAsk").onclick=ask; };
-    road();
-    post(Object.assign({action:"placeNames",pts:[key],saved:true},rPlaceAuth())).then(j=>{ const h=j&&j.ok&&j.names&&j.names[key];
-      if(h&&h.n&&rPlaceKey===key&&!(key in rNames)){ rNames[key]={n:h.n,src:"手入力"}; draw(h.n,"手入力"); } }).catch(()=>{});
+    // 出す順（2026-11-01 ユーザー指定）：①乗せた場所から約30m以内で誰かが入れた名前（手入力。職員通用口など）
+    // ②一覧で分かる場所（羽田・成田のターミナルの建物、ホテル・乗り場・駅） ③それ以外は「路上」。Googleで調べるのは「施設名を確認」を押したときだけ
+    if(key in rNames&&rNames[key].src!=="近く") draw(rNames[key].n,rNames[key].src);
+    else if(own) draw(own,"一覧");
+    else draw("路上","路上");
+    if(rNames[key]&&rNames[key].src==="手入力") return;
+    // 約30m以内のます目（緯度・経度の小数4けた＝約10m）をまとめて、確かめ済みの名前だけ聞く（Googleには聞かない）
+    const ks=[]; for(let i=-3;i<=3;i++) for(let j=-3;j<=3;j++){ const k=cmpKey(lat+i*1e-4,lng+j*1e-4), q=k.split(",").map(Number); if(distM([lat,lng],q)<=30) ks.push(k); }
+    post(Object.assign({action:"placeNames",pts:ks,saved:true},rPlaceAuth())).then(j=>{ if(!(j&&j.ok&&j.names)||rPlaceKey!==key) return;
+      const hit=Object.keys(j.names).filter(k=>j.names[k]&&j.names[k].n).map(k=>({k,n:j.names[k].n,d:distM([lat,lng],k.split(",").map(Number))})).sort((a,b)=>a.d-b.d)[0];
+      if(hit&&!(rNames[key]&&rNames[key].src==="手入力")){ hitKey=hit.k; rNames[key]={n:hit.n,src:"手入力"}; draw(hit.n,"手入力"); } }).catch(()=>{});
     function ask(){ el.textContent="乗車地の施設名を調べています…";
       post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ rNames[key]=j.names[key]||{n:"",src:""}; draw(rNames[key].n,rNames[key].src); } else if(rPlaceKey===key) el.innerHTML=`<span class="err">${esc((j&&j.error)||"施設名を調べられませんでした")}</span>`; })
         .catch(()=>{ if(rPlaceKey===key) el.innerHTML=`<span class="err">通信できませんでした。電波のよいところでもう一度</span>`; }); }
