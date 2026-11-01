@@ -454,6 +454,12 @@ body.rtfull{overflow:hidden}
 .wxsel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .taxibanner{position:fixed;top:0;left:0;right:0;z-index:2000;background:var(--accent);color:#fff;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .trainbanner{position:fixed;top:0;left:0;right:0;z-index:2001;background:#FBE3EC;color:#7A1F3D;border-bottom:2px solid #EBB8CB;padding:10px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.bqhide{display:none!important}
+#banMore{position:fixed;left:0;right:0;z-index:2003;display:flex;flex-direction:column;gap:0}
+#banMore[hidden]{display:none}
+#banMore button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid rgba(0,0,0,.15);padding:9px 14px;font-size:17px;font-weight:800;line-height:1.3;color:#222;background:#F4F4F4;box-shadow:0 2px 6px rgba(0,0,0,.15);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#banMore button b{margin-right:6px}
+#trainBanner{top:auto!important;bottom:var(--tabh,64px);padding-top:14px!important;border-bottom:0;border-top:2px solid #EBB8CB;box-shadow:0 -2px 8px rgba(0,0,0,.2)}   /* 電車の乱れは画面の下側（下のタブの上）に出す（2026-11-01 ユーザー指定） */
 .trainbanner.trok{background:#DDEFE3;color:#1E5A36;border-bottom-color:#9FD0B0}.trainbanner.trok #trainBannerClose{color:#1E5A36}
 .patrolbanner{position:fixed;top:0;left:0;right:0;z-index:2002;background:#FFF1C2;color:#5A4300;border-bottom:2px solid #E8C14A;padding:12px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:17px;font-weight:800}
 .patrolbanner[hidden]{display:none}
@@ -512,6 +518,7 @@ body.rtfull{overflow:hidden}
   <button type="button" id="trainBannerText"></button>
   <button type="button" id="trainBannerClose" aria-label="閉じる">×</button>
 </div>
+<div id="banMore" hidden></div>
 <div id="taxiBanner" class="taxibanner" hidden role="status">
   <span id="taxiBannerText"></span>
   <button type="button" id="taxiBannerClose" aria-label="閉じる">×</button>
@@ -1339,7 +1346,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 17:51</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 18:00</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6407,6 +6414,35 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     D.requestPermission().then(r=>{ try{ localStorage.setItem("tenko.cmpPerm",r); }catch(e){} if(r==="granted") cmpStart(); sdUpdate(); }).catch(()=>{});
   }
   try{ if(localStorage.getItem("tenko.cmpPerm")==="granted"&&!(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function")) cmpStart(); }catch(e){}
+  // ===== 上の帯が同時に出たとき（2026-11-01 ユーザー指定） =====
+  // 大きく出すのは大事な順で1つだけ：駐車禁止 → 取締り（線の小さい帯も） → 日交乗り場 → 優良乗り場 → 森ビル乗り場。
+  // ほかは、出ている帯のすぐ下に1行ずつ「ほかに：…」と添え、押すとそちらを大きく出す。それぞれの帯の出す・消すは今までどおり（hidden）で、ここは見せ方だけ決める
+  const BAN_ORDER=[["restBanner","🚫"],["patrolBanner","⚠"],["speedBanner","⚠"],["standBanner","🚕"],["yuryoBanner","【優】"],["taxiBanner","🚖"]];
+  let banPick=null, banBusy=false;
+  function banArrange(){
+    if(banBusy) return; banBusy=true;
+    try{
+      const on=BAN_ORDER.filter(([id])=>!$(id).hidden);
+      if(banPick&&!on.some(([id])=>id===banPick)) banPick=null;
+      const top=banPick||(on[0]&&on[0][0]);
+      BAN_ORDER.forEach(([id])=>$(id).classList.toggle("bqhide",!!top&&id!==top));
+      const rest=on.filter(([id])=>id!==top), more=$("banMore");
+      if(!rest.length){ more.hidden=true; more.innerHTML=""; return; }
+      // 1行の文：向きの説明・グループ名・ボタン・「テスト」は省き、まとまりごとに空白で区切る（隠れている帯は改行が取れないため）
+      const line=id=>{ const cl=$(id+"Text").cloneNode(true); cl.querySelectorAll(".sdHow,.pb3,.pbhw,.pbtest,svg").forEach(e=>e.remove());
+        cl.querySelectorAll("span,b,small,br").forEach(e=>e.after(" ")); return (cl.textContent||"").replace(/\s+/g," ").trim(); };
+      more.innerHTML=rest.map(([id,ic])=>{ const t=line(id);
+        return `<button type="button" data-banpick="${id}"><b>ほかに：</b>${esc(t.startsWith(ic)?t:ic+" "+t)}</button>`; }).join("");
+      more.hidden=false; more.style.top=Math.round($(top).getBoundingClientRect().bottom)+"px";
+      more.querySelectorAll("[data-banpick]").forEach(b=>b.onclick=()=>{ banPick=b.dataset.banpick; banArrange(); window.scrollTo(0,0); });
+    }finally{ banBusy=false; }
+  }
+  const banObs=new MutationObserver(()=>requestAnimationFrame(banArrange));
+  BAN_ORDER.forEach(([id])=>{ banObs.observe($(id),{attributes:true,attributeFilter:["hidden"],childList:true,subtree:true,characterData:true}); });
+  window.addEventListener("resize",()=>requestAnimationFrame(banArrange));
+  // 電車の乱れの帯は下のタブのすぐ上に出すので、タブの高さを測っておく
+  const setTabH=()=>{ const tb=document.querySelector(".tabbar"); if(tb) document.documentElement.style.setProperty("--tabh",tb.offsetHeight+"px"); };
+  setTabH(); window.addEventListener("resize",setTabH);
   ["standBanner","yuryoBanner","restBanner","patrolBanner"].forEach(id=>$(id).addEventListener("click",e=>{ if(e.target.closest("#"+id+"Close")||e.target.closest("[data-pthw]")) return; cmpAsk(); }));
   // ===== 取締りの通知を止める・数える（2026-10-27 ユーザー指定） =====
   // ①速さ：時速○km以上が○秒続いたら止める（首都高などで、下の一般道の取締りで鳴らないように）。○km未満が1分続いたら戻す
