@@ -866,12 +866,13 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="subRest" hidden>
     <section class="card" aria-live="polite">
       <div class="infohead"><h2>休憩場</h2><button class="btn" id="restReload">更新</button></div>
-      <div class="src"><b>よい休憩場所を見つけたら、どんどん登録してください。</b>登録した場所は、みんなのアプリのこの地図に出ます（青いピン）。地図には、マイマップの<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>も出しています。合言葉なしで、誰でも見たり追加したりできます。社員コードだけは必ず入れてください（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
+      <div class="src"><b>よい休憩場所を見つけたら、どんどん登録してください。</b>登録した場所は、みんなのアプリのこの地図に出ます（青いピン）。地図には、マイマップの<b style="color:#8B5A2B">●喫煙所</b>・<b style="color:#2F6FD6">●長時間駐車可</b>も出しています。合言葉なしで、誰でも見たり追加したりできます。社員コードは最初の1回だけ入れてください。スマホが覚えるので、次からは入れなくて大丈夫です（誰が書いたか分かるようにするためで、見られるのは管理者だけです）。地図を拡大して、追加したい場所をタップして選べます（タップしなければ、今いる場所になります）。</div>
       <div class="btnrow"><button class="btn primary" id="restNearest">一番近い休憩場へ行く</button><button class="btn" id="restMe">現在地</button></div>
       <div id="restMapWrap" class="mapwrap" hidden><div id="restMap" class="bigmap" hidden style="height:380px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="restFullBtn">全画面</button></div></div>
       <div class="btnrow" id="restPickRow" hidden><button class="btn" id="restPickClear">地図で選んだ場所を取り消す（今の場所に戻す）</button></div>
-      <div class="field"><label for="restCode">社員コード</label><input type="text" id="restCode" inputmode="numeric" autocomplete="off"></div>
+      <div class="field" id="restCodeBox"><label for="restCode">社員コード</label><input type="text" id="restCode" inputmode="numeric" autocomplete="off"></div>
+      <div class="src" id="restCodeShow" style="display:none">社員コード：<b id="restCodeVal"></b>（変えるときは点呼時間の画面で）</div>
       <div class="field"><label for="restNote">メモ（場所の名前など・省略できます）</label><input type="text" id="restNote" maxlength="60" autocomplete="off"></div>
       <div class="btnrow"><button class="btn primary" id="restAdd">この場所を休憩場として追加</button></div>
       <div class="msg" id="restMsg" role="status"></div>
@@ -1346,7 +1347,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 19:07</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 19:27</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2010,7 +2011,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("schCodeChange").onclick=()=>{
     if(!schChangeArmed){ schChangeArmed=true; $("schCodeChange").textContent="もう一度押すと変更できます"; return; }
     schChangeArmed=false; $("schCodeChange").textContent="社員コードを変更する";
-    cfg.empCode=""; saveCfg(); $("schCode").value=""; applySchLock(); $("schMsg").textContent="社員コードを消しました。新しいコードを入れてください"; $("schCode").focus();
+    cfg.empCode=""; saveCfg(); $("schCode").value=""; if($("restCode")){ $("restCode").value=""; restCodeUI(); } applySchLock(); $("schMsg").textContent="社員コードを消しました。新しいコードを入れてください"; $("schCode").focus();
   };
   async function syncSchedule(silent){
     const m=$("schMsg"), code=(cfg.empCode||"").trim();
@@ -2059,7 +2060,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(!silent) m.textContent=added||chg.length?`${added}日分の計画を追加しました${chg.length?`。予定表の変更 ${chg.length}件を反映しました`:""}${noTime?`。うち${noTime}日は、その勤務の種類の出庫時刻が入っていないので、計画の時刻が空です`:""}`:"追加する日はありませんでした（すでに全部入っています、または予定表にまだ登録されていません）";
     }catch(e){ if(!silent) m.textContent="通信できませんでした。電波を確認してください"; }
   }
-  $("schCode").addEventListener("change",()=>{ cfg.empCode=$("schCode").value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); saveCfg(); applySchLock(); });
+  $("schCode").addEventListener("change",()=>{ cfg.empCode=$("schCode").value.trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)); saveCfg(); applySchLock(); if($("restCode")){ $("restCode").value=cfg.empCode; restCodeUI(); } });   // 休憩場の表示もそろえる
   $("schOut").addEventListener("change",()=>{ cfg.shutsuko=$("schOut").value; saveCfg(); });
   $("schOutD").addEventListener("change",()=>{ cfg.shutsukoD=$("schOutD").value; saveCfg(); });
   $("schOutN").addEventListener("change",()=>{ cfg.shutsukoN=$("schOutN").value; saveCfg(); });
@@ -2717,7 +2718,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
 
   // ===== 休憩場（合言葉なし・みんなで書き込める地図） =====
   $("restCode").value=cfg.empCode||"";
-  $("restCode").addEventListener("change",()=>{ cfg.empCode=$("restCode").value.trim(); saveCfg(); });
+  // 社員コードがスマホに入っていれば、欄は隠して「社員コード：○○」だけ出す。変えるのは点呼時間の画面だけ（2026-11-01 ユーザー指定）
+  function restCodeUI(){ const c=$("restCode").value.trim(); $("restCodeBox").style.display=c?"none":""; $("restCodeShow").style.display=c?"":"none"; $("restCodeVal").textContent=c; }
+  $("restCode").addEventListener("change",()=>{ cfg.empCode=$("restCode").value.trim(); saveCfg(); restCodeUI(); });
+  restCodeUI();
   let restMapObj=null, restLayer=null, restPick=null, restPickMarker=null;
   function renderRestPick(){
     if(restPickMarker&&restMapObj){ restMapObj.removeLayer(restPickMarker); restPickMarker=null; }
@@ -3155,7 +3159,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const fs=["pk","sm"].filter(f=>(sel[f]||"")!==(c[f]||""));
     if(!fs.length){ msg.textContent="変わったところがありません。駐車場・喫煙所の「あり／なし」を選んでから押してください"; return; }
     let code=(cfg.empCode||"").trim();
-    if(!code){ code=(prompt("社員コードを入れてください（誰が確認したか分かるようにするためです）")||"").trim(); if(!code) return; cfg.empCode=code; saveCfg(); if($("restCode")) $("restCode").value=code; }
+    if(!code){ code=(prompt("社員コードを入れてください（誰が確認したか分かるようにするためです）")||"").trim(); if(!code) return; cfg.empCode=code; saveCfg(); if($("restCode")){ $("restCode").value=code; restCodeUI(); } }
     if(!cfg.url){ msg.textContent="サーバーにつながっていません。電波を確認してください"; return; }
     t.disabled=true; t.textContent="登録しています…";
     try{
@@ -5468,10 +5472,15 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 病院・駅などの施設で乗せたときだけ「この施設で合っている」を押す（施設でない乗車の方が多いので、何も押さなければ町名のまま）。
   // 押した・入れた名前はサーバーの「施設名」シートに「手入力」で残り、次からは全員の乗務員比較にその名前が出る。手上げは出さない
   const rNames={};
-  const rPlaceAuth=()=>isAdmin()?{adminPass:cfg.apass}:{passcode:cfg.npass};
+  // 施設名は合言葉なし・社員コードで使える（2026-11-01 ユーザー指定）。管理者・合言葉のある人は、それも一緒に送る（回数の上限なし／グループ1）
+  const rPlaceAuth=()=>Object.assign({code:String(cfg.empCode||"").trim()},isAdmin()?{adminPass:cfg.apass}:cfg.npass?{passcode:cfg.npass}:{});
+  // 社員コードがまだなら、最初に押したときに聞く（お店の「みんなの確認」と同じ）
+  function placeCode(){ if(isAdmin()||String(cfg.empCode||"").trim()) return true;
+    const c=(prompt("社員コードを入れてください（誰が入れたか分かるようにするためです。次からは聞きません）")||"").trim().replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-65248));
+    if(!c) return false; cfg.empCode=c; saveCfg(); if($("restCode")){ $("restCode").value=c; restCodeUI(); } return true; }
   // 乗車地・降車地の欄（2026-11-01 ユーザー指定：降車地も同じ考え方で）。場所ごとの名前の辞書は乗車・降車で共通
   function rPlaceShow(r){
-    const ok=(isAdmin()||(isNakama()&&!!cfg.npass))&&r&&!isEv(r.kind||"")&&cfg.url;   // 合言葉のある全員（2026-11-01 ユーザー指定。CSVとまとめて確かめる画面は管理者とグループ1だけ）
+    const ok=r&&!isEv(r.kind||"")&&cfg.url;   // 全員（合言葉なし。社員コードは押したときに聞く。2026-11-01 ユーザー指定。CSVとまとめて確かめる画面は管理者とグループ1だけ）
     placeBox($("rPlace"),ok&&r.kind!=="手上げ"?r.onPos:null,"乗車地","乗せた");   // 手上げの乗車地は出さない（家の前などが多い）
     placeBox($("rPlaceOff"),ok?r.offPos:null,"降車地","降ろした");
   }
@@ -5482,6 +5491,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const live=()=>el.dataset.k===key, q=s=>el.querySelector(s);
     const send=async(body,okMsg,v)=>{
       if(body.name&&/様|宅|さん/.test(body.name)){ el.insertAdjacentHTML("beforeend",`<div class="err">お客様の名前や家は入れられません。施設の名前だけを入れてください</div>`); return; }   // 全員で共通の辞書なので
+      if(!placeCode()) return;
       el.querySelectorAll("button").forEach(b=>b.disabled=true);
       try{ const j=await post(Object.assign({action:"placeFix",key,code:cfg.empCode||""},body,rPlaceAuth()));
         if(j&&j.ok){ rNames[key]=cmpNames[key]=v; draw(v.n,v.src); el.insertAdjacentHTML("beforeend",`<div>✅ ${okMsg}</div>`); return; }
@@ -5512,12 +5522,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     else if(own) draw(own,"一覧");
     else draw("路上","路上");
     if(rNames[key]&&rNames[key].src==="手入力") return;
+    if(!isAdmin()&&!cfg.npass&&!String(cfg.empCode||"").trim()) return;   // 社員コードがまだの人は、確かめ済みの名前を聞かない（サーバーが断るため）
     // 約30m以内のます目（緯度・経度の小数4けた＝約10m）をまとめて、確かめ済みの名前だけ聞く（Googleには聞かない）
     const ks=[]; for(let i=-3;i<=3;i++) for(let j=-3;j<=3;j++){ const k=cmpKey(lat+i*1e-4,lng+j*1e-4), qq=k.split(",").map(Number); if(distM([lat,lng],qq)<=30) ks.push(k); }
     post(Object.assign({action:"placeNames",pts:ks,saved:true},rPlaceAuth())).then(j=>{ if(!(j&&j.ok&&j.names)||!live()) return;
       const hit=Object.keys(j.names).filter(k=>j.names[k]&&j.names[k].n).map(k=>({k,n:j.names[k].n,d:distM([lat,lng],k.split(",").map(Number))})).sort((a,b)=>a.d-b.d)[0];
       if(hit&&!(rNames[key]&&rNames[key].src==="手入力")){ hitKey=hit.k; rNames[key]={n:hit.n,src:"手入力"}; draw(hit.n,"手入力"); } }).catch(()=>{});
-    function ask(){ el.textContent=`${L}の施設名を調べています…`;
+    function ask(){ if(!placeCode()) return; el.textContent=`${L}の施設名を調べています…`;
       post(Object.assign({action:"placeNames",pts:[key]},rPlaceAuth())).then(j=>{ if(j&&j.ok){ rNames[key]=j.names[key]||{n:"",src:""}; draw(rNames[key].n,rNames[key].src); } else if(live()) el.innerHTML=`<span class="err">${esc((j&&j.error)||"施設名を調べられませんでした")}</span>`; })
         .catch(()=>{ if(live()) el.innerHTML=`<span class="err">通信できませんでした。電波のよいところでもう一度</span>`; }); }
   }
