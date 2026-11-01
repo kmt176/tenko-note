@@ -471,15 +471,16 @@ body.rtfull{overflow:hidden}
 #patrolBannerClose{font-size:44px!important;padding:0 6px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
 /* 日交乗り場の帯は、元の帯と取締りの帯のちょうど中間の大きさ（2026-11-01 ユーザー指定）。文字 17px と 44px→30px、17px と 68px→42px、17px と 22px→20px、余白 12/14px と 14/12/16px→13/13/14px、× 24px と 44px→34px */
-#standBanner{align-items:flex-start;padding:13px 13px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 13px)}
-#standBannerText{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
-#standBannerText .sb1{font-size:30px;font-weight:900;line-height:1.12}
-#standBannerText .sb2{font-size:42px;font-weight:900;line-height:1.1;word-break:break-all}
-#standBannerText .sb3{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:900;line-height:1.1}
-#standBannerText .sb3 small{font-size:20px;font-weight:800}
-#standBannerText .sbarrow{width:58px;height:58px;flex:none;transition:transform .35s}
-#standBannerText .pbtest{font-style:normal;font-size:15px;margin-left:8px;padding:1px 8px;border:2px solid currentColor;border-radius:999px}
-#standBannerClose{font-size:34px!important;padding:0 5px!important}
+#standBanner,#yuryoBanner,#restBanner{align-items:flex-start;padding:13px 13px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 13px)}
+#standBannerText,#yuryoBannerText,#restBannerText{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+#standBanner .sb1,#yuryoBanner .sb1,#restBanner .sb1{font-size:30px;font-weight:900;line-height:1.12}
+#standBanner .sb2,#yuryoBanner .sb2,#restBanner .sb2{font-size:42px;font-weight:900;line-height:1.1;word-break:break-all}
+.patrolbanner .sb3{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:900;line-height:1.1}
+.patrolbanner .sb3 small{font-size:20px;font-weight:800}
+.patrolbanner .sbarrow{width:58px;height:58px;flex:none;transition:transform .35s}
+#patrolBannerText .pbdir .sdDist:empty+br{display:none}
+#standBanner .pbtest,#yuryoBanner .pbtest,#restBanner .pbtest{font-style:normal;font-size:15px;margin-left:8px;padding:1px 8px;border:2px solid currentColor;border-radius:999px}
+#standBannerClose,#yuryoBannerClose,#restBannerClose{font-size:34px!important;padding:0 5px!important}
 #trainBanner{align-items:flex-start;padding:14px 12px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
 #trainBannerText{display:flex!important;flex-direction:column;gap:6px;min-width:0}
 #trainBannerText .tb1{font-size:40px;font-weight:900;line-height:1.1}
@@ -503,6 +504,7 @@ body.rtfull{overflow:hidden}
   <button type="button" class="btn primary" id="qrClose">閉じる</button></div></div>
 <div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
 <div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
+<div id="speedBanner" class="patrolbanner" hidden role="alert"><span id="speedBannerText"></span><button type="button" id="speedBannerClose" aria-label="閉じる">×</button></div>
 <div id="restBanner" class="patrolbanner restbanner" hidden role="alert"><span id="restBannerText"></span><button type="button" id="restBannerClose" aria-label="閉じる">×</button></div>
 <div id="standBanner" class="patrolbanner standbanner" hidden role="status"><span id="standBannerText"></span><button type="button" id="standBannerClose" aria-label="閉じる">×</button></div>
 <div id="yuryoBanner" class="patrolbanner standbanner" hidden role="status"><span id="yuryoBannerText"></span><button type="button" id="yuryoBannerClose" aria-label="閉じる">×</button></div>
@@ -1337,7 +1339,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 17:20</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 17:51</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6296,6 +6298,9 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   // 大まかな囲み（緯度・経度の最小と最大）。近くにあるものだけ細かく測るため
   const geoBB=x=>x._bb||(x._bb=[Math.min(...x[2].map(c=>c[0])),Math.max(...x[2].map(c=>c[0])),Math.min(...x[2].map(c=>c[1])),Math.max(...x[2].map(c=>c[1]))]);
+  // 乗り場マップは、マイマップのグループ名「専用乗り場」をアプリでは「日交乗り場」と出す（2026-10-25 ユーザー指定）
+  // ※下の GS を作る前に決めておく（後に置くと、保存してあったグループ名が読めず空になり、駐車禁止などが鳴らなかった。2026-11-01 直した）
+  const geoGroups=(k,g)=>k==="stand"||k==="yuryo"?(g||[]).map(x=>x==="専用乗り場"?"日交乗り場":x):(g||[]);
   const GS={}; Object.keys(GEO).forEach(k=>{ GS[k]={pts:null,groups:[],prev:{},last:{},hideT:0,map:null,layer:null,me:null,offG:{}};
     try{ const c=JSON.parse(localStorage.getItem(GEO[k].store)||"null"); if(c&&c.pts){ GS[k].pts=c.pts; GS[k].groups=geoGroups(k,c.groups); } }catch(e){}
     try{ GS[k].offG=JSON.parse(localStorage.getItem(GEO[k].store+"Off")||"{}")||{}; }catch(e){}
@@ -6303,8 +6308,6 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     $(GEO[k].dist).addEventListener("change",()=>{ try{ localStorage.setItem("tenko."+GEO[k].dist,$(GEO[k].dist).value); }catch(e){} });
     $(GEO[k].ban+"Close").onclick=()=>{ $(GEO[k].ban).hidden=true; }; });
   let geoWid=null;
-  // 乗り場マップは、マイマップのグループ名「専用乗り場」をアプリでは「日交乗り場」と出す（2026-10-25 ユーザー指定）
-  const geoGroups=(k,g)=>k==="stand"||k==="yuryo"?(g||[]).map(x=>x==="専用乗り場"?"日交乗り場":x):(g||[]);
   async function geoLoad(k,force){
     if(!cfg.url) return; let at=0; try{ at=+(localStorage.getItem(GEO[k].store+"At")||0); }catch(e){}
     if(!force&&GS[k].pts&&Date.now()-at<6*3600e3) return;
@@ -6353,35 +6356,42 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
         nameHtml=`${esc(base)}<small class="pbx">交差点${esc(rest)}</small>`; }
       else { fs=Math.max(low,Math.min(cap,Math.floor(avail*(ks.length?2:3)/Math.max(1,nm.length)))); nameHtml=esc(nm); }
       const mx=Math.max(1,...ks.map(z=>z.length)), fk=Math.max(26,Math.min(58,Math.floor((window.innerWidth-80)/mx)));   // 違反名は1つ1行で、幅いっぱいに大きく
-      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span>${ks.length?`<span class="pb4" style="font-size:${fk}px">${ks.map(z=>`<span>${esc(z)}</span>`).join("")}</span>`:""}${nm?`<span class="pb2" style="font-size:${fs}px">${nameHtml}</span>`:""}<span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button>`;
-      $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; S.cur=null; },hold||20000); return;
+      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span>${ks.length?`<span class="pb4" style="font-size:${fk}px">${ks.map(z=>`<span>${esc(z)}</span>`).join("")}</span>`:""}${nm?`<span class="pb2" style="font-size:${fs}px">${nameHtml}</span>`:""}<span class="sb3 pbdir">${sdArrowSvg("#5A4300")}<span><span class="sdDist" data-keep="1"></span><small class="sdHow"></small></span></span><span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button>`;
+      sdCurs[G.ban]={x,d,test}; $(G.ban).hidden=false; sdUpdate(); clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; S.cur=null; },hold||20000); return;
     }
-    if(k==="stand"){ sdShow(x,d,test); clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; sdCur=null; },20000); return; }
+    if(SD_LOOK[k]){ sdShow(x,d,test,k); clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; delete sdCurs[G.ban]; if(k==="stand") sdCur=null; },20000); return; }
     $(G.ban+"Text").textContent=G.msg(x,S.groups[x[1]]||"",dd)+(test?"　※テスト表示":"");
     $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000);
   }
   // ===== 日交乗り場の帯：3段の大きな文字と、乗り場の方向の矢印・残りの距離（2026-11-01 ユーザー指定） =====
   // 矢印の向き：走っているときはGPSの進行方向が上、止まっているときはスマホのコンパス（iPhoneは許可が要る）、どちらもないときは北が上
-  let sdCur=null, sdPos=null, cmpHd=null, cmpAt=0, cmpOn=false;
+  // 2026-11-01 追加：優良乗り場・駐車禁止も同じ大きな帯と矢印に。取締りの大きな帯にも矢印を付ける（ユーザー指定）
+  let sdCur=null, sdPos=null, cmpHd=null, cmpAt=0, cmpOn=false; const sdCurs={};
   const sdBear=(a,b)=>{ const r=Math.PI/180, y=Math.sin((b[1]-a[1])*r)*Math.cos(b[0]*r), x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos((b[1]-a[1])*r); return (Math.atan2(y,x)/r+360)%360; };
-  function sdShow(x,d,test){
-    const S=GS.stand, nm=x[0].replace(/^\d+_/,""), avail=Math.max(200,window.innerWidth-100);
+  const sdArrowSvg=col=>`<svg class="sbarrow sdArrow" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="28" fill="#fff" stroke="${col}" stroke-width="3"/><path d="M30 7 L45 40 L30 32 L15 40 Z" fill="${col}"/></svg>`;
+  const SD_LOOK={stand:{col:"#1E5A36",t:(x,g)=>`🚕 ${g}`,nm:x=>x[0].replace(/^\d+_/,"")},
+    yuryo:{col:"#1E5A36",t:()=>"【優】優良乗り場",nm:x=>x[0].replace(/優良タクシー乗り場|タクシー乗り場|優良/g,"").trim()||x[0]},
+    rest2:{col:"#7A3B00",t:(x,g,d)=>`🚫 駐車禁止${d===0?"（エリアの中です）":""}`,nm:x=>x[0]}};
+  function sdShow(x,d,test,k){
+    k=k||"stand"; const S=GS[k], L0=SD_LOOK[k], ban=GEO[k].ban, nm=L0.nm(x), avail=Math.max(200,window.innerWidth-100);
     const fs=Math.max(26,Math.min(42,Math.floor(avail*2/Math.max(1,nm.length))));   // 名前は2行に収まる大きさ（42pxまで）
-    sdCur={x,d,test};
-    $("standBannerText").innerHTML=`<span class="sb1">🚕 ${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3"><svg class="sbarrow" id="sdArrow" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="28" fill="#fff" stroke="#1E5A36" stroke-width="3"/><path d="M30 7 L45 40 L30 32 L15 40 Z" fill="#1E5A36"/></svg><span><span id="sdDist"></span><br><small id="sdHow"></small></span></span>`;
-    $("standBanner").hidden=false; sdUpdate();
+    sdCurs[ban]={x,d,test}; if(k==="stand") sdCur=sdCurs[ban];
+    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span>`;
+    $(ban).hidden=false; sdUpdate();
   }
+  // 矢印の先：点はその点、線・エリアは一番近い角
+  const sdTarget=(x,p)=>x[2].length<2?x[2][0]:x[2].reduce((b,c)=>distM([p.lat,p.lng],c)<distM([p.lat,p.lng],b)?c:b,x[2][0]);
   function sdUpdate(){
-    if(!sdCur||$("standBanner").hidden) return;
-    const c=sdCur.x[2][0], p=sdPos&&Date.now()-sdPos.t<60e3?sdPos:(lastPos&&Date.now()-lastPos.t<60e3?lastPos:null), a=$("sdArrow");
-    if(!p||!c){ $("sdDist").textContent=`あと約${Math.max(10,Math.round(sdCur.d/10)*10)}m`; $("sdHow").textContent="今の場所が分からないので方向は出せません"; if(a) a.style.visibility="hidden"; return; }
-    const d=sdCur.test&&!sdPos?distM([p.lat,p.lng],c):geoD(p,sdCur.x), br=sdBear([p.lat,p.lng],c);
+    const p=sdPos&&Date.now()-sdPos.t<60e3?sdPos:(lastPos&&Date.now()-lastPos.t<60e3?lastPos:null);
     let up=0, how="北が上";
-    if(p.hd!=null&&isFinite(p.hd)&&p.spd!=null&&p.spd>=1.5){ up=p.hd; how="進む向きが上"; }
+    if(p&&p.hd!=null&&isFinite(p.hd)&&p.spd!=null&&p.spd>=1.5){ up=p.hd; how="進む向きが上"; }
     else if(cmpHd!=null&&Date.now()-cmpAt<3000){ up=cmpHd; how="スマホの向きが上"; }
-    if(a){ a.style.visibility=""; a.style.transform=`rotate(${Math.round(br-up)}deg)`; }
-    $("sdDist").textContent=d>=1000?`あと約${(d/1000).toFixed(1)}km`:`あと約${d<=0?0:Math.max(10,Math.round(d/10)*10)}m`;
-    $("sdHow").textContent=how;
+    Object.keys(sdCurs).forEach(ban=>{ const cur=sdCurs[ban], el=$(ban); if(!cur||!el||el.hidden) return;
+      const a=el.querySelector(".sdArrow"), dE=el.querySelector(".sdDist"), hE=el.querySelector(".sdHow"), fmt=d=>d>=1000?`あと約${(d/1000).toFixed(1)}km`:`あと約${d<=0?0:Math.max(10,Math.round(d/10)*10)}m`;
+      if(!p){ if(dE) dE.textContent=fmt(cur.d); if(hE) hE.textContent="今の場所が分からないので方向は出せません"; if(a) a.style.visibility="hidden"; return; }
+      const c=sdTarget(cur.x,p), d=cur.test&&!sdPos?distM([p.lat,p.lng],c):geoD(p,cur.x), br=sdBear([p.lat,p.lng],c);
+      if(a){ a.style.visibility=d<=0?"hidden":""; a.style.transform=`rotate(${Math.round(br-up)}deg)`; }
+      if(dE&&!dE.dataset.keep) dE.textContent=d<=0?"この場所です":fmt(d); if(hE) hE.textContent=d<=0?"":how; });
   }
   // コンパス：iPhoneは、帯を最初に押したときに許可を聞く（専用のボタンは作らない）。許可されたら次からは聞かない
   function cmpStart(){
@@ -6397,7 +6407,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     D.requestPermission().then(r=>{ try{ localStorage.setItem("tenko.cmpPerm",r); }catch(e){} if(r==="granted") cmpStart(); sdUpdate(); }).catch(()=>{});
   }
   try{ if(localStorage.getItem("tenko.cmpPerm")==="granted"&&!(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function")) cmpStart(); }catch(e){}
-  $("standBanner").addEventListener("click",e=>{ if(e.target.closest("#standBannerClose")) return; cmpAsk(); });
+  ["standBanner","yuryoBanner","restBanner","patrolBanner"].forEach(id=>$(id).addEventListener("click",e=>{ if(e.target.closest("#"+id+"Close")||e.target.closest("[data-pthw]")) return; cmpAsk(); }));
   // ===== 取締りの通知を止める・数える（2026-10-27 ユーザー指定） =====
   // ①速さ：時速○km以上が○秒続いたら止める（首都高などで、下の一般道の取締りで鳴らないように）。○km未満が1分続いたら戻す
   // ②手動：「高速利用中」ボタン（渋滞で遅いときも確実に止める）。○分たつと自動で戻る（戻し忘れ防止）
@@ -6413,7 +6423,24 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     if(v>=ptSet("patrolSpd")){ spLo=0; if(!spHi) spHi=p.t; if(!spMute&&p.t-spHi>=ptSet("patrolSpdSec")*1000){ spMute=true; ptHide(); ptHwRender(); } }
     else { spHi=0; if(spMute){ if(!spLo) spLo=p.t; if(p.t-spLo>=60e3){ spMute=false; spLo=0; ptHwRender(); } } }
   }
-  function ptHide(){ const S=GS.patrol; $("patrolBanner").hidden=true; S.cur=null; S.curD=null; S.cd={}; S.prev={}; }
+  function ptHide(){ const S=GS.patrol; $("patrolBanner").hidden=true; S.cur=null; S.curD=null; S.cd={}; S.prev={}; $("speedBanner").hidden=true; S.ln={}; S.lnCur=null; }
+  // ===== 速度取締りの線：小さい帯で「速度取締り ○○（○丁目付近）」。音は最初に近づいたときの1回だけ（2026-11-01 ユーザー指定） =====
+  // 線の上を走っている間は帯を出したまま。線から（通知を始める距離＋離れたら消す距離）より離れたら消し、同じ線は10分間は鳴らさない
+  const ptIsLine=x=>(x[4]||"P")!=="P"&&x[4]!=="A"&&x[2].length>1;
+  const ptLineArea=x=>{ const m=/実施場所[:：]\s*(?:東京都)?([^<\s]+?)(?:付近|$)/.exec(String(x[3]||"")); return m?m[1]:""; };
+  function ptLineShow(x,d,test){
+    const a=ptLineArea(x), dd=d<=30?"":`まで約${Math.max(10,Math.round(d/10)*10)}m`;
+    $("speedBannerText").textContent=`⚠ 速度取締り：${String(x[0]||"").trim()}${a?`（${a}付近）`:""}${dd}${test?"　※テスト表示":""}`;
+    $("speedBanner").hidden=false;
+  }
+  $("speedBannerClose").addEventListener("click",()=>{ const S=GS.patrol; $("speedBanner").hidden=true; if(S.lnCur!=null) S.lnDis=S.lnCur; });
+  function ptLineCheck(S,x,i,p,now,start,leave){
+    S.ln=S.ln||{}; const d=geoD(p,x), st=S.ln[i];
+    if(st){ if(d>start+leave){ delete S.ln[i]; S.last[i]=now; if(S.lnCur===i){ $("speedBanner").hidden=true; S.lnCur=null; } if(S.lnDis===i) S.lnDis=null; return; }
+      if(S.lnDis!==i&&(S.lnCur===i||S.lnCur==null)){ S.lnCur=i; ptLineShow(x,d); } return; }
+    const prev=S.prev[i]; S.prev[i]=d;
+    if(d<=start&&prev!=null&&d<prev-2&&!(S.last[i]&&now-S.last[i]<10*60e3)){ S.ln[i]={at:now}; geoChime("pipo"); S.lnCur=i; ptLineShow(x,d); }
+  }
   function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) ptHide(); ptHwRender(); }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
     b.textContent=man?"🛣 高速利用中を終える（取締りの通知を戻す）":"🛣 高速利用中（取締りの通知を止める）"; b.classList.toggle("primary",man);
@@ -6430,13 +6457,15 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // ④離れたら消す：一番近づいた距離から○m離れたら（通過・右左折）消す。同じ場所は10分間は鳴らさない
   function ptCheck(p,now,dLat,dLng){
     const S=GS.patrol; S.cd=S.cd||{};
-    if(ptMuted()){ if(S.cur!=null||Object.keys(S.cd).length) ptHide(); return; }
+    if(ptMuted()){ if(S.cur!=null||Object.keys(S.cd).length||S.lnCur!=null) ptHide(); return; }
     const start=+$("patrolStart").value||300, leave=ptSet("patrolLeave"), marks=[300,200,100].filter(m=>m<=start);
     let show=null, fired=false;
     S.pts.forEach((x,i)=>{
       const bb=geoBB(x);
       if(p.lat<bb[0]-dLat||p.lat>bb[1]+dLat||p.lng<bb[2]-dLng||p.lng>bb[3]+dLng){ delete S.prev[i];
-        if(S.cd[i]){ if(S.cd[i].act) S.last[i]=now; delete S.cd[i]; if(S.cur===i) ptHide(); } return; }
+        if(S.ln&&S.ln[i]){ delete S.ln[i]; S.last[i]=now; if(S.lnCur===i){ $("speedBanner").hidden=true; S.lnCur=null; } }
+        if(S.cd[i]){ if(S.cd[i].act) S.last[i]=now; delete S.cd[i]; if(S.cur===i){ $("patrolBanner").hidden=true; S.cur=null; S.curD=null; } } return; }
+      if(ptIsLine(x)){ ptLineCheck(S,x,i,p,now,start,leave); return; }   // 速度取締りの線は小さい帯で別に扱う
       const d=geoD(p,x), prev=S.prev[i]; S.prev[i]=d;
       const st=S.cd[i]||(S.cd[i]={done:0,min:Infinity,act:false});   // done＝最後に知らせた距離（0＝まだ）
       if(st.act){ st.min=Math.min(st.min,d);
