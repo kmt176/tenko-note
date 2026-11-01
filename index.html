@@ -235,6 +235,8 @@ a.flink:active{background:var(--sunk)}
 .ridebtn .check{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;width:50px;text-align:center;padding-top:2px}
 .ridebtn .check input{width:22px;height:22px;margin:0}
 .ridebtn .check .vtext{writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px}
+/* 売上画面の「連続配車 開始」は「乗車」ボタンと同じ横幅に（右の「押し忘れ」の幅50px＋すき間8pxをあける。2026-11-01 ユーザー指定） */
+.ridebtns>.rzbtn{margin-right:58px}
 .bigbtn{border:0;border-radius:14px;padding:18px 16px;font-size:26px;font-weight:700;background:var(--accent);color:var(--accent-ink);display:grid;gap:2px;text-align:center}
 .bigbtn small{font-size:15px;font-weight:400;opacity:.9}
 .bigbtn.off{background:var(--ok);color:#fff}
@@ -468,6 +470,16 @@ body.rtfull{overflow:hidden}
 #patrolBannerText .pbtest{font-style:normal;font-size:16px;margin-left:10px;padding:1px 8px;border:2px solid #5A4300;border-radius:999px}
 #patrolBannerClose{font-size:44px!important;padding:0 6px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
+/* 日交乗り場の帯は、元の帯と取締りの帯のちょうど中間の大きさ（2026-11-01 ユーザー指定）。文字 17px と 44px→30px、17px と 68px→42px、17px と 22px→20px、余白 12/14px と 14/12/16px→13/13/14px、× 24px と 44px→34px */
+#standBanner{align-items:flex-start;padding:13px 13px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 13px)}
+#standBannerText{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+#standBannerText .sb1{font-size:30px;font-weight:900;line-height:1.12}
+#standBannerText .sb2{font-size:42px;font-weight:900;line-height:1.1;word-break:break-all}
+#standBannerText .sb3{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:900;line-height:1.1}
+#standBannerText .sb3 small{font-size:20px;font-weight:800}
+#standBannerText .sbarrow{width:58px;height:58px;flex:none;transition:transform .35s}
+#standBannerText .pbtest{font-style:normal;font-size:15px;margin-left:8px;padding:1px 8px;border:2px solid currentColor;border-radius:999px}
+#standBannerClose{font-size:34px!important;padding:0 5px!important}
 #trainBanner{align-items:flex-start;padding:14px 12px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
 #trainBannerText{display:flex!important;flex-direction:column;gap:6px;min-width:0}
 #trainBannerText .tb1{font-size:40px;font-weight:900;line-height:1.1}
@@ -838,7 +850,7 @@ body.rtfull{overflow:hidden}
         <div class="evmapbtns"><button class="btn" id="wcFullBtn">全画面</button></div></div>
       <div class="legend" style="margin-top:8px"><span><b style="background:#1E8E3E;border-radius:50%"></b>24時間使えるトイレ</span><span><b style="background:#2F6FD6;border-radius:50%"></b>そのほかのトイレ（時間が分からないものも）</span><span><b style="background:#E07A00"></b>P 今使えるパーキング</span><span><b style="background:#9AA0A6"></b>P 時間外・使えない日</span><span><b style="background:#8E44AD;border-radius:50%"></b>コンビニ</span><span><b style="background:#C0392B;border-radius:50%"></b>飲食店</span></div>
       <div id="wcPkList"></div>
-      <div class="src"><b>トイレ</b>：地図を広く見ているときは、近くのトイレをまとめて数字で出します。拡大すると1つずつ出ます。トイレの印の右上の<b style="color:#E07A00">P</b>は、50m以内に駐車場か、今使えるパーキングメーターがあるという印です。印をタップすると、名前・住所・利用時間・車椅子・近くの駐車場までの距離が出ます。分からない項目は「情報なし」と出します（推測では埋めていません）。<b>公園のトイレは夜に閉まることがあります。</b>利用時間が「情報なし」のときは、現地で確かめてください。駐車場は、近くにあっても止められるとは限りません（月極・満車・時間外など）。距離はまっすぐ測ったものです。<span id="wcDate"></span><br><br><b>パーキングメーター</b>：パーキング・メーター／チケット（時間制限駐車区間）のPの印です。拡大すると区間の線も出ます。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br><br><b>駐車場のあるお店</b>：地図に見えている範囲のお店を、その場でオープンストリートマップから読み込みます（地図をある程度拡大したときだけ）。お店の情報に「駐車場あり」と書いてあればそれを使い、書いていなければ、お店から決めた距離（初めは50m）の中に駐車場があるお店を出します。「お店専用の駐車場があるお店だけ」に入れると、お客さん用の駐車場か、名前にお店の名前が入っている駐車場がある場合だけにします（専用の駐車場でも、そう登録されていなければ出ません）。休憩場の地図の喫煙所・長時間駐車可にあるコンビニは、駐車場があるお店として、いつも出します（金色のふちと「休」の札）。<br><br><b>みんなの確認</b>：お店の印を押すと、「駐車場」「喫煙所」の<b>あり／なし</b>を選んで、「登録する」でまとめて登録できます。付けた確認は全員の地図に出ます（社員コードが必要です。間違えたら「取り消し」か付け直してください）。駐車場ありと確認したお店は緑のふち、駐車場なしと確認したお店は地図から消えます（「出すお店」を「すべて」にすると灰色で出ます）。喫煙所ありは「煙」の札が付きます。駐車場が分からないお店は、「出すお店」を「すべて」にすると白い丸で出るので、押して確認を付けてください。「店名で絞る」に店名の一部を入れると、そのお店だけ出せます。<b>オープンストリートマップに登録されていないお店は出ません。</b>牛丼・ラーメン・ファミレスは店名やお店の種類の情報から見分けているので、名前で分からないお店は出ないことがあります。オープンストリートマップには駐車場が登録されていないお店も多いので、止められるのに出てこないお店や、近くの別の駐車場で「あり」になるお店もあります。止められるかは現地で確かめてください。<br><br>出典：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>（ODbL）、警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成。町名は国土地理院の逆ジオコーダで、通り名はマイマップ「東京通り名マップ」の大きな通り沿いの区間だけに付けています</div>
+      <div class="src"><b>トイレ</b>：地図を広く見ているときは、近くのトイレをまとめて数字で出します。拡大すると1つずつ出ます。トイレの印の右上の<b style="color:#E07A00">P</b>は、50m以内に駐車場か、今使えるパーキングメーターがあるという印です。印をタップすると、名前・住所・利用時間・車椅子・近くの駐車場までの距離が出ます。分からない項目は「情報なし」と出します（推測では埋めていません）。<b>公園のトイレは夜に閉まることがあります。</b>利用時間が「情報なし」のときは、現地で確かめてください。駐車場は、近くにあっても止められるとは限りません（月極・満車・時間外など）。距離はまっすぐ測ったものです。<span id="wcDate"></span><br><br><b>パーキングメーター</b>：パーキング・メーター／チケット（時間制限駐車区間）のPの印です。拡大すると区間の線も出ます。印をタップすると、時間帯・制限時間・料金が出ます。<b>制限時間を過ぎると駐車違反</b>です（延長・お金を足して続けて停めるのはできません）。時間外や「使えない日」は駐車禁止のことが多いので停めないでください。白線の枠に1台ずつ（2枠使わない）、貨物車用の枠には停めないでください。現地の標識と機械の表示がいちばん正しい情報です。<span id="pkDate"></span><br><br><b>駐車場のあるお店</b>：前もってオープンストリートマップから取り込んだお店（東京23区・武蔵野市・三鷹市。月1回くらい取り込み直します）のうち、地図に見えている範囲のお店を出します（地図をある程度拡大したときだけ）。お店の情報に「駐車場あり」と書いてあればそれを使い、書いていなければ、お店から決めた距離（初めは50m）の中に駐車場があるお店を出します。「お店専用の駐車場があるお店だけ」に入れると、お客さん用の駐車場か、名前にお店の名前が入っている駐車場がある場合だけにします（専用の駐車場でも、そう登録されていなければ出ません）。休憩場の地図の喫煙所・長時間駐車可にあるコンビニは、駐車場があるお店として、いつも出します（金色のふちと「休」の札）。<br><br><b>みんなの確認</b>：お店の印を押すと、「駐車場」「喫煙所」の<b>あり／なし</b>を選んで、「登録する」でまとめて登録できます。付けた確認は全員の地図に出ます（社員コードが必要です。間違えたら「取り消し」か付け直してください）。駐車場ありと確認したお店は緑のふち、駐車場なしと確認したお店は地図から消えます（「出すお店」を「すべて」にすると灰色で出ます）。喫煙所ありは「煙」の札が付きます。駐車場が分からないお店は、「出すお店」を「すべて」にすると白い丸で出るので、押して確認を付けてください。「店名で絞る」に店名の一部を入れると、そのお店だけ出せます。<b>オープンストリートマップに登録されていないお店は出ません。</b>牛丼・ラーメン・ファミレスは店名やお店の種類の情報から見分けているので、名前で分からないお店は出ないことがあります。オープンストリートマップには駐車場が登録されていないお店も多いので、止められるのに出てこないお店や、近くの別の駐車場で「あり」になるお店もあります。止められるかは現地で確かめてください。<br><br>出典：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>（ODbL）、警視庁「<a href="https://parking-meter.jp/" target="_blank" rel="noopener">時間制限駐車区間案内地図</a>」オープンデータ（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）を加工して作成。町名は国土地理院の逆ジオコーダで、通り名はマイマップ「東京通り名マップ」の大きな通り沿いの区間だけに付けています</div>
     </section>
   </div>
 
@@ -1099,8 +1111,8 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subTaxi" hidden>
     <section class="card">
-      <h2>森ビル乗り場（日交の専用乗り場）の不足お知らせ</h2>
-      <div class="src">現地に行かなくても、今の空車状況を確認できます。不足中の場所があれば、上の帯を試しに表示します。</div>
+      <h2>森ビル乗り場（日交の専用乗り場）の空車0台お知らせ</h2>
+      <div class="src">現地に行かなくても、今の空車状況を確認できます。近く（1km以内）にいるとき、1分おきに確かめて、空車が0台で待っている人が1人以上いるときに上の帯で知らせます（同じ乗り場は30分あけます）。</div>
       <div class="btnrow"><button class="btn" id="taxiTestBtn">今の状況を確認・テスト表示</button></div>
       <div class="msg" id="taxiTestMsg" role="status"></div>
       <div class="src"><a href="https://taxi-dashboard.nihon-kotsu.co.jp/?key=gauctw9p44w2" target="_blank" rel="noopener">本家のダッシュボードを見る（10月分）</a></div>
@@ -1325,7 +1337,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-10-31 11:41</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-01 16:17</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1428,7 +1440,7 @@ body.rtfull{overflow:hidden}
     <p>「メニュー」の上のボタンで切り替えます。どちらも合言葉なしで使えます。</p>
     <dl class="explain">
       <dt>休憩場</dt><dd>みんなで書き込む休憩場所の地図です。「一番近い休憩場へ行く」でGoogleマップの道案内が開きます。「現在地」を押すと、地図が今いる場所に移り、赤い丸で示します。追加するときは社員コードを入れてください（誰が書いたかは管理者だけが見られます）。自分が追加したものだけ消せます。</dd><dt>マップ</dt><dd>公衆トイレとパーキングメーターの地図です。トイレは緑＝24時間、青＝そのほか、右上のP＝50m以内に駐車場か今使えるパーキングメーターがあるもの。パーキングメーターはオレンジのP＝今使える、灰色＝時間外・使えない日（「今使えるパーキングだけ」で灰色を消せます）。「一番近いトイレへ行く」で、押した場所から一番近いトイレをGoogleマップの道案内で開きます。「近いパーキング5件」で近い順に見られます。「駐車場のあるお店」に入れると、コンビニ・牛丼・ラーメン・ファミレス・ファストフードのうち、駐車場があるお店も出します（地図を拡大したとき、見えている範囲をその場で読み込みます）。お店の印を押すと、駐車場・喫煙所の「あり／なし」を選んで「登録する」で登録でき、全員の地図に出ます。「出すお店」を「すべて」にすると、まだ分からないお店も出ます。</dd>
-      <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（1km以内）にいるときに台数が足りないと、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
+      <dt>専用乗り場</dt><dd>森ビル（六本木ヒルズ・虎ノ門ヒルズ・麻布台ヒルズ）の専用乗り場の空車状況です。近く（1km以内）にいるときに1分おきに確かめて、空車が0台で待っている人が1人以上いると、画面の上に帯で知らせます。「時間帯ごとの傾向（グラフ）を見る」で、時間帯ごとの台数・不足しやすさ・待ち人数を見られます。位置はスマホの中で距離を測るだけで、どこにも送りません。</dd>
     </dl>
   </section>
 
@@ -2982,7 +2994,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // お店専用の駐車場か：お客さん用（access=customers）か、駐車場の名前・運営者にお店の名前（ブランド）が入っている
   const shopOwnPk=(x,p)=>{ if(p.cust) return true; const b=shopNorm(x.t.brand||(x.t.name||"").split(/[\s　]/)[0]); return b.length>=2&&p.nm.includes(b); };
   // 一番近い駐車場（d）と、一番近いお店専用の駐車場（dOwn）
-  const shopNear=x=>{ let d=Infinity, dOwn=Infinity; for(const k in shopPks){ const p=shopPks[k]; if(Math.abs(p.c[0]-x.lat)>.003||Math.abs(p.c[1]-x.lng)>.004) continue; const v=distM([x.lat,x.lng],p.c); if(v<d) d=v; if(v<dOwn&&shopOwnPk(x,p)) dOwn=v; } return {d,dOwn}; };
+  const shopNear=x=>{ if(x.pd!==undefined) return {d:x.pd,dOwn:x.po};   // shops.json で前もって測った距離
+    let d=Infinity, dOwn=Infinity; for(const k in shopPks){ const p=shopPks[k]; if(Math.abs(p.c[0]-x.lat)>.003||Math.abs(p.c[1]-x.lng)>.004) continue; const v=distM([x.lat,x.lng],p.c); if(v<d) d=v; if(v<dOwn&&shopOwnPk(x,p)) dOwn=v; } return {d,dOwn}; };
   function shopJudge(x){ const tg=shopPkTag(x.t), {d,dOwn}=shopNear(x), M=wcOpt.shopM||50;
     const ck=cvsChk[x.id];   // みんなの確認（いちばん新しい確認を使う。コンビニも飲食店も）
     if(ck&&ck.pk==="なし") return {ok:false,src:"chkno",d,dOwn}; if(ck&&ck.pk==="あり") return {ok:true,src:"chk",d,dOwn};
@@ -3026,15 +3039,25 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(!wcMapObj||!wcOpt.shop) return;
     shopLayer=L.layerGroup();
     shopMarks={};
-    shopShown().forEach(({x,j})=>{ const ck=cvsChk[x.id]||{};
+    const vb=shopData?wcMapObj.getBounds().pad(.3):null, wide=shopData&&!shopQ&&wcMapObj.getZoom()<SHOP_Z;
+    shopShown().filter(({x})=>!vb||(vb.contains([x.lat,x.lng])&&(!wide||x.rest||cvsChk[x.id]))).forEach(({x,j})=>{ const ck=cvsChk[x.id]||{};
       shopMarks[x.id]=L.marker([x.lat,x.lng],{icon:shopIc(x.kind,{rest:x.rest,pk:ck.pk,sm:ck.sm==="あり",unk:!j.ok&&j.src!=="chkno"}),zIndexOffset:x.rest||ck.pk?400:300}).bindPopup(()=>shopPop(x,shopJudge(x)),Object.assign({maxHeight:300},WC_POP)).addTo(shopLayer); });   // 長いときは吹き出しの中をスクロール（地図の下で切れないように）
     shopLayer.addTo(wcMapObj);
     if(openId&&shopMarks[openId]) shopMarks[openId].openPopup();
   }
+  // 前もって保存したお店のデータ（shops.json。src/shop_fetch.py で月1回作る）。その場でオープンストリートマップに聞くと、混んでいて時間切れになり1軒も出なかったため（2026-11-01）
+  let shopData=null;
+  async function shopStatic(){
+    if(shopData) return true;
+    try{ const r=await fetch("shops.json",{cache:"no-cache"}); if(!r.ok) return false; const j=await r.json(); if(!j||!j.items) return false; shopData=j; }catch(e){ return false; }
+    shopData.items.forEach(([la,ln,id,k,nm,br,pt,d,dOwn])=>{ const t={}; if(nm) t.name=nm; if(br) t.brand=br; if(pt!=="") t.parking=pt?"yes":"no";
+      shopEls[id]=Object.assign(shopEls[id]||{},{id,lat:la,lng:ln,t,kind:k,pd:d===""?Infinity:d,po:dOwn===""?Infinity:dOwn}); });
+    return true;
+  }
   async function shopFetch(q){
     for(let k=0;k<2;k++){   // 混んでいるときは、少し待ってもう一回
       if(k) await new Promise(r=>setTimeout(r,4000));
-      for(const u of SHOP_OVP){ const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),35000);
+      for(const u of SHOP_OVP){ const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),60000);   // 混んでいると40秒以上かかる
         try{ const r=await fetch(u,{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"},signal:ac.signal}); if(r.ok) return (await r.json()).elements||[]; }catch(e){}
         finally{ clearTimeout(tm); } } }
     throw new Error("Overpass");
@@ -3042,6 +3065,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function loadShops(auto){
     const m=$("wcShopMsg");
     if(!wcMapObj||!wcOpt.shop||shopBusy) return;
+    if(!shopData){ shopBusy=true; m.textContent="お店のデータを読み込んでいます…"; const ok=await shopStatic(); shopBusy=false; if(ok) cvsChkAt=0, cvsLoad(); }
+    if(shopData){   // 保存したデータから、見えている範囲のお店を出す
+      drawShops();
+      if(wcMapObj.getZoom()<SHOP_Z&&!shopQ){ m.textContent="地図をもう少し拡大すると、見えている範囲のお店を出します（「地図に見えている範囲を検索」を押すと、自動で拡大します）"; return; }
+      const bb=wcMapObj.getBounds(), inV=Object.values(shopEls).filter(x=>bb.contains([x.lat,x.lng])), ok=inV.filter(x=>shopJudge(x).ok);
+      m.textContent=`見えている範囲のお店${inV.length}件（コンビニ${inV.filter(x=>x.kind==="cvs").length}件）のうち、駐車場ありと決めたお店は${ok.length}件です（種類をオフにしたものも数えています。${shopData.made.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1年$2月$3日")}のデータ）`;
+      return;
+    }
     if(wcMapObj.getZoom()<SHOP_Z){ m.textContent="地図をもう少し拡大すると、見えている範囲のお店を読み込みます（「地図に見えている範囲を検索」を押すと、自動で拡大します）"; return; }
     const bb=wcMapObj.getBounds();
     if(auto&&shopBoxes.some(x=>x.contains(bb))){ return; }   // もう読んだ範囲
@@ -6168,7 +6199,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   setInterval(renderRzFloat,60000);
   renderRzFloat();
 
-  // ===== 専用乗り場（森ビル）の空車不足お知らせ。1km圏内に入ったら確認し、不足中なら帯で知らせる（2026-10-23に5kmから1kmへ。ユーザー指定） =====
+  // ===== 専用乗り場（森ビル）の空車0台お知らせ。1km圏内に入ったら1分おきに確認し、空車が0台なら帯で知らせる（2026-10-23に5kmから1kmへ。2026-11-01に「目安より少ない」→「0台」、3分おき→1分おきへ。ユーザー指定） =====
   const TAXI_SPOTS=[
     {id:"roppongi_mori",name:"六本木ヒルズ森タワー1F",lat:35.66026,lng:139.72909},
     {id:"toranomon_st",name:"虎ノ門ヒルズステーションタワー1F",lat:35.66733,lng:139.74731},
@@ -6177,6 +6208,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("taxiBannerClose").onclick=()=>{ $("taxiBanner").hidden=true; };
   async function taxiCheck(){
     if(!PROD||!cfg.url||offCfg.taxi) return;
+    // 3分以内に取れた位置が、どの乗り場からも3km以上離れていれば、位置を調べ直さずに休む（1分おきでも電池を減らしすぎないため）
+    if(lastPos&&Date.now()-lastPos.t<3*60e3&&TAXI_SPOTS.every(s=>distM([lastPos.lat,lastPos.lng],[s.lat,s.lng])>3000)) return;
     const near=TAXI_SPOTS.filter(s=>pos&&distM([pos.lat,pos.lng],[s.lat,s.lng])<=1000);
     let list=near;
     if(!list.length){
@@ -6187,16 +6220,16 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     let j; try{ j=await post({action:"taxiStatus"}); }catch(e){ return; }
     if(!j||!j.ok) return;
     for(const s of list){
-      const x=j.items.find(y=>y.id===s.id); if(!x||!x.ok||!x.red) continue;
+      const x=j.items.find(y=>y.id===s.id); if(!x||x.count!==0||!(x.person>=1)) continue;   // 空車が0台で、待っている人が1人以上のときだけ（2026-11-01 ユーザー指定）
       const key="tenko.taxiSeen."+s.id; let last=0; try{ last=+localStorage.getItem(key)||0; }catch(e){}
       if(Date.now()-last<30*60*1000) continue;   // 同じ場所は30分あけてから
       try{ localStorage.setItem(key,String(Date.now())); }catch(e){}
-      $("taxiBannerText").textContent=`${x.name}が不足中です（待機 ${x.count}台／目安 ${x.threshold}台）`;
+      $("taxiBannerText").textContent=`${x.name}の空車が0台です${x.person?`（待っている人 ${x.person}人）`:""}`;
       $("taxiBanner").hidden=false;
       break;   // 一度に1件だけ
     }
   }
-  if(PROD){ setTimeout(taxiCheck,8000); setInterval(taxiCheck,3*60*1000); }
+  if(PROD){ setTimeout(taxiCheck,8000); setInterval(taxiCheck,60*1000); }
 
   // ===== 電車が止まったときのお知らせ（薄いピンクの帯）。運転見合わせ・運休などの路線があれば出す（遅れだけでは出さない） =====
   let trainBanLine="";
@@ -6318,9 +6351,48 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span>${ks.length?`<span class="pb4" style="font-size:${fk}px">${ks.map(z=>`<span>${esc(z)}</span>`).join("")}</span>`:""}${nm?`<span class="pb2" style="font-size:${fs}px">${nameHtml}</span>`:""}<span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button>`;
       $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; S.cur=null; },hold||20000); return;
     }
+    if(k==="stand"){ sdShow(x,d,test); clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; sdCur=null; },20000); return; }
     $(G.ban+"Text").textContent=G.msg(x,S.groups[x[1]]||"",dd)+(test?"　※テスト表示":"");
     $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000);
   }
+  // ===== 日交乗り場の帯：3段の大きな文字と、乗り場の方向の矢印・残りの距離（2026-11-01 ユーザー指定） =====
+  // 矢印の向き：走っているときはGPSの進行方向が上、止まっているときはスマホのコンパス（iPhoneは許可が要る）、どちらもないときは北が上
+  let sdCur=null, sdPos=null, cmpHd=null, cmpAt=0, cmpOn=false;
+  const sdBear=(a,b)=>{ const r=Math.PI/180, y=Math.sin((b[1]-a[1])*r)*Math.cos(b[0]*r), x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos((b[1]-a[1])*r); return (Math.atan2(y,x)/r+360)%360; };
+  function sdShow(x,d,test){
+    const S=GS.stand, nm=x[0].replace(/^\d+_/,""), avail=Math.max(200,window.innerWidth-100);
+    const fs=Math.max(26,Math.min(42,Math.floor(avail*2/Math.max(1,nm.length))));   // 名前は2行に収まる大きさ（42pxまで）
+    sdCur={x,d,test};
+    $("standBannerText").innerHTML=`<span class="sb1">🚕 ${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3"><svg class="sbarrow" id="sdArrow" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="28" fill="#fff" stroke="#1E5A36" stroke-width="3"/><path d="M30 7 L45 40 L30 32 L15 40 Z" fill="#1E5A36"/></svg><span><span id="sdDist"></span><br><small id="sdHow"></small></span></span>`;
+    $("standBanner").hidden=false; sdUpdate();
+  }
+  function sdUpdate(){
+    if(!sdCur||$("standBanner").hidden) return;
+    const c=sdCur.x[2][0], p=sdPos&&Date.now()-sdPos.t<60e3?sdPos:(lastPos&&Date.now()-lastPos.t<60e3?lastPos:null), a=$("sdArrow");
+    if(!p||!c){ $("sdDist").textContent=`あと約${Math.max(10,Math.round(sdCur.d/10)*10)}m`; $("sdHow").textContent="今の場所が分からないので方向は出せません"; if(a) a.style.visibility="hidden"; return; }
+    const d=sdCur.test&&!sdPos?distM([p.lat,p.lng],c):geoD(p,sdCur.x), br=sdBear([p.lat,p.lng],c);
+    let up=0, how="北が上";
+    if(p.hd!=null&&isFinite(p.hd)&&p.spd!=null&&p.spd>=1.5){ up=p.hd; how="進む向きが上"; }
+    else if(cmpHd!=null&&Date.now()-cmpAt<3000){ up=cmpHd; how="スマホの向きが上"; }
+    if(a){ a.style.visibility=""; a.style.transform=`rotate(${Math.round(br-up)}deg)`; }
+    $("sdDist").textContent=d>=1000?`あと約${(d/1000).toFixed(1)}km`:`あと約${d<=0?0:Math.max(10,Math.round(d/10)*10)}m`;
+    $("sdHow").textContent=how;
+  }
+  // コンパス：iPhoneは、帯を最初に押したときに許可を聞く（専用のボタンは作らない）。許可されたら次からは聞かない
+  function cmpStart(){
+    if(cmpOn) return; cmpOn=true;
+    const h=e=>{ let v=null; if(e.webkitCompassHeading!=null) v=e.webkitCompassHeading; else if(e.absolute&&e.alpha!=null) v=(360-e.alpha)%360;
+      if(v!=null){ const so=(screen.orientation&&screen.orientation.angle)||window.orientation||0; cmpHd=(v+so+360)%360; cmpAt=Date.now(); sdUpdate(); } };
+    window.addEventListener("deviceorientationabsolute",h,true); window.addEventListener("deviceorientation",h,true);
+  }
+  function cmpAsk(){
+    const D=window.DeviceOrientationEvent; if(!D) return;
+    if(typeof D.requestPermission!=="function"){ cmpStart(); return; }   // Androidなど：許可は要らない
+    if(cmpOn) return;
+    D.requestPermission().then(r=>{ try{ localStorage.setItem("tenko.cmpPerm",r); }catch(e){} if(r==="granted") cmpStart(); sdUpdate(); }).catch(()=>{});
+  }
+  try{ if(localStorage.getItem("tenko.cmpPerm")==="granted"&&!(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function")) cmpStart(); }catch(e){}
+  $("standBanner").addEventListener("click",e=>{ if(e.target.closest("#standBannerClose")) return; cmpAsk(); });
   // ===== 取締りの通知を止める・数える（2026-10-27 ユーザー指定） =====
   // ①速さ：時速○km以上が○秒続いたら止める（首都高などで、下の一般道の取締りで鳴らないように）。○km未満が1分続いたら戻す
   // ②手動：「高速利用中」ボタン（渋滞で遅いときも確実に止める）。○分たつと自動で戻る（戻し忘れ防止）
@@ -6376,6 +6448,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   function geoCheck(p){
     const now=Date.now(), dLat=0.004, dLng=0.005;   // 約400m四方だけ細かく測る
     if(!offCfg.patrol&&GS.patrol.pts) ptSpeedCheck(p);
+    sdPos={lat:p.lat,lng:p.lng,spd:p.spd,hd:p.hd,t:Date.now()}; sdUpdate();
     Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k]; if(!S.pts||offCfg[k]) return;
       if(k==="patrol"){ ptCheck(p,now,dLat,dLng); return; }
       const th=+$(G.dist).value||100;
@@ -6389,7 +6462,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   function geoWatch(){
     const on=Object.keys(GEO).some(k=>!offCfg[k]&&GS[k].pts&&GS[k].pts.length)&&navigator.geolocation&&document.visibilityState==="visible";
-    if(on&&geoWid==null){ geoWid=navigator.geolocation.watchPosition(pos=>{ lastPos={t:Date.now(),lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6),acc:Math.round(pos.coords.accuracy)}; geoCheck({lat:pos.coords.latitude,lng:pos.coords.longitude,spd:pos.coords.speed,t:pos.timestamp||Date.now()}); },()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:20000}); }
+    if(on&&geoWid==null){ geoWid=navigator.geolocation.watchPosition(pos=>{ lastPos={t:Date.now(),lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6),acc:Math.round(pos.coords.accuracy)}; geoCheck({lat:pos.coords.latitude,lng:pos.coords.longitude,spd:pos.coords.speed,hd:pos.coords.heading,t:pos.timestamp||Date.now()}); },()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:20000}); }
     else if(!on&&geoWid!=null){ navigator.geolocation.clearWatch(geoWid); geoWid=null; Object.values(GS).forEach(S=>{ S.prev={}; }); }
   }
   document.addEventListener("visibilitychange",geoWatch);
@@ -6474,9 +6547,9 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const m=$("taxiTestMsg"); m.textContent="確認しています…";
     let j; try{ j=await post({action:"taxiStatus"}); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return; }
     if(!j||!j.ok){ m.textContent=(j&&j.error)||"取得できませんでした"; return; }
-    const show=j.items.find(x=>x.ok&&x.red)||j.items.find(x=>x.ok);
-    if(show){ $("taxiBannerText").textContent=`${show.name}が不足中です（待機 ${show.count}台／目安 ${show.threshold}台）`; $("taxiBanner").hidden=false; }
-    m.innerHTML="今の状況：<br>"+j.items.map(x=>x.ok?`${esc(x.name)} ${x.red?"🔴不足":"🔵充足"}（${x.count}/${x.threshold}台）`:`${esc(x.name)} 取得できず`).join("<br>");
+    const show=j.items.find(x=>x.count===0&&x.person>=1)||j.items.find(x=>typeof x.count==="number");
+    if(show){ $("taxiBannerText").textContent=show.count===0&&show.person>=1?`${show.name}の空車が0台です${show.person?`（待っている人 ${show.person}人）`:""}`:`（試し）${show.name}の空車は${show.count}台です`; $("taxiBanner").hidden=false; }
+    m.innerHTML="今の状況：<br>"+j.items.map(x=>typeof x.count==="number"?`${esc(x.name)} ${x.count===0?"🔴空車0台":"🔵空車"+x.count+"台"}${x.person!=null?`（待っている人 ${x.person}人）`:""}`:`${esc(x.name)} 取得できず`).join("<br>");
   };
 
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
