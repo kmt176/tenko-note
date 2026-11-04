@@ -1311,6 +1311,15 @@ body.rtfull{overflow:hidden}
           <div class="btnrow"><button class="btn primary" id="aNoticeSend">お知らせを送る</button></div>
           <div class="msg" id="aNoticeMsg" role="status"></div>
           <div id="aNoticeList"></div>
+          <h3 style="margin-top:14px">営業分析の共有（試験）</h3>
+          <div class="src">自分の営業分析を、選んだ人に「見るだけ」で見せるURLを作ります。アプリを入れていない人も、URLと4けたの暗証番号で見られます。見せるのは月ごとの売上・曜日×時間帯の時給・順位・条件ごとの比較・長距離の件数と、乗車地の地図（実際に乗せた位置）だけです（お客さんの情報・降車地の住所・日ごとの明細・AIや「今どうする」・設定は出しません）。</div>
+          <div class="pair"><div class="field"><label for="aShareName">相手の名前（例：Aさん用）</label><input type="text" id="aShareName" maxlength="20" autocomplete="off"></div>
+            <div class="field"><label for="aShareDays">有効期限（日）</label><input type="number" id="aShareDays" inputmode="numeric" min="1" max="365" value="30"></div></div>
+          <div class="field"><label for="aSharePin">暗証番号（4けたの数字。開くときに相手が入れます）</label><input type="text" id="aSharePin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off"></div>
+          <div class="btnrow"><button class="btn primary" id="aShareNew">共有URLを発行</button><button class="btn" id="aSharePut">中身を今のデータで新しくする</button><button class="btn" id="aShareReload">読み直す</button></div>
+          <div class="msg" id="aShareMsg" role="status"></div>
+          <div class="src" id="aShareData"></div>
+          <div id="aShareList"></div>
           <h3 style="margin-top:14px">車種ごとの設定</h3>
           <div class="src">全員のアプリに反映されます（開いたときに読み込みます）。乗務員が自分で変えた値（給与の率・余裕時間など）は、その人の値が優先されます。</div>
           <div style="overflow-x:auto"><table class="cartbl" id="aCars"></table></div>
@@ -1380,7 +1389,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-04 14:55</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-04 19:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2339,6 +2348,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(!j.ok){ cfg.admin=false; saveCfg(); applyRole(); $("adminBox").hidden=true; m.textContent=j.error||"管理者の合言葉が違います"; return; }
       cfg.admin=true; saveCfg(); applyRole(); drawAdmin(j); m.textContent="管理の画面を開きました。売上の「仲間の速報」で全グループが見られます";
       loadShiftAdmin(); if(!shiftPollTimer) shiftPollTimer=setInterval(loadShiftAdmin,15*60*1000);
+      shareCall({op:"shareList"},"");
     }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; }
   }
   $("aPass").value=cfg.apass||"";
@@ -5008,7 +5018,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       longs.sort((a,b)=>a.k!==b.k?(a.k<b.k?1:-1):b.r.on-a.r.on);
       html+=card("長距離（1万円以上）が出た条件",longs.length?`<div style="overflow-x:auto"><table class="cmpt"><tbody>${longs.slice(0,30).map(({k,r})=>`<tr><td class="num">${md(k)}（${dow(k)}）</td><td class="num">${tm(r.on)}</td><td>${esc(r.kind)}</td><td class="num">${yen(r.amt)}円</td><td>${esc(r.onAddr||r.nOnAddr||"")}${r.offAddr||r.nOffAddr?" → "+esc(r.offAddr||r.nOffAddr):""}</td></tr>`).join("")}</tbody></table></div>${longs.length>30?`<div class="src">他${longs.length-30}件（新しい順の上位だけ表示しています）</div>`:""}`:`<div class="geo">この期間に1万円以上の乗車はまだありません</div>`,"1万円以上になった乗車の一覧（新しい順）。時間帯・場所・内容（配車／手上げ／乗り場など）から、出やすい条件を見つけてください。"); }
     B.innerHTML=html;
-    if(anOn) anAfter(anData);
+    if(anOn){ anAfter(anData); shareAuto(); }
     // 日ごとの内訳プルダウン：選んだ日の時間あたり・回送・休憩を出す（最新の日を初期表示）
     function renderADay(k){
       const el=$("aDayDetail"); if(!el||!k) return;
@@ -5229,6 +5239,98 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       rs.forEach(r=>L.circleMarker(r.p,{radius:6,color:"#1f5fa8",weight:1,fillColor:"#2F6FD6",fillOpacity:.6}).addTo(cellLayer).bindPopup(`${md(r.k)} ${tm(r.on)}<br>${yen(r.fare)}円（${esc(r.kind)}）<br>${esc(r.town||"")}`));
       $("anCellMap").scrollIntoView({block:"nearest"}); });
   }
+
+  // ===== 営業分析の共有URL（管理者だけ・試験。2026-11-04 追加の指示書） =====
+  // 共有のページ（share.html）に見せる中身を、ここで集計だけにして作る。入れるのは月度・曜日・時間帯ごとの合計と回数、
+  // 乗車地（実際の位置。本人指定でぼかさない）。
+  // お客さんの情報・降車地の住所・日ごとの明細は入れない
+  async function shareSnap(){
+    const tax=salesCfg().tax, cur=shiftNow(), today=todayStr();
+    const live=k=>k===cur&&!(getDay(k).rides||[]).some(r=>r.kind==="入庫"&&r.on!=null);
+    const keys=Object.keys(sales.days).filter(k=>k<=today&&!live(k)).sort();
+    await anWxLoad(keys).catch(()=>{});
+    const S=keys.map(anShift).filter(s=>s&&!s.live), minS=anC("minShift"), minH=anC("minHours")*60, LA=anC("longAmt");
+    const R=x=>Math.round(x);
+    // 月度（給与の締め）ごとの売上：総売上・乗務回数・時給・乗車回数（売上だけ入れた日も、総売上と乗務回数には入れる）
+    const pm={}; keys.forEach(k=>{ const x=shiftSales(k); if(!x.has) return; const i=periodOf(k); if(i<0) return; const P=PERIODS[i], id=P.y+"-"+String(P.m).padStart(2,"0");
+      const o=pm[id]=pm[id]||{p:id,y:P.y,m:P.m,s:P.start,e:P.end,n:0,sum:0,wnet:0,work:0,rides:0,rsum:0};
+      const net=x.amt*tax; o.n++; o.sum+=net; const t=workOf(k); if(t){ o.wnet+=t.net; o.work+=t.work; } if(x.cnt>0){ o.rides+=x.cnt; o.rsum+=net; } });
+    const months=Object.values(pm).sort((a,b)=>a.p<b.p?-1:1).map(o=>({p:o.p,y:o.y,m:o.m,s:o.s,e:o.e,n:o.n,sum:R(o.sum),wnet:R(o.wnet),work:R(o.work),rides:o.rides,rsum:R(o.rsum),part:today>=o.s&&today<=o.e}));
+    // 曜日×時の営業した分と売上
+    const grid={}; Object.entries(anGrid(S)).forEach(([k,c])=>{ grid[k]=[R(c.m),R(c.f),c.n]; });
+    const dowA={}; S.forEach(s=>{ const o=dowA[s.w]=dowA[s.w]||[0,0,0]; o[0]++; o[1]+=s.sum; o[2]+=s.work; }); Object.values(dowA).forEach(o=>{ o[1]=R(o[1]); });
+    // 条件ごとの比較（アプリの「条件ごとの比較」と同じ分け方）
+    const wxKnown=s=>Object.keys(s.hrs).some(b=>anRainAt(s.k,+b)!=null), rainy=s=>Object.keys(s.hrs).filter(b=>anRainAt(s.k,+b)).length>=2;
+    const pay=s=>anAfterPay(s.k), ren=s=>anBeforeRenkyu(s.k), off=s=>anOffDay(s.k);
+    const cond=[["全部",()=>true],["雨の勤務（勤務中に雨が2時間以上）",s=>wxKnown(s)&&rainy(s)],["雨でない勤務",s=>wxKnown(s)&&!rainy(s)],[`給料日のあと（${anC("payDay")}日から${anC("payDays")}日間）`,pay],[`${anC("renkyu")}連休以上の前の日`,ren],["土日祝",s=>off(s)&&!ren(s)],["ふつうの平日（上のどれでもない日）",s=>!pay(s)&&!ren(s)&&!off(s)]]
+      .map(([t,f])=>{ const ss=S.filter(f); return [t,ss.length,R(ss.reduce((a,s)=>a+s.sum,0)),ss.reduce((a,s)=>a+s.work,0)]; });
+    const hr={雨:[0,0],雨なし:[0,0]}; S.forEach(s=>{ Object.entries(s.hrs).forEach(([b,m])=>{ const r=anRainAt(s.k,+b); if(r!=null) hr[r?"雨":"雨なし"][1]+=m; }); s.rides.forEach(x=>{ const r=anRainAt(s.k,x.b); if(r!=null) hr[r?"雨":"雨なし"][0]+=x.fare; }); });
+    // 月度ごとの時間帯の時給
+    const BANDS=[["昼（11〜17時）",11,17],["夕方〜夜（17〜22時）",17,22],["深夜（22〜2時）",22,26],["明け方（2〜11時）",26,35]], inB=(x,[,a,b])=>{ const t=x<11?x+24:x; return t>=a&&t<b; };
+    const pOf=s=>{ const i=periodOf(s.k); return i<0?"":PERIODS[i].y+"-"+String(PERIODS[i].m).padStart(2,"0"); };
+    const band=months.map(mo=>{ const ss=S.filter(s=>pOf(s)===mo.p); return {p:mo.p,n:ss.length,f:R(ss.reduce((a,s)=>a+s.sum,0)),m:ss.reduce((a,s)=>a+s.work,0),b:BANDS.map(B=>{ let f=0,m=0; ss.forEach(s=>{ Object.entries(s.hrs).forEach(([b,v])=>{ if(inB(+b%24,B)) m+=v; }); s.rides.forEach(r=>{ if(inB(r.b%24,B)) f+=r.fare; }); }); return [R(f),m]; })}; });
+    // 長距離（件数だけ。日付・金額・場所の一覧は入れない）
+    const lg=S.flatMap(s=>s.rides.filter(r=>r.amt>=LA).map(r=>({w:s.w,k:s.k,b:r.b,kind:r.kind,off:r.offTown})));
+    const totM=S.reduce((a,s)=>a+s.work,0), shu=x=>{ const t=x%24; return t>=1&&t<5; };
+    const byW=AN_W.filter(w=>S.some(s=>s.w===w)).map(w=>[w,lg.filter(r=>r.w===w).length,S.filter(s=>s.w===w).reduce((a,s)=>a+s.work,0)]);
+    const lb=[...Array(12)].map((_,i)=>{ let m=0; S.forEach(s=>Object.entries(s.hrs).forEach(([bb,v])=>{ if(Math.floor((+bb%24)/2)===i) m+=v; })); return [i,lg.filter(r=>Math.floor((r.b%24)/2)===i).length,m]; }).filter(x=>x[2]>0);
+    const cm={雨:[0,0],雨なし:[0,0],終電後:[0,0],それ以外:[0,0]};
+    S.forEach(s=>{ Object.entries(s.hrs).forEach(([bb,v])=>{ const r=anRainAt(s.k,+bb); if(r!=null) cm[r?"雨":"雨なし"][1]+=v; cm[shu(+bb)?"終電後":"それ以外"][1]+=v; }); });
+    lg.forEach(r=>{ const x=anRainAt(r.k,r.b); if(x!=null) cm[x?"雨":"雨なし"][0]++; cm[shu(r.b)?"終電後":"それ以外"][0]++; });
+    const kinds={}, allK={}; lg.forEach(r=>kinds[r.kind]=(kinds[r.kind]||0)+1); S.forEach(s=>s.rides.forEach(r=>allK[r.kind]=(allK[r.kind]||0)+1));
+    const nR=S.reduce((a,s)=>a+s.rides.length,0), homen={}; lg.forEach(r=>{ const h=anHomen(r.off); homen[h]=(homen[h]||0)+1; });
+    // 乗車地の地図：実際に乗せた位置をそのまま出す（2026-11-04 本人指定「ぼかさないでそのまま出す」）。日付は入れない
+    const LA2=LA, cl=[]; S.forEach(s=>s.rides.forEach(r=>{ if(!r.p) return; cl.push([Math.round(r.p[0]*1e5)/1e5,Math.round(r.p[1]*1e5)/1e5,R(r.fare),r.kind||"",r.town||"",r.amt>=LA2?1:0]); }));
+    return {v:1,at:new Date().toISOString(),minS,minH,longAmt:LA,rainMm:anC("rainMm"),from:S.length?S[0].k.slice(0,7):"",to:S.length?S[S.length-1].k.slice(0,7):"",nS:S.length,
+      months,grid,dow:dowA,cond,rainHr:[hr.雨,hr.雨なし].map(x=>[R(x[0]),x[1]]),bands:BANDS.map(x=>x[0]),band,
+      long:{n:lg.length,totM,byW,bands:lb,cm:Object.entries(cm),kinds:Object.entries(kinds).sort((a,b)=>b[1]-a[1]).map(([k,n])=>[k,n,nR?Math.round((allK[k]||0)/nR*100):0]),homen:Object.entries(homen).sort((a,b)=>b[1]-a[1])},
+      cells:cl};
+  }
+  var shareList=null;
+  const shareUrl=t=>new URL("share.html",location.href).href.replace(/[?#].*$/,"")+"#t="+t;
+  const shareDt=x=>{ const d=new Date(x); return isNaN(d)?"":`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  function shareDraw(j){
+    shareList=j; try{ localStorage.setItem("tenko.shareOn",(j.shares||[]).some(s=>!s.stopped&&s.expires>Date.now())?"1":""); }catch(e){}
+    $("aShareData").textContent=j.dataAt?`共有の中身は ${shareDt(j.dataAt)} のデータです（営業分析を開くと、1日に1回、自動で新しくします）`:"共有の中身はまだ送っていません（URLを発行すると一緒に送ります）";
+    const st=s=>s.stopped?`<b style="color:#D23C2F">止めています</b>`:s.expires<Date.now()?`<b style="color:#D23C2F">期限切れ</b>`:s.lockUntil>Date.now()?`<b style="color:#E8890C">暗証番号のまちがいでロック中</b>（${shareDt(s.lockUntil)}まで）`:`<b style="color:var(--ok,#3E9B4F)">見られます</b>`;
+    $("aShareList").innerHTML=(j.shares||[]).length?(j.shares||[]).map(s=>`<div class="ntrow"><div><b>${esc(s.name)}</b>　${st(s)}</div>
+      <small>発行 ${shareDt(s.created)}・期限 ${shareDt(s.expires)}まで・開いた回数 ${s.count}回${s.opens.length?`・最後に開いた ${shareDt(s.opens[0])}`:""}</small>
+      ${s.opens.length?`<details><summary style="font-size:13px">開かれた日時（新しい順）</summary><small>${s.opens.map(shareDt).join("<br>")}</small></details>`:""}
+      ${j.newId===s.id?`<div class="geo" style="margin-top:6px">発行しました。URLをコピーして相手に送ってください。<b>暗証番号は、URLとは別に</b>（電話や別のメッセージで）伝えてください。</div>`:""}
+      <div class="btnrow" style="margin:4px 0 0"><button class="btn" data-shcopy="${esc(s.token)}">URLをコピー</button><a class="btn" href="https://line.me/R/msg/text/?${encodeURIComponent(shareUrl(s.token))}" target="_blank" rel="noopener">LINEで送る</a>
+      <button class="btn" data-shop="${s.stopped?"shareResume":"shareStop"}" data-id="${esc(s.id)}">${s.stopped?"再開する":"止める"}</button><button class="btn" data-shop="shareDel" data-id="${esc(s.id)}">消す</button></div></div>`).join(""):`<div class="src">まだ共有URLはありません。</div>`;
+    $("aShareList").querySelectorAll("[data-shcopy]").forEach(b=>b.onclick=async()=>{ const u=shareUrl(b.dataset.shcopy); try{ await navigator.clipboard.writeText(u); $("aShareMsg").textContent="URLをコピーしました。LINEなどに貼り付けて送ってください"; }catch(e){ prompt("このURLをコピーしてください",u); } });
+    $("aShareList").querySelectorAll("[data-shop]").forEach(b=>b.onclick=async()=>{ const op=b.dataset.shop;
+      if(op==="shareDel"&&!confirm("この共有URLを消しますか？（相手はもう開けなくなります。元に戻せません）")) return;
+      if(op==="shareStop"&&!confirm("この共有URLを止めますか？（「再開する」でまた見られるようになります）")) return;
+      await shareCall({op,id:b.dataset.id},op==="shareDel"?"消しました":op==="shareStop"?"止めました。相手は開けなくなりました":"再開しました"); });
+  }
+  async function shareCall(body,okMsg){
+    const m=$("aShareMsg"); m.textContent="通信しています…";
+    try{ const j=await post(Object.assign({action:"admin",adminPass:cfg.apass},body)); if(!j.ok){ m.textContent=j.error||"できませんでした"; return null; } shareDraw(j); m.textContent=okMsg||""; return j; }
+    catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return null; }
+  }
+  async function sharePush(quiet){
+    const snap=await shareSnap(), data=JSON.stringify(snap);
+    if(quiet){ try{ const j=await post({action:"admin",adminPass:cfg.apass,op:"sharePut",data}); if(j&&j.ok){ try{ localStorage.setItem("tenko.shareAt",String(Date.now())); }catch(e){} } }catch(e){} return; }
+    const j=await shareCall({op:"sharePut",data},`共有の中身を今のデータ（${snap.nS}勤務）で新しくしました`);
+    if(j){ try{ localStorage.setItem("tenko.shareAt",String(Date.now())); }catch(e){} }
+    return j;
+  }
+  // 営業分析を開いたとき、見られる共有URLがあれば、1日に1回だけ中身を新しくする（画面には何も出さない）
+  function shareAuto(){
+    if(!isAdmin()||!cfg.url) return; let on="",at=0; try{ on=localStorage.getItem("tenko.shareOn")||""; at=+localStorage.getItem("tenko.shareAt")||0; }catch(e){}
+    if(on&&Date.now()-at>20*3600e3){ try{ localStorage.setItem("tenko.shareAt",String(Date.now())); }catch(e){} setTimeout(()=>sharePush(true),3000); }
+  }
+  $("aShareNew").onclick=async()=>{ const m=$("aShareMsg"), name=$("aShareName").value.trim(), pin=$("aSharePin").value.trim(), days=+$("aShareDays").value||30;
+    if(!name){ m.textContent="相手の名前（例：Aさん用）を入れてください"; return; }
+    if(!/^\d{4}$/.test(pin)){ m.textContent="暗証番号は4けたの数字にしてください"; return; }
+    if(!confirm(`「${name}」の共有URLを発行しますか？\n有効期限：${days}日\n暗証番号：${pin}（控えておいてください。あとから見られません）`)) return;
+    m.textContent="中身を作っています…"; if(!await sharePush(false)) return;
+    const j=await shareCall({op:"shareNew",name,pin,days},"発行しました。下の「URLをコピー」から相手に送ってください");
+    if(j){ $("aShareName").value=""; $("aSharePin").value=""; } };
+  $("aSharePut").onclick=()=>sharePush(false);
+  $("aShareReload").onclick=()=>shareCall({op:"shareList"},"読み直しました");
 
   // ===== 「今どうする」ボタン（管理者だけ・試験。2026-11-04 指示書の2段目） =====
   // 選択肢ごとに、過去の同じ条件（曜日・時間帯・雨）での見込み時給を本人の実績から計算し、移動の時間を引いて順位を付ける

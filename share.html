@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>営業分析（見るだけ）</title>
+<style>
+:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--grid:#E3E9E8;--acc:#1D6A80;--acc-bg:#E3F0F4;--acc-line:#A9CCD7;--acc-ink:#1D4F5E;--up:#2E7D45;--down:#C0392B;--warn:#9A5B00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--grid:#26312F;--acc:#4FA3BC;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--up:#6CC287;--down:#F08A7E;--warn:#F0B35A}}
+:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--grid:#26312F;--acc:#4FA3BC;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--up:#6CC287;--down:#F08A7E;--warn:#F0B35A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:720px;margin:0 auto;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 32px);display:grid;gap:14px}
+h1{font-size:19px;margin:6px 0 0}
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+h2{margin:0 0 6px;font-size:17px}
+h3{margin:12px 0 4px;font-size:15px}
+.src{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:6px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ng{color:var(--muted)}
+.btn{border:1px solid var(--acc-line);background:var(--acc-bg);color:var(--acc-ink);border-radius:10px;padding:12px 16px;font-size:17px;font-weight:800;width:100%}
+.btn:disabled{opacity:.5}
+#pin{font-size:28px;letter-spacing:.4em;text-align:center;width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);margin:8px 0}
+#msg{font-size:15px;line-height:1.5;margin-top:8px}
+#msg.warn{color:var(--down);font-weight:700}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;font-size:13px}
+table.t{width:100%}
+table.t th,table.t td{border-bottom:1px solid var(--grid);padding:6px 5px;text-align:left;vertical-align:top}
+table.t th{font-size:12px;color:var(--muted);font-weight:700}
+table.t td.r,table.t th.r{text-align:right}
+.d{display:block;font-size:11px;font-weight:700}
+.d.up{color:var(--up)} .d.down{color:var(--down)} .d.eq{color:var(--muted)}
+table.heat{font-size:11px}
+table.heat th{font-weight:700;color:var(--muted);padding:2px 3px}
+table.heat td{min-width:26px;height:24px;text-align:center;border:1px solid var(--surface);border-radius:3px;padding:0 2px}
+.bars{display:grid;gap:6px;margin-top:4px}
+.bar{display:grid;grid-template-columns:4.6em 1fr auto;gap:8px;align-items:center;font-size:13px}
+.bar .tr{height:16px;background:var(--grid);border-radius:4px;overflow:hidden}
+.bar .tr i{display:block;height:100%;background:var(--acc);border-radius:0 4px 4px 0}
+.bar .v{text-align:right;min-width:7.5em}
+#map{height:320px;border-radius:10px;border:1px solid var(--line)}
+.foot{font-size:12px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<main>
+  <h1>営業分析（見るだけ）</h1>
+  <section class="card" id="gate">
+    <h2>暗証番号</h2>
+    <div class="src">送ってくれた人から聞いた、4けたの暗証番号を入れてください。</div>
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="4けたの暗証番号">
+    <button class="btn" id="go">開く</button>
+    <div id="msg" role="status"></div>
+  </section>
+  <div id="out" hidden style="display:grid;gap:14px"></div>
+</main>
+<script>
+"use strict";
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzaCheINzPr7VXonUOs9CnwTCXCbRy0XqeMmaNw1vlNagiPqg_LyUDEQvrZA5axfnHPQQ/exec";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const yen=n=>(Math.round(n)||0).toLocaleString("ja-JP");
+const W=[..."月火水木金土日"], HOURS=[...Array(24)].map((_,i)=>(i+11)%24);
+const rate=(f,m)=>m>0?f/(m/60):0;
+const tok=(/[#&]t=([0-9a-f]{64})/.exec(location.hash)||[])[1]||"";
+const msg=(t,warn)=>{ $("msg").textContent=t; $("msg").className=warn?"warn":""; };
+if(!tok){ msg("このURLは使えません。送ってくれた人に確かめてください",true); $("go").disabled=true; }
+$("pin").addEventListener("keydown",e=>{ if(e.key==="Enter") open(); });
+$("go").onclick=open;
+let busy=false;
+async function open(){
+  if(busy||!tok) return; const pin=$("pin").value.trim();
+  if(!/^\d{4}$/.test(pin)){ msg("4けたの数字を入れてください",true); return; }
+  busy=true; $("go").disabled=true; msg("確かめています…");
+  try{
+    const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"shareView",t:tok,pin})});
+    const j=await r.json();
+    if(!j.ok){ msg(j.error||"開けませんでした",true); $("pin").value=""; return; }
+    let d=null; try{ d=JSON.parse(j.data); }catch(e){}
+    if(!d||d.v!==1){ msg("中身を読み込めませんでした",true); return; }
+    $("gate").hidden=true; render(d,j);
+  }catch(e){ msg("通信できませんでした。電波を確かめて、もう一度押してください",true); }
+  finally{ busy=false; $("go").disabled=!tok; }
+}
+const card=(h,note,body)=>`<section class="card"><h2>${h}</h2>${note?`<div class="src">${note}</div>`:""}${body}</section>`;
+const NG=t=>`<span class="ng">データ不足${t?`（${t}）`:""}</span>`;
+const dt=x=>{ const d=new Date(x); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; };
+function diff(cur,prev,unit,isYen){
+  if(prev==null||cur==null) return `<span class="d eq">—</span>`;
+  const v=Math.round(cur-prev); if(!v) return `<span class="d eq">→ ±0${unit}</span>`;
+  return `<span class="d ${v>0?"up":"down"}">${v>0?"▲":"▼"} ${isYen?yen(Math.abs(v)):Math.abs(v)}${unit}</span>`;
+}
+function render(d,j){
+  const minS=d.minS, minH=d.minH, O=$("out"); let h="";
+  h+=`<div class="src">${d.nS}勤務分（${d.from.replace("-","年")}月〜${d.to.replace("-","年")}月）の集計です。中身は${dt(j.at)}時点のデータ。このURLは${dt(j.expires)}まで見られます。金額はETC・アプリ手配料を除いたメーター料金の税抜です。</div>`;
+  // ---- 月ごとの売上 ----
+  { const M=d.months.map(m=>({...m,avg:m.n?m.sum/m.n:null,hr:m.work>0?rate(m.wnet,m.work):null,unit:m.rides?m.rsum/m.rides:null}));
+    const mx=Math.max(1,...M.map(m=>m.sum)), lab=m=>`${m.m}月度${m.part?"<small>（途中）</small>":""}`;
+    let b=`<div class="bars">${M.map((m,i)=>`<div class="bar"><span>${lab(m)}</span><span class="tr"><i style="width:${Math.max(1,Math.round(m.sum/mx*100))}%"></i></span><span class="v num">${yen(m.sum)}円${m.part?`<span class="d eq">途中</span>`:diff(m.sum,i?M[i-1].sum:null,"円",true)}</span></div>`).join("")}</div>`;
+    b+=`<div class="scroll" style="margin-top:10px"><table class="t"><thead><tr><th>月度</th><th class="r">総売上</th><th class="r">乗務</th><th class="r">1乗務平均</th><th class="r">平均時給</th><th class="r">乗車（1回平均）</th></tr></thead><tbody>${M.map((m,i)=>{ const p=i?M[i-1]:null;
+      return `<tr><td class="num">${lab(m)}<br><small class="ng">${+m.s.slice(5,7)}/${+m.s.slice(8)}〜${+m.e.slice(5,7)}/${+m.e.slice(8)}</small></td>
+      <td class="r num">${yen(m.sum)}円${m.part?`<span class="d eq">途中</span>`:diff(m.sum,p&&p.sum,"円",true)}</td>
+      <td class="r num">${m.n}回${m.part?`<span class="d eq">途中</span>`:diff(m.n,p&&p.n,"回")}</td>
+      <td class="r num">${m.avg!=null?yen(m.avg)+"円":"—"}${diff(m.avg,p&&p.avg,"円",true)}</td>
+      <td class="r num">${m.hr!=null?yen(m.hr)+"円":"—"}${diff(m.hr,p&&p.hr,"円",true)}</td>
+      <td class="r num">${m.rides}回・${m.unit!=null?yen(m.unit)+"円":"—"}${diff(m.unit,p&&p.unit,"円",true)}</td></tr>`; }).join("")}</tbody></table></div>`;
+    h+=card("月ごとの売上","月度は給与の締め（例：6月度＝5/27〜6/25）。▲▼は前の月度との差です（途中の月度は、合計の差は出さず平均と時給だけ比べます）。平均時給は、出庫〜入庫から休憩・回送を除いた時間で計算しています。",b); }
+  // ---- 曜日×時間帯の時給 ----
+  const g=d.grid, G=(w,x)=>g[w+"|"+x];
+  { const hs=HOURS.filter(x=>W.some(w=>G(w,x)&&G(w,x)[0]>0)), ws=W.filter(w=>d.dow[w]);
+    let mx=1; ws.forEach(w=>hs.forEach(x=>{ const c=G(w,x); if(c&&c[0]>=minH) mx=Math.max(mx,rate(c[1],c[0])); }));
+    const td=(w,x)=>{ const c=G(w,x); if(!c||!c[0]) return `<td></td>`; if(c[0]<minH) return `<td class="ng" title="データ不足">·</td>`;
+      const v=rate(c[1],c[0])/mx; return `<td style="background:color-mix(in srgb,var(--acc) ${Math.round(v*85)}%,transparent);color:${v>.55?"#fff":"var(--ink)"}">${Math.round(rate(c[1],c[0])/100)/10}</td>`; };
+    h+=card("曜日×時間帯の時給",`その時間（時計の時）に営業した1時間あたりの売上（千円）。営業時間が合計${minH/60}時間に届かないマスは「·」（データ不足）。曜日は出庫した曜日です。`,
+      `<div class="scroll"><table class="heat"><thead><tr><th></th>${hs.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${ws.map(w=>`<tr><th>${w}</th>${hs.map(x=>td(w,x)).join("")}</tr>`).join("")}</tbody></table></div>`); }
+  // ---- 曜日ごとの順位 ----
+  { const by=d.dow, ok=W.filter(w=>by[w]&&by[w][0]>=minS), rs=[...ok].sort((a,b)=>by[b][1]/by[b][0]-by[a][1]/by[a][0]), rr=[...ok].sort((a,b)=>rate(by[b][1],by[b][2])-rate(by[a][1],by[a][2]));
+    const best=w=>HOURS.map(x=>({x,c:G(w,x)})).filter(o=>o.c&&o.c[0]>=minH).sort((a,b)=>rate(b.c[1],b.c[0])-rate(a.c[1],a.c[0])).slice(0,3);
+    h+=card("曜日ごとの順位",`平均売上は1勤務あたり。順位は勤務が${minS}回以上ある曜日だけで付けています。`,`<div class="scroll"><table class="t"><thead><tr><th>曜日</th><th class="r">勤務</th><th class="r">平均売上</th><th class="r">時給</th><th>時給の高い時間帯</th></tr></thead><tbody>${W.filter(w=>by[w]).map(w=>{ const o=by[w];
+      if(o[0]<minS) return `<tr><td>${w}</td><td class="r num">${o[0]}回</td><td colspan="3">${NG()}</td></tr>`;
+      const bt=best(w); return `<tr><td>${w}</td><td class="r num">${o[0]}回</td><td class="r num">${yen(o[1]/o[0])}円<small>（${rs.indexOf(w)+1}位）</small></td><td class="r num">${yen(rate(o[1],o[2]))}円<small>（${rr.indexOf(w)+1}位）</small></td><td class="num">${bt.length?bt.map((o,i)=>`${i+1}. ${o.x}時台 ${yen(rate(o.c[1],o.c[0]))}円`).join("<br>"):NG()}</td></tr>`; }).join("")}</tbody></table></div>`); }
+  // ---- 条件ごとの比較 ----
+  { const [rh,nh]=d.rainHr;
+    h+=card("条件ごとの比較",`雨は、新宿付近の1時間の雨量が${d.rainMm}mm以上の時間（Open-Meteoの過去の雨量）。休みは土日と祝日で見ています。`,`<div class="scroll"><table class="t"><thead><tr><th>条件</th><th class="r">勤務</th><th class="r">平均売上</th><th class="r">時給</th></tr></thead><tbody>${d.cond.map(([t,n,f,m])=>`<tr><td>${esc(t)}</td><td class="r num">${n}回</td>${n>=minS?`<td class="r num">${yen(f/n)}円</td><td class="r num">${yen(rate(f,m))}円</td>`:`<td colspan="2">${NG()}</td>`}</tr>`).join("")}
+      <tr><td>雨が降っていた時間の時給</td><td></td><td></td><td class="r num">${rh[1]>=minH?yen(rate(rh[0],rh[1]))+"円":NG()}</td></tr><tr><td>雨でない時間の時給</td><td></td><td></td><td class="r num">${nh[1]>=minH?yen(rate(nh[0],nh[1]))+"円":NG()}</td></tr></tbody></table></div>`); }
+  // ---- 月ごとの変化（時間帯ごとの時給） ----
+  { const B=d.band, ok=x=>x.n>=minS;
+    h+=card("月ごとの変化（時間帯ごとの時給）",`「·」はデータ不足（勤務が${minS}回未満、または営業時間が${minH/60}時間未満）。`,`<div class="scroll"><table class="t"><thead><tr><th></th>${B.map(x=>`<th class="r">${+x.p.slice(5)}月度</th>`).join("")}</tr></thead><tbody>
+      <tr><td>時給（全体）</td>${B.map(x=>`<td class="r num">${ok(x)?yen(rate(x.f,x.m)):"·"}</td>`).join("")}</tr>
+      ${d.bands.map((t,i)=>`<tr><td>${esc(t)}</td>${B.map(x=>`<td class="r num">${ok(x)&&x.b[i][1]>=minH?yen(rate(x.b[i][0],x.b[i][1])):"·"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`); }
+  // ---- 長距離 ----
+  { const L=d.long, r10=(n,m)=>m>=minH?Math.round(rate(n,m)*100)/10+"件":NG();
+    const tbl=(head,rows)=>`<div class="scroll"><table class="t"><thead><tr>${head.map((x,i)=>`<th${i?' class="r"':""}>${x}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
+    let b=`<div class="src">${L.n}件（${d.nS}勤務で）。ふだんは10時間あたり${Math.round(rate(L.n,L.totM)*100)/10}件。出やすさは「10時間営業したら何件出るか」で比べています。</div>`;
+    if(L.n){ const cmL={雨:"雨の時間",雨なし:"雨でない時間",終電後:"終電後（1〜5時）",それ以外:"終電後以外"};
+      b+=`<h3>曜日</h3>`+tbl(["曜日","件数","10時間あたり"],L.byW.map(([w,n,m])=>`<tr><td>${w}</td><td class="r num">${n}件</td><td class="r num">${r10(n,m)}</td></tr>`));
+      b+=`<h3>時間帯（乗車した時刻）</h3>`+tbl(["時間帯","件数","10時間あたり"],L.bands.map(([i,n,m])=>`<tr><td>${i*2}〜${i*2+2}時</td><td class="r num">${n}件</td><td class="r num">${r10(n,m)}</td></tr>`));
+      b+=`<h3>天気・終電後</h3>`+tbl(["条件","件数","10時間あたり"],L.cm.map(([k,[n,m]])=>`<tr><td>${cmL[k]||esc(k)}</td><td class="r num">${n}件</td><td class="r num">${r10(n,m)}</td></tr>`));
+      b+=`<h3>手上げ・配車・乗り場の割合</h3>`+tbl(["種類","長距離","長距離の割合","乗車全体の割合"],L.kinds.map(([k,n,pa])=>`<tr><td>${esc(k)}</td><td class="r num">${n}件</td><td class="r num">${Math.round(n/L.n*100)}%</td><td class="r num">${pa}%</td></tr>`));
+      b+=`<h3>行き先の方面</h3>`+tbl(["方面","件数"],L.homen.map(([k,n])=>`<tr><td>${esc(k)}</td><td class="r num">${n}件</td></tr>`)); }
+    h+=card(`長距離（${yen(d.longAmt)}円以上）`,"",b); }
+  // ---- 地図 ----
+  h+=card("乗車地の地図",`乗せた場所に丸を置いています（${d.cells.length}回分）。紫の丸は長距離（${yen(d.longAmt)}円以上）。丸を押すと町丁目・金額・種類が出ます。`,
+    d.cells.length?`<div id="map"></div>`:`<div class="src">${NG("位置の記録がある乗車がありません")}</div>`);
+  h+=`<div class="foot">この画面は見るだけです。数字は、共有した乗務員本人の実績だけから計算しています。</div>`;
+  O.innerHTML=h; O.hidden=false;
+  if(d.cells.length) drawMap(d);
+}
+function drawMap(d){
+  const c=document.createElement("link"); c.rel="stylesheet"; c.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(c);
+  const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+  s.onload=()=>{ const m=L.map("map",{zoomControl:true,preferCanvas:true});
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
+    d.cells.forEach(([la,ln,f,k,t,l])=>L.circleMarker([la,ln],{radius:l?8:6,color:l?"#5B2C82":"#14505F",weight:1,fillColor:l?"#7B3FA0":"#1D6A80",fillOpacity:l?.75:.5}).addTo(m)
+      .bindPopup(`<b>${esc(t||"（町名なし）")}</b><br>${yen(f)}円・${esc(k)}`));
+    m.fitBounds(L.latLngBounds(d.cells.map(x=>[x[0],x[1]])).pad(0.1),{maxZoom:15}); };
+  s.onerror=()=>{ $("map").outerHTML=`<div class="src">地図を読み込めませんでした。</div>`; };
+  document.head.appendChild(s);
+}
+</script>
+</body>
+</html>
