@@ -1370,7 +1370,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-04 10:40</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-04 11:15</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6690,7 +6690,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     if(v>=ptSet("patrolSpd")){ spLo=0; if(!spHi) spHi=p.t; if(!spMute&&p.t-spHi>=ptSet("patrolSpdSec")*1000){ spMute=true; ptHidePts(); ptHwRender(); } }
     else { spHi=0; if(spMute){ if(!spLo) spLo=p.t; if(p.t-spLo>=60e3){ spMute=false; spLo=0; ptHwRender(); } } }
   }
-  function ptHide(){ ptHidePts(); const S=GS.patrol; $("speedBanner").hidden=true; S.ln={}; S.lnCur=null; S.pe={}; }
+  function ptHide(){ ptHidePts(); const S=GS.patrol; $("speedBanner").hidden=true; S.ln={}; S.lnCur=null; S.pe={}; S.ov={}; }
   // 速さで止めるのは点の取締りだけ（速度取締りの線は速さでは止めない。2026-11-04 ユーザー指定）
   function ptHidePts(){ const S=GS.patrol; $("patrolBanner").hidden=true; S.cur=null; S.curD=null; S.cd={}; S.prev={}; }
   // ===== 速度取締りの線：小さい帯で「速度取締り ○○（○丁目付近）」。音は最初に近づいたときの1回だけ（2026-11-01 ユーザー指定） =====
@@ -6737,7 +6737,22 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       if(vx*Math.sin(r)+vy*Math.cos(r)<-80) return false;                          // 端を過ぎて80mより先（途中から入った）
       return dE<=80||angD((Math.atan2(vx,vy)*180/Math.PI+360)%360,h)<=45;          // 端がほぼ前にある
     });
-    if(hit){ S.ln[i]={at:now}; geoChime("pipo"); S.lnCur=i; ptLineShow(x,d); }
+    // 途中の交差点から乗ったとき：線から25m以内を、線に沿う向き（30度以内）で50m続けて走ったら鳴らす。横切るときは向きが合わないので鳴らない（2026-11-04 ユーザー指定）
+    S.ov=S.ov||{}; let ok=false;
+    const sb=d<=25?ptSegBrg(p,x):null, o=S.ov[i];
+    if(sb!=null&&(angD(h,sb)<=30||angD(h,sb+180)<=30)){
+      if(o){ o.m+=distM([o.lat,o.lng],[p.lat,p.lng]); o.lat=p.lat; o.lng=p.lng; ok=o.m>=50; }
+      else S.ov[i]={m:0,lat:p.lat,lng:p.lng};
+    } else delete S.ov[i];
+    if(hit||ok){ delete S.ov[i]; S.ln[i]={at:now}; geoChime("pipo"); S.lnCur=i; ptLineShow(x,d); }
+  }
+  function ptSegBrg(p,x){   // 一番近い区間の向き（北＝0度）
+    const c=x[2], ky=111320, kx=111320*Math.cos(p.lat*Math.PI/180), xy=q=>[(q[1]-p.lng)*kx,(q[0]-p.lat)*ky];
+    let best=Infinity, brg=null;
+    for(let j=0;j<c.length-1;j++){ const a=xy(c[j]), b=xy(c[j+1]), dx=b[0]-a[0], dy=b[1]-a[1], L2=dx*dx+dy*dy;
+      let t=L2?-(a[0]*dx+a[1]*dy)/L2:0; t=Math.max(0,Math.min(1,t)); const e=Math.hypot(a[0]+t*dx,a[1]+t*dy);
+      if(e<best&&L2){ best=e; brg=(Math.atan2(dx,dy)*180/Math.PI+360)%360; } }
+    return brg;
   }
   function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) ptHide(); ptHwRender(); }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
