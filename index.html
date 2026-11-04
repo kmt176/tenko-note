@@ -1370,7 +1370,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-02 09:41</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-04 10:40</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6687,10 +6687,12 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     let v=(p.spd!=null&&p.spd>=0)?p.spd*3.6:null;
     if(v==null&&spLast&&p.t-spLast.t>=1000) v=distM([spLast.lat,spLast.lng],[p.lat,p.lng])/((p.t-spLast.t)/1000)*3.6;
     spLast={lat:p.lat,lng:p.lng,t:p.t}; if(v==null) return;
-    if(v>=ptSet("patrolSpd")){ spLo=0; if(!spHi) spHi=p.t; if(!spMute&&p.t-spHi>=ptSet("patrolSpdSec")*1000){ spMute=true; ptHide(); ptHwRender(); } }
+    if(v>=ptSet("patrolSpd")){ spLo=0; if(!spHi) spHi=p.t; if(!spMute&&p.t-spHi>=ptSet("patrolSpdSec")*1000){ spMute=true; ptHidePts(); ptHwRender(); } }
     else { spHi=0; if(spMute){ if(!spLo) spLo=p.t; if(p.t-spLo>=60e3){ spMute=false; spLo=0; ptHwRender(); } } }
   }
-  function ptHide(){ const S=GS.patrol; $("patrolBanner").hidden=true; S.cur=null; S.curD=null; S.cd={}; S.prev={}; $("speedBanner").hidden=true; S.ln={}; S.lnCur=null; }
+  function ptHide(){ ptHidePts(); const S=GS.patrol; $("speedBanner").hidden=true; S.ln={}; S.lnCur=null; S.pe={}; }
+  // 速さで止めるのは点の取締りだけ（速度取締りの線は速さでは止めない。2026-11-04 ユーザー指定）
+  function ptHidePts(){ const S=GS.patrol; $("patrolBanner").hidden=true; S.cur=null; S.curD=null; S.cd={}; S.prev={}; }
   // ===== 速度取締りの線：小さい帯で「速度取締り ○○（○丁目付近）」。音は最初に近づいたときの1回だけ（2026-11-01 ユーザー指定） =====
   // 線の上を走っている間は帯を出したまま。線から（通知を始める距離＋離れたら消す距離）より離れたら消し、同じ線は10分間は鳴らさない
   const ptIsLine=x=>(x[4]||"P")!=="P"&&x[4]!=="A"&&x[2].length>1;
@@ -6701,18 +6703,47 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     $("speedBanner").hidden=false;
   }
   $("speedBannerClose").addEventListener("click",()=>{ const S=GS.patrol; $("speedBanner").hidden=true; if(S.lnCur!=null) S.lnDis=S.lnCur; });
+  // 鳴らすのは、線の端から線に沿う向きで入っていくときだけ（陸橋の下などで途中を横切ったときは鳴らさない。2026-11-04 ユーザー指定）
+  // 端ごとに「線の中へ向かう向き」を出し、①端まで（通知を始める距離）以内 ②進む向きがその向きと45度以内 ③端に向かって近づいている（端の手前か、過ぎて80m以内）のとき
+  const angD=(a,b)=>{ const t=Math.abs(((a-b)%360+360)%360); return t>180?360-t:t; };
+  function ptLineEnds(x){
+    if(x._ends) return x._ends;
+    const c=x[2], ky=111320, kx=111320*Math.cos(c[0][0]*Math.PI/180), M=q=>[q[1]*kx,q[0]*ky];
+    const end=pts=>{ const a=M(pts[0]); let b=M(pts[1]); for(let j=1;j<pts.length;j++){ b=M(pts[j]); if(Math.hypot(b[0]-a[0],b[1]-a[1])>=40) break; }
+      return {e:pts[0],brg:(Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI+360)%360}; };
+    return (x._ends=[end(c),end(c.slice().reverse())]);
+  }
+  function ptHeading(S,p){   // 進む向き（北＝0度）。GPSの向き（動いているとき）、なければ15m以上動いた前の位置から
+    let h=(p.hd!=null&&isFinite(p.hd)&&p.spd!=null&&p.spd>1.5)?p.hd:null;
+    const hp=S.hp, k=111320*Math.cos(p.lat*Math.PI/180);
+    if(hp){ const dx=(p.lng-hp.lng)*k, dy=(p.lat-hp.lat)*111320, m=Math.hypot(dx,dy);
+      if(m>=15){ if(h==null) h=(Math.atan2(dx,dy)*180/Math.PI+360)%360; S.hp={lat:p.lat,lng:p.lng}; S.hd=h; }
+      else if(h==null) h=S.hd; }
+    else S.hp={lat:p.lat,lng:p.lng};
+    if(h!=null) S.hd=h;
+    return h;
+  }
   function ptLineCheck(S,x,i,p,now,start,leave){
-    S.ln=S.ln||{}; const d=geoD(p,x), st=S.ln[i];
+    S.ln=S.ln||{}; S.pe=S.pe||{}; const d=geoD(p,x), st=S.ln[i];
     if(st){ if(d>start+leave){ delete S.ln[i]; S.last[i]=now; if(S.lnCur===i){ $("speedBanner").hidden=true; S.lnCur=null; } if(S.lnDis===i) S.lnDis=null; return; }
       if(S.lnDis!==i&&(S.lnCur===i||S.lnCur==null)){ S.lnCur=i; ptLineShow(x,d); } return; }
-    const prev=S.prev[i]; S.prev[i]=d;
-    if(d<=start&&prev!=null&&d<prev-2&&!(S.last[i]&&now-S.last[i]<10*60e3)){ S.ln[i]={at:now}; geoChime("pipo"); S.lnCur=i; ptLineShow(x,d); }
+    const h=S.hdNow, k=111320*Math.cos(p.lat*Math.PI/180), prevs=S.pe[i]||[];
+    const ds=ptLineEnds(x).map(E=>distM([p.lat,p.lng],E.e)); S.pe[i]=ds;
+    if(h==null||S.last[i]&&now-S.last[i]<10*60e3) return;
+    const hit=ptLineEnds(x).some((E,j)=>{
+      const dE=ds[j], pr=prevs[j]; if(dE>start||pr==null||dE>=pr-2) return false;   // 端に近づいているときだけ
+      if(angD(h,E.brg)>45) return false;                                           // 線に沿う向きで入っていく
+      const vx=(E.e[1]-p.lng)*k, vy=(E.e[0]-p.lat)*111320, r=E.brg*Math.PI/180;
+      if(vx*Math.sin(r)+vy*Math.cos(r)<-80) return false;                          // 端を過ぎて80mより先（途中から入った）
+      return dE<=80||angD((Math.atan2(vx,vy)*180/Math.PI+360)%360,h)<=45;          // 端がほぼ前にある
+    });
+    if(hit){ S.ln[i]={at:now}; geoChime("pipo"); S.lnCur=i; ptLineShow(x,d); }
   }
   function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) ptHide(); ptHwRender(); }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
     b.textContent=man?"🛣 高速利用中を終える（取締りの通知を戻す）":"🛣 高速利用中（取締りの通知を止める）"; b.classList.toggle("primary",man);
     m.textContent=man?`取締りの通知を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
-      :spMute?`速く走っているので（高速道路とみなして）、取締りの通知を止めています。時速${ptSet("patrolSpd")}km未満が1分続くと戻ります`:"取締りの通知はオンです"; }
+      :spMute?`速く走っているので（高速道路とみなして）、取締りの通知を止めています（速度取締りの線は知らせます）。時速${ptSet("patrolSpd")}km未満が1分続くと戻ります`:"取締りの通知はオンです"; }
   Object.keys(PT_SET).forEach(k=>{ try{ const v=localStorage.getItem("tenko."+k); if(v) $(k).value=v; }catch(e){}
     $(k).addEventListener("change",()=>{ try{ localStorage.setItem("tenko."+k,$(k).value); }catch(e){} ptHwRender(); }); });
   $("ptHwBtn").onclick=()=>ptHwSet(!(Date.now()<hwUntil));
@@ -6724,10 +6755,13 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // ④離れたら消す：一番近づいた距離から○m離れたら（通過・右左折）消す。同じ場所は10分間は鳴らさない
   function ptCheck(p,now,dLat,dLng){
     const S=GS.patrol; S.cd=S.cd||{};
-    if(ptMuted()){ if(S.cur!=null||Object.keys(S.cd).length||S.lnCur!=null) ptHide(); return; }
+    S.hdNow=ptHeading(S,p);
+    if(Date.now()<hwUntil){ if(S.cur!=null||Object.keys(S.cd).length||S.lnCur!=null) ptHide(); return; }   // 「高速利用中」ボタンは線も止める
+    if(spMute&&(S.cur!=null||Object.keys(S.cd).length)) ptHidePts();
     const start=+$("patrolStart").value||300, leave=ptSet("patrolLeave"), marks=[300,200,100].filter(m=>m<=start);
     let show=null, fired=false;
     S.pts.forEach((x,i)=>{
+      if(spMute&&!ptIsLine(x)) return;
       const bb=geoBB(x);
       if(p.lat<bb[0]-dLat||p.lat>bb[1]+dLat||p.lng<bb[2]-dLng||p.lng>bb[3]+dLng){ delete S.prev[i];
         if(S.ln&&S.ln[i]){ delete S.ln[i]; S.last[i]=now; if(S.lnCur===i){ $("speedBanner").hidden=true; S.lnCur=null; } }
