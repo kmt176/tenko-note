@@ -670,9 +670,10 @@ body.rtfull{overflow:hidden}
       <div class="btnrow"><button class="btn primary" id="svStart">乗車接遇</button><button class="btn primary" id="svOff">降車接遇</button><button class="btn danger" id="svStop" disabled>止める</button></div>
       <div id="svStat" class="geo">止まっています</div>
       <div id="svList" class="svlist"></div>
-      <details><summary>ドアの音の感度</summary>
+      <details><summary>ドアの音の感度・緑にするまでの間</summary>
         <div class="field"><label for="svTh">「バン」とみなす大きさ（小さいほど拾いやすい）</label><input type="range" id="svTh" min="0.05" max="0.6" step="0.01"></div>
         <div class="svmeter"><i id="svLv"></i><b id="svThMark"></b></div>
+        <div class="field"><label for="svWait">話し終わってから緑にするまでの間：<b id="svWaitV"></b>秒（短いほど早く、長いほど話の途中では緑にならない）</label><input type="range" id="svWait" min="0.05" max="1" step="0.05"></div>
         <div class="src">今の音の大きさが棒で出ます。降車接遇を押したあと、縦線（赤）を超える音が1回鳴ると「バン」と数えて終わります。</div>
       </details>
       <details><summary>聞き取った文字（確認用・保存しません）</summary><div id="svText" class="src" style="white-space:pre-wrap"></div></details>
@@ -1395,7 +1396,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-06 11:04</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-06 11:23</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4208,12 +4209,12 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     ["⑱","<b>ドアを開け</b>てもよろしいでしょうか。足元にお気をつけくださいませ。<br>（ドアサービスの音でもOK）",/ドアを開け/,true],
     ["⑲","ありがとうございました。また<b>日本交通</b>をご利用くださいませ。<br>（ドアサービスの音でもOK）",/日本交通/,true]
   ];
-  let svOn=false, svRec=null, svHeard="", svMatchText="", svMatchTimer=null, svBang=0, svOffAt=null, svOnAt=null, svAudio=null, svRaf=0, svTh=0.22, svLastBang=0, svBase=0, svDiag="", svErrCount=0;
-  try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; }catch(e){}
+  let svOn=false, svRec=null, svHeard="", svMatchText="", svMatchTimer=null, svBang=0, svOffAt=null, svOnAt=null, svAudio=null, svRaf=0, svTh=0.22, svWait=0.1, svLastBang=0, svBase=0, svDiag="", svErrCount=0;
+  try{ const v=+localStorage.getItem("tenko.svth"); if(v>0) svTh=v; const w=+localStorage.getItem("tenko.svwait"); if(w>0) svWait=w; }catch(e){}
   const SV_OFF_FROM=SV_ITEMS.findIndex(x=>x[0]==="⑫");   // ⑫からは降車接遇を押してから出す
   // 短く途切れたら（0.35秒）そこまでの文字で判定する。話している途中（毎文字）では緑にせず、でも確定（isFinal）を待つよりずっと早くする
-  // 0.35秒→0.05秒に短くした（緑になるのが遅いので、2026-11-06 ユーザー指定）
-  function scheduleMatch(){ clearTimeout(svMatchTimer); svMatchTimer=setTimeout(()=>{ svMatchText=svHeard; svRender(); },50); }
+  // 話し終わってから緑にするまでの間（初期0.1秒、設定で0.05〜1秒。2026-11-06 ユーザー指定）
+  function scheduleMatch(){ clearTimeout(svMatchTimer); svMatchTimer=setTimeout(()=>{ svMatchText=svHeard; svRender(); },svWait*1000); }
   function svRender(){
     const t=svMatchText.replace(/\s/g,""), shown=svPhase==="off"?SV_ITEMS.slice(SV_OFF_FROM):SV_ITEMS.slice(0,SV_OFF_FROM);
     let n=0;
@@ -4279,7 +4280,9 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("svStop").onclick=svStop;
   const svThUI=()=>{ $("svTh").value=svTh; $("svThMark").style.left=Math.min(100,svTh/0.6*100)+"%"; };
   $("svTh").addEventListener("input",()=>{ svTh=+$("svTh").value; try{ localStorage.setItem("tenko.svth",svTh); }catch(e){} svThUI(); });
-  svThUI(); svRender();
+  const svWaitUI=()=>{ $("svWait").value=svWait; $("svWaitV").textContent=svWait.toFixed(2); };
+  $("svWait").addEventListener("input",()=>{ svWait=+$("svWait").value; try{ localStorage.setItem("tenko.svwait",svWait); }catch(e){} svWaitUI(); });
+  svThUI(); svWaitUI(); svRender();
 
   // メニューのタブを開いたときも、表示中の情報を新しくする
   $("tb2").onclick=()=>{ showTab(2); if(menuStyle==="tile") menuHomeShow(); else showSub(curSub==="home"||PAGES[curSub]?(localStorage.getItem("tenko.sub")||"rest"):curSub); };
