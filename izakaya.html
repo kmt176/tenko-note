@@ -56,11 +56,12 @@ body.full .panel{display:none}
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-10-28 22:20</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-06</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
-      <div class="row qd"><span>よく使う：</span><button data-q="新宿">新宿</button><button data-q="渋谷">渋谷</button><button data-q="池袋">池袋</button><button data-q="東京">東京</button><button data-q="品川">品川</button><button data-q="上野">上野</button><button data-q="六本木">六本木</button><button data-q="銀座">銀座</button></div>
+      <div class="row"><label>よく使う <select id="rFav"></select></label><button class="btn" id="favAdd" style="min-height:36px;padding:6px 10px">＋自分の場所を登録</button></div>
+      <div id="favList" style="font-size:13px"></div>
       <div class="row"><label>寄り道は線から <select id="rLim"><option value="500">500m</option><option value="1000" selected>1km</option><option value="1500">1.5km</option><option value="2000">2km</option></select> 以内</label>
         <label>経由地 <select id="rNum"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select> か所</label></div>
       <div class="btns"><button class="btn primary" id="rGo">現在地から探す</button><button class="btn primary" id="rGoMap">地図上から探す</button><button class="btn" id="rClear">消す</button></div>
@@ -89,7 +90,7 @@ body.full .panel{display:none}
       ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝その他。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
-      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うボタン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②は①の行き先から、③は②の行き先から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
+      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うのプルダウン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。「＋自分の場所を登録」で、地図をタップした場所に名前を付けて5か所まで登録でき、よく使うのプルダウンから選べます（このスマホに覚えます）。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②は①の行き先から、③は②の行き先から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
     </details>
   </div>
 </div>
@@ -231,22 +232,42 @@ $("meBtn").onclick=()=>{ if(!navigator.geolocation){ $("msg").textContent="こ�
 // ===== 飲み屋街を通って戻る（2026-10-27 ユーザー指定） =====
 // 現在地→行き先のまっすぐな線から「寄り道」の距離以内の飲み屋街を、軒数の多い順に選ぶ。選んだら線の上の順（現在地に近い順）に並べてGoogleマップのナビへ
 const RK="izakayaMap.route";
-let rDestLL=null, rTapMode=false; const rLayer=L.layerGroup().addTo(map);
+let rDestLL=null, rDestName="地図で選んだ場所", rTapMode=false; const rLayer=L.layerGroup().addTo(map);
 (()=>{ let c={}; try{ c=JSON.parse(localStorage.getItem(RK)||"{}")||{}; }catch(e){} if(c.lim) $("rLim").value=c.lim; if(c.num) $("rNum").value=c.num; if(c.dest) $("rDest").value=c.dest; })();
 const rSave=()=>{ try{ localStorage.setItem(RK,JSON.stringify({lim:$("rLim").value,num:$("rNum").value,dest:rDestLL?"":$("rDest").value})); }catch(e){} };
 ["rLim","rNum","rDest"].forEach(id=>$(id).addEventListener("change",rSave));
 $("stList").innerHTML=[...new Set(ST.map(s=>s[0].replace(/（.*$/,"")))].map(n=>`<option value="${esc(n)}">`).join("");
-document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{ $("rDest").value=b.dataset.q; rDestLL=null; rSave(); });
-$("rDest").addEventListener("input",()=>{ rDestLL=null; });
+// よく使う：プルダウン（駅＋自分で登録した場所5か所まで。登録はこのスマホに覚える。2026-11-06 ユーザー指定）
+const FQ=["新宿","渋谷","池袋","東京","品川","上野","六本木","銀座"], FK="izakayaMap.favs", FMAX=5;
+let favs=[]; try{ favs=JSON.parse(localStorage.getItem(FK)||"[]")||[]; }catch(e){}
+const favSave=()=>{ try{ localStorage.setItem(FK,JSON.stringify(favs)); }catch(e){} };
+function favDraw(){
+  $("rFav").innerHTML=`<option value="">選んでください</option>`+(favs.length?`<optgroup label="自分で登録した場所">${favs.map((f,i)=>`<option value="f${i}">★ ${esc(f.n)}</option>`).join("")}</optgroup>`:"")+`<optgroup label="駅">${FQ.map(q=>`<option value="s${esc(q)}">${esc(q)}</option>`).join("")}</optgroup>`;
+  $("favAdd").hidden=favs.length>=FMAX;
+  $("favList").innerHTML=favs.length?`登録した場所（${favs.length}/${FMAX}）：`+favs.map((f,i)=>`<span style="white-space:nowrap">★${esc(f.n)} <button data-fren="${i}">名前を変える</button><button data-fdel="${i}">消す</button></span>`).join("　"):"";
+  document.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>{ const f=favs[+b.dataset.fdel]; if(!confirm(`「${f.n}」を消しますか？`)) return; favs.splice(+b.dataset.fdel,1); favSave(); favDraw(); });
+  document.querySelectorAll("[data-fren]").forEach(b=>b.onclick=()=>{ const f=favs[+b.dataset.fren], n=(prompt("新しい名前",f.n)||"").trim().slice(0,20); if(!n) return; f.n=n; favSave(); favDraw(); });
+}
+favDraw();
+$("rFav").onchange=()=>{ const v=$("rFav").value; if(!v) return;
+  if(v[0]==="s"){ $("rDest").value=v.slice(1); rDestLL=null; }
+  else { const f=favs[+v.slice(1)]; if(!f) return; rDestLL=[f.lat,f.lng]; rDestName=f.n; $("rDest").value=f.n; }
+  rSave(); $("rFav").value=""; };
+$("favAdd").onclick=()=>{ if(favs.length>=FMAX){ alert(`登録できるのは${FMAX}か所までです。使わない場所を消してください`); return; } rTapStart("fav","地図で登録したい場所をタップしてください"); };
+$("rDest").addEventListener("input",()=>{ rDestLL=null; rDestName="地図で選んだ場所"; });
 // 地図をタップして決める：rTapMode="dest"＝行き先、"start"＝出発地（「地図上から探す」。2026-10-27 ユーザー指定）
 const rTapStart=(mode,msg)=>{ rTapMode=mode; $("pbody").hidden=true; $("fold").textContent="開く"; $("map").style.cursor="crosshair"; alert(msg); };
 $("rTap").onclick=()=>rTapStart("dest","地図で行き先をタップしてください");
 map.on("click",e=>{ if(!rTapMode) return; const mode=rTapMode; rTapMode=false; $("map").style.cursor="";
   const ll=[e.latlng.lat,e.latlng.lng]; $("pbody").hidden=false; $("fold").textContent="閉じる";
+  if(mode==="fav"){ const n=(prompt("この場所の名前（例：自宅、会社、よく行く店）","")||"").trim().slice(0,20);
+    if(!n){ $("rOut").textContent="名前が入っていないので、登録しませんでした"; return; }
+    favs.push({n,lat:+ll[0].toFixed(6),lng:+ll[1].toFixed(6)}); favSave(); favDraw();
+    rDestLL=ll; rDestName=n; $("rDest").value=n; $("rOut").textContent=`「${n}」を登録し、行き先にしました`; return; }
   if(mode==="start"){ const D=rDest(); rShow(ll,D.ll,D.name,rPick(ll,D.ll,+$("rLim").value,+$("rNum").value)); return; }
-  rDestLL=ll; $("rDest").value="地図で選んだ場所";
+  rDestLL=ll; rDestName="地図で選んだ場所"; $("rDest").value="地図で選んだ場所";
   $("rOut").textContent="行き先を決めました。「現在地から探す」か「地図上から探す」を押してください"; });
-function rDest(){ if(rDestLL) return {ll:rDestLL,name:"地図で選んだ場所"};
+function rDest(){ if(rDestLL) return {ll:rDestLL,name:rDestName};
   const v=$("rDest").value.trim().replace(/駅$/,""); if(!v) return null;
   const h=ST.find(s=>s[0]===v)||ST.find(s=>s[0].replace(/（.*$/,"")===v)||ST.find(s=>s[0].startsWith(v));
   return h?{ll:[h[1],h[2]],name:h[0].replace(/（.*$/,"")+"駅"}:null; }
