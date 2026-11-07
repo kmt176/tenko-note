@@ -1396,7 +1396,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-06 11:23</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 18:42</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1996,17 +1996,24 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // IDは社員コード（2026-10-26 ユーザー指定）。入っていなければ、設定・休憩場で入れた社員コードを使う
   const abkNorm=v=>String(v||"").trim().replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248));
   function abkShow(){ $("abkId").value=cfg.abkId||cfg.empCode||""; $("abkPass").value=cfg.abkPass||""; $("abkPass2").value=cfg.abkPass||""; $("abkAuto").checked=cfg.abkOn!==false;
-    $("abkNow").hidden=!cfg.abkId; if(cfg.abkLast&&!$("abkMsg").textContent) abkMsg(`前回預けた日時：${new Date(cfg.abkLast).toLocaleString("ja-JP")}`); }
+    $("abkNow").hidden=!cfg.abkId; if(!$("abkMsg").textContent){ const e=(cfg.abkErr||"").split("|"); abkMsg((cfg.abkLast?`前回預けた日時：${new Date(cfg.abkLast).toLocaleString("ja-JP")}`:"まだ一度も預けていません")+(e[1]?`　⚠ ${new Date(e[0]).toLocaleString("ja-JP")}に預けられませんでした（${e[1]}）`:"")); } }
   async function abkPut(quiet){
     const id=(cfg.abkId||"").trim(), pass=cfg.abkPass||""; if(!id||!pass||!cfg.url) return false;
     if(!quiet) abkMsg("預けています…");
     try{ const data=await packBackup({v:3,tenko:recs,uriage:sales},pass);
-      let j; try{ j=await post({action:"abkPut",id,token:await abkToken(id,pass),data}); }
-      catch(e){ abkMsg("サーバーの準備ができていないため、預けられませんでした（管理者の作業待ち）。あとで「今すぐ預ける」を押してください"); return false; }
-      if(!j||!j.ok){ abkMsg((j&&j.error)||"預けられませんでした"); return false; }
-      cfg.abkLast=j.at; saveCfg(); abkMsg(`✅ 預けました（${new Date(j.at).toLocaleString("ja-JP")}・サーバーには最新の${j.count}回分）`); return true;
-    }catch(e){ abkMsg("通信できませんでした。電波のよいところで「今すぐ預ける」を押してください"); return false; }
+      // うまくいかなかったら、20秒あけてもう1回だけ試す（鍵をかけた直後は、ほかの送信と重なりやすい。2026-11-07）
+      const send=()=>post({action:"abkPut",id,token,data});
+      const token=await abkToken(id,pass);
+      let j; try{ j=await send(); if(!j||!j.ok){ if(!quiet) abkMsg("混んでいたので、20秒後にもう一度試します…"); await new Promise(r=>setTimeout(r,20000)); j=await send(); } }
+      catch(e){ try{ if(!quiet) abkMsg("つながらなかったので、20秒後にもう一度試します…"); await new Promise(r=>setTimeout(r,20000)); j=await send(); }catch(e2){ j=null; } }
+      if(j===null){ abkFail("サーバーにつながりませんでした"); abkMsg("サーバーにつながらず、預けられませんでした。電波のよいところで「今すぐ預ける」を押してください"); return false; }
+      if(!j||!j.ok){ abkFail((j&&j.error)||"預けられませんでした"); abkMsg((j&&j.error)||"預けられませんでした"); return false; }
+      cfg.abkLast=j.at; cfg.abkErr=""; saveCfg(); abkMsg(`✅ 預けました（${new Date(j.at).toLocaleString("ja-JP")}・サーバーには最新の${j.count}回分）`); return true;
+    }catch(e){ abkFail("通信できませんでした"); abkMsg("通信できませんでした。電波のよいところで「今すぐ預ける」を押してください"); return false; }
   }
+  // 預けられなかったときは、その理由と日時を残す（鍵の行・設定に出し続ける。2026-11-07 ユーザー指定：預けたか分からなかったため）
+  function abkFail(t){ cfg.abkErr=new Date().toISOString()+"|"+t; saveCfg(); }
+  window.tenkoAbkState=()=>({id:cfg.abkId,pass:!!cfg.abkPass,on:cfg.abkOn!==false,last:cfg.abkLast||"",err:cfg.abkErr||""});
   $("abkSave").onclick=async()=>{
     const id=abkNorm($("abkId").value), p1=$("abkPass").value, p2=$("abkPass2").value;
     if(!/^\d{3,10}$/.test(id)){ abkMsg("社員コード（数字）を入れてください"); return; }
@@ -5828,7 +5835,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       const cur=(dd.check.note||"").trim(); if(cur.includes(line)) return;
       dd.check.note=cur?cur+"\n"+line:line; saveSales(); renderSales(); });    renderHw(d); renderGas(d); renderRoute(k,d,s); renderCmp(k,d); renderHist(d);
     const canLock=st.total!=null&&(simple||st.meterOk);
-    $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>`:
+    const abkLine=()=>{ const a=window.tenkoAbkState?window.tenkoAbkState():null; if(!a) return "";
+      if(!a.id||!a.pass) return `<small class="src" style="display:block">ℹ 自動バックアップの設定がまだです（点呼時間の画面 →「バックアップ・機種変更」）</small>`;
+      const e=a.err.split("|"), ok=a.last?`前回バックアップを預けた日時：${new Date(a.last).toLocaleString("ja-JP")}`:"まだ一度もバックアップを預けていません";
+      return `<small class="src" style="display:block">${a.on?"":"ℹ 鍵をかけたときに自動で預ける設定が外れています。"}${ok}${e[1]&&(!a.last||e[0]>a.last)?`<br><b style="color:#D23C2F">⚠ ${new Date(e[0]).toLocaleString("ja-JP")}に預けられませんでした（${esc(e[1])}）</b>`:""}</small>`; };
+    $("ckLock").innerHTML=d.locked?`<span>🔒 照合済み（直すときは確認が出ます）</span><button class="btn" id="ckUnlock">鍵を外す</button>${abkLine()}`:
       canLock?`<button class="btn primary" id="ckDoLock">照合済みにする（鍵をかける）</button>`:"";
     if($("ckDoLock")) $("ckDoLock").onclick=()=>{ const dd=ensureDay(k); dd.locked=true; dd.lockedAt=new Date().toISOString(); saveSales(); renderSales();
       { let ac={}; try{ ac=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); }catch(e){}
@@ -5836,7 +5847,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         // 預けなかったときも、なぜ預けなかったかを出す（2026-10-28。黙って何もしないと、預けたつもりになってしまう）
         if(!ac.abkId||!ac.abkPass) note("ℹ 自動バックアップの設定がまだなので、預けていません（使い方：点呼時間の画面 →「バックアップ・機種変更」→ 自動バックアップで、社員コードとパスワードを入れて「この設定で使う」）");
         else if(ac.abkOn===false) note("ℹ 「鍵をかけたときに自動で預ける」のチェックが外れているので、預けていません");
-        else if(window.tenkoAbkPut) window.tenkoAbkPut(true).then(ok=>note(ok?"✅ バックアップをサーバーに預けました":"⚠ バックアップを預けられませんでした（電波のよいところで、バックアップの「今すぐ預ける」を）")); } };
+        else if(window.tenkoAbkPut){ note("バックアップを預けています…"); window.tenkoAbkPut(true).then(ok=>{ renderSales(); note(ok?"✅ バックアップをサーバーに預けました":"⚠ バックアップを預けられませんでした（電波のよいところで、バックアップの「今すぐ預ける」を）"); }); } } };
     if($("ckUnlock")) $("ckUnlock").onclick=()=>{ if(!confirm("鍵を外しますか？")) return; const dd=ensureDay(k); dd.locked=false; saveSales(); renderSales(); };
     fillPending();
   }
