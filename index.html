@@ -527,6 +527,10 @@ body.rtfull{overflow:hidden}
   .hcamfig{margin:0 0 10px}
   .hcamfig img{width:100%;display:block;border-radius:8px;background:#222;aspect-ratio:16/9;object-fit:cover}
   .hcamfig figcaption{font-size:13px;margin-top:3px}
+  .hcambox{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:6px}
+  .hcambtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .hcambtns .btn{min-height:42px}
+  .hcamlv{display:inline-block;padding:2px 8px;border-radius:8px;color:#fff;font-weight:700}
 </style>
 
 <div id="docView" class="docview" hidden role="dialog" aria-modal="true" aria-labelledby="docTitle"><div class="docbar"><b id="docTitle"></b><button type="button" class="btn" id="docClose">✕ 閉じる</button></div><iframe id="docFrame" title="資料"></iframe></div>
@@ -1060,6 +1064,23 @@ body.rtfull{overflow:hidden}
         <div class="hcamsel" id="hcamSel"></div>
         <div id="hcamImgs"></div>
         <div class="src" id="hcamNote"></div>
+        <div class="hcambox" id="hcamAiBox" hidden>
+          <b>🤖 AIで混み具合を読む</b>
+          <div id="hcamAiOut" class="src">選んでいる場所の写真をAI（Gemini）に見せて、どのくらい埋まっているかを読みます。</div>
+          <div class="hcambtns"><button type="button" class="btn" id="hcamAiBtn">今の写真を読む</button>
+            <label class="src" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hcamAiAuto">開いている間は5分ごとに読む</label></div>
+          <details id="hcamKeyBox"><summary class="src">Geminiのキー（この端末だけに保存）</summary>
+            <div class="src">① <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> を開いてGoogleにログイン → ②「APIキーを作成」→ ③ できた文字（AIza…）をコピーして下に貼り付け →「保存」。無料の範囲で使えます。キーはこのスマホの中だけに残し、サーバーやバックアップには送りません。</div>
+            <div class="hcambtns"><input type="password" id="hcamKey" placeholder="AIza…" autocomplete="off" style="flex:1;min-width:0"><button type="button" class="btn" id="hcamKeySave">保存</button></div>
+          </details>
+        </div>
+        <div class="hcambox">
+          <b>⏱ プールの待ち時間の記録</b>
+          <div id="hcamPoolNow" class="src"></div>
+          <div class="hcambtns"><button type="button" class="btn" id="hcamIn">プールに入った</button><button type="button" class="btn" id="hcamOut">出た（乗り場へ）</button></div>
+          <div id="hcamEst" class="src"></div>
+          <details><summary class="src">これまでの記録</summary><div id="hcamLogList" class="src"></div></details>
+        </div>
         <div class="src">写真：東京タクシーセンター「羽田空港TPシステム」（1分ごとに新しくなります。この画面を開いている間は自動で替わります）。<a href="https://ttc.taxi-inf.jp/index.php" target="_blank" rel="noopener">元のページ</a></div>
       </details>
     </section>
@@ -1416,7 +1437,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 23:49</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 00:21</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4029,6 +4050,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 羽田のタクシー待機所・乗り場カメラ（東京タクシーセンター「羽田空港TPシステム」の公開写真。1分ごとに更新される。2026-11-07 ユーザー依頼）
   // 写真はその都度見に行くだけで、保存はしない
   const HCAM_BASE="https://ttc.taxi-inf.jp/";
+  // 写真をAIに渡すための取り次ぎ所（Cloudflare Workers。日本の拠点から取る）。Googleのサーバーからは写真を取れなかった（2026-11-08）。空のあいだはAIの欄を出さない
+  const HCAM_PROXY="";
   const HCAM=[
     ["p1","第1待機所",[["Real001.jpg","第1待機所（南側）"],["Real002.jpg","第1待機所（東側）"]]],
     ["p3","第3待機所",[["Real108.jpg","第3待機所（前方）"],["Real109.jpg","第3待機所（中間）"],["Real03.jpg","第3待機所（後方）"]]],
@@ -4043,11 +4066,90 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("hcamSel").innerHTML=HCAM.map(([k,n])=>`<button type="button" data-hcam="${k}" aria-pressed="${k===g[0]}">${n}</button>`).join("");
     $("hcamImgs").innerHTML=g[2].map(([f,n])=>`<figure class="hcamfig"><img src="${HCAM_BASE}${f}?${t}" alt="${n}" loading="lazy" onerror="this.alt='写真を読み込めませんでした';this.style.minHeight='60px'"><figcaption>${n}</figcaption></figure>`).join("");
     const d=new Date(t); $("hcamNote").textContent=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")} に読み込みました`;
+    if(hcamReady){ hcamAiShow(); hcamPoolDraw(); }   // hcamReady は下の準備が済んでから true（起動直後に呼ばれても困らないよう var）
   }
   $("hcamSel").onclick=e=>{ const b=e.target.closest("[data-hcam]"); if(!b) return; hcamSel=b.dataset.hcam; try{ localStorage.setItem("tenko.hcam",hcamSel); }catch(e){} hcamDraw(); };
   $("hcamBox").addEventListener("toggle",()=>{ if($("hcamBox").open) hcamDraw(); });
+  // ----- AIで混み具合を読む（Gemini。キーは各自の端末だけ。2026-11-08 ユーザー依頼） -----
+  // 写真は別のサイトのものでブラウザから直接読めないので、サーバー（hcamImg）に取り次いでもらう
+  const hcamLS=(k,d)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } };
+  const hcamLSet=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+  let hcamAiLog=hcamLS("tenko.hcamAi",[]), hcamPool=hcamLS("tenko.hcamPool",[]), hcamAiBusy=false, hcamAiAt=0;
+  const hcamGName=k=>(HCAM.find(g=>g[0]===k)||HCAM[0])[1];
+  const hcamHM=t=>{ const d=new Date(t); return `${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  const hcamLvColor=v=>v>=80?"#D23C2F":v>=50?"#E8890C":v>=20?"#1E6FD9":"#2E9E5B";
+  const hcamLvWord=v=>v>=80?"満杯に近い":v>=50?"多め":v>=20?"少なめ":"ガラガラ";
+  function hcamArr60(){ try{ const j=airData.arr; if(!j) return null; return (j.items||[]).filter(x=>x.ap==="HND").map(airRow).filter(x=>!x.cancel&&x.rel>=0&&x.rel<60).length; }catch(e){ return null; } }
+  function hcamLatest(g,maxMin){ for(let i=hcamAiLog.length-1;i>=0;i--){ const x=hcamAiLog[i]; if(x.g===g&&Date.now()-x.t<=maxMin*60000) return x; } return null; }
+  function hcamAiShow(){
+    const x=hcamLatest(hcamSel,60), prev=x&&hcamAiLog.filter(y=>y.g===x.g&&y.t<x.t-4*60000&&x.t-y.t<=45*60000).pop();
+    if(!x){ $("hcamAiOut").innerHTML=`${esc(hcamGName(hcamSel))}は、まだ読んでいません。「今の写真を読む」を押してください。`; return; }
+    const tr=prev?(x.lv-prev.lv>=10?`　${hcamHM(prev.t)}より<b>増えています</b>（${prev.lv}%→${x.lv}%）`:prev.lv-x.lv>=10?`　${hcamHM(prev.t)}より<b>減っています</b>（${prev.lv}%→${x.lv}%）`:`　${hcamHM(prev.t)}からあまり変わっていません`):"";
+    $("hcamAiOut").innerHTML=`${esc(hcamGName(x.g))}（${hcamHM(x.t)}に読みました）：<span class="hcamlv" style="background:${hcamLvColor(x.lv)}">${x.lv}%・${hcamLvWord(x.lv)}</span>${x.cars!=null?`　写っている車 約${x.cars}台`:""}${x.ppl!=null?`　待っているお客様 約${x.ppl}人`:""}${tr}${x.note?`<br>${esc(x.note)}`:""}`;
+  }
+  async function hcamAi(quiet){
+    const key=hcamLS("tenko.gemkey",""); if(!key){ if(!quiet){ $("hcamKeyBox").open=true; $("hcamAiOut").textContent="先にGeminiのキーを入れてください（下の「Geminiのキー」）"; } return; }
+    if(hcamAiBusy) return; hcamAiBusy=true; hcamAiAt=Date.now();
+    const g=HCAM.find(x=>x[0]===hcamSel)||HCAM[0], pool=g[0][0]==="p";
+    if(!quiet) $("hcamAiOut").textContent="写真を取ってきています…";
+    try{
+      const j=await (await fetch(`${HCAM_PROXY}?f=${g[2].map(x=>x[0]).join(",")}`,{cache:"no-store"})).json();
+      if(!j||!j.ok) throw new Error((j&&j.error)||"写真を取れませんでした（サーバーの準備がまだかもしれません）");
+      const imgs=(j.imgs||[]).filter(x=>x.b64); if(!imgs.length) throw new Error("写真を取れませんでした");
+      if(!quiet) $("hcamAiOut").textContent="AIが読んでいます…";
+      const ask=(pool?`これは羽田空港のタクシー待機所（タクシープール）の定点カメラの写真${imgs.length}枚です（同じ待機所を別の向きから写したもの）。待機所の駐車枠が、客待ちのタクシーでどのくらい埋まっているかを読んでください。`
+        :`これは羽田空港のタクシー乗り場の定点カメラの写真${imgs.length}枚です。乗り場に並んでいる客待ちのタクシーの列と、タクシーを待つお客様の列がどのくらいかを読んでください。`)
+        +`夜はライトだけで見づらいことがあります。分からないところは推測しすぎないでください。次の形のJSONだけで答えてください：{"level":埋まり具合0〜100の整数（${pool?"0=空っぽ、100=満杯":"0=タクシーがいない、100=タクシーが長く並んでいる"}）,"cars":写っているタクシーのおおよその台数（整数）,"people":${pool?"null":"待っているお客様のおおよその人数（整数。見えなければnull）"},"note":"気づいたことを日本語で40字以内"}`;
+      const body={contents:[{parts:[{text:ask}].concat(imgs.map(x=>({inline_data:{mime_type:"image/jpeg",data:x.b64}})))}],generationConfig:{responseMimeType:"application/json",temperature:0.1}};
+      let r=null, err="";
+      for(const m of ["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.0-flash"]){
+        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+        if(res.ok){ r=await res.json(); break; }
+        err=res.status===400||res.status===403?"キーが正しくないようです。もう一度貼り付けてください":res.status===429?"無料で使える回数を超えました。しばらく（または明日まで）待ってください":"AIにつながりませんでした（"+res.status+"）";
+        if(res.status!==404&&res.status!==429&&res.status<500) break;
+      }
+      if(!r) throw new Error(err);
+      const t=((((r.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||"").join("");
+      const o=JSON.parse(t.replace(/^[^{]*/,"").replace(/[^}]*$/,""));
+      const lv=Math.max(0,Math.min(100,Math.round(+o.level))); if(!isFinite(lv)) throw new Error("AIの答えを読めませんでした");
+      const num=v=>v==null||!isFinite(+v)?null:Math.round(+v);
+      hcamAiLog.push({t:Date.now(),g:g[0],lv,cars:num(o.cars),ppl:num(o.people),note:String(o.note||"").slice(0,60),arr:hcamArr60()});
+      hcamAiLog=hcamAiLog.filter(x=>Date.now()-x.t<30*864e5).slice(-1500); hcamLSet("tenko.hcamAi",hcamAiLog);
+      hcamAiShow(); hcamPoolDraw();
+    }catch(e){ if(!quiet) $("hcamAiOut").textContent=e.message||"読めませんでした"; }
+    finally{ hcamAiBusy=false; }
+  }
+  // ----- プールに入った・出たの記録（待ち時間の実績。混み具合と到着便の数も一緒に残す） -----
+  function hcamPoolDraw(){
+    const open=hcamPool.length&&!hcamPool[hcamPool.length-1].out?hcamPool[hcamPool.length-1]:null, done=hcamPool.filter(x=>x.out);
+    $("hcamIn").disabled=!!open; $("hcamOut").disabled=!open;
+    $("hcamPoolNow").innerHTML=open?`<b>${hcamHM(open.in)}にプールに入りました（${esc(hcamGName(open.g))}）。いま${Math.round((Date.now()-open.in)/60000)}分</b>`:"羽田のプールに入ったら「プールに入った」、乗り場に向けて出たら「出た」を押してください。待ち時間の実績が貯まります。";
+    const ws=done.map(x=>(x.out-x.in)/60000), avg=a=>Math.round(a.reduce((p,c)=>p+c,0)/a.length);
+    let est="";
+    if(done.length){
+      est=`これまで${done.length}回・平均${avg(ws)}分（最短${Math.round(Math.min(...ws))}分・最長${Math.round(Math.max(...ws))}分）`;
+      const g=open?open.g:(["p1","p3","p4"].includes(hcamSel)?hcamSel:"p1"), cur=hcamLatest(g,30);
+      if(cur){ const near=done.filter(x=>x.lv!=null&&Math.abs(x.lv-cur.lv)<=15);
+        est+=near.length?`<br>今と似た混み具合（${cur.lv}%前後）のとき：<b>平均${avg(near.map(x=>(x.out-x.in)/60000))}分</b>（${near.length}回の実績）${near.length<3?"。回数が少ないので目安です":""}`:`<br>今の混み具合（${cur.lv}%）に近い実績は、まだありません`; }
+    }
+    $("hcamEst").innerHTML=est;
+    $("hcamLogList").innerHTML=done.length?done.slice(-20).reverse().map(x=>{ const d=new Date(x.in); return `${d.getMonth()+1}/${d.getDate()} ${hcamHM(x.in)}→${hcamHM(x.out)}　<b>${Math.round((x.out-x.in)/60000)}分</b>　${esc(hcamGName(x.g))}${x.lv!=null?`・混み${x.lv}%`:""}${x.arr!=null?`・1時間の到着便${x.arr}便`:""} <button type="button" class="btn" data-hcamdel="${x.in}" style="min-height:30px;padding:0 8px">消す</button>`; }).join("<br>"):"まだ記録がありません";
+  }
+  $("hcamIn").onclick=()=>{ const g=["p1","p3","p4"].includes(hcamSel)?hcamSel:"p1", cur=hcamLatest(g,20);
+    hcamPool.push({in:Date.now(),out:null,g,lv:cur?cur.lv:null,arr:hcamArr60()}); hcamLSet("tenko.hcamPool",hcamPool.slice(-500)); hcamPoolDraw();
+    if(!cur&&hcamLS("tenko.gemkey","")&&hcamSel===g) hcamAi(true).then(()=>{ const c=hcamLatest(g,5), o=hcamPool[hcamPool.length-1]; if(c&&o&&!o.out&&o.lv==null){ o.lv=c.lv; hcamLSet("tenko.hcamPool",hcamPool); hcamPoolDraw(); } }); };
+  $("hcamOut").onclick=()=>{ const o=hcamPool[hcamPool.length-1]; if(!o||o.out) return; o.out=Date.now();
+    if(o.out-o.in<60000) hcamPool.pop(); hcamLSet("tenko.hcamPool",hcamPool); hcamPoolDraw(); };
+  $("hcamLogList").onclick=e=>{ const b=e.target.closest("[data-hcamdel]"); if(!b||!confirm("この記録を消しますか？")) return; hcamPool=hcamPool.filter(x=>String(x.in)!==b.dataset.hcamdel); hcamLSet("tenko.hcamPool",hcamPool); hcamPoolDraw(); };
+  $("hcamAiBtn").onclick=()=>hcamAi(false);
+  $("hcamAiAuto").checked=!!hcamLS("tenko.hcamAuto",false);
+  $("hcamAiAuto").onchange=()=>{ hcamLSet("tenko.hcamAuto",$("hcamAiAuto").checked); if($("hcamAiAuto").checked) hcamAi(true); };
+  $("hcamKey").value=hcamLS("tenko.gemkey","");
+  $("hcamKeySave").onclick=()=>{ const v=$("hcamKey").value.trim(); hcamLSet("tenko.gemkey",v); $("hcamAiOut").textContent=v?"キーを保存しました。「今の写真を読む」を押してください":"キーを消しました"; if(v) $("hcamKeyBox").open=false; };
+  $("hcamAiBox").hidden=!HCAM_PROXY;
+  hcamPoolDraw(); var hcamReady=true;
   const hcamShown=()=>$("hcamBox").open&&!$("subAir").hidden&&!$("tabLong").hidden&&document.visibilityState==="visible";
-  setInterval(()=>{ if(hcamShown()&&Date.now()-hcamAt>55000) hcamDraw(); },5000);
+  setInterval(()=>{ if(hcamShown()&&Date.now()-hcamAt>55000) hcamDraw(); if(hcamShown()&&$("hcamAiAuto").checked&&Date.now()-hcamAiAt>5*60000) hcamAi(true); },5000);
   document.addEventListener("visibilitychange",()=>{ if(hcamShown()&&Date.now()-hcamAt>30000) hcamDraw(); });
 
   let airKind="arr", airAp="HND", airData={}, airAt={};
@@ -6688,12 +6790,14 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const kotekiOnly=!rides.length&&!rzRaw.length&&Object.keys(check).length>0&&Object.keys(check).every(k=>k==="koteki"||k==="kakushu");
     if(!rides.length&&!kotekiOnly) errs.push("明細の行がありません");
     if(date&&kotekiOnly&&!dayHas(sales.days[date])) errs.push(`${md(date)} 出庫の記録がありません（公的割引・各種料金だけは入れられません）`);
-    if(date&&!rzOnly&&!kotekiOnly&&!hasShift(date)&&!tenko.ab) errs.push(`点呼時間で ${md(date)} 出社の業務前点呼（実績）が入っていません。先に点呼時間で入れてください`);
+    // 過去の日で、点呼時間に計画だけ入っている勤務は、取り込むときに計画の時刻を実績にする（日報があるので乗務した日。2026-11-08 宮沢さんの10月分で取り込めなかった）
+    if(date&&!rzOnly&&!kotekiOnly&&!hasShift(date)&&!tenko.ab&&!(planOnly(date)&&date<todayStr())) errs.push(`点呼時間で ${md(date)} 出社の勤務が入っていません。先に点呼時間で ${md(date)} の業務前点呼を入れてください`);
     if(date&&rzOnly&&!sales.days[date]&&!hasShift(date)) errs.push(`${md(date)} 出社の勤務がありません（連続配車の時間だけは入れられません）`);
     return {date,check,rides,errs,tenko,rzOnly,kotekiOnly};
   }
   // 点呼時間にその日の勤務がなければ、取り込んだ点呼の実績で作る（計画も同じ時刻）。実績が空なら埋める
   function applyTenko(p){
+    if((!p.tenko||!p.tenko.ab)&&p.date&&p.date<todayStr()){ const r=planOnly(p.date); if(r&&r.pb){ r.ab=r.pb; if(!r.aa&&r.pa) r.aa=r.pa; save(); } return; }
     if(!p.tenko||!p.tenko.ab) return;
     let r=recs.find(x=>x.date===p.date);
     if(!r){ r={id:"r"+Date.now()+Math.random().toString(36).slice(2,5),date:p.date,pb:p.tenko.ab,pa:p.tenko.aa||"",ab:"",aa:""}; recs.push(r); }
