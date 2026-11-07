@@ -45,6 +45,13 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 #rOut a.go{display:block;text-align:center;background:#1A73E8;color:#fff;padding:12px;border-radius:10px;font-weight:800;font-size:16px;text-decoration:none;margin-top:6px}
 .wp{display:flex;width:28px;height:28px;border-radius:50%;background:#B3261E;color:#fff;font:800 15px/1 sans-serif;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .wp.d{background:#1A73E8}
+/* 自分の場所の登録：検索（音声・文字）→地図で位置を直す（2026-11-07 ユーザー指定） */
+.favbox[hidden],.favbar[hidden]{display:none}
+.favbox{border:1px dashed var(--pk-line);border-radius:10px;padding:8px;display:grid;gap:6px}
+.favbox input{width:100%;box-sizing:border-box}
+.favres button{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px;margin-top:4px;font-size:14px}
+.favbar{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:1002;background:var(--surface);border:2px solid var(--pk-line);border-radius:14px;padding:10px;display:grid;gap:8px;max-width:520px;margin:0 auto;box-shadow:0 4px 16px rgba(0,0,0,.25);font-size:14px}
+.favbar input{font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%;box-sizing:border-box}
 .cnt{font:800 12px/1 sans-serif;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap}
 /* 全画面：設定の枠を隠して地図だけにする（アプリの見出しも隠してもらう。2026-10-28 ユーザー指定） */
 .fullbtn{position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:1001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
@@ -55,12 +62,24 @@ body.full .panel{display:none}
 <div id="map"></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
+<div class="favbar" id="favBar" hidden>
+  <div>📍 <b>印を指で動かすか、地図をタップして</b>位置を直してください</div>
+  <input id="favName" placeholder="名前（例：自宅、会社、よく行く店）" maxlength="20" autocomplete="off">
+  <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
+</div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-06</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-07</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
       <div class="row"><label>よく使う <select id="rFav"></select></label><button class="btn" id="favAdd" style="min-height:36px;padding:6px 10px">＋自分の場所を登録</button></div>
+      <div class="favbox" id="favBox" hidden>
+        <b>自分の場所を登録</b>
+        <div class="row"><input id="favQ" placeholder="住所・駅名・地名（例：板橋区赤塚新町3）" autocomplete="off" enterkeyhint="search"></div>
+        <div class="btns"><button class="btn" id="favMic" hidden>🎤 声で入れる</button><button class="btn primary" id="favSearch">🔍 検索</button><button class="btn" id="favMap">検索せずに地図で選ぶ</button><button class="btn" id="favCancel">やめる</button></div>
+        <small id="favMsg">キーボードのマイクでも声で入れられます。お店や施設の名前は見つからないことがあるので、そのときは住所か近くの駅名で探して、地図で位置を直してください。</small>
+        <div class="favres" id="favRes"></div>
+      </div>
       <div id="favList" style="font-size:13px"></div>
       <div class="row"><label>寄り道は線から <select id="rLim"><option value="500">500m</option><option value="1000" selected>1km</option><option value="1500">1.5km</option><option value="2000">2km</option></select> 以内</label>
         <label>経由地 <select id="rNum"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select> か所</label></div>
@@ -90,7 +109,7 @@ body.full .panel{display:none}
       ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝その他。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
-      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うのプルダウン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。「＋自分の場所を登録」で、地図をタップした場所に名前を付けて5か所まで登録でき、よく使うのプルダウンから選べます（このスマホに覚えます）。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②は①の行き先から、③は②の行き先から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
+      ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うのプルダウン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。「＋自分の場所を登録」で、住所・駅名・地名を文字か声で検索し、地図で印を動かして位置を直してから名前を付けて、5か所まで登録でき、よく使うのプルダウンから選べます（このスマホに覚えます）。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②は①の行き先から、③は②の行き先から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
     </details>
   </div>
 </div>
@@ -253,12 +272,43 @@ $("rFav").onchange=()=>{ const v=$("rFav").value; if(!v) return;
   if(v[0]==="s"){ $("rDest").value=v.slice(1); rDestLL=null; }
   else { const f=favs[+v.slice(1)]; if(!f) return; rDestLL=[f.lat,f.lng]; rDestName=f.n; $("rDest").value=f.n; }
   rSave(); $("rFav").value=""; };
-$("favAdd").onclick=()=>{ if(favs.length>=FMAX){ alert(`登録できるのは${FMAX}か所までです。使わない場所を消してください`); return; } rTapStart("fav","地図で登録したい場所をタップしてください"); };
+$("favAdd").onclick=()=>{ if(favs.length>=FMAX){ alert(`登録できるのは${FMAX}か所までです。使わない場所を消してください`); return; } $("favBox").hidden=false; $("favRes").innerHTML=""; $("favQ").focus(); };
+// 検索：駅名はこのページの駅一覧、それ以外は国土地理院の住所・地名検索（キー不要）
+let favMk=null, favPicking=false;
+const favPin=(ll,name)=>{ if(favMk) map.removeLayer(favMk);
+  favMk=L.marker(ll,{draggable:true,icon:L.divIcon({className:"",html:'<span class="wp d">★</span>',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(map);
+  map.setView(ll,Math.max(map.getZoom(),17)); favPicking=true; $("favName").value=name||""; $("favBar").hidden=false;
+  $("pbody").hidden=true; $("fold").textContent="開く"; };
+const favEnd=()=>{ favPicking=false; if(favMk){ map.removeLayer(favMk); favMk=null; } $("favBar").hidden=true; $("pbody").hidden=false; $("fold").textContent="閉じる"; };
+$("favSearch").onclick=async()=>{ const q=$("favQ").value.trim(); if(!q){ $("favMsg").textContent="場所を入れてください"; return; }
+  $("favMsg").textContent="探しています…"; $("favRes").innerHTML="";
+  const qs=q.replace(/駅$/,""), hits=ST.filter(x=>x[0].replace(/（.*$/,"")===qs||x[0].startsWith(qs)).slice(0,3).map(x=>({t:x[0]+"駅",ll:[x[1],x[2]]}));
+  try{ const r=await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(q)); const j=await r.json();
+    (j||[]).slice(0,8).forEach(f=>{ const c=f.geometry&&f.geometry.coordinates; if(c) hits.push({t:f.properties&&f.properties.title||q,ll:[c[1],c[0]]}); }); }catch(e){}
+  if(!hits.length){ $("favMsg").textContent="見つかりませんでした。住所（区・町・丁目）や近くの駅名で探すか、「検索せずに地図で選ぶ」を押してください"; return; }
+  $("favMsg").textContent="候補を押すと地図に印が出ます";
+  $("favRes").innerHTML=hits.map((h,i)=>`<button data-fh="${i}">${esc(h.t)}</button>`).join("");
+  $("favRes").querySelectorAll("[data-fh]").forEach(b=>b.onclick=()=>{ const h=hits[+b.dataset.fh]; favPin(h.ll,q.length<=20?q:""); }); };
+$("favQ").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("favSearch").click(); } });
+$("favMap").onclick=()=>favPin([map.getCenter().lat,map.getCenter().lng],"");
+$("favCancel").onclick=()=>{ $("favBox").hidden=true; $("favRes").innerHTML=""; };
+$("favBack").onclick=()=>favEnd();
+$("favNo").onclick=()=>{ favEnd(); $("favBox").hidden=true; };
+$("favOk").onclick=()=>{ if(!favMk) return; const n=$("favName").value.trim().slice(0,20); if(!n){ alert("名前を入れてください"); return; }
+  if(favs.length>=FMAX){ alert(`登録できるのは${FMAX}か所までです`); return; }
+  const ll=favMk.getLatLng(); favs.push({n,lat:+ll.lat.toFixed(6),lng:+ll.lng.toFixed(6)}); favSave(); favDraw();
+  rDestLL=[ll.lat,ll.lng]; rDestName=n; $("rDest").value=n; favEnd(); $("favBox").hidden=true; $("favQ").value=""; $("favRes").innerHTML="";
+  $("rOut").textContent=`「${n}」を登録し、行き先にしました`; rSave(); };
+// 声で入れる（ブラウザが対応しているときだけボタンを出す）
+(()=>{ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return; $("favMic").hidden=false;
+  $("favMic").onclick=()=>{ const rc=new SR(); rc.lang="ja-JP"; rc.interimResults=false; $("favMsg").textContent="話してください…";
+    rc.onresult=e=>{ $("favQ").value=e.results[0][0].transcript.replace(/[。、\s]/g,""); $("favSearch").click(); };
+    rc.onerror=()=>{ $("favMsg").textContent="声を聞き取れませんでした。キーボードのマイクも使えます"; }; rc.start(); }; })();
 $("rDest").addEventListener("input",()=>{ rDestLL=null; rDestName="地図で選んだ場所"; });
 // 地図をタップして決める：rTapMode="dest"＝行き先、"start"＝出発地（「地図上から探す」。2026-10-27 ユーザー指定）
 const rTapStart=(mode,msg)=>{ rTapMode=mode; $("pbody").hidden=true; $("fold").textContent="開く"; $("map").style.cursor="crosshair"; alert(msg); };
 $("rTap").onclick=()=>rTapStart("dest","地図で行き先をタップしてください");
-map.on("click",e=>{ if(!rTapMode) return; const mode=rTapMode; rTapMode=false; $("map").style.cursor="";
+map.on("click",e=>{ if(favPicking&&favMk){ favMk.setLatLng(e.latlng); return; } if(!rTapMode) return; const mode=rTapMode; rTapMode=false; $("map").style.cursor="";
   const ll=[e.latlng.lat,e.latlng.lng]; $("pbody").hidden=false; $("fold").textContent="閉じる";
   if(mode==="fav"){ const n=(prompt("この場所の名前（例：自宅、会社、よく行く店）","")||"").trim().slice(0,20);
     if(!n){ $("rOut").textContent="名前が入っていないので、登録しませんでした"; return; }
