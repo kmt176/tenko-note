@@ -882,7 +882,7 @@ body.rtfull{overflow:hidden}
       <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowShop">🏪 コンビニ・飲食店</label>
       <div id="wcShopBox" hidden style="margin-top:6px;font-size:15px">
         <!-- お店の名前で探す（文字・声。2026-11-07 ユーザー指定） -->
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><input type="text" id="wcShopQ" placeholder="お店の名前（例：吉野家、セブン、一蘭）" autocomplete="off" enterkeyhint="search" style="flex:1 1 auto;min-width:0;font-size:16px">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><input type="text" id="wcShopName" placeholder="お店の名前（例：吉野家、セブン、一蘭）" autocomplete="off" enterkeyhint="search" style="flex:1 1 auto;min-width:0;font-size:16px">
           <button class="btn" id="wcShopMic" hidden aria-label="声で入れる">🎤</button><button class="btn primary" id="wcShopFind">探す</button></div>
         <div id="wcShopFound" style="font-size:14px"></div>
         <div id="wcShopTypes" style="display:flex;flex-wrap:wrap;gap:4px 14px"></div>
@@ -895,7 +895,6 @@ body.rtfull{overflow:hidden}
             <div style="display:flex;align-items:center;gap:8px"><label for="wcShopM" style="white-space:nowrap">駐車場までの距離</label><input type="range" id="wcShopM" min="10" max="200" step="10" style="flex:1 1 auto;width:0;min-width:0;margin:0"><b id="wcShopMv" style="white-space:nowrap">50m以内</b></div>
             <label style="display:flex;align-items:center;gap:6px;margin-top:4px"><input type="checkbox" id="wcShopOwn">お店専用の駐車場があるお店だけ（お客さん用の駐車場・お店の名前の駐車場）</label></div>
           <div style="font-size:13px;color:#5F6368;margin-top:2px">緑のふち＝駐車場あり、白い丸＝まだ分からない、灰色＝駐車場なし。印を押して、駐車場と喫煙所の「あり／なし」とコメントを入れて「登録する」を押してください。違っていたら、選び直して「登録する」で直せます</div></div>
-        <input type="search" id="wcShopQ" placeholder="店名で絞る（例：セブン、早宮）" autocomplete="off" style="margin-top:8px;width:100%;box-sizing:border-box;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
         <div class="btnrow"><button class="btn" id="wcShopLoad">🔍 地図に見えている範囲を検索</button><button class="btn" id="wcShopCsv" hidden>CSVで保存（管理者）</button></div>
         <div class="geo" id="wcShopMsg" style="font-size:13.5px"></div>
       </div></div>
@@ -1403,7 +1402,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 20:31</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 20:49</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3167,7 +3166,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const shopShown=()=>{ const all=Object.values(shopEls), rs=all.filter(x=>x.rest);
     return all.filter(x=>shopTOn(x.kind)&&(x.rest||x.kind!=="cvs"||!rs.some(r=>Math.abs(r.lat-x.lat)<.0006&&distM([r.lat,r.lng],[x.lat,x.lng])<40))).map(x=>({x,j:shopJudge(x)})).filter(o=>o.j.ok||(wcOpt.showNo&&o.j.src==="chkno")||(wcOpt.allCvs&&o.j.src!=="chkno"))
       .filter(o=>!wcOpt.smOnly||(cvsChk[o.x.id]||{}).sm==="あり")
-      .filter(o=>!shopQ||shopNorm([o.x.t.name,o.x.t.brand,o.x.t["name:ja"]].filter(Boolean).join(" ")).includes(shopQ)); };
+      .filter(o=>!shopQ||shopQs.some(v=>shopKey([o.x.t.name,o.x.t.brand,o.x.t["name:ja"]].filter(Boolean).join("|")).includes(v))); };
   // 休憩場の地図（マイマップ）の喫煙所・長時間駐車可にあるコンビニを、お店に足す（クレーム発生ポイントは除く。2026-10-31 ユーザー指定）
   const SHOP_CV_RE=/ファミリーマート|ファミマ|セブン|ローソン|ミニストップ|デイリー|ニューデイズ|NewDays|スリーエフ|ポプラ|マイバスケット|コンビニ/i;
   let shopRestDone=false;
@@ -3273,8 +3272,9 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const shopKey=v=>String(v||"").normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\s\-・ー‐－.'’&＆]/g,"");
   const SHOP_ALIAS={"せぶん":"7eleven","せぶんいれぶん":"7eleven","ろーそん":"lawson","ふぁみま":"ふぁみりーまーと","まっく":"まくどなるど","まくど":"まくどなるど","けんた":"けんたっきー","すきや":"すき家"};
   let shopFindMk=null;
+  function shopFilterOff(){ shopQ=""; shopQs=[]; if(shopFindMk){ shopFindMk.remove(); shopFindMk=null; } drawShops(); }
   async function shopFind(){
-    const q0=$("wcShopQ").value.trim(), f=$("wcShopFound"); if(!q0){ f.textContent="お店の名前を入れてください"; return; }
+    const q0=$("wcShopName").value.trim(), f=$("wcShopFound"); if(!q0){ shopFilterOff(); f.textContent="お店の名前を入れてください"; return; }
     if(!wcMapObj) await openToilet(); if(!wcMapObj) return;
     if(!wcOpt.shop) $("wcShowShop").click();
     f.textContent="探しています…";
@@ -3283,20 +3283,23 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const c=wcMapObj.getCenter(), mm=wcMeMarker&&wcMeMarker.getLatLng?wcMeMarker.getLatLng():null, me=mm, o=me?[me.lat,me.lng]:[c.lat,c.lng];
     const hit=Object.values(shopEls).filter(x=>{ const k=shopKey((x.t.name||"")+"|"+(x.t.brand||"")+"|"+(x.t["name:ja"]||"")); return qs.some(v=>k.includes(v)); })
       .map(x=>({x,d:distM(o,[x.lat,x.lng])})).sort((a,b)=>a.d-b.d).slice(0,10);
-    if(!hit.length){ f.textContent=`「${q0}」という名前のお店は、データの中に見つかりませんでした（データにあるのはコンビニ・ファストフード・ラーメン・牛丼・ファミレスです）`; return; }
-    f.innerHTML=`<div class="src">${me?"今の場所":"地図の真ん中"}に近い順（押すと地図で出します）</div>`+hit.map((h,i)=>`<button class="btn" data-sf="${i}" style="display:block;width:100%;text-align:left;margin-top:4px;min-height:40px">${esc(h.x.t.name||h.x.t.brand||"お店")}　<small>${h.d>=1000?(h.d/1000).toFixed(1)+"km":Math.round(h.d)+"m"}</small></button>`).join("");
+    shopQ=q; shopQs=qs; drawShops();   // 地図の印もこの名前のお店だけにする
+    const offBtn=`<button class="btn" id="wcShopOff" style="margin-top:4px">✕ 絞り込みを外す（全部のお店に戻す）</button>`;
+    setTimeout(()=>{ if($("wcShopOff")) $("wcShopOff").onclick=()=>{ shopFilterOff(); $("wcShopName").value=""; $("wcShopFound").textContent="絞り込みを外しました"; }; },0);
+    if(!hit.length){ f.innerHTML=offBtn; f.insertAdjacentText("afterbegin",`「${q0}」という名前のお店は、データの中に見つかりませんでした（データにあるのはコンビニ・ファストフード・ラーメン・牛丼・ファミレスです）`); return; }
+    f.innerHTML=`<div class="src">地図の印を「${esc(q0)}」のお店だけにしました。${me?"今の場所":"地図の真ん中"}に近い順（押すと地図で出します）</div>`+offBtn+hit.map((h,i)=>`<button class="btn" data-sf="${i}" style="display:block;width:100%;text-align:left;margin-top:4px;min-height:40px">${esc(h.x.t.name||h.x.t.brand||"お店")}　<small>${h.d>=1000?(h.d/1000).toFixed(1)+"km":Math.round(h.d)+"m"}</small></button>`).join("");
     f.querySelectorAll("[data-sf]").forEach(b=>b.onclick=()=>{ const x=hit[+b.dataset.sf].x;
       wcMapObj.setView([x.lat,x.lng],18); if(shopFindMk) shopFindMk.remove();
       shopFindMk=L.circleMarker([x.lat,x.lng],{radius:16,color:"#D23C2F",weight:4,fill:false,interactive:false}).addTo(wcMapObj);
       setTimeout(()=>{ const mk=shopMarks[x.id]; if(mk&&mk._map&&mk.openPopup) mk.openPopup(); else L.popup(WC_POP).setLatLng([x.lat,x.lng]).setContent(shopPop(x,shopJudge(x))).openOn(wcMapObj); },600);
       $("wcMap").scrollIntoView({block:"start",behavior:"smooth"}); }); }
   $("wcShopFind").onclick=shopFind;
-  $("wcShopQ").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); shopFind(); } });
+  $("wcShopName").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); shopFind(); } });
   (()=>{ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return; $("wcShopMic").hidden=false;
     // 🎤：先にキーボードを閉じ、ページの位置を押す前のまま保つ（キーボードが閉じると、ページが一番下へ飛んでいたため。2026-11-07）
     $("wcShopMic").onclick=()=>{ const y=window.scrollY, keep=()=>window.scrollTo(0,y); if(document.activeElement) document.activeElement.blur(); setTimeout(keep,50); setTimeout(keep,350);
       const rc=new SR(); rc.lang="ja-JP"; rc.interimResults=false; $("wcShopFound").textContent="お店の名前を話してください…";
-      rc.onresult=e=>{ $("wcShopQ").value=e.results[0][0].transcript.replace(/[。、\s]/g,""); keep(); shopFind().then(()=>$("wcShopFound").scrollIntoView({block:"nearest"})); };
+      rc.onresult=e=>{ $("wcShopName").value=e.results[0][0].transcript.replace(/[。、\s]/g,""); keep(); shopFind().then(()=>$("wcShopFound").scrollIntoView({block:"nearest"})); };
       rc.onerror=()=>{ $("wcShopFound").textContent="声を聞き取れませんでした。キーボードのマイクも使えます"; }; rc.start(); }; })();
   // 一番近いお店（コンビニ・飲食店）。今の絞り込み（種類・出すお店・喫煙所など）に合うお店から選ぶ（2026-11-01 ユーザー指定）
   $("wcShopNear").onclick=async()=>{
@@ -3387,8 +3390,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   document.querySelectorAll("input[name=wcShopMode]").forEach(r=>{ r.checked=r.value===(wcOpt.allCvs?"all":"ok");
     r.onchange=()=>{ if(!r.checked) return; wcOpt.allCvs=wcOpt.showNo=r.value==="all"; wcSave(); $("wcShopOkOpt").hidden=wcOpt.allCvs; drawShops(); }; });
   $("wcShopOkOpt").hidden=wcOpt.allCvs;
-  // 店名で絞る（読み込んだお店の中から。名前・ブランドに入っていれば出す）
-  let shopQ=""; $("wcShopQ").oninput=()=>{ shopQ=shopNorm($("wcShopQ").value); drawShops(); };
+  // 店名で絞る：上の名前の欄で「探す」を押したときに、地図の印もその名前のお店だけにする（2つあった欄を1つにまとめた。2026-11-07 ユーザー指定）
+  var shopQ="", shopQs=[];
   // CSVで保存（管理者だけ）。今地図に出しているお店（駐車場ありと決めたもの・オンの種類）
   $("wcShopCsv").onclick=()=>{
     if(!isAdmin()) return;
