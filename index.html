@@ -1397,7 +1397,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 19:07</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 19:21</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3597,8 +3597,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function hospState(h,now){
     const cl=hospClosed(h,now); if(cl.closed) return {closed:true,why:cl.why,c:"#8A8F8E",l:cl.why};
     const ends=hospEnds(h,now,cl), nm=now.getHours()*60+now.getMinutes(), next=ends.find(e=>e.m>nm);
-    if(!ends.length) return {ends,c:"#8A8F8E",l:"今日の時刻が表にありません"};
-    if(!next) return {ends,past:true,c:"#8A8F8E",l:"今日の外来は終わりました"};
+    if(!ends.length) return {ends,c:"#E8890C",l:"今日の時刻が表にありません"};   // 灰色は見づらいのでオレンジ（2026-11-07 ユーザー指定）
+    if(!next) return {ends,past:true,c:"#E8890C",l:"今日の外来は終わりました"};
     const left=next.m-nm, soon=left<=hospWin;
     return {ends,next,left,soon,c:soon?"#D23C2F":"#1D6A80",l:`${next.lab}（${hospHm(next.m)}）まで あと${hospLeft(left)}`};
   }
