@@ -1402,7 +1402,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 20:49</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 23:31</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3118,18 +3118,22 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   };
   // ===== 駐車場のあるお店（2026-10-31 ユーザー指定）。地図に見えている範囲を、その場でオープンストリートマップ（Overpass API）から取る =====
   // お店の情報に駐車場あり（parking など）が書いてあればそれを使い、なければ、決めた距離（初めは50m）の中に駐車場（amenity=parking）があるかで決める
-  const SHOP_T=[["cvs","コンビニ","コ","#8E44AD"],["gyu","牛丼","牛","#C0392B"],["ramen","ラーメン","ラ","#C0392B"],["fami","ファミレス","フ","#C0392B"],["ff","ファストフード","F","#C0392B"]];
+  const SHOP_T=[["cvs","コンビニ","コ","#8E44AD"],["gyu","牛丼","牛","#C0392B"],["ramen","ラーメン","ラ","#C0392B"],["steak","ステーキ","ス","#C0392B"],["chinese","中華","中","#C0392B"],["fami","ファミレス","フ","#C0392B"],["ff","ファストフード","F","#C0392B"]];
   const SHOP_Z=14, SHOP_OVP=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
   const SHOP_GYU="吉野家|すき家|松屋|なか卯|すた丼|Yoshinoya|Sukiya|Matsuya";
   const SHOP_RAMEN="ラーメン|らーめん|拉麺|中華そば|つけ麺|つけめん|麺屋|麺処|日高屋|幸楽苑|天下一品|一蘭|一風堂|ramen";
-  const SHOP_FAMI="ガスト|デニーズ|サイゼリヤ|ジョナサン|ロイヤルホスト|バーミヤン|ココス|夢庵|ジョリーパスタ|びっくりドンキー|ステーキ宮|ビッグボーイ|藍屋|しゃぶ葉|むさしの森|Denny|Gusto|Saizeriya|Jonathan|Royal Host|Bamiyan|COCO'S";
-  const shopRe=new RegExp(`${SHOP_GYU}|${SHOP_RAMEN}|${SHOP_FAMI}`,"i");
+  const SHOP_STEAK="ステーキ|すてーき|steak|ペッパーランチ|ブロンコビリー|Pepper Lunch";
+  const SHOP_CHINESE="中華|中国料理|中國料理|中国菜|餃子|ぎょうざ|ギョーザ|飯店|菜館|酒家|点心|點心|王将|れんげ食堂|紅虎|バーミヤン|Bamiyan|chinese";
+  const SHOP_FAMI="ガスト|デニーズ|サイゼリヤ|ジョナサン|ロイヤルホスト|ココス|夢庵|ジョリーパスタ|びっくりドンキー|ビッグボーイ|藍屋|しゃぶ葉|むさしの森|Denny|Gusto|Saizeriya|Jonathan|Royal Host|COCO'S";
+  const shopRe=new RegExp(`${SHOP_GYU}|${SHOP_RAMEN}|${SHOP_STEAK}|${SHOP_CHINESE}|${SHOP_FAMI}`,"i");
   let shopEls={}, shopPks={}, shopBoxes=[], shopLayer=null, shopBusy=false, shopMoveT=0, shopMoveOn=false;
   function shopKind(t){
     if(t.shop==="convenience") return "cvs";
     const n=[t.name,t.brand,t["name:en"],t["brand:en"]].filter(Boolean).join(" "), cu=t.cuisine||"";
     if(/beef_bowl|gyudon/.test(cu)||new RegExp(SHOP_GYU,"i").test(n)) return "gyu";
     if(/ramen/.test(cu)||new RegExp(SHOP_RAMEN,"i").test(n)) return "ramen";
+    if(/steak/.test(cu)||new RegExp(SHOP_STEAK,"i").test(n)) return "steak";
+    if(/chinese|dumpling|dim_sum/.test(cu)||new RegExp(SHOP_CHINESE,"i").test(n)) return "chinese";
     if(new RegExp(SHOP_FAMI,"i").test(n)) return "fami";
     if(t.amenity==="fast_food"||/burger/.test(cu)) return "ff";
     return null;
@@ -3242,7 +3246,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     shopBusy=true; m.textContent="見えている範囲のお店を読み込んでいます…";
     const f=v=>v.toFixed(5), b=`${f(bb.getSouth())},${f(bb.getWest())},${f(bb.getNorth())},${f(bb.getEast())}`,
       b2=`${f(bb.getSouth()-.0025)},${f(bb.getWest()-.003)},${f(bb.getNorth()+.0025)},${f(bb.getEast()+.003)}`, re=shopRe.source.replace(/"/g,"");
-    const q=`[out:json][timeout:30];(nwr["shop"="convenience"](${b});nwr["amenity"="fast_food"](${b});nwr["amenity"="restaurant"]["cuisine"~"ramen|beef_bowl|gyudon|burger"](${b});nwr["amenity"="restaurant"]["name"~"${re}",i](${b});nwr["amenity"="restaurant"]["brand"~"${re}",i](${b}););out center tags;nwr["amenity"="parking"]["access"!~"^(private|no)$"](${b2});out center tags;`;
+    const q=`[out:json][timeout:30];(nwr["shop"="convenience"](${b});nwr["amenity"="fast_food"](${b});nwr["amenity"="restaurant"]["cuisine"~"ramen|beef_bowl|gyudon|burger|steak|chinese|dumpling|dim_sum"](${b});nwr["amenity"="restaurant"]["name"~"${re}",i](${b});nwr["amenity"="restaurant"]["brand"~"${re}",i](${b}););out center tags;nwr["amenity"="parking"]["access"!~"^(private|no)$"](${b2});out center tags;`;
     try{
       const els=await shopFetch(q);
       els.forEach(e=>{ const la=e.lat!=null?e.lat:e.center&&e.center.lat, ln=e.lon!=null?e.lon:e.center&&e.center.lon; if(la==null) return;
@@ -3269,7 +3273,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("wcShopM").oninput=()=>{ wcOpt.shopM=+$("wcShopM").value; $("wcShopMv").textContent=`${wcOpt.shopM}m以内`; wcSave(); drawShops(); };
   $("wcShowShop").onchange=()=>{ wcOpt.shop=$("wcShowShop").checked; wcSave(); $("wcShopBox").hidden=!wcOpt.shop; $("wcShopMsg").textContent=""; if(wcOpt.shop){ shopOpen(); drawShops(); } else drawShops(); };
   // お店の名前で探す：保存したお店のデータ（shops.json）の名前・ブランドから、今の地図の真ん中（現在地が取れればそこ）に近い順に10件
-  const shopKey=v=>String(v||"").normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\s\-・ー‐－.'’&＆]/g,"");
+  const shopKey=v=>String(v||"").normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[\s\-・ー‐－.'’&＆!?！？「」]/g,"");
   const SHOP_ALIAS={"せぶん":"7eleven","せぶんいれぶん":"7eleven","ろーそん":"lawson","ふぁみま":"ふぁみりーまーと","まっく":"まくどなるど","まくど":"まくどなるど","けんた":"けんたっきー","すきや":"すき家"};
   let shopFindMk=null;
   function shopFilterOff(){ shopQ=""; shopQs=[]; if(shopFindMk){ shopFindMk.remove(); shopFindMk=null; } drawShops(); }
@@ -3286,7 +3290,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     shopQ=q; shopQs=qs; drawShops();   // 地図の印もこの名前のお店だけにする
     const offBtn=`<button class="btn" id="wcShopOff" style="margin-top:4px">✕ 絞り込みを外す（全部のお店に戻す）</button>`;
     setTimeout(()=>{ if($("wcShopOff")) $("wcShopOff").onclick=()=>{ shopFilterOff(); $("wcShopName").value=""; $("wcShopFound").textContent="絞り込みを外しました"; }; },0);
-    if(!hit.length){ f.innerHTML=offBtn; f.insertAdjacentText("afterbegin",`「${q0}」という名前のお店は、データの中に見つかりませんでした（データにあるのはコンビニ・ファストフード・ラーメン・牛丼・ファミレスです）`); return; }
+    if(!hit.length){ f.innerHTML=offBtn; f.insertAdjacentText("afterbegin",`「${q0}」という名前のお店は、データの中に見つかりませんでした（データにあるのはコンビニ・ファストフード・ラーメン・牛丼・ステーキ・中華・ファミレスです）`); return; }
     f.innerHTML=`<div class="src">地図の印を「${esc(q0)}」のお店だけにしました。${me?"今の場所":"地図の真ん中"}に近い順（押すと地図で出します）</div>`+offBtn+hit.map((h,i)=>`<button class="btn" data-sf="${i}" style="display:block;width:100%;text-align:left;margin-top:4px;min-height:40px">${esc(h.x.t.name||h.x.t.brand||"お店")}　<small>${h.d>=1000?(h.d/1000).toFixed(1)+"km":Math.round(h.d)+"m"}</small></button>`).join("");
     f.querySelectorAll("[data-sf]").forEach(b=>b.onclick=()=>{ const x=hit[+b.dataset.sf].x;
       wcMapObj.setView([x.lat,x.lng],18); if(shopFindMk) shopFindMk.remove();
