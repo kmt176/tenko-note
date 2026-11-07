@@ -529,6 +529,16 @@ body.rtfull{overflow:hidden}
   .hcamfig{margin:0 0 10px}
   .hcamfig img{width:100%;height:auto;display:block;border-radius:8px;background:#222;min-height:120px}   /* 元の写真の縦横比のまま（切らない）。第4待機所などは4:3 */
   .hcamfig figcaption{font-size:13px;margin-top:3px}
+  .hcamfig img{cursor:zoom-in}
+  .hcamzoom{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column}
+  .hcamzoom[hidden]{display:none}
+  .hzbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px calc(8px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left));padding-top:calc(8px + env(safe-area-inset-top));color:#fff}
+  .hzbar .sp{flex:1}
+  .hzbar button{min-height:44px;min-width:48px;border-radius:10px;border:1px solid #666;background:#222;color:#fff;font-size:17px;padding:0 12px}
+  .hztime{flex-basis:100%;font-size:13px;color:#ccc}
+  .hzwrap{flex:1;overflow:auto;display:grid;place-items:center;-webkit-overflow-scrolling:touch}
+  .hzwrap.big{display:block}
+  .hzwrap img{width:100%;max-width:none;height:auto;display:block}
   .hcambox{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:6px}
   .hcambtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .hcambtns .btn{min-height:42px}
@@ -1065,12 +1075,17 @@ body.rtfull{overflow:hidden}
       <details id="hcamBox" open><summary><b>羽田のタクシー待機所・乗り場カメラ</b></summary>
         <div class="hcamsel" id="hcamSel"></div>
         <div id="hcamImgs"></div>
+        <div id="hcamZoom" class="hcamzoom" hidden role="dialog" aria-label="カメラの写真を大きく見る">
+          <div class="hzbar"><b id="hzTitle"></b><span class="sp"></span><button type="button" id="hzMinus" aria-label="小さく">－</button><button type="button" id="hzPlus" aria-label="大きく">＋</button><button type="button" id="hzClose">✕ 閉じる</button>
+            <div id="hzTime" class="hztime"></div></div>
+          <div class="hzwrap" id="hzWrap"><img id="hzImg" alt=""></div>
+        </div>
         <div class="src" id="hcamNote"></div>
         <div class="hcambox" id="hcamAiBox" hidden>
           <b>🤖 AIで混み具合を読む</b>
           <div id="hcamAiOut" class="src">選んでいる場所の写真をAI（Gemini）に見せて、どのくらい埋まっているかを読みます。</div>
           <div class="hcambtns"><button type="button" class="btn" id="hcamAiBtn">今の写真を読む</button>
-            <label class="src" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hcamAiAuto">開いている間は5分ごとに読む</label></div>
+            <label class="src" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hcamAiAuto">AIの読み取りも、開いている間は5分ごとに自動でする</label></div>
           <details id="hcamKeyBox"><summary class="src">Geminiのキー（この端末だけに保存）</summary>
             <div class="src">① <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> を開いてGoogleにログイン → ②「APIキーを作成」→ ③ できた文字（AIza… や AQ.… で始まるもの）をコピーして下に貼り付け →「保存」。無料の範囲で使えます。キーはこのスマホの中だけに残し、サーバーやバックアップには送りません。</div>
             <div class="hcambtns"><input type="password" id="hcamKey" placeholder="AIza… または AQ.…" autocomplete="off" style="flex:1;min-width:0"><button type="button" class="btn" id="hcamKeySave">保存</button></div>
@@ -1439,7 +1454,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 01:40</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 01:51</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4068,10 +4083,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function hcamDraw(){
     const g=HCAM.find(x=>x[0]===hcamSel)||HCAM[0], t=Date.now(); hcamAt=t;
     $("hcamSel").innerHTML=HCAM.map(([k,n])=>`<button type="button" data-hcam="${k}" aria-pressed="${k===g[0]}">${n}</button>`).join("");
-    $("hcamImgs").innerHTML=g[2].map(([f,n])=>`<figure class="hcamfig"><a href="${HCAM_BASE}${f}?${t}" target="_blank" rel="noopener"><img src="${HCAM_BASE}${f}?${t}" alt="${n}" loading="lazy" onerror="this.alt='写真を読み込めませんでした';this.style.minHeight='60px'"></a><figcaption>${n}（押すと元の大きさで開きます）</figcaption></figure>`).join("");
+    $("hcamImgs").innerHTML=g[2].map(([f,n])=>`<figure class="hcamfig"><img src="${HCAM_BASE}${f}?${t}" alt="${n}" data-hzf="${f}" loading="lazy" onerror="this.alt='写真を読み込めませんでした';this.style.minHeight='60px'"><figcaption>${n}（押すと大きく出します）</figcaption></figure>`).join("");
     const d=new Date(t), ph=new Date(hcamMark(t)), p2=n=>String(n).padStart(2,"0");
     $("hcamNote").textContent=`${ph.getHours()}:${p2(ph.getMinutes())}ごろの写真です（${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}に読み込み。次は${(nx=>nx.getHours()+":"+p2(nx.getMinutes()))(new Date(hcamMark(t)+60000))}:25ごろ）`;
-    if(hcamReady){ hcamAiShow(); hcamPoolDraw(); }   // hcamReady は下の準備が済んでから true（起動直後に呼ばれても困らないよう var）
+    if(hcamReady){ hcamAiShow(); hcamPoolDraw(); hzSync(); }   // hcamReady は下の準備が済んでから true（起動直後に呼ばれても困らないよう var）
   }
   $("hcamSel").onclick=e=>{ const b=e.target.closest("[data-hcam]"); if(!b) return; hcamSel=b.dataset.hcam; try{ localStorage.setItem("tenko.hcam",hcamSel); }catch(e){} hcamDraw(); };
   $("hcamBox").addEventListener("toggle",()=>{ if($("hcamBox").open) hcamDraw(); });
@@ -4167,7 +4182,23 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("hcamKeySave").onclick=()=>{ const v=$("hcamKey").value.trim(); hcamLSet("tenko.gemkey",v); $("hcamAiOut").textContent=v?"キーを保存しました。「今の写真を読む」を押してください":"キーを消しました"; if(v) $("hcamKeyBox").open=false; };
   $("hcamAiBox").hidden=!HCAM_PROXY;
   hcamPoolDraw(); var hcamReady=true;
-  const hcamShown=()=>$("hcamBox").open&&!$("subAir").hidden&&!$("tabLong").hidden&&document.visibilityState==="visible";
+  // ----- 写真を大きく見る（アプリの中で。開いている間も毎分25秒ごろに新しくなる。2026-11-08 ユーザー依頼） -----
+  let hzF="", hzZ=1;
+  function hzSync(){
+    if($("hcamZoom").hidden||!hzF) return;
+    const g=HCAM.find(x=>x[2].some(y=>y[0]===hzF)), it=g&&g[2].find(y=>y[0]===hzF);
+    $("hzTitle").textContent=it?it[1]:""; $("hzTime").textContent=$("hcamNote").textContent;
+    $("hzImg").src=`${HCAM_BASE}${hzF}?${hcamAt}`; $("hzImg").alt=it?it[1]:"";
+    $("hzImg").style.width=(hzZ*100)+"%"; $("hzWrap").classList.toggle("big",hzZ>1);
+    $("hzMinus").disabled=hzZ<=1; $("hzPlus").disabled=hzZ>=4;
+  }
+  $("hcamImgs").addEventListener("click",e=>{ const im=e.target.closest("[data-hzf]"); if(!im) return; hzF=im.dataset.hzf; hzZ=1; $("hcamZoom").hidden=false; document.body.style.overflow="hidden"; hzSync(); });
+  const hzClose=()=>{ $("hcamZoom").hidden=true; hzF=""; document.body.style.overflow=""; };
+  $("hzClose").onclick=hzClose;
+  $("hzPlus").onclick=()=>{ const w=$("hzWrap"), cx=(w.scrollLeft+w.clientWidth/2)/w.scrollWidth, cy=(w.scrollTop+w.clientHeight/2)/Math.max(1,w.scrollHeight); hzZ=Math.min(4,hzZ+1); hzSync(); w.scrollLeft=cx*w.scrollWidth-w.clientWidth/2; w.scrollTop=cy*w.scrollHeight-w.clientHeight/2; };
+  $("hzMinus").onclick=()=>{ hzZ=Math.max(1,hzZ-1); hzSync(); };
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("hcamZoom").hidden) hzClose(); });
+  const hcamShown=()=>(($("hcamBox").open)||!$("hcamZoom").hidden)&&!$("subAir").hidden&&!$("tabLong").hidden&&document.visibilityState==="visible";
   setInterval(()=>{ if(hcamShown()&&hcamAt<hcamMark(Date.now())) hcamDraw(); if(hcamShown()&&$("hcamAiAuto").checked&&Date.now()-hcamAiAt>5*60000) hcamAi(true); },5000);
   document.addEventListener("visibilitychange",()=>{ if(hcamShown()&&hcamAt<hcamMark(Date.now())) hcamDraw(); });
 
