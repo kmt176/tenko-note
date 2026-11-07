@@ -319,6 +319,23 @@ a.flink:active{background:var(--sunk)}
 .airbar i{display:block;height:14px;border-radius:4px;background:var(--accent);min-width:2px}
 .airbar.nt i{background:#D23C2F}.airbar.nt{color:#D23C2F;font-weight:700}
 .airac{display:block;color:var(--muted,#666);overflow-wrap:anywhere}
+/* 乗り場ごとの到着と乗客の見込み（羽田。2026-11-08） */
+.airstand{margin-top:12px;display:grid;gap:6px;min-width:0}
+.airstwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.airstand table{border-collapse:separate;border-spacing:3px;font-size:12px;min-width:100%}
+.airstand th{font-weight:700;text-align:center;white-space:nowrap;padding:2px}
+.airstand tbody th{text-align:left;font-size:12px;line-height:1.25}
+.airstand tbody th small{display:block;font-weight:400;color:var(--muted)}
+.airstand td{padding:0}
+.airstand td button{width:100%;min-width:58px;min-height:48px;border:1px solid var(--line);border-radius:8px;background:var(--sunk);color:var(--ink);font:inherit;font-size:12px;padding:3px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+.airstand td button b{font-size:14px}
+.airstand td button span{white-space:nowrap;font-size:11px}
+.airstand td button{min-width:66px}
+.airstand td button small{color:var(--muted);font-size:10px}
+.airstand td button.hot{background:rgba(232,137,12,.18);border-color:#E8890C}
+.airstand td button.on{outline:3px solid var(--accent)}
+.airstand td button:disabled{opacity:.5}
+.airppl{color:var(--accent)}
 .airrow>*{min-width:0}
 .airrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border-left:6px solid var(--line);background:var(--sunk);border-radius:10px;padding:8px 10px;margin-top:6px}
 .airtm{display:flex;flex-direction:column;font-size:15px;min-width:92px}.airtm small{font-size:12px;color:#E8742A;font-weight:700}
@@ -1115,6 +1132,7 @@ body.rtfull{overflow:hidden}
         </div>
       <div id="airCards" class="aircards"></div>
       <div id="airBars"></div>
+      <div id="airStand"></div>
       <div id="airAttn"></div>
       <details id="airAllBox"><summary id="airAllSum">すべての便を見る</summary>
         <div id="airList"></div></details>
@@ -1190,6 +1208,12 @@ body.rtfull{overflow:hidden}
     <section class="card">
       <h2>優良乗り場</h2>
       <div class="src">マイマップ「専用乗り場・優良乗り場」の、公共の優良乗り場を地図と一覧に出します。印を押すと「ルート案内」が出ます。近づいたときの音（ピロリン）と緑の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
+      <details id="ycamBox" open><summary><b>東京駅八重洲口 優良乗り場のカメラ</b></summary>
+        <div class="hcamsel" id="ycamSel"></div>
+        <div id="ycamImgs"></div>
+        <div class="src" id="ycamNote"></div>
+        <div class="src">写真：東京タクシーセンター「東京駅八重洲口前タクシー乗り場」（約15秒ごとに新しくなります。この画面を開いている間は自動で替わります。写真を押すと大きく出します）。元のページの「待ち人数・待ち時間」は2025年5月からメンテナンス中で止まっているため出していません。<a href="https://svc01.p-counter.jp/doc-server-taxi/tokyo_taxi/yaesu_wait_info.html" target="_blank" rel="noopener">乗り場のページ</a>・<a href="https://svc01.p-counter.jp/doc-server-taxi/tokyo_taxi/yaesu_taxi_info.html" target="_blank" rel="noopener">待機所のページ</a></div>
+      </details>
       <div class="btnrow"><button class="btn" id="yrTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="yrTestSnd">🔊 音だけテスト</button></div>
       <div id="yrGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="yrMapWrap" class="mapwrap">
@@ -1454,7 +1478,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 01:51</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 08:37</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2720,6 +2744,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
     if(s==="hosp"&&!$("tabLong").hidden&&typeof renderHosp==="function") renderHosp(true);
     if(s==="toilet"&&!$("tabLong").hidden&&typeof openToilet==="function") openToilet();
+    if(s==="yuryo"&&!$("tabLong").hidden&&typeof ycamAt==="number"&&$("ycamBox").open&&Date.now()-ycamAt>=15000) ycamDraw();   // 八重洲口のカメラ（var なので起動直後でも困らない）
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
     if(s==="demand"&&!$("tabLong").hidden&&typeof dmOpen==="function") dmOpen();
@@ -4186,6 +4211,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let hzF="", hzZ=1;
   function hzSync(){
     if($("hcamZoom").hidden||!hzF) return;
+    if(hzF.startsWith("Y:")){ const f=hzF.slice(2), it=YCAM_ALL.find(y=>y[0]===f);   // 八重洲口の写真（優良乗り場の画面から）
+      $("hzTitle").textContent=it?it[1]:""; $("hzTime").textContent=$("ycamNote").textContent;
+      $("hzImg").src=`${YCAM_BASE}${f}?${ycamAt}`; $("hzImg").alt=it?it[1]:"";
+      $("hzImg").style.width=(hzZ*100)+"%"; $("hzWrap").classList.toggle("big",hzZ>1);
+      $("hzMinus").disabled=hzZ<=1; $("hzPlus").disabled=hzZ>=4; return; }
     const g=HCAM.find(x=>x[2].some(y=>y[0]===hzF)), it=g&&g[2].find(y=>y[0]===hzF);
     $("hzTitle").textContent=it?it[1]:""; $("hzTime").textContent=$("hcamNote").textContent;
     $("hzImg").src=`${HCAM_BASE}${hzF}?${hcamAt}`; $("hzImg").alt=it?it[1]:"";
@@ -4201,6 +4231,28 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const hcamShown=()=>(($("hcamBox").open)||!$("hcamZoom").hidden)&&!$("subAir").hidden&&!$("tabLong").hidden&&document.visibilityState==="visible";
   setInterval(()=>{ if(hcamShown()&&hcamAt<hcamMark(Date.now())) hcamDraw(); if(hcamShown()&&$("hcamAiAuto").checked&&Date.now()-hcamAiAt>5*60000) hcamAi(true); },5000);
   document.addEventListener("visibilitychange",()=>{ if(hcamShown()&&hcamAt<hcamMark(Date.now())) hcamDraw(); });
+  document.body.appendChild($("hcamZoom"));   // 大きく出す画面は、羽田（飛行機）と八重洲口（優良乗り場）の両方で使うので、画面の外側に置く
+
+  // ===== 東京駅八重洲口 優良乗り場のカメラ（東京タクシーセンター。約15秒ごとに更新。2026-11-08 ユーザー指定） =====
+  const YCAM_BASE="https://svc01.p-counter.jp/doc-server-taxi/tokyo_taxi/data/";
+  const YCAM_ALL=[["cam_a.jpg","乗り場（前方カメラ）"],["cam_b.jpg","乗り場（後方カメラ）"],["park.jpg","タクシー待機所"]];
+  const YCAM=[["nori","乗り場",["cam_a.jpg","cam_b.jpg"]],["park","待機所",["park.jpg"]],["all","全部",["cam_a.jpg","cam_b.jpg","park.jpg"]]];
+  var ycamSel="nori", ycamAt=0;
+  try{ const v=localStorage.getItem("tenko.ycam"); if(YCAM.some(g=>g[0]===v)) ycamSel=v; }catch(e){}
+  function ycamDraw(){
+    const g=YCAM.find(x=>x[0]===ycamSel)||YCAM[0], t=Date.now(); ycamAt=t;
+    $("ycamSel").innerHTML=YCAM.map(([k,n])=>`<button type="button" data-ycam="${k}" aria-pressed="${k===g[0]}">${n}</button>`).join("");
+    $("ycamImgs").innerHTML=g[2].map(f=>{ const n=(YCAM_ALL.find(y=>y[0]===f)||[f,f])[1]; return `<figure class="hcamfig"><img src="${YCAM_BASE}${f}?${t}" alt="${n}" data-hzf="Y:${f}" loading="lazy" onerror="this.alt='写真を読み込めませんでした';this.style.minHeight='60px'"><figcaption>${n}（押すと大きく出します）</figcaption></figure>`; }).join("");
+    const d=new Date(t), p2=n=>String(n).padStart(2,"0");
+    $("ycamNote").textContent=`${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}に読み込んだ写真です（15秒ごとに替わります）`;
+    hzSync();
+  }
+  $("ycamSel").onclick=e=>{ const b=e.target.closest("[data-ycam]"); if(!b) return; ycamSel=b.dataset.ycam; try{ localStorage.setItem("tenko.ycam",ycamSel); }catch(e){} ycamDraw(); };
+  $("ycamImgs").addEventListener("click",e=>{ const im=e.target.closest("[data-hzf]"); if(!im) return; hzF=im.dataset.hzf; hzZ=1; $("hcamZoom").hidden=false; document.body.style.overflow="hidden"; hzSync(); });
+  $("ycamBox").addEventListener("toggle",()=>{ if($("ycamBox").open) ycamDraw(); });
+  const ycamShown=()=>($("ycamBox").open||(!$("hcamZoom").hidden&&hzF.startsWith("Y:")))&&!$("subYuryo").hidden&&!$("tabLong").hidden&&document.visibilityState==="visible";
+  setInterval(()=>{ if(ycamShown()&&Date.now()-ycamAt>=15000) ycamDraw(); },3000);
+  document.addEventListener("visibilitychange",()=>{ if(ycamShown()&&Date.now()-ycamAt>=15000) ycamDraw(); });
 
   let airKind="arr", airAp="HND", airData={}, airAt={};
   const airMin=s=>{ const m=/^(\d{1,2}):(\d{2})/.exec(s||""); return m?(+m[1])*60+(+m[2]):null; };
@@ -4222,8 +4274,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const lvl=cancel?"c":late&&dl>=15?"r":late?"r2":dl>=30?"o":dl>=15?"y":"";
     // 成田はターミナルが空のことが多いので、航空会社から推定する（ANA＝第1、JAL＝第2）
     const guess=!x.term&&x.ap==="NRT"?({ANA:"Terminal1",JAL:"Terminal2"})[x.al]||"":"";
+    // 南北は乗り場の見込みに使うので残す（羽田の第1ターミナル。JALは南・北が入る。スターフライヤー＝ANAの番号で南北なしは南ウイング。2026-11-08）
+    const wing=/South/i.test(x.term||"")?"S":/North/i.test(x.term||"")?"N":"";
     if(/Wing/.test(x.term||"")) x=Object.assign({},x,{term:"Terminal1"});   // 「北ウィング・南ウィング」は第1ターミナルの中（羽田・成田とも）
-    return Object.assign({},x,{sm:s,when,dl,cancel,late,lvl,rel:when!=null?airRel(when):0,term:x.term||guess,tguess:!!guess});
+    return Object.assign({},x,{sm:s,when,dl,cancel,late,lvl,rel:when!=null?airRel(when):0,term:x.term||guess,tguess:!!guess,wing});
   }
   // 到着・出発を切り替えたら、すぐにボタンの色と「読み込んでいます」を出す。前に読んだ分があれば先に出して、裏で新しくする
   const airLoading={};
@@ -4361,6 +4415,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   const airHrs=new Set();   // 選んだ時間帯（2時間ごとの始まりの時）。空＝これから全部
   $("airFHour").onclick=()=>{ const b=$("airHrBox"); b.hidden=!b.hidden; $("airFHour").setAttribute("aria-expanded",String(!b.hidden)); };
+  let airStSel=null;   // 乗り場ごとの表で押した欄（{s:乗り場, h:時}）
   let airSel=null;   // ターミナルの枠で押した行（{term, cat}）。cat：late＝深夜着/早朝発、cancel＝欠航、delay＝遅れ
   const airFilter=(xs,noTerm)=>{ const al=$("airFAl").value, tm=$("airFTerm").value, q=$("airFText").value.trim().toUpperCase();
     return xs.filter(x=>(!al||airPre(x)===al)&&(noTerm||!tm||x.term===tm)&&(!airHrs.size||(x.when!=null&&airHrs.has((Math.floor(x.when/120)*2)%24)))&&(!q||(x.f+" "+x.fs+" "+(AIR_NAME[x.from]||"")+" "+x.from).toUpperCase().includes(q))); };
@@ -4384,6 +4439,26 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(airAp==="HND"){ const now=new Date().getHours(), hs=[...Array(9)].map((_,i)=>(now+i)%24), cnt=h=>airFilter(airUp).filter(x=>!x.cancel&&x.when!=null&&Math.floor(x.when/60)===h).length, mx=Math.max(1,...hs.map(cnt));
       $("airBars").innerHTML=`<div class="airbars"><b>時間帯ごとの${arr?"到着":"出発"}（これから）</b>${hs.map(h=>{ const n=cnt(h), nt=h>=23||h<5; return `<div class="airbar${nt?" nt":""}"><span class="num">${h}時</span><i style="width:${n/mx*100}%"></i><span class="num">${n}便${nt?(h<5?" 🌙終電後":" 🌙"):""}</span></div>`; }).join("")}</div>`; }
     else $("airBars").innerHTML="";
+    // ②' 羽田の到着：乗り場ごと・1時間ごとの便数と乗客の見込み（2026-11-08 ユーザー指定）
+    //   第1乗り場＝第1T南ウイング（1・2番出口）、第2乗り場＝第1T北ウイング（17・18番出口）、第3・第4＝第2T、第5＝第3T
+    if(airAp==="HND"&&arr){
+      const ST=[["s1","第1乗り場","第1T 南",x=>x.term==="Terminal1"&&x.wing!=="N"],["s2","第2乗り場","第1T 北",x=>x.term==="Terminal1"&&x.wing==="N"],
+        ["s34","第3・4乗り場","第2T",x=>x.term==="Terminal2"],["s5","第5乗り場","第3T 国際",x=>x.term==="Terminal3"]];
+      const now=new Date().getHours(), hs=[...Array(6)].map((_,i)=>(now+i)%24);
+      const inH=(x,h)=>!x.cancel&&x.when!=null&&Math.floor(x.when/60)%24===h&&x.rel>=-30&&x.rel<24*60;
+      const sum=xs=>{ let p=0,u=0; xs.forEach(x=>{ const a=airAc(x); if(a) p+=a.ppl; else u++; }); return {n:xs.length,p,u}; };
+      const sel=airStSel&&ST.some(s=>s[0]===airStSel.s)&&hs.includes(airStSel.h)?airStSel:null;
+      let h=`<div class="airstand"><b>乗り場ごとの到着と乗客の見込み <small style="font-weight:400;color:var(--muted)">（表は横にずらすと先の時間）</small></b><div class="airstwrap"><table><thead><tr><th></th>${hs.map(x=>`<th>${x}時台</th>`).join("")}</tr></thead><tbody>`;
+      ST.forEach(([k,nm,sub,f])=>{ h+=`<tr><th>${nm}<small>${sub}</small></th>`+hs.map(hh=>{ const r=sum(airUp.filter(x=>f(x)&&inH(x,hh)));
+        return `<td><button type="button" data-ast="${k}|${hh}" class="${sel&&sel.s===k&&sel.h===hh?"on":""}${r.p>=1500?" hot":""}"${r.n?"":" disabled"}>${r.n?`<b class="num">${r.n}便</b><span class="num">約${r.p.toLocaleString()}人</span>${r.u?`<small>機種不明${r.u}</small>`:""}`:`<span class="num">—</span>`}</button></td>`; }).join("")+`</tr>`; });
+      h+=`</tbody></table></div>`;
+      if(sel){ const s=ST.find(x=>x[0]===sel.s), xs=airUp.filter(x=>s[3](x)&&inH(x,sel.h)).sort((a,b)=>a.when-b.when);
+        h+=`<div class="row" style="align-items:center;margin-top:6px"><b>${s[1]}（${s[2]}）${sel.h}時台 ${xs.length}便</b><button class="btn" id="airStClose">×</button></div>`+xs.map(x=>{ const a=airAc(x); return row(x).replace('<div class="airst">',`<div class="airst">${a?`<b class="airppl">約${a.ppl}人</b><br>`:`<small>人数不明</small><br>`}`); }).join(""); }
+      h+=`<div class="src">見込みは「座席数×7割」の目安で、飛行機を降りる人の数です（タクシーに乗る人数ではありません）。遅れている便は着く見込みの時間に入れ、欠航は数えません。第1乗り場＝第1ターミナル南ウイング（JAL南・スターフライヤー）、第2乗り場＝北ウイング（JAL北。スカイマークはデータがなく入りません）。第2ターミナルは南北の区別がデータにないので合わせて出します。数字を押すと、その時間の便が出ます。</div></div>`;
+      $("airStand").innerHTML=h;
+      $("airStand").querySelectorAll("[data-ast]").forEach(b=>b.onclick=()=>{ const [s,hh]=b.dataset.ast.split("|"); airStSel=sel&&sel.s===s&&sel.h===+hh?null:{s,h:+hh}; renderAir(); });
+      if($("airStClose")) $("airStClose").onclick=()=>{ airStSel=null; renderAir(); };
+    } else $("airStand").innerHTML="";
     // ③ 一覧：枠の行を押していればその便、押していなければ「気をつける便」
     if(airSel){ const xs=up.filter(x=>x.term===airSel.term&&CAT[airSel.cat].f(x));
       $("airAttn").innerHTML=`<div class="row" style="align-items:center"><b>${esc(AIR_TERM[airAp][airSel.term][2])}・${CAT[airSel.cat].l}の便 ${xs.length}便</b><button class="btn" id="airSelClose">×</button></div>`+(xs.map(row).join("")||`<div class="geo">当てはまる便はありません</div>`);
