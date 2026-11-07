@@ -318,6 +318,8 @@ a.flink:active{background:var(--sunk)}
 .airbar{display:grid;grid-template-columns:42px 1fr 110px;gap:6px;align-items:center;font-size:13px}
 .airbar i{display:block;height:14px;border-radius:4px;background:var(--accent);min-width:2px}
 .airbar.nt i{background:#D23C2F}.airbar.nt{color:#D23C2F;font-weight:700}
+.airac{display:block;color:var(--muted,#666);overflow-wrap:anywhere}
+.airrow>*{min-width:0}
 .airrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border-left:6px solid var(--line);background:var(--sunk);border-radius:10px;padding:8px 10px;margin-top:6px}
 .airtm{display:flex;flex-direction:column;font-size:15px;min-width:92px}.airtm small{font-size:12px;color:#E8742A;font-weight:700}
 .airmid small{font-size:12.5px;color:var(--muted)}.airnote{color:#D23C2F!important}
@@ -1437,7 +1439,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 00:55</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 01:24</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4045,7 +4047,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const AIR_NAME={CTS:"札幌(新千歳)",FUK:"福岡",OKA:"那覇",ITM:"大阪(伊丹)",KIX:"関西",UKB:"神戸",NGO:"中部",KOJ:"鹿児島",KMJ:"熊本",HIJ:"広島",OKJ:"岡山",MYJ:"松山",KMI:"宮崎",NGS:"長崎",OIT:"大分",HSG:"佐賀",KMQ:"小松",TOY:"富山",AOJ:"青森",AKJ:"旭川",HKD:"函館",KUH:"釧路",OBO:"帯広",MMB:"女満別",WKJ:"稚内",ISG:"石垣",MMY:"宮古",UBJ:"山口宇部",TKS:"徳島",TAK:"高松",KCZ:"高知",IZO:"出雲",YGJ:"米子",SYO:"庄内",AXT:"秋田",GAJ:"山形",SDJ:"仙台",MSJ:"三沢",HNA:"花巻",ONJ:"大館能代",KKJ:"北九州",IWJ:"岩見",NTQ:"能登",SHM:"南紀白浜",TTJ:"鳥取",
     ICN:"ソウル(仁川)",GMP:"ソウル(金浦)",PUS:"釜山",TPE:"台北(桃園)",TSA:"台北(松山)",KHH:"高雄",HKG:"香港",MFM:"マカオ",PVG:"上海(浦東)",SHA:"上海(虹橋)",PEK:"北京",PKX:"北京(大興)",CAN:"広州",SIN:"シンガポール",BKK:"バンコク",DMK:"バンコク(ドンムアン)",KUL:"クアラルンプール",MNL:"マニラ",SGN:"ホーチミン",HAN:"ハノイ",CGK:"ジャカルタ",DPS:"デンパサール",DEL:"デリー",DXB:"ドバイ",DOH:"ドーハ",IST:"イスタンブール",
     HNL:"ホノルル",LAX:"ロサンゼルス",SFO:"サンフランシスコ",SEA:"シアトル",JFK:"ニューヨーク",ORD:"シカゴ",DFW:"ダラス",IAH:"ヒューストン",YVR:"バンクーバー",YYZ:"トロント",LHR:"ロンドン",CDG:"パリ",FRA:"フランクフルト",MUC:"ミュンヘン",HEL:"ヘルシンキ",AMS:"アムステルダム",SYD:"シドニー",MEL:"メルボルン",GUM:"グアム",HND:"羽田",NRT:"成田"};
-  const AIR_ST={EstimatedArrival:"到着予定",EstimatedDeparture:"出発予定",InAir:"飛行中",LeftGate:"ゲート出発",Arrived:"到着",Landed:"着陸",Cancelled:"欠航",Delayed:"遅延",OnTime:"定刻",Changed:"時刻変更",Departed:"出発",Diverted:"他空港へ",Returned:"引き返し",Boarding:"搭乗中",CheckIn:"搭乗手続き中",FinalCall:"最終案内",GateClosed:"搭乗締切",Estimated:"予定",Takeoff:"出発"};
+  const AIR_ST={EstimatedArrival:"到着予定",EstimatedDeparture:"出発予定",InAir:"飛行中",LeftGate:"ゲート出発",Arrived:"到着",Landed:"着陸",Cancelled:"欠航",Delayed:"遅延",OnTime:"定刻",Changed:"時刻変更",Departed:"出発",Diverted:"他空港へ",Returned:"引き返し",Boarding:"搭乗中",CheckIn:"搭乗手続き中",FinalCall:"最終案内",GateClosed:"搭乗締切",Estimated:"予定",Takeoff:"出発",BaggageAvailable:"荷物受取中",BaggageClaim:"荷物受取中",AtGate:"ゲート到着",Gate:"ゲート到着",Scheduled:"予定"};
   const AIR_TERM={HND:{Terminal1:[35.5486,139.7843,"羽田 第1ターミナル"],Terminal2:[35.5507,139.7882,"羽田 第2ターミナル"],Terminal3:[35.5443,139.7686,"羽田 第3ターミナル"]},NRT:{Terminal1:[35.7645,140.3862,"成田 第1ターミナル"],Terminal2:[35.7727,140.3928,"成田 第2ターミナル"],Terminal3:[35.7778,140.3941,"成田 第3ターミナル"]}};
   // 羽田のタクシー待機所・乗り場カメラ（東京タクシーセンター「羽田空港TPシステム」の公開写真。1分ごとに更新される。2026-11-07 ユーザー依頼）
   // 写真はその都度見に行くだけで、保存はしない
@@ -4169,6 +4171,17 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let airKind="arr", airAp="HND", airData={}, airAt={};
   const airMin=s=>{ const m=/^(\d{1,2}):(\d{2})/.exec(s||""); return m?(+m[1])*60+(+m[2]):null; };
   const airRel=m=>{ const n=new Date(), now=n.getHours()*60+n.getMinutes(); let d=m-now; if(d<-720) d+=1440; if(d>720) d-=1440; return d; };   // 今から何分後か（日付をまたぐ分を直す）
+  // 機種（航空会社が出している型式の略号）→ [呼び名, おおよその座席数]。座席数は国内線のよくある座席の目安（航空会社・便で違う）。2026-11-08
+  // 乗客の目安＝座席数×7割（国内線の搭乗率のおおよそ）。実際の人数は公表されていない
+  const AIR_AC={"73H":["B737-800",170],"738":["B737-800",166],"73L":["B737-800",170],"73D":["B737",150],"73G":["B737-700",120],"7M8":["B737 MAX8",170],
+    "320":["A320",166],"32S":["A320",166],"32N":["A320neo",166],"321":["A321",194],"32P":["A321neo",194],"32Q":["A321neo",194],
+    "E90":["E190",95],"E70":["E170",76],"AT7":["ATR72",70],"DH4":["Q400",74],
+    "763":["B767-300",270],"76P":["B767-300",270],"76W":["B767-300ER",200],"762":["B767",230],
+    "788":["B787-8",250],"789":["B787-9",330],"78P":["B787",300],"78K":["B787-10",294],"78G":["B787",300],"781":["B787-10",294],
+    "78I":["B787",300],"780":["B787",300],"78E":["B787",300],"78X":["B787-10",340],"76E":["B767-300",270],
+    "772":["B777-200",400],"773":["B777-300",500],"77W":["B777-300ER",250],"777":["B777",300],"77N":["B777",300],"77I":["B777",300],"748":["B747-8",364],
+    "332":["A330-200",250],"333":["A330-300",290],"32E":["A320",180],"21N":["A321neo",194],"359":["A350-900",369],"351":["A350-1000",239]};   // 722（ANA）は何の機種か分からないので出さない
+  const airAc=x=>{ const a=AIR_AC[String(x.ac||"").toUpperCase()]; if(!a) return null; const ppl=Math.round(a[1]*0.7/10)*10; return {nm:a[0],seat:a[1],ppl,big:a[1]>=250?"大型機":a[1]>=150?"中型機":"小型機"}; };
   function airRow(x){
     const s=airMin(x.s), when=airMin(x.a||x.e||x.s); let dl=(s!=null&&when!=null)?when-s:0; if(dl<-720) dl+=1440; if(dl>720) dl-=1440;
     const cancel=/Cancel/.test(x.st), late=airKind==="arr"&&when!=null&&(when>=22*60+30||when<5*60);   // 深夜着（22:30〜翌5時）は電車が少ない
@@ -4327,7 +4340,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const up=airFilter(airUp,true), early=x=>x.when!=null&&x.when>=4*60&&x.when<7*60;
     const CAT={ok:{l:"正常",f:x=>!x.cancel&&x.dl<30},late:{l:arr?"深夜着":"早朝発",f:x=>!x.cancel&&(arr?x.late:early(x))},cancel:{l:"欠航",f:x=>x.cancel},delay:{l:"遅れ",f:x=>!x.cancel&&x.dl>=30}};
     const row=x=>{ const st=AIR_ST[x.st]||x.st||"", to=AIR_NAME[x.from]||x.from||"", tm=x.e&&x.e!==x.s?`<s>${esc(x.s)}</s> → <b>${esc(x.e)}</b>`:x.a?`${esc(x.s)} → <b>${esc(x.a)}</b>`:`<b>${esc(x.s)}</b>`;
-      return `<div class="airrow air-${x.lvl}"><div class="airtm num">${tm}${x.dl>=5&&!x.cancel?`<small>${x.dl}分遅れ</small>`:""}</div><div class="airmid"><b>${esc(x.f)}</b> <small>${esc(to)}${x.term?"・"+esc(x.term.replace("Terminal","第")+"T"+(x.tguess?"（推定）":"")):""}</small>${x.sum||x.txt?`<br><small class="airnote">${esc(x.sum)} ${esc(x.txt)}</small>`:""}</div><div class="airst">${x.late&&!x.cancel?`<span class="airbadge">深夜着</span>`:""}${esc(st)}</div></div>`; };
+      return `<div class="airrow air-${x.lvl}"><div class="airtm num">${tm}${x.dl>=5&&!x.cancel?`<small>${x.dl}分遅れ</small>`:""}</div><div class="airmid"><b>${esc(x.f)}</b> <small>${esc(to)}${x.term?"・"+esc(x.term.replace("Terminal","第")+"T"+(x.tguess?"（推定）":"")):""}</small>${(ac=>ac?`<small class="airac">${ac.big}（${esc(ac.nm)}・約${ac.seat}席）${!x.cancel&&(x.late||x.dl>=15)?`・<b>乗客の目安 約${ac.ppl}人</b>`:""}</small>`:"")(airAc(x))}${x.sum||x.txt?`<br><small class="airnote">${esc(x.sum)} ${esc(x.txt)}</small>`:""}</div><div class="airst">${x.late&&!x.cancel?`<span class="airbadge">深夜着</span>`:""}${esc(st)}</div></div>`; };
     // ① ターミナルの枠：行（深夜着・欠航・遅れ）を押すと、下にその便が出る。ルートは「ルート ›」だけ
     $("airCards").innerHTML=Object.entries(AIR_TERM[airAp]).map(([k,[la,ln,nm]])=>{ const xs=up.filter(x=>x.term===k), n={ok:xs.filter(CAT.ok.f).length,late:xs.filter(CAT.late.f).length,cancel:xs.filter(CAT.cancel.f).length,delay:xs.filter(CAT.delay.f).length};
       const line=c=>`<button class="aircat${airSel&&airSel.term===k&&airSel.cat===c?" on":""}" data-sel="${k}|${c}">${CAT[c].l} <b class="num"${c==="cancel"&&n[c]?' style="color:#D23C2F"':""}>${n[c]}</b></button>`;
