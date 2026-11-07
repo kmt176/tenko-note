@@ -1070,8 +1070,8 @@ body.rtfull{overflow:hidden}
           <div class="hcambtns"><button type="button" class="btn" id="hcamAiBtn">今の写真を読む</button>
             <label class="src" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hcamAiAuto">開いている間は5分ごとに読む</label></div>
           <details id="hcamKeyBox"><summary class="src">Geminiのキー（この端末だけに保存）</summary>
-            <div class="src">① <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> を開いてGoogleにログイン → ②「APIキーを作成」→ ③ できた文字（AIza…）をコピーして下に貼り付け →「保存」。無料の範囲で使えます。キーはこのスマホの中だけに残し、サーバーやバックアップには送りません。</div>
-            <div class="hcambtns"><input type="password" id="hcamKey" placeholder="AIza…" autocomplete="off" style="flex:1;min-width:0"><button type="button" class="btn" id="hcamKeySave">保存</button></div>
+            <div class="src">① <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> を開いてGoogleにログイン → ②「APIキーを作成」→ ③ できた文字（AIza… や AQ.… で始まるもの）をコピーして下に貼り付け →「保存」。無料の範囲で使えます。キーはこのスマホの中だけに残し、サーバーやバックアップには送りません。</div>
+            <div class="hcambtns"><input type="password" id="hcamKey" placeholder="AIza… または AQ.…" autocomplete="off" style="flex:1;min-width:0"><button type="button" class="btn" id="hcamKeySave">保存</button></div>
           </details>
         </div>
         <div class="hcambox">
@@ -1437,7 +1437,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 00:34</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 00:55</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4102,11 +4102,25 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         +`夜はライトだけで見づらいことがあります。分からないところは推測しすぎないでください。次の形のJSONだけで答えてください：{"level":埋まり具合0〜100の整数（${pool?"0=空っぽ、100=満杯":"0=タクシーがいない、100=タクシーが長く並んでいる"}）,"cars":写っているタクシーのおおよその台数（整数）,"people":${pool?"null":"待っているお客様のおおよその人数（整数。見えなければnull）"},"note":"気づいたことを日本語で40字以内"}`;
       const body={contents:[{parts:[{text:ask}].concat(imgs.map(x=>({inline_data:{mime_type:"image/jpeg",data:x.b64}})))}],generationConfig:{responseMimeType:"application/json",temperature:0.1}};
       let r=null, err="";
-      for(const m of ["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.0-flash"]){
-        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-        if(res.ok){ r=await res.json(); break; }
-        err=res.status===400||res.status===403?"キーが正しくないようです。もう一度貼り付けてください":res.status===429?"無料で使える回数を超えました。しばらく（または明日まで）待ってください":"AIにつながりませんでした（"+res.status+"）";
-        if(res.status!==404&&res.status!==429&&res.status<500) break;
+      // モデルの名前は古くなると使えなくなる（404）。前に使えたもの → キーで使えるモデルの一覧から「flash」を選ぶ（2026-11-08）
+      const GEM="https://generativelanguage.googleapis.com/v1beta/", hdr={"Content-Type":"application/json","x-goog-api-key":key};
+      const tryM=async m=>{ const res=await fetch(`${GEM}models/${m}:generateContent`,{method:"POST",headers:hdr,body:JSON.stringify(body)});
+        if(res.ok){ r=await res.json(); hcamLSet("tenko.gemModel",m); return true; }
+        let d=""; try{ d=((await res.json()).error||{}).message||""; }catch(e){}
+        err=res.status===400&&/API key|api_key/i.test(d)||res.status===401||res.status===403?"キーが正しくないようです。もう一度貼り付けてください":res.status===429?"無料で使える回数を超えました。しばらく（または明日まで）待ってください":"AIにつながりませんでした（"+res.status+(d?"："+d.slice(0,80):"")+"）";
+        return res.status===404?false:null; };
+      let ok=false; const saved=hcamLS("tenko.gemModel","");
+      if(saved) ok=await tryM(saved);
+      if(!r&&ok!==null){
+        let names=[];
+        try{ const lr=await fetch(`${GEM}models?pageSize=200`,{headers:{"x-goog-api-key":key}}); const lj=await lr.json();
+          if(!lr.ok) throw new Error(((lj.error||{}).message)||String(lr.status));
+          names=(lj.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes("generateContent")).map(m=>m.name.replace(/^models\//,""))
+            .filter(n=>/flash/.test(n)&&!/image|tts|audio|live|thinking|exp|embed/.test(n)); }
+        catch(e){ err="使えるAIを調べられませんでした（"+(e.message||e).slice(0,80)+"）"; }
+        const ver=n=>parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/)||[])[1]||0);
+        names.sort((a,b)=>ver(b)-ver(a)||(/lite/.test(a)-/lite/.test(b))||(/preview/.test(a)-/preview/.test(b))||a.length-b.length);
+        for(const m of names.filter(n=>n!==saved).slice(0,4)){ ok=await tryM(m); if(r||ok===null) break; }
       }
       if(!r) throw new Error(err);
       const t=((((r.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||"").join("");
