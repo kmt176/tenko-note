@@ -127,6 +127,8 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 .grp h3{margin:0;font-size:15.5px}
 input[type=date],input[type=time]{width:100%;font:20.5px var(--num);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px}
 .live{font-size:15px;color:var(--muted)}
+/* 文字を入れている間（スマホのキーボードが出ている間）は、下のメニューを隠す。iPhoneはキーボードの上にメニューが上がってきて、配置が崩れて見えるため（2026-11-07） */
+body.kbopen .tabbar{display:none}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1500;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabbar button{flex:1 1 0;min-width:0;border:0;background:none;padding:8px 0 8px;font-weight:700;font-size:16.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.1}
 .tabbar button .ic{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -1401,7 +1403,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 19:24</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-07 20:31</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3291,8 +3293,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("wcShopFind").onclick=shopFind;
   $("wcShopQ").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); shopFind(); } });
   (()=>{ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return; $("wcShopMic").hidden=false;
-    $("wcShopMic").onclick=()=>{ const rc=new SR(); rc.lang="ja-JP"; rc.interimResults=false; $("wcShopFound").textContent="お店の名前を話してください…";
-      rc.onresult=e=>{ $("wcShopQ").value=e.results[0][0].transcript.replace(/[。、\s]/g,""); shopFind(); };
+    // 🎤：先にキーボードを閉じ、ページの位置を押す前のまま保つ（キーボードが閉じると、ページが一番下へ飛んでいたため。2026-11-07）
+    $("wcShopMic").onclick=()=>{ const y=window.scrollY, keep=()=>window.scrollTo(0,y); if(document.activeElement) document.activeElement.blur(); setTimeout(keep,50); setTimeout(keep,350);
+      const rc=new SR(); rc.lang="ja-JP"; rc.interimResults=false; $("wcShopFound").textContent="お店の名前を話してください…";
+      rc.onresult=e=>{ $("wcShopQ").value=e.results[0][0].transcript.replace(/[。、\s]/g,""); keep(); shopFind().then(()=>$("wcShopFound").scrollIntoView({block:"nearest"})); };
       rc.onerror=()=>{ $("wcShopFound").textContent="声を聞き取れませんでした。キーボードのマイクも使えます"; }; rc.start(); }; })();
   // 一番近いお店（コンビニ・飲食店）。今の絞り込み（種類・出すお店・喫煙所など）に合うお店から選ぶ（2026-11-01 ユーザー指定）
   $("wcShopNear").onclick=async()=>{
@@ -4463,6 +4467,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const numOf=v=>{ const t=String(v??"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).replace(/[^\d]/g,""); return t===""?null:+t; };
   const fmtYen=v=>v==null||v===""?"":yen(v);
   document.addEventListener("focusin",e=>{ if(e.target.classList&&e.target.classList.contains("yenin")) e.target.value=e.target.value.replace(/,/g,""); });
+  // キーボードが出る欄に入っている間は、下のメニューを隠す
+  const kbField=t=>t&&(t.tagName==="TEXTAREA"||(t.tagName==="INPUT"&&!t.readOnly&&/^(text|search|number|email|password|tel|url)$/.test(t.type)&&t.inputMode!=="none"));
+  document.addEventListener("focusin",e=>{ if(kbField(e.target)) document.body.classList.add("kbopen"); });
+  document.addEventListener("focusout",()=>{ setTimeout(()=>{ if(!kbField(document.activeElement)) document.body.classList.remove("kbopen"); },120); });
   document.addEventListener("focusout",e=>{ if(e.target.classList&&e.target.classList.contains("yenin")){ const n=numOf(e.target.value); e.target.value=fmtYen(n); } });
   const dKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   const dayStart=k=>new Date(k+"T00:00:00");
