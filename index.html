@@ -333,6 +333,9 @@ a.flink:active{background:var(--sunk)}
 .airstand td button{min-width:66px}
 .airstand td button small{color:var(--muted);font-size:10px}
 .airstand td button.hot{background:rgba(232,137,12,.18);border-color:#E8890C}
+.airstand td button.est{opacity:.6;border-style:dashed}
+.airstand th.est{color:var(--muted)}
+.airstand tbody th,.airstand thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}   /* 横にずらしても乗り場名は残す */
 .airstand td button.on{outline:3px solid var(--accent)}
 .airstand td button:disabled{opacity:.5}
 .airppl{color:var(--accent)}
@@ -1478,7 +1481,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 08:37</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 08:54</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4444,16 +4447,22 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(airAp==="HND"&&arr){
       const ST=[["s1","第1乗り場","第1T 南",x=>x.term==="Terminal1"&&x.wing!=="N"],["s2","第2乗り場","第1T 北",x=>x.term==="Terminal1"&&x.wing==="N"],
         ["s34","第3・4乗り場","第2T",x=>x.term==="Terminal2"],["s5","第5乗り場","第3T 国際",x=>x.term==="Terminal3"]];
-      const now=new Date().getHours(), hs=[...Array(6)].map((_,i)=>(now+i)%24);
-      const inH=(x,h)=>!x.cancel&&x.when!=null&&Math.floor(x.when/60)%24===h&&x.rel>=-30&&x.rel<24*60;
+      // 今から24時間分（2026-11-08 ユーザー指定）。データは今日の0〜23時台の便だけなので、明日の分（今の時より前の時）は今日の同じ時間の便から推定する
+      const nd=new Date(), nowH=nd.getHours(), nowM=nowH*60+nd.getMinutes(), hs=[...Array(24)].map((_,i)=>nowH+i);   // 24以上＝明日
+      const am=x=>{ let w=x.when; if(w!=null&&x.sm!=null&&w<x.sm-720) w+=1440; return w; };   // 遅れて0時を過ぎた便は明日の時刻に
+      const plan=x=>Object.assign({},x,{e:"",a:"",st:"Scheduled",sum:"",txt:"",dl:0,cancel:false,lvl:"",late:false,when:x.sm,est:true});
+      const inH=(H)=>{ const real=all.filter(x=>{ const w=am(x); return !x.cancel&&w!=null&&w>=nowM-30&&Math.floor(w/60)===H; });
+        return H<24?real:real.concat(all.filter(x=>x.sm!=null&&Math.floor(x.sm/60)===H-24).map(plan)); };
       const sum=xs=>{ let p=0,u=0; xs.forEach(x=>{ const a=airAc(x); if(a) p+=a.ppl; else u++; }); return {n:xs.length,p,u}; };
       const sel=airStSel&&ST.some(s=>s[0]===airStSel.s)&&hs.includes(airStSel.h)?airStSel:null;
-      let h=`<div class="airstand"><b>乗り場ごとの到着と乗客の見込み <small style="font-weight:400;color:var(--muted)">（表は横にずらすと先の時間）</small></b><div class="airstwrap"><table><thead><tr><th></th>${hs.map(x=>`<th>${x}時台</th>`).join("")}</tr></thead><tbody>`;
-      ST.forEach(([k,nm,sub,f])=>{ h+=`<tr><th>${nm}<small>${sub}</small></th>`+hs.map(hh=>{ const r=sum(airUp.filter(x=>f(x)&&inH(x,hh)));
-        return `<td><button type="button" data-ast="${k}|${hh}" class="${sel&&sel.s===k&&sel.h===hh?"on":""}${r.p>=1500?" hot":""}"${r.n?"":" disabled"}>${r.n?`<b class="num">${r.n}便</b><span class="num">約${r.p.toLocaleString()}人</span>${r.u?`<small>機種不明${r.u}</small>`:""}`:`<span class="num">—</span>`}</button></td>`; }).join("")+`</tr>`; });
+      const hl=H=>H<24?`${H}時台`:`翌${H-24}時台`;
+      let h=`<div class="airstand"><b>乗り場ごとの到着と乗客の見込み <small style="font-weight:400;color:var(--muted)">（今から24時間。表は横にずらすと先の時間。薄い色の「翌」は推定）</small></b><div class="airstwrap"><table><thead><tr><th></th>${hs.map(H=>`<th${H>=24?' class="est"':""}>${hl(H)}</th>`).join("")}</tr></thead><tbody>`;
+      const cells=hs.map(H=>inH(H));
+      ST.forEach(([k,nm,sub,f])=>{ h+=`<tr><th>${nm}<small>${sub}</small></th>`+hs.map((H,i)=>{ const r=sum(cells[i].filter(f));
+        return `<td><button type="button" data-ast="${k}|${H}" class="${sel&&sel.s===k&&sel.h===H?"on":""}${r.p>=1500?" hot":""}${H>=24?" est":""}"${r.n?"":" disabled"}>${r.n?`<b class="num">${r.n}便</b><span class="num">約${r.p.toLocaleString()}人</span>${r.u?`<small>機種不明${r.u}</small>`:""}`:`<span class="num">—</span>`}</button></td>`; }).join("")+`</tr>`; });
       h+=`</tbody></table></div>`;
-      if(sel){ const s=ST.find(x=>x[0]===sel.s), xs=airUp.filter(x=>s[3](x)&&inH(x,sel.h)).sort((a,b)=>a.when-b.when);
-        h+=`<div class="row" style="align-items:center;margin-top:6px"><b>${s[1]}（${s[2]}）${sel.h}時台 ${xs.length}便</b><button class="btn" id="airStClose">×</button></div>`+xs.map(x=>{ const a=airAc(x); return row(x).replace('<div class="airst">',`<div class="airst">${a?`<b class="airppl">約${a.ppl}人</b><br>`:`<small>人数不明</small><br>`}`); }).join(""); }
+      if(sel){ const s=ST.find(x=>x[0]===sel.s), xs=inH(sel.h).filter(s[3]).sort((a,b)=>(a.est?1:0)-(b.est?1:0)||am(a)-am(b));
+        h+=`<div class="row" style="align-items:center;margin-top:6px"><b>${s[1]}（${s[2]}）${hl(sel.h)} ${xs.length}便${xs.some(x=>x.est)?`<small>（${xs.some(x=>!x.est)?"遅れて0時を過ぎた今日の便と、":""}今日の同じ時間の便からの推定。推定の分は遅れ・欠航は入りません）</small>`:""}</b><button class="btn" id="airStClose">×</button></div>`+xs.map(x=>{ const a=airAc(x); return row(x).replace('<div class="airst">',`<div class="airst">${a?`<b class="airppl">約${a.ppl}人</b><br>`:`<small>人数不明</small><br>`}`); }).join(""); }
       h+=`<div class="src">見込みは「座席数×7割」の目安で、飛行機を降りる人の数です（タクシーに乗る人数ではありません）。遅れている便は着く見込みの時間に入れ、欠航は数えません。第1乗り場＝第1ターミナル南ウイング（JAL南・スターフライヤー）、第2乗り場＝北ウイング（JAL北。スカイマークはデータがなく入りません）。第2ターミナルは南北の区別がデータにないので合わせて出します。数字を押すと、その時間の便が出ます。</div></div>`;
       $("airStand").innerHTML=h;
       $("airStand").querySelectorAll("[data-ast]").forEach(b=>b.onclick=()=>{ const [s,hh]=b.dataset.ast.split("|"); airStSel=sel&&sel.s===s&&sel.h===+hh?null:{s,h:+hh}; renderAir(); });
