@@ -1092,7 +1092,7 @@ body.rtfull{overflow:hidden}
   </div>
   <div class="wrap" id="subAir" hidden>
     <section class="card">
-      <details id="hcamBox" open><summary><b>羽田のタクシー待機所・乗り場カメラ</b></summary>
+      <details id="hcamBox"><summary><b>羽田のタクシー待機所・乗り場カメラ</b></summary>
         <div class="hcamsel" id="hcamSel"></div>
         <div id="hcamImgs"></div>
         <div id="hcamZoom" class="hcamzoom" hidden role="dialog" aria-label="カメラの写真を大きく見る">
@@ -1105,7 +1105,8 @@ body.rtfull{overflow:hidden}
           <b>🤖 AIで混み具合を読む</b>
           <div id="hcamAiOut" class="src">選んでいる場所の写真をAI（Gemini）に見せて、どのくらい埋まっているかを読みます。</div>
           <div class="hcambtns"><button type="button" class="btn" id="hcamAiBtn">今の写真を読む</button>
-            <label class="src" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hcamAiAuto">AIの読み取りも、開いている間は5分ごとに自動でする</label></div>
+            <label class="src" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hcamAiAuto">AIで自動で読む（開いている間30分ごと。チェックを外すと、ボタンを押したときだけ読みます）</label></div>
+          <div id="hcamAiCnt" class="src"></div>
           <details id="hcamKeyBox"><summary class="src">Geminiのキー（この端末だけに保存）</summary>
             <div class="src">① <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> を開いてGoogleにログイン → ②「APIキーを作成」→ ③ できた文字（AIza… や AQ.… で始まるもの）をコピーして下に貼り付け →「保存」。無料の範囲で使えます。キーはこのスマホの中だけに残し、サーバーやバックアップには送りません。</div>
             <div class="hcambtns"><input type="password" id="hcamKey" placeholder="AIza… または AQ.…" autocomplete="off" style="flex:1;min-width:0"><button type="button" class="btn" id="hcamKeySave">保存</button></div>
@@ -1211,7 +1212,7 @@ body.rtfull{overflow:hidden}
     <section class="card">
       <h2>優良乗り場</h2>
       <div class="src">マイマップ「専用乗り場・優良乗り場」の、公共の優良乗り場を地図と一覧に出します。印を押すと「ルート案内」が出ます。近づいたときの音（ピロリン）と緑の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
-      <details id="ycamBox" open><summary><b>東京駅八重洲口 優良乗り場のカメラ</b></summary>
+      <details id="ycamBox"><summary><b>東京駅八重洲口 優良乗り場のカメラ</b></summary>
         <div class="hcamsel" id="ycamSel"></div>
         <div id="ycamImgs"></div>
         <div class="src" id="ycamNote"></div>
@@ -1481,7 +1482,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 08:54</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 09:10</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2747,14 +2748,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(s==="event"&&!$("tabLong").hidden&&typeof renderEv==="function") renderEv(true);
     if(s==="hosp"&&!$("tabLong").hidden&&typeof renderHosp==="function") renderHosp(true);
     if(s==="toilet"&&!$("tabLong").hidden&&typeof openToilet==="function") openToilet();
-    if(s==="yuryo"&&!$("tabLong").hidden&&typeof ycamAt==="number"&&$("ycamBox").open&&Date.now()-ycamAt>=15000) ycamDraw();   // 八重洲口のカメラ（var なので起動直後でも困らない）
+    if(s==="yuryo"&&$("ycamBox")) $("ycamBox").open=false;   // カメラは画面を開くたびに閉じた状態から（押すと開く。2026-11-08 ユーザー指定）   // 八重洲口のカメラ（var なので起動直後でも困らない）
     if(s==="train"&&!$("tabLong").hidden&&typeof renderTrainTab==="function"){ renderTrainTab(true); loadTrainInfo(false); }
     if(s==="cmp"&&!$("tabLong").hidden&&typeof cmpOpen==="function") cmpOpen();
     if(s==="demand"&&!$("tabLong").hidden&&typeof dmOpen==="function") dmOpen();
     if(s==="bus"&&!$("tabLong").hidden&&typeof loadBus==="function") loadBus(false);
     if((s==="patrol"||s==="stand"||s==="yuryo"||s==="rest2")&&!$("tabLong").hidden&&typeof renderGeoTab==="function") renderGeoTab(s,true);
     if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function") loadShip(false);
-    if(s==="air"&&!$("tabLong").hidden&&typeof hcamAt==="number"&&$("hcamBox").open&&hcamAt<hcamMark(Date.now())) hcamDraw();
+    if(s==="air"&&$("hcamBox")) $("hcamBox").open=false;   // カメラは画面を開くたびに閉じた状態から（押すと開く。2026-11-08 ユーザー指定）
     if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function"){ loadAir(false); loadAir(false,airKind==="arr"?"dep":"arr"); }   // 到着・出発の両方を先に読む
   }
   // ===== メニューの形：ボタンの一覧（新・初期値）か、今までの横並び（設定で切り替え。2026-10-23） =====
@@ -4135,6 +4136,16 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const tr=prev?(x.lv-prev.lv>=10?`　${hcamHM(prev.t)}より<b>増えています</b>（${prev.lv}%→${x.lv}%）`:prev.lv-x.lv>=10?`　${hcamHM(prev.t)}より<b>減っています</b>（${prev.lv}%→${x.lv}%）`:`　${hcamHM(prev.t)}からあまり変わっていません`):"";
     $("hcamAiOut").innerHTML=`${esc(hcamGName(x.g))}（${hcamHM(x.t)}に読みました）：<span class="hcamlv" style="background:${hcamLvColor(x.lv)}">${x.lv}%・${hcamLvWord(x.lv)}</span>${x.cars!=null?`　写っている車 約${x.cars}台`:""}${x.ppl!=null?`　待っているお客様 約${x.ppl}人`:""}${tr}${x.note?`<br>${esc(x.note)}`:""}`;
   }
+  // Geminiの無料の回数は、米国西海岸の日付ごと（日本の17時ごろ、夏は16時ごろにリセット）
+  const gemLADay=()=>{ try{ return new Intl.DateTimeFormat("en-CA",{timeZone:"America/Los_Angeles"}).format(new Date()); }catch(e){ return new Date(Date.now()-17*3600e3).toISOString().slice(0,10); } };
+  function gemReset(){ const now=Date.now();
+    try{ const p=new Intl.DateTimeFormat("en-US",{timeZone:"America/Los_Angeles",hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit"}).formatToParts(new Date(now)), g=k=>+((p.find(x=>x.type===k)||{}).value||0);
+      return now+((24-g("hour")%24)*3600-g("minute")*60-g("second"))*1000; }catch(e){ const d=new Date(now); d.setHours(17,0,0,0); if(d.getTime()<=now) d.setDate(d.getDate()+1); return d.getTime(); } }
+  function gemOutNow(){ const o=hcamLS("tenko.gemOut",{}), n={}; Object.keys(o||{}).forEach(k=>{ if(o[k]>Date.now()) n[k]=o[k]; }); return n; }
+  function gemCnt(){ const c=hcamLS("tenko.gemCnt",{}), d=gemLADay(); return c&&c.d===d?c:{d,n:0,m:(c&&c.m)||""}; }
+  const gemStopped=()=>hcamLS("tenko.gemStop",0)>Date.now();
+  function hcamCntShow(){ const c=gemCnt(), st=hcamLS("tenko.gemStop",0);
+    $("hcamAiCnt").innerHTML=`今日 <b>${c.n}回</b>読みました${c.m?`（型：${esc(c.m)}）`:""}。無料の回数は型ごとに1日20回ほどで、毎日17時ごろ（夏は16時ごろ）にリセットされます。`+(st>Date.now()?`<br><b style="color:#D23C2F">回数を超えたので、自動の読み取りは${hcamHM(st)}ごろまで止めています</b>（ボタンで読むと、まだ回数が残っている別の型で試します）`:""); }
   async function hcamAi(quiet){
     const key=hcamLS("tenko.gemkey",""); if(!key){ if(!quiet){ $("hcamKeyBox").open=true; $("hcamAiOut").textContent="先にGeminiのキーを入れてください（下の「Geminiのキー」）"; } return; }
     if(hcamAiBusy) return; hcamAiBusy=true; hcamAiAt=Date.now();
@@ -4152,13 +4163,16 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       let r=null, err="";
       // モデルの名前は古くなると使えなくなる（404）。前に使えたもの → キーで使えるモデルの一覧から「flash」を選ぶ（2026-11-08）
       const GEM="https://generativelanguage.googleapis.com/v1beta/", hdr={"Content-Type":"application/json","x-goog-api-key":key};
+      // 無料の回数を超えた型（429）は、その日のリセット（米国西海岸の0時＝日本の17時ごろ）まで使わず、枠が別の型（flash-lite など）に切り替える（2026-11-08）
+      const out=gemOutNow(); let hit429=false, usedM="";
       const tryM=async m=>{ const res=await fetch(`${GEM}models/${m}:generateContent`,{method:"POST",headers:hdr,body:JSON.stringify(body)});
-        if(res.ok){ r=await res.json(); hcamLSet("tenko.gemModel",m); return true; }
+        if(res.ok){ r=await res.json(); usedM=m; hcamLSet("tenko.gemModel",m); return true; }
         let d=""; try{ d=((await res.json()).error||{}).message||""; }catch(e){}
-        err=res.status===400&&/API key|api_key/i.test(d)||res.status===401||res.status===403?"キーが正しくないようです。もう一度貼り付けてください":res.status===429?"無料で使える回数を超えました。しばらく（または明日まで）待ってください":"AIにつながりませんでした（"+res.status+(d?"："+d.slice(0,80):"")+"）";
-        return res.status===404?false:null; };
+        if(res.status===429){ hit429=true; out[m]=gemReset(); hcamLSet("tenko.gemOut",out); }
+        err=res.status===400&&/API key|api_key/i.test(d)||res.status===401||res.status===403?"キーが正しくないようです。もう一度貼り付けてください":res.status===429?"無料で使える回数を超えました。しばらく待ってください（1日の回数は、毎日17時ごろにリセットされます。夏は16時ごろ）":"AIにつながりませんでした（"+res.status+(d?"："+d.slice(0,80):"")+"）";
+        return res.status===404||res.status===429||res.status===503?false:null; };   // 型が無い・回数オーバー・混雑 → 別の型を試す
       let ok=false; const saved=hcamLS("tenko.gemModel","");
-      if(saved) ok=await tryM(saved);
+      if(saved&&!out[saved]) ok=await tryM(saved);
       if(!r&&ok!==null){
         let names=[];
         try{ const lr=await fetch(`${GEM}models?pageSize=200`,{headers:{"x-goog-api-key":key}}); const lj=await lr.json();
@@ -4168,9 +4182,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         catch(e){ err="使えるAIを調べられませんでした（"+(e.message||e).slice(0,80)+"）"; }
         const ver=n=>parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/)||[])[1]||0);
         names.sort((a,b)=>ver(b)-ver(a)||(/lite/.test(a)-/lite/.test(b))||(/preview/.test(a)-/preview/.test(b))||a.length-b.length);
-        for(const m of names.filter(n=>n!==saved).slice(0,4)){ ok=await tryM(m); if(r||ok===null) break; }
+        for(const m of names.filter(n=>n!==saved&&!out[n]).slice(0,4)){ ok=await tryM(m); if(r||ok===null) break; }
+        if(!r&&!names.some(n=>!out[n])&&names.length) err="無料で使える回数を、使える型ぜんぶで超えました。しばらく待ってください（1日の回数は、毎日17時ごろにリセットされます。夏は16時ごろ）";
       }
-      if(!r) throw new Error(err);
+      if(!r){ if(hit429||(saved&&out[saved])) hcamLSet("tenko.gemStop",gemReset()); throw new Error(err||"無料で使える回数を超えています（17時ごろにリセット。夏は16時ごろ）"); }   // 回数オーバーの日は、自動の読み取りを止める
+      { const c=gemCnt(); c.n++; c.m=usedM; hcamLSet("tenko.gemCnt",c); }
       const t=((((r.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||"").join("");
       const o=JSON.parse(t.replace(/^[^{]*/,"").replace(/[^}]*$/,""));
       const lv=Math.max(0,Math.min(100,Math.round(+o.level))); if(!isFinite(lv)) throw new Error("AIの答えを読めませんでした");
@@ -4179,7 +4195,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       hcamAiLog=hcamAiLog.filter(x=>Date.now()-x.t<30*864e5).slice(-1500); hcamLSet("tenko.hcamAi",hcamAiLog);
       hcamAiShow(); hcamPoolDraw();
     }catch(e){ if(!quiet) $("hcamAiOut").textContent=e.message||"読めませんでした"; }
-    finally{ hcamAiBusy=false; }
+    finally{ hcamAiBusy=false; hcamCntShow(); }
   }
   // ----- プールに入った・出たの記録（待ち時間の実績。混み具合と到着便の数も一緒に残す） -----
   function hcamPoolDraw(){
@@ -4205,11 +4221,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("hcamLogList").onclick=e=>{ const b=e.target.closest("[data-hcamdel]"); if(!b||!confirm("この記録を消しますか？")) return; hcamPool=hcamPool.filter(x=>String(x.in)!==b.dataset.hcamdel); hcamLSet("tenko.hcamPool",hcamPool); hcamPoolDraw(); };
   $("hcamAiBtn").onclick=()=>hcamAi(false);
   $("hcamAiAuto").checked=!!hcamLS("tenko.hcamAuto",false);
-  $("hcamAiAuto").onchange=()=>{ hcamLSet("tenko.hcamAuto",$("hcamAiAuto").checked); if($("hcamAiAuto").checked) hcamAi(true); };
+  $("hcamAiAuto").onchange=()=>{ hcamLSet("tenko.hcamAuto",$("hcamAiAuto").checked); if($("hcamAiAuto").checked&&!gemStopped()) hcamAi(true); };
   $("hcamKey").value=hcamLS("tenko.gemkey","");
   $("hcamKeySave").onclick=()=>{ const v=$("hcamKey").value.trim(); hcamLSet("tenko.gemkey",v); $("hcamAiOut").textContent=v?"キーを保存しました。「今の写真を読む」を押してください":"キーを消しました"; if(v) $("hcamKeyBox").open=false; };
   $("hcamAiBox").hidden=!HCAM_PROXY;
-  hcamPoolDraw(); var hcamReady=true;
+  hcamPoolDraw(); hcamCntShow(); var hcamReady=true;
   // ----- 写真を大きく見る（アプリの中で。開いている間も毎分25秒ごろに新しくなる。2026-11-08 ユーザー依頼） -----
   let hzF="", hzZ=1;
   function hzSync(){
@@ -4232,7 +4248,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("hzMinus").onclick=()=>{ hzZ=Math.max(1,hzZ-1); hzSync(); };
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("hcamZoom").hidden) hzClose(); });
   const hcamShown=()=>(($("hcamBox").open)||!$("hcamZoom").hidden)&&!$("subAir").hidden&&!$("tabLong").hidden&&document.visibilityState==="visible";
-  setInterval(()=>{ if(hcamShown()&&hcamAt<hcamMark(Date.now())) hcamDraw(); if(hcamShown()&&$("hcamAiAuto").checked&&Date.now()-hcamAiAt>5*60000) hcamAi(true); },5000);
+  setInterval(()=>{ if(hcamShown()&&hcamAt<hcamMark(Date.now())) hcamDraw(); if(hcamShown()&&$("hcamAiAuto").checked&&!gemStopped()&&Date.now()-hcamAiAt>30*60000) hcamAi(true); },5000);   // 自動は30分ごと（無料の回数が1日20回ほどのため。2026-11-08）
   document.addEventListener("visibilitychange",()=>{ if(hcamShown()&&hcamAt<hcamMark(Date.now())) hcamDraw(); });
   document.body.appendChild($("hcamZoom"));   // 大きく出す画面は、羽田（飛行機）と八重洲口（優良乗り場）の両方で使うので、画面の外側に置く
 
