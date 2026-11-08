@@ -502,18 +502,39 @@ body.rtfull{overflow:hidden}
 .trainbanner.trok{background:#DDEFE3;color:#1E5A36;border-bottom-color:#9FD0B0}.trainbanner.trok #trainBannerClose{color:#1E5A36}
 .patrolbanner{position:fixed;top:0;left:0;right:0;z-index:2002;background:#FFF1C2;color:#5A4300;border-bottom:2px solid #E8C14A;padding:12px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:17px;font-weight:800}
 .patrolbanner[hidden]{display:none}
-#patrolBanner{align-items:flex-start;padding:14px 12px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 14px)}
-#patrolBannerText{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
-#patrolBannerText .pb1{font-size:44px;font-weight:900;line-height:1.1;display:flex;flex-wrap:wrap;gap:0 16px}
+/* 取締りの帯は、前の約3分の2の高さに（2026-11-08 ユーザー指定）。文字・余白・矢印・×も同じ割合で小さく */
+#patrolBanner{align-items:flex-start;padding:10px 10px 11px;padding-top:calc(env(safe-area-inset-top,0px) + 10px)}
+#patrolBannerText{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+#patrolBannerText .pb1{font-size:30px;font-weight:900;line-height:1.1;display:flex;flex-wrap:wrap;gap:0 12px}
 #patrolBannerText .pb1 b{color:#B3261E;font-weight:900}
-#patrolBannerText .pb2{font-size:68px;font-weight:900;line-height:1.08;word-break:break-all}
-#patrolBannerText .pb3{font-size:22px;font-weight:800}
+#patrolBannerText .pb2{font-size:45px;font-weight:900;line-height:1.08;word-break:break-all}
+#patrolBannerText .pb3{font-size:16px;font-weight:800}
 #patrolBannerText .pbx{font-size:.5em;font-weight:900;margin-left:.15em;white-space:nowrap}
-#patrolBannerText .pb4{font-size:26px;font-weight:900;color:#C62828;line-height:1.15;display:flex;flex-direction:column}
+#patrolBannerText .pb4{font-size:18px;font-weight:900;color:#C62828;line-height:1.15;display:flex;flex-direction:column}
 #patrolBannerText .pb4 span{white-space:nowrap}   /* 違反の種類は1つずつ1行で（長い方に合わせて大きさをそろえる） */
-#patrolBannerText .pbhw{align-self:flex-start;margin-top:4px;font-size:19px;font-weight:900;padding:8px 14px;border:2px solid #5A4300;border-radius:10px;background:#fff;color:#5A4300;line-height:1.2}
-#patrolBannerText .pbtest{font-style:normal;font-size:16px;margin-left:10px;padding:1px 8px;border:2px solid #5A4300;border-radius:999px}
-#patrolBannerClose{font-size:44px!important;padding:0 6px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
+/* OKボタン（押すと3分間、同じ場所は鳴らさない。2026-11-08）と高速ボタンを横に並べる */
+/* OKボタンは帯の右下（2026-11-08 ユーザー指定）。取締りは左に高速ボタン、右にOK */
+.patrolbanner .pbbtns{display:flex;flex-wrap:wrap;align-items:stretch;justify-content:flex-end;gap:8px;margin-top:2px;margin-right:-44px}
+.patrolbanner .pbbtns .pbhw{margin-right:auto}
+.patrolbanner .pbbtns .pbok{order:2}
+.taxibanner,.trainbanner{flex-wrap:wrap}
+#taxiBannerText,#airBannerText,#trainBannerText{flex:1 1 calc(100% - 60px)!important;min-width:0}   /* 1段目は文と×、OKは2段目の右に */
+.banok{order:3;margin-left:auto;font-size:18px!important;font-weight:900;padding:4px 22px!important;border:2px solid #fff!important;border-radius:8px;background:#2E7D4F!important;color:#fff!important;line-height:1.2}
+.trainbanner .banok{border-color:#1E5A36!important}
+.patrolbanner .pbok,.banok{touch-action:manipulation}
+.patrolbanner .pbok{font-size:22px!important;font-weight:900;padding:5px 26px!important;border:2px solid #1E5A36!important;border-radius:8px;background:#2E7D4F!important;color:#fff!important;line-height:1.2}
+#patrolBannerText .pbhw{align-self:flex-start;margin-top:0;font-size:15px;font-weight:900;padding:5px 10px;border:2px solid #5A4300;border-radius:8px;background:#fff;color:#5A4300;line-height:1.2}
+#patrolBannerText .pbtest{font-style:normal;font-size:13px;margin-left:8px;padding:1px 6px;border:2px solid #5A4300;border-radius:999px}
+#patrolBanner .sb3{font-size:22px;gap:8px}#patrolBanner .sb3 small{font-size:15px}#patrolBanner .sbarrow{width:40px;height:40px}
+#patrolBannerClose{font-size:30px!important;padding:0 4px!important}
+/* 速度取締りの帯も、取締りの帯と同じくらいの大きさに（2026-11-08 ユーザー指定） */
+#speedBanner{align-items:flex-start;padding:10px 10px 11px;padding-top:calc(env(safe-area-inset-top,0px) + 10px)}
+#speedBannerText{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+#speedBannerText .sp1{font-size:30px;font-weight:900;line-height:1.1;display:flex;flex-wrap:wrap;gap:0 12px}
+#speedBannerText .sp1 b{color:#B3261E;font-weight:900}
+#speedBannerText .sp2{font-size:34px;font-weight:900;line-height:1.1;word-break:break-all}
+#speedBannerText .sp3{font-size:18px;font-weight:800}
+#speedBannerClose{font-size:30px!important;padding:0 4px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
 /* 日交乗り場の帯は、元の帯と取締りの帯のちょうど中間の大きさ（2026-11-01 ユーザー指定）。文字 17px と 44px→30px、17px と 68px→42px、17px と 22px→20px、余白 12/14px と 14/12/16px→13/13/14px、× 24px と 44px→34px */
 #standBanner,#yuryoBanner,#restBanner{align-items:flex-start;padding:13px 13px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 13px)}
@@ -582,15 +603,18 @@ body.rtfull{overflow:hidden}
 <div id="trainBanner" class="trainbanner" hidden role="status">
   <button type="button" id="trainBannerText"></button>
   <button type="button" id="trainBannerClose" aria-label="閉じる">×</button>
+  <button type="button" class="banok" data-banok>OK</button>
 </div>
 <div id="banMore" hidden></div>
 <div id="taxiBanner" class="taxibanner" hidden role="status">
   <span id="taxiBannerText"></span>
   <button type="button" id="taxiBannerClose" aria-label="閉じる">×</button>
+  <button type="button" class="banok" data-banok>OK</button>
 </div>
 <div id="airBanner" class="taxibanner airbanner" hidden role="status">
   <button type="button" id="airBannerText"></button>
   <button type="button" id="airBannerClose" aria-label="閉じる">×</button>
+  <button type="button" class="banok" data-banok>OK</button>
 </div>
 <div class="wrap" id="tabTenko">
   <div class="note" id="demoNote" hidden>試作版です。あなたのExcel（点呼時間_）の10月度の時刻を例として入れてあります。入力は、このスマホの中だけに保存されます。</div>
@@ -1482,7 +1506,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 09:10</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 10:03</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -7399,14 +7423,15 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       // 名前が長いときは、3行に収まるまで小さくする（短い名前は68px。最小でも36px）
       // 「○○交差点」は「交差点」だけ小さくして、名前の部分をなるべく1行で大きく（2026-10-25 ユーザー指定）
       // 違反名を赤字で先に大きく、その下に交差点名（2026-10-27 ユーザー指定）。違反名がない場所は、今までどおり場所を大きく
+      const okBtn=`<span class="pbbtns"><button type="button" class="pbok" data-ptok>OK</button><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button></span>`;
       const gp=geoPlace(k,x), nm=gp.place, ks=gp.kinds, avail=Math.max(200,window.innerWidth-110), km=/^(.+?)\s*(交差点)(.*)$/.exec(nm);
-      const cap=ks.length?38:68, low=ks.length?24:36;
+      const cap=ks.length?26:45, low=ks.length?18:24;   // 2026-11-08 帯を約3分の2に（元は 38/68・24/36）
       let nameHtml, fs;
       if(km){ const base=km[1], rest=km[3]; fs=Math.max(low,Math.min(cap,Math.floor(avail/(base.length+2+rest.length*0.55))));
         nameHtml=`${esc(base)}<small class="pbx">交差点${esc(rest)}</small>`; }
       else { fs=Math.max(low,Math.min(cap,Math.floor(avail*(ks.length?2:3)/Math.max(1,nm.length)))); nameHtml=esc(nm); }
-      const mx=Math.max(1,...ks.map(z=>z.length)), fk=Math.max(26,Math.min(58,Math.floor((window.innerWidth-80)/mx)));   // 違反名は1つ1行で、幅いっぱいに大きく
-      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span>${ks.length?`<span class="pb4" style="font-size:${fk}px">${ks.map(z=>`<span>${esc(z)}</span>`).join("")}</span>`:""}${nm?`<span class="pb2" style="font-size:${fs}px">${nameHtml}</span>`:""}<span class="sb3 pbdir">${sdArrowSvg("#5A4300")}<span><span class="sdDist" data-keep="1"></span><small class="sdHow"></small></span></span><span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button>`;
+      const mx=Math.max(1,...ks.map(z=>z.length)), fk=Math.max(18,Math.min(39,Math.floor((window.innerWidth-70)/mx)));   // 違反名は1つ1行で、幅いっぱいに大きく
+      $(G.ban+"Text").innerHTML=`<span class="pb1">⚠ 取締り<b>あと約${dd}m</b></span>${ks.length?`<span class="pb4" style="font-size:${fk}px">${ks.map(z=>`<span>${esc(z)}</span>`).join("")}</span>`:""}${nm?`<span class="pb2" style="font-size:${fs}px">${nameHtml}</span>`:""}<span class="sb3 pbdir">${sdArrowSvg("#5A4300")}<span><span class="sdDist" data-keep="1"></span><small class="sdHow"></small></span></span><span class="pb3">${esc(S.groups[x[1]]||"")}${test?`<i class="pbtest">テスト</i>`:""}</span>${okBtn}`;
       sdCurs[G.ban]={x,d,test}; $(G.ban).hidden=false; sdUpdate(); clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; S.cur=null; },hold||20000); return;
     }
     if(SD_LOOK[k]){ sdShow(x,d,test,k); clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; delete sdCurs[G.ban]; if(k==="stand") sdCur=null; },20000); return; }
@@ -7426,7 +7451,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     k=k||"stand"; const S=GS[k], L0=SD_LOOK[k], ban=GEO[k].ban, nm=L0.nm(x), avail=Math.max(200,window.innerWidth-100);
     const fs=Math.max(26,Math.min(42,Math.floor(avail*2/Math.max(1,nm.length))));   // 名前は2行に収まる大きさ（42pxまで）
     sdCurs[ban]={x,d,test}; if(k==="stand") sdCur=sdCurs[ban];
-    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span>`;
+    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span><span class="pbbtns"><button type="button" class="pbok" data-banok>OK</button></span>`;
     $(ban).hidden=false; sdUpdate();
   }
   // 矢印の先：点はその点、線・エリアは一番近い角
@@ -7472,7 +7497,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       const rest=on.filter(([id])=>id!==top), more=$("banMore");
       if(!rest.length){ more.hidden=true; more.innerHTML=""; return; }
       // 1行の文：向きの説明・グループ名・ボタン・「テスト」は省き、まとまりごとに空白で区切る（隠れている帯は改行が取れないため）
-      const line=id=>{ const cl=$(id+"Text").cloneNode(true); cl.querySelectorAll(".sdHow,.pb3,.pbhw,.pbtest,svg").forEach(e=>e.remove());
+      const line=id=>{ const cl=$(id+"Text").cloneNode(true); cl.querySelectorAll(".sdHow,.pb3,.pbbtns,.pbhw,.pbtest,svg").forEach(e=>e.remove());
         cl.querySelectorAll("span,b,small,br").forEach(e=>e.after(" ")); return (cl.textContent||"").replace(/\s+/g," ").trim(); };
       more.innerHTML=rest.map(([id,ic])=>{ const t=line(id);
         return `<button type="button" data-banpick="${id}"><b>ほかに：</b>${esc(t.startsWith(ic)?t:ic+" "+t)}</button>`; }).join("");
@@ -7486,7 +7511,10 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // 電車の乱れの帯は下のタブのすぐ上に出すので、タブの高さを測っておく
   const setTabH=()=>{ const tb=document.querySelector(".tabbar"); if(tb) document.documentElement.style.setProperty("--tabh",tb.offsetHeight+"px"); };
   setTabH(); window.addEventListener("resize",setTabH);
-  ["standBanner","yuryoBanner","restBanner","patrolBanner"].forEach(id=>$(id).addEventListener("click",e=>{ if(e.target.closest("#"+id+"Close")||e.target.closest("[data-pthw]")) return; cmpAsk(); }));
+  ["standBanner","yuryoBanner","restBanner","patrolBanner"].forEach(id=>$(id).addEventListener("click",e=>{ if(e.target.closest("#"+id+"Close")||e.target.closest("[data-pthw]")||e.target.closest("[data-ptok]")||e.target.closest("[data-banok]")) return; cmpAsk(); }));
+  // OKボタン（取締り以外の帯）：帯を閉じる。どの帯も、一度鳴った場所・知らせは10分以上（森ビル・電車は30分、飛行機は1回だけ）鳴らないので、3分間は鳴らない（2026-11-08 ユーザー指定）
+  document.addEventListener("click",e=>{ const b=e.target.closest("[data-banok]"); if(!b) return; e.stopPropagation();
+    const ban=b.closest(".patrolbanner,.taxibanner,.trainbanner"); if(ban){ ban.hidden=true; delete sdCurs[ban.id]; if(ban.id==="standBanner") sdCur=null; } },true);
   // ===== 取締りの通知を止める・数える（2026-10-27 ユーザー指定） =====
   // ①速さ：時速○km以上が○秒続いたら止める（首都高などで、下の一般道の取締りで鳴らないように）。○km未満が1分続いたら戻す
   // ②手動：「高速利用中」ボタン（渋滞で遅いときも確実に止める）。○分たつと自動で戻る（戻し忘れ防止）
@@ -7510,11 +7538,19 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   const ptIsLine=x=>(x[4]||"P")!=="P"&&x[4]!=="A"&&x[2].length>1;
   const ptLineArea=x=>{ const m=/実施場所[:：]\s*(?:東京都)?([^<\s]+?)(?:付近|$)/.exec(String(x[3]||"")); return m?m[1]:""; };
   function ptLineShow(x,d,test){
-    const a=ptLineArea(x), dd=d<=30?"":`まで約${Math.max(10,Math.round(d/10)*10)}m`;
-    $("speedBannerText").textContent=`⚠ 速度取締り：${String(x[0]||"").trim()}${a?`（${a}付近）`:""}${dd}${test?"　※テスト表示":""}`;
+    const a=ptLineArea(x), dd=d<=30?"この道です":`あと約${Math.max(10,Math.round(d/10)*10)}m`, nm=String(x[0]||"").trim();
+    // 2026-11-08：取締りの帯と同じくらいの大きさで3段に（ユーザー指定）
+    $("speedBannerText").innerHTML=`<span class="sp1">⚠ 速度取締り<b>${dd}</b></span>${nm?`<span class="sp2">${esc(nm)}</span>`:""}<span class="sp3">${a?`${esc(a)}付近`:""}${test?"　※テスト表示":""}</span><span class="pbbtns"><button type="button" class="pbok" data-ptok>OK</button></span>`;
     $("speedBanner").hidden=false;
   }
   $("speedBannerClose").addEventListener("click",()=>{ const S=GS.patrol; $("speedBanner").hidden=true; if(S.lnCur!=null) S.lnDis=S.lnCur; });
+  // OKボタン：帯を閉じて、同じ場所（線）は3分間、鳴らさず帯も出さない。3分たってまだ近づいていれば、次の距離でまた知らせる（2026-11-08 ユーザー指定）
+  const PT_OK_MS=3*60e3;
+  $("speedBanner").addEventListener("click",e=>{ if(!e.target.closest("[data-ptok]")) return; const S=GS.patrol; S.ok=S.ok||{};
+    if(S.lnCur!=null){ S.ok[S.lnCur]=Date.now()+PT_OK_MS; if(S.lnDis===S.lnCur) S.lnDis=null; } S.lnCur=null; $("speedBanner").hidden=true; });
+  $("patrolBanner").addEventListener("click",e=>{ if(!e.target.closest("[data-ptok]")) return; const S=GS.patrol; S.ok=S.ok||{};
+    if(S.cur!=null){ S.ok[S.cur]=Date.now()+PT_OK_MS; if(S.dis===S.cur) S.dis=null; } S.cur=null; S.curD=null; clearTimeout(S.hideT); $("patrolBanner").hidden=true; });
+  const ptOkOn=(S,i,now)=>!!(S.ok&&S.ok[i]>now);
   // 鳴らすのは、線の端から線に沿う向きで入っていくときだけ（陸橋の下などで途中を横切ったときは鳴らさない。2026-11-04 ユーザー指定）
   // 端ごとに「線の中へ向かう向き」を出し、①端まで（通知を始める距離）以内 ②進む向きがその向きと45度以内 ③端に向かって近づいている（端の手前か、過ぎて80m以内）のとき
   const angD=(a,b)=>{ const t=Math.abs(((a-b)%360+360)%360); return t>180?360-t:t; };
@@ -7538,10 +7574,11 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   function ptLineCheck(S,x,i,p,now,start,leave){
     S.ln=S.ln||{}; S.pe=S.pe||{}; const d=geoD(p,x), st=S.ln[i];
     if(st){ if(d>start+leave){ delete S.ln[i]; S.last[i]=now; if(S.lnCur===i){ $("speedBanner").hidden=true; S.lnCur=null; } if(S.lnDis===i) S.lnDis=null; return; }
+      if(ptOkOn(S,i,now)) return;   // OKを押した線は3分間出さない
       if(S.lnDis!==i&&(S.lnCur===i||S.lnCur==null)){ S.lnCur=i; ptLineShow(x,d); } return; }
     const h=S.hdNow, k=111320*Math.cos(p.lat*Math.PI/180), prevs=S.pe[i]||[];
     const ds=ptLineEnds(x).map(E=>distM([p.lat,p.lng],E.e)); S.pe[i]=ds;
-    if(h==null||S.last[i]&&now-S.last[i]<10*60e3) return;
+    if(h==null||S.last[i]&&now-S.last[i]<10*60e3||ptOkOn(S,i,now)) return;
     const hit=ptLineEnds(x).some((E,j)=>{
       const dE=ds[j], pr=prevs[j]; if(dE>start||pr==null||dE>=pr-2) return false;   // 端に近づいているときだけ
       if(angD(h,E.brg)>45) return false;                                           // 線に沿う向きで入っていく
@@ -7598,10 +7635,11 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       const st=S.cd[i]||(S.cd[i]={done:0,min:Infinity,act:false});   // done＝最後に知らせた距離（0＝まだ）
       if(st.act){ st.min=Math.min(st.min,d);
         if(d>=st.min+leave){ delete S.cd[i]; S.last[i]=now; if(S.cur===i){ $("patrolBanner").hidden=true; S.cur=null; S.curD=null; } return; } }
-      if(prev!=null&&d<prev-2&&!(S.last[i]&&now-S.last[i]<10*60e3)){
+      const okm=ptOkOn(S,i,now);   // OKを押した場所は3分間、鳴らさず帯も出さない（距離の区切りは進めない＝3分後の次の区切りで知らせる）
+      if(prev!=null&&d<prev-2&&!okm&&!(S.last[i]&&now-S.last[i]<10*60e3)){
         const ms=marks.filter(m=>d<=m&&(!st.done||m<st.done));
         if(ms.length){ st.done=Math.min(...ms); st.act=true; st.min=Math.min(st.min,d); fired=true; if(S.dis===i) S.dis=null; } }   // 一度に2つ越えたときは1回だけ鳴らす
-      if(st.act&&S.dis!==i&&(!show||d<show.d)) show={x,i,d};
+      if(st.act&&!okm&&S.dis!==i&&(!show||d<show.d)) show={x,i,d};
     });
     if(fired) geoChime("pipo");
     if(show){ const dd=Math.max(10,Math.round(show.d/10)*10);
