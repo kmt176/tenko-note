@@ -1510,7 +1510,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 14:18</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 17:35</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -7455,9 +7455,22 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     $(G.ban).hidden=false; clearTimeout(S.hideT); S.hideT=setTimeout(()=>{ $(G.ban).hidden=true; },20000);
   }
   // ===== 日交乗り場の帯：3段の大きな文字と、乗り場の方向の矢印・残りの距離（2026-11-01 ユーザー指定） =====
-  // 矢印の向き：走っているときはGPSの進行方向が上、止まっているときはスマホのコンパス（iPhoneは許可が要る）、どちらもないときは北が上
+  // 矢印の向き：いつも「スマホの上＝車の進む向き」（スマホはスタンドに立てて使うため。2026-11-08 ユーザー指定）
+  //  走っているときはGPSの向き（なければ20m以上動いた前の位置から）。止まっている間は最後に走った向きのまま。走る前だけ北が上
+  //  （前はコンパスも使っていたが、車の中では狂いやすく、北が上・スマホの向きが上と表示が変わるのでやめた）
   // 2026-11-01 追加：優良乗り場・駐車禁止も同じ大きな帯と矢印に。取締りの大きな帯にも矢印を付ける（ユーザー指定）
-  let sdCur=null, sdPos=null, cmpHd=null, cmpAt=0, cmpOn=false; const sdCurs={};
+  let sdCur=null, sdPos=null; const sdCurs={};
+  const sdHd=(()=>{ try{ const v=JSON.parse(localStorage.getItem("tenko.sdHd")||"null"); if(v&&isFinite(v.hd)) return {hd:v.hd,hp:{lat:v.lat,lng:v.lng},mv:0}; }catch(e){} return {hd:null,hp:null,mv:0}; })();
+  function sdHdFeed(p){   // 進む向きを覚える。前回の場所から50m以上離れて読み込み直したときは使わない
+    const k=111320*Math.cos(p.lat*Math.PI/180), hp=sdHd.hp;
+    let h=(p.hd!=null&&isFinite(p.hd)&&p.spd!=null&&p.spd>=1.5)?p.hd:null, m=0;
+    if(hp){ const dx=(p.lng-hp.lng)*k, dy=(p.lat-hp.lat)*111320; m=Math.hypot(dx,dy);
+      if(!sdHd.mv&&m>=50){ sdHd.hd=null; m=0; }   // 前に覚えた向きは、別の場所で開き直したら捨てる
+      else if(h==null&&m>=20) h=(Math.atan2(dx,dy)*180/Math.PI+360)%360; }
+    if(!hp||!m||m>=20||h!=null) sdHd.hp={lat:p.lat,lng:p.lng};
+    if(h!=null){ sdHd.hd=h; sdHd.mv=Date.now(); try{ localStorage.setItem("tenko.sdHd",JSON.stringify({hd:Math.round(h),lat:p.lat,lng:p.lng})); }catch(e){} }
+  }
+  setInterval(()=>{ if(Object.keys(sdCurs).length) sdUpdate(); },5000);   // 止まって位置が来ないときも、表示の言葉を直す
   const sdBear=(a,b)=>{ const r=Math.PI/180, y=Math.sin((b[1]-a[1])*r)*Math.cos(b[0]*r), x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos((b[1]-a[1])*r); return (Math.atan2(y,x)/r+360)%360; };
   const sdArrowSvg=col=>`<svg class="sbarrow sdArrow" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="28" fill="#fff" stroke="${col}" stroke-width="3"/><path d="M30 7 L45 40 L30 32 L15 40 Z" fill="${col}"/></svg>`;
   const SD_LOOK={stand:{col:"#1E5A36",t:(x,g)=>`🚕 ${g}`,nm:x=>x[0].replace(/^\d+_/,"")},
@@ -7474,9 +7487,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   const sdTarget=(x,p)=>x[2].length<2?x[2][0]:x[2].reduce((b,c)=>distM([p.lat,p.lng],c)<distM([p.lat,p.lng],b)?c:b,x[2][0]);
   function sdUpdate(){
     const p=sdPos&&Date.now()-sdPos.t<60e3?sdPos:(lastPos&&Date.now()-lastPos.t<60e3?lastPos:null);
-    let up=0, how="北が上";
-    if(p&&p.hd!=null&&isFinite(p.hd)&&p.spd!=null&&p.spd>=1.5){ up=p.hd; how="進む向きが上"; }
-    else if(cmpHd!=null&&Date.now()-cmpAt<3000){ up=cmpHd; how="スマホの向きが上"; }
+    let up=0, how="北が上（走り出すと進む向きが上になります）";
+    if(sdHd.hd!=null){ up=sdHd.hd; how=sdHd.mv&&Date.now()-sdHd.mv<15e3?"進む向きが上":"進む向きが上（止まっている間は最後に走った向き）"; }
     Object.keys(sdCurs).forEach(ban=>{ const cur=sdCurs[ban], el=$(ban); if(!cur||!el||el.hidden) return;
       const a=el.querySelector(".sdArrow"), dE=el.querySelector(".sdDist"), hE=el.querySelector(".sdHow"), fmt=d=>d>=1000?`あと約${(d/1000).toFixed(1)}km`:`あと約${d<=0?0:Math.max(10,Math.round(d/10)*10)}m`;
       if(!p){ if(dE) dE.textContent=fmt(cur.d); if(hE) hE.textContent="今の場所が分からないので方向は出せません"; if(a) a.style.visibility="hidden"; return; }
@@ -7484,20 +7496,6 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       if(a){ a.style.visibility=d<=0?"hidden":""; a.style.transform=`rotate(${Math.round(br-up)}deg)`; }
       if(dE&&!dE.dataset.keep) dE.textContent=d<=0?"この場所です":fmt(d); if(hE) hE.textContent=d<=0?"":how; });
   }
-  // コンパス：iPhoneは、帯を最初に押したときに許可を聞く（専用のボタンは作らない）。許可されたら次からは聞かない
-  function cmpStart(){
-    if(cmpOn) return; cmpOn=true;
-    const h=e=>{ let v=null; if(e.webkitCompassHeading!=null) v=e.webkitCompassHeading; else if(e.absolute&&e.alpha!=null) v=(360-e.alpha)%360;
-      if(v!=null){ const so=(screen.orientation&&screen.orientation.angle)||window.orientation||0; cmpHd=(v+so+360)%360; cmpAt=Date.now(); sdUpdate(); } };
-    window.addEventListener("deviceorientationabsolute",h,true); window.addEventListener("deviceorientation",h,true);
-  }
-  function cmpAsk(){
-    const D=window.DeviceOrientationEvent; if(!D) return;
-    if(typeof D.requestPermission!=="function"){ cmpStart(); return; }   // Androidなど：許可は要らない
-    if(cmpOn) return;
-    D.requestPermission().then(r=>{ try{ localStorage.setItem("tenko.cmpPerm",r); }catch(e){} if(r==="granted") cmpStart(); sdUpdate(); }).catch(()=>{});
-  }
-  try{ if(localStorage.getItem("tenko.cmpPerm")==="granted"&&!(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==="function")) cmpStart(); }catch(e){}
   // ===== 上の帯が同時に出たとき（2026-11-01 ユーザー指定） =====
   // 大きく出すのは大事な順で1つだけ：駐車禁止 → 取締り（線の小さい帯も） → 日交乗り場 → 優良乗り場 → 森ビル乗り場。
   // ほかは、出ている帯のすぐ下に1行ずつ「ほかに：…」と添え、押すとそちらを大きく出す。それぞれの帯の出す・消すは今までどおり（hidden）で、ここは見せ方だけ決める
@@ -7527,7 +7525,6 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // 電車の乱れの帯は下のタブのすぐ上に出すので、タブの高さを測っておく
   const setTabH=()=>{ const tb=document.querySelector(".tabbar"); if(tb) document.documentElement.style.setProperty("--tabh",tb.offsetHeight+"px"); };
   setTabH(); window.addEventListener("resize",setTabH);
-  ["standBanner","yuryoBanner","restBanner","patrolBanner"].forEach(id=>$(id).addEventListener("click",e=>{ if(e.target.closest("#"+id+"Close")||e.target.closest("[data-pthw]")||e.target.closest("[data-ptok]")||e.target.closest("[data-banok]")) return; cmpAsk(); }));
   // OKボタン（取締り以外の帯）：帯を閉じる。どの帯も、一度鳴った場所・知らせは10分以上（森ビル・電車は30分、飛行機は1回だけ）鳴らないので、3分間は鳴らない（2026-11-08 ユーザー指定）
   document.addEventListener("click",e=>{ const b=e.target.closest("[data-banok]"); if(!b) return; e.stopPropagation();
     const ban=b.closest(".patrolbanner,.taxibanner,.trainbanner"); if(ban){ ban.hidden=true; delete sdCurs[ban.id]; if(ban.id==="standBanner") sdCur=null; } },true);
@@ -7664,7 +7661,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   function geoCheck(p){
     const now=Date.now(), dLat=0.004, dLng=0.005;   // 約400m四方だけ細かく測る
     if(!offCfg.patrol&&GS.patrol.pts) ptSpeedCheck(p);
-    sdPos={lat:p.lat,lng:p.lng,spd:p.spd,hd:p.hd,t:Date.now()}; sdUpdate();
+    sdPos={lat:p.lat,lng:p.lng,spd:p.spd,hd:p.hd,t:Date.now()}; sdHdFeed(p); sdUpdate();
     Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k]; if(!S.pts||offCfg[k]) return;
       if(k==="patrol"){ ptCheck(p,now,dLat,dLng); return; }
       const th=+$(G.dist).value||100;
