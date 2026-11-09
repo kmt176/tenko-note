@@ -27,7 +27,7 @@ h2{margin:0 0 6px;font-size:17px}
 .opt input{width:20px;height:20px}
 /* 文例 */
 .ph{display:grid;grid-template-columns:28px 1fr auto;gap:2px 8px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
-.ph:first-of-type{border-top:none}
+.grp+.ph{border-top:none}
 .ph .no{font-weight:800;color:var(--acc-ink);font-size:16px;line-height:1.5}
 .ph .ja{font-size:13px;color:var(--muted);line-height:1.5}
 .ph .en{font-size:18px;font-weight:700;line-height:1.4;margin-top:2px}
@@ -36,6 +36,7 @@ h2{margin:0 0 6px;font-size:17px}
 .ph>div{grid-column:2;grid-row:1;min-width:0}
 .ph .no{grid-column:1;grid-row:1}
 .grp{font-size:14px;font-weight:800;color:var(--muted);margin:10px 0 0}
+h2.other{margin:22px 0 0;padding-top:14px;border-top:2px solid var(--acc-line)}
 /* 練習 */
 #stat{font-size:15px;margin:10px 0 4px;line-height:1.5}
 #stat .err{color:var(--red);font-size:13px;margin-top:4px}
@@ -103,10 +104,50 @@ const ITEMS=[
   ["⑲","ありがとうございました。また日本交通をご利用くださいませ。","Thank you. We hope you'll ride with Nihon Kotsu again.","サンキュー。ウィ ホウプ ユール ライド ウィズ ニホン コウツウ アゲイン。",/again|have a (nice|good|great)/]
 ];
 const OFF_FROM=ITEMS.findIndex(x=>x[0]==="⑫");
+// その他：タクシーの仕事でよく使う英語（文例集の下に出す。練習の判定には使わない）
+// 増やすときは [日本語, 英語, カタカナの読み方] を1行足す。見出しを増やすときは {g:"見出し", items:[...]} を足す（2026-11-09 ユーザー指定）
+const OTHER=[
+  {g:"乗る前・行き先", items:[
+    ["呼び出しの番号をお願いします。","Information number, please.","インフォメーション ナンバー、プリーズ。"],
+    ["ご予約のお名前をお願いします。","May I have your name, please?","メイ アイ ハヴ ユア ネイム、プリーズ？"],
+    ["何名様ですか？","How many people?","ハウ メニー ピープル？"],
+    ["お荷物をトランクにお入れしましょうか？","Shall I put your luggage in the trunk?","シャル アイ プット ユア ラゲッジ イン ザ トランク？"],
+    ["住所か地図を見せていただけますか？","Could you show me the address or a map?","クッジュー ショウ ミー ジ アドレス オア ア マップ？"],
+    ["高速道路を使ってもよろしいですか？ 料金は別にかかります。","May I use the expressway? The toll is extra.","メイ アイ ユーズ ジ イクスプレスウェイ？ ザ トウル イズ エクストラ。"],
+    ["30分ほどかかります。","It takes about 30 minutes.","イット テイクス アバウト サーティ ミニッツ。"],
+    ["道が混んでいます。","The traffic is heavy.","ザ トラフィック イズ ヘヴィー。"]
+  ]},
+  {g:"料金・お支払い", items:[
+    ["料金は○○円です。","The fare is ___ yen.","ザ フェア イズ ___ イェン。"],
+    ["お支払いはどうなさいますか？","How would you like to pay?","ハウ ウッジュー ライク トゥ ペイ？"],
+    ["クレジットカードが使えます。","We accept credit cards.","ウィ アクセプト クレディット カーズ。"],
+    ["ここにカードをタッチしてください。","Please tap your card here.","プリーズ タップ ユア カード ヒア。"],
+    ["領収書はご入用ですか？","Do you need a receipt?","ドゥ ユー ニード ア リシート？"],
+    ["お釣りです。","Here is your change.","ヒア イズ ユア チェインジ。"],
+    ["夜10時から朝5時までは2割増しです。","There is a 20% late-night surcharge from 10 p.m. to 5 a.m.","ゼア イズ ア トゥエンティ パーセント レイトナイト サーチャージ フロム テン ピーエム トゥ ファイヴ エーエム。"]
+  ]},
+  {g:"車内・降りるとき", items:[
+    ["窓を開けましょうか？","Shall I open the window?","シャル アイ オウプン ザ ウィンドウ？"],
+    ["車内は禁煙です。","No smoking in the car, please.","ノウ スモウキング イン ザ カー、プリーズ。"],
+    ["ここで降りますか？","Would you like to get out here?","ウッジュー ライク トゥ ゲット アウト ヒア？"],
+    ["ここには停められません。少し先で停めます。","I can't stop here. I'll stop a little ahead.","アイ キャント ストップ ヒア。アイル ストップ ア リトル アヘッド。"],
+    ["右側のドアは開きません。左側から降りてください。","The right door doesn't open. Please get out on the left.","ザ ライト ドア ダズント オウプン。プリーズ ゲット アウト オン ザ レフト。"]
+  ]},
+  {g:"困ったとき", items:[
+    ["もう一度お願いします。","Could you say that again, please?","クッジュー セイ ザット アゲイン、プリーズ？"],
+    ["ゆっくり話してください。","Please speak slowly.","プリーズ スピーク スロウリー。"],
+    ["少々お待ちください。","Just a moment, please.","ジャスト ア モウメント、プリーズ。"],
+    ["ここに書いていただけますか？","Could you write it here?","クッジュー ライト イット ヒア？"]
+  ]}
+];
 
 // ===== 文例集 =====
-$("list").innerHTML=ITEMS.map((x,i)=>(i===0?`<div class="grp">乗車のとき</div>`:i===OFF_FROM?`<div class="grp">降車のとき</div>`:"")+
-  `<div class="ph"><span class="no">${x[0]}</span><div><div class="ja">${esc(x[1])}</div><div class="en" lang="en">${esc(x[2])}</div><div class="kana">${esc(x[3])}</div></div><button type="button" class="btn play" data-i="${i}" aria-label="${x[0]}を英語で読む">▶</button></div>`).join("");
+// 読み上げる英語は SAY に集めて、ボタンには番号だけ持たせる
+const SAY=[];
+const phHtml=(no,ja,en,kana)=>{ SAY.push(en); return `<div class="ph"><span class="no">${no}</span><div><div class="ja">${esc(ja)}</div><div class="en" lang="en">${esc(en)}</div><div class="kana">${esc(kana)}</div></div><button type="button" class="btn play" data-i="${SAY.length-1}" aria-label="英語で読む">▶</button></div>`; };
+$("list").innerHTML=ITEMS.map((x,i)=>(i===0?`<div class="grp">乗車のとき</div>`:i===OFF_FROM?`<div class="grp">降車のとき</div>`:"")+phHtml(x[0],x[1],x[2],x[3])).join("")+
+  `<h2 class="other">その他（タクシーでよく使う英語）</h2>`+
+  OTHER.map(s=>`<div class="grp">${esc(s.g)}</div>`+s.items.map(x=>phHtml("・",x[0],x[1],x[2])).join("")).join("");
 let slow=true; try{ slow=localStorage.getItem("tenko.enSlow")!=="0"; }catch(e){}
 $("slow").checked=slow;
 $("slow").onchange=()=>{ slow=$("slow").checked; try{ localStorage.setItem("tenko.enSlow",slow?"1":"0"); }catch(e){} };
@@ -116,7 +157,7 @@ $("list").addEventListener("click",e=>{
   const b=e.target.closest(".play"); if(!b) return;
   if(!window.speechSynthesis){ alert("このブラウザでは音声の読み上げが使えません"); return; }
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(ITEMS[+b.dataset.i][2].replace(/___/g,"")); u.lang="en-US"; u.rate=slow?0.75:1; const v=enVoice(); if(v) u.voice=v;
+  const u=new SpeechSynthesisUtterance(SAY[+b.dataset.i].replace(/___/g,"")); u.lang="en-US"; u.rate=slow?0.75:1; const v=enVoice(); if(v) u.voice=v;
   speechSynthesis.speak(u);
 });
 
