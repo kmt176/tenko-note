@@ -692,10 +692,10 @@ body.rtfull{overflow:hidden}
       </div>
       <div class="grp" id="abkBox" style="margin-top:10px">
         <h3>自動バックアップ（サーバーに預ける）</h3>
-        <div class="src"><b>社員コード</b>と、自分で決めた<b>パスワード</b>で、点呼と売上のバックアップをサーバーに預けます。売上で「照合済みにする（鍵をかける）」を押したときに自動で預けます。中身はこのスマホの中でパスワードで暗号化してから送るので、管理者を含め、パスワードを知らない人は見られません。最新の3回分を残します。<b>パスワードを忘れると、自分でも戻せません。</b>機種変更のときは、新しいスマホで社員コードとパスワードを入れて「サーバーから戻す」を押します。</div>
+        <div class="src"><b>社員コード</b>と、自分で決めた<b>パスワード</b>で、点呼と売上のバックアップをサーバーに預けます。売上で「入庫」を押したときと、「照合済みにする（鍵をかける）」を押したときに自動で預けます。中身はこのスマホの中でパスワードで暗号化してから送るので、管理者を含め、パスワードを知らない人は見られません。最新の3回分を残します。<b>パスワードを忘れると、自分でも戻せません。</b>機種変更のときは、新しいスマホで社員コードとパスワードを入れて「サーバーから戻す」を押します。</div>
         <div class="field"><label for="abkId">社員コード</label><input type="text" id="abkId" maxlength="10" inputmode="numeric" autocomplete="off"></div>
         <div class="pair"><div class="field"><label for="abkPass">パスワード</label><input type="password" id="abkPass" autocomplete="new-password"></div><div class="field"><label for="abkPass2">パスワード（確認）</label><input type="password" id="abkPass2" autocomplete="new-password"></div></div>
-        <label class="check"><input type="checkbox" id="abkAuto" checked>売上で「照合済みにする（鍵をかける）」を押したときに、自動で預ける</label>
+        <label class="check"><input type="checkbox" id="abkAuto" checked>売上で「入庫」と「照合済みにする（鍵をかける）」を押したときに、自動で預ける</label>
         <div class="btnrow"><button class="btn primary" id="abkSave">この設定で使う（今すぐ預ける）</button><button class="btn" id="abkNow">今すぐ預ける</button></div>
         <div class="btnrow"><button class="btn" id="abkRestore">サーバーから戻す</button><select id="abkVer" hidden aria-label="戻すバックアップ"></select></div>
         <div class="msg" id="abkMsg" role="status"></div>
@@ -1512,7 +1512,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-09 20:47</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-09 20:59</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6427,6 +6427,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     }
     if(kind===RZ) syncRz(d);
     saveSales(); renderSales(); renderRzFloat();
+    // 入庫を押したら、自動バックアップもサーバーに預ける（照合する前の記録もその日のうちに残すため。2026-11-10 ユーザー指定）
+    if(kind==="入庫"&&!open&&cfg.abkOn!==false&&cfg.abkId&&window.tenkoAbkPut) setTimeout(()=>window.tenkoAbkPut(true),1500);
   }
   // コアタイム（朝6〜10時・夕方16〜20時）の間、画面下のバーの上に連続配車ボタンを浮かせて出す（どのタブを見ていても押せるように）
   let rzFloatTest=false;   // 連続配車の浮かせたボタンを、コアタイム以外でも確認用に出す（保存されない・画面を開き直すと元に戻る）
