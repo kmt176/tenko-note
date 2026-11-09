@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>英語の接遇</title>
+<style>
+:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--acc-bg:#E3F0F4;--acc-line:#A9CCD7;--acc-ink:#1D4F5E;--ok-bg:#DDF3E3;--ok-line:#7CC392;--ok-ink:#1F6B36;--red:#D23C2F;--red-bg:#FCE5E2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--ok-bg:#183A24;--ok-line:#3F8A57;--ok-ink:#A8E6BC;--red:#FF7A6E;--red-bg:#3E1E1B}}
+:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--ok-bg:#183A24;--ok-line:#3F8A57;--ok-ink:#A8E6BC;--red:#FF7A6E;--red-bg:#3E1E1B}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:720px;margin:0 auto;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 32px);display:grid;gap:12px}
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+h2{margin:0 0 6px;font-size:17px}
+.src{font-size:13px;color:var(--muted);line-height:1.6}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:none;background:var(--surface);color:var(--ink);padding:11px 8px;font-size:16px;font-weight:800}
+.seg button[aria-pressed="true"]{background:var(--acc-bg);color:var(--acc-ink)}
+.btn{border:1px solid var(--acc-line);background:var(--acc-bg);color:var(--acc-ink);border-radius:10px;padding:10px 14px;font-size:16px;font-weight:800}
+.btn:disabled{opacity:.45}
+.btn.stop{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px}
+.btnrow .btn{flex:1;min-width:0;padding:10px 6px;font-size:15px;line-height:1.3}
+.opt{display:flex;align-items:center;gap:6px;font-size:14px;margin-top:8px}
+.opt input{width:20px;height:20px}
+/* 文例 */
+.ph{display:grid;grid-template-columns:28px 1fr auto;gap:2px 8px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.ph:first-of-type{border-top:none}
+.ph .no{font-weight:800;color:var(--acc-ink);font-size:16px;line-height:1.5}
+.ph .ja{font-size:13px;color:var(--muted);line-height:1.5}
+.ph .en{font-size:18px;font-weight:700;line-height:1.4;margin-top:2px}
+.ph .kana{font-size:13px;color:var(--muted);line-height:1.5;margin-top:2px}
+.ph .play{grid-column:3;grid-row:1;align-self:center;padding:10px 12px;font-size:15px}
+.ph>div{grid-column:2;grid-row:1;min-width:0}
+.ph .no{grid-column:1;grid-row:1}
+.grp{font-size:14px;font-weight:800;color:var(--muted);margin:10px 0 0}
+/* 練習 */
+#stat{font-size:15px;margin:10px 0 4px;line-height:1.5}
+#stat .err{color:var(--red);font-size:13px;margin-top:4px}
+.chk{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;font-size:16px;line-height:1.4}
+.chk small{display:block;font-size:12px;color:var(--muted)}
+.chk.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok-ink)}
+.chk.ok small{color:var(--ok-ink)}
+details{margin-top:10px}
+summary{font-size:14px;font-weight:700;color:var(--muted)}
+#heard{white-space:pre-wrap;font-size:14px;line-height:1.5;margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+  <div class="seg" role="group" aria-label="切り替え">
+    <button type="button" id="tabList" aria-pressed="true">📖 文例集</button>
+    <button type="button" id="tabPrac" aria-pressed="false">🎤 英語で練習</button>
+  </div>
+
+  <section class="card" id="viewList">
+    <h2>英語の接遇 文例集</h2>
+    <div class="src">外国人のお客様を乗せたときの言い方です。「▶」を押すと英語の音声が流れます（お客様に聞かせてもOK）。「○○」のところは英語では「___」にしてあります。<b>操作は必ず停車中に。</b></div>
+    <label class="opt"><input type="checkbox" id="slow" checked>ゆっくり読む</label>
+    <div id="list"></div>
+  </section>
+
+  <section class="card" id="viewPrac" hidden>
+    <h2>英語で練習（接遇チェック）</h2>
+    <div class="src">「乗車」または「降車」を押して、英語で言ってみてください。言えた行が緑になります。<b>録音も文字も保存しません</b>。英語の聞き取りなので、多少ちがう言い方でも、大事な言葉が入っていれば緑になります。</div>
+    <div class="btnrow" style="margin-top:10px">
+      <button type="button" class="btn" id="pOn">乗車<br><small>①〜⑪</small></button>
+      <button type="button" class="btn" id="pOff">降車<br><small>⑫〜⑲</small></button>
+      <button type="button" class="btn stop" id="pStop" disabled>止める</button>
+    </div>
+    <div id="stat">止まっています</div>
+    <div id="chk"></div>
+    <details><summary>聞き取った英語（確認用・保存しません）</summary><div id="heard" class="src"></div></details>
+  </section>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// [番号, 日本語, 英語, カタカナの読み方, 英語の聞き取りで緑にする言葉]
+// 本体の接遇チェック（①〜⑲）と同じ順番。乗車＝①〜⑪、降車＝⑫〜⑲（本体と同じ区切り）
+const ITEMS=[
+  ["①","ありがとうございます！ どうぞご乗車くださいませ。","Thank you! Please get in.","サンキュー！ プリーズ ゲット イン。",/get in|come in|hop in|welcome/],
+  ["②","ドアをお閉めいたします。お足元にお気をつけくださいませ。","I'll close the door. Please watch your step.","アイル クロウズ ザ ドア。プリーズ ウォッチ ユア ステップ。",/close the door|closing the door|watch your step/],
+  ["③","おはようございます／こんにちは／こんばんは","Good morning. / Good afternoon. / Good evening.","グッ モーニング／グッ アフタヌーン／グッ イーブニング",/good (morning|afternoon|evening)|hello|\bhi\b/],
+  ["④","どちらまでお送り致しますか？","Where would you like to go?","ホウェア ウッジュー ライク トゥ ゴウ？",/where (would|do|can|shall)|where to|destination/],
+  ["⑤","○○ですね。かしこまりました。","To ___? Certainly.","トゥ ___？ サートゥンリー。",/certainly|sure|all right|alright|of course|got it/],
+  ["⑥","よろしければ、ご希望のコースを申し付けくださいませ。","If you have a preferred route, please let me know.","イフ ユー ハヴ ア プリファード ルート、プリーズ レット ミー ノウ。",/route|way you prefer|preferred/],
+  ["⑦","はい、かしこまりました。○○を通ってお送りさせて頂きます。","Certainly. I'll take you via ___.","サートゥンリー。アイル テイク ユー ヴァイア ___。",/via|by way of|through|take the|turn|intersection|traffic light|highway|expressway|straight/],
+  ["⑧","ご乗車ありがとうございます。私、日本交通グループ三和交通の○○と申します。","Thank you for riding with us. I'm ___ from Sanwa Kotsu, a Nihon Kotsu Group company.","サンキュー フォー ライディング ウィズ アス。アイム ___ フロム サンワ コウツウ、ア ニホン コウツウ グループ カンパニー。",/thank you for (riding|choosing|taking|using)|my name is|i'?m .* from/],
+  ["⑨","安全運転でお送りいたしますが、","I'll drive safely,","アイル ドライヴ セイフリー、",/drive safe|safely|safe driving/],
+  ["⑩","念のためシートベルトのご協力をお願い申し上げます。","but please fasten your seat belt just in case.","バット プリーズ ファスン ユア シートベルト ジャスト イン ケイス。",/seat ?belt|fasten/],
+  ["⑪","車内の温度はいかがでしょうか？","Is the temperature comfortable for you?","イズ ザ テンパラチャー カンファタブル フォー ユー？",/temperature|too (hot|cold|warm)|comfortable/],
+  ["⑫","目的地に到着いたしますが、どの辺りにお停めいたしますか？","We're almost there. Where would you like me to stop?","ウィア オールモウスト ゼア。ホウェア ウッジュー ライク ミー トゥ ストップ？",/almost there|where (would you like me to|should i|shall i|can i) (stop|drop|pull)/],
+  ["⑬","はい、かしこまりました。○○にお停めさせて頂きます。","Certainly. I'll stop at ___.","サートゥンリー。アイル ストップ アット ___。",/i('ll| will) (stop|drop|pull)|stop (here|at|over)|pull over/],
+  ["⑭","ありがとうございました。お忘れ物ございませんようにお気を付け下さいませ。","Thank you. Please make sure you have all your belongings.","サンキュー。プリーズ メイク シュア ユー ハヴ オール ユア ビロンギングズ。",/belonging|forget|left anything|leave anything|your things/],
+  ["⑮","料金はタブレットを確認お願いします。","Please check the fare on the tablet.","プリーズ チェック ザ フェア オン ザ タブレット。",/tablet|fare/],
+  ["⑯","ありがとうございました。領収書でございます。","Thank you. Here is your receipt.","サンキュー。ヒア イズ ユア リシート。",/receipt/],
+  ["⑰","外からドアを開けいたしますのでお待ちくださいませ。","I'll open the door from outside. Please wait a moment.","アイル オウプン ザ ドア フロム アウトサイド。プリーズ ウェイト ア モウメント。",/outside|wait a moment|just a moment|one moment/],
+  ["⑱","ドアを開けてもよろしいでしょうか。足元にお気をつけくださいませ。","May I open the door? Please watch your step.","メイ アイ オウプン ザ ドア？ プリーズ ウォッチ ユア ステップ。",/(may|can|shall) i open|open the door now/],
+  ["⑲","ありがとうございました。また日本交通をご利用くださいませ。","Thank you. We hope you'll ride with Nihon Kotsu again.","サンキュー。ウィ ホウプ ユール ライド ウィズ ニホン コウツウ アゲイン。",/again|have a (nice|good|great)/]
+];
+const OFF_FROM=ITEMS.findIndex(x=>x[0]==="⑫");
+
+// ===== 文例集 =====
+$("list").innerHTML=ITEMS.map((x,i)=>(i===0?`<div class="grp">乗車のとき</div>`:i===OFF_FROM?`<div class="grp">降車のとき</div>`:"")+
+  `<div class="ph"><span class="no">${x[0]}</span><div><div class="ja">${esc(x[1])}</div><div class="en" lang="en">${esc(x[2])}</div><div class="kana">${esc(x[3])}</div></div><button type="button" class="btn play" data-i="${i}" aria-label="${x[0]}を英語で読む">▶</button></div>`).join("");
+let slow=true; try{ slow=localStorage.getItem("tenko.enSlow")!=="0"; }catch(e){}
+$("slow").checked=slow;
+$("slow").onchange=()=>{ slow=$("slow").checked; try{ localStorage.setItem("tenko.enSlow",slow?"1":"0"); }catch(e){} };
+function enVoice(){ const vs=speechSynthesis.getVoices(); return vs.find(v=>/^en-US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null; }
+if(window.speechSynthesis) speechSynthesis.onvoiceschanged=()=>{};
+$("list").addEventListener("click",e=>{
+  const b=e.target.closest(".play"); if(!b) return;
+  if(!window.speechSynthesis){ alert("このブラウザでは音声の読み上げが使えません"); return; }
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(ITEMS[+b.dataset.i][2].replace(/___/g,"")); u.lang="en-US"; u.rate=slow?0.75:1; const v=enVoice(); if(v) u.voice=v;
+  speechSynthesis.speak(u);
+});
+
+// ===== 英語で練習 =====
+let on=false, rec=null, heard="", phase="on", errCount=0, diag="";
+function render(){
+  const t=heard.toLowerCase(), shown=phase==="off"?ITEMS.slice(OFF_FROM):ITEMS.slice(0,OFF_FROM);
+  let n=0;
+  $("chk").innerHTML=shown.map(x=>{ const ok=x[4].test(t); if(ok) n++; return `<div class="chk${ok?" ok":""}"><span>${x[0]}</span><span lang="en">${esc(x[2])}<small>${esc(x[1])}</small></span></div>`; }).join("");
+  $("stat").innerHTML=(on?`${phase==="off"?"降車":"乗車"} 聞き取り中… <b>${n}／${shown.length}</b>`:`止まっています${heard?`（前回 ${n}／${shown.length}）`:""}`)+(diag?`<div class="err">${esc(diag)}</div>`:"");
+  $("heard").textContent=heard;
+}
+function listen(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ diag="このブラウザでは音声認識が使えません"; stop(); return; }
+  const r=new SR(); r.lang="en-US"; r.continuous=true; r.interimResults=true;
+  const base=heard; let fixed="";
+  r.onresult=e=>{ let interim=""; for(let i=e.resultIndex;i<e.results.length;i++){ const x=e.results[i][0].transcript; if(e.results[i].isFinal) fixed+=x+" "; else interim+=x; } heard=base+fixed+interim; errCount=0; diag=""; render(); };
+  r.onerror=e=>{
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){ diag="マイクか音声認識が許可されていません（設定 → Safari（またはこのアプリ）→ マイク）"; stop(); return; }
+    if(++errCount>=3) diag=`音声認識でエラーが続いています（${e.error}）`;
+    render();
+  };
+  r.onend=()=>{ if(on){ heard=base+fixed; setTimeout(()=>{ if(on) listen(); },200); } };   // 途中で止まったら続ける
+  try{ r.start(); rec=r; }catch(e){}
+}
+function begin(p){ stop(); if(window.speechSynthesis) speechSynthesis.cancel(); phase=p; on=true; heard=""; errCount=0; diag=""; $("pStop").disabled=false; render(); listen(); }
+function stop(){ on=false; try{ rec&&rec.stop(); }catch(e){} rec=null; $("pStop").disabled=true; render(); }
+$("pOn").onclick=()=>begin("on");
+$("pOff").onclick=()=>begin("off");
+$("pStop").onclick=stop;
+
+// ===== 切り替え =====
+function tab(k){ const prac=k==="prac"; $("viewList").hidden=prac; $("viewPrac").hidden=!prac; $("tabList").setAttribute("aria-pressed",!prac); $("tabPrac").setAttribute("aria-pressed",prac); if(!prac) stop(); try{ localStorage.setItem("tenko.enTab",k); }catch(e){} }
+$("tabList").onclick=()=>tab("list");
+$("tabPrac").onclick=()=>tab("prac");
+let first="list"; try{ first=localStorage.getItem("tenko.enTab")||"list"; }catch(e){}
+tab(first); render();
+</script>
+</body>
+</html>
