@@ -878,6 +878,7 @@ body.rtfull{overflow:hidden}
   </div>
 
   <div class="wrap" id="sMonthView" hidden>
+    <div class="seg" role="tablist" aria-label="集計の単位" id="mUnitSeg"><button role="tab" data-mu="m" aria-selected="true">月度ごと</button><button role="tab" data-mu="y" aria-selected="false">年間</button></div>
     <div class="period">
       <button class="iconbtn" id="mPrev" aria-label="前の月度">◀</button>
       <div class="titlepick"><h1 id="mTitle">月度</h1><select id="mPick" aria-label="月度を選ぶ"></select></div>
@@ -888,7 +889,7 @@ body.rtfull{overflow:hidden}
     <section class="meter" id="mSum"></section>
     <section class="card" id="mHourCard" hidden>
       <h2>時間帯別の売上</h2>
-      <div class="src">乗車した時刻の時間帯ごとの、1勤務あたりの平均（右は月度の合計）。金額はETC・アプリ手配料を除いたメーター料金です。</div>
+      <div class="src" id="mHourSrc">乗車した時刻の時間帯ごとの、1勤務あたりの平均（右は月度の合計）。金額はETC・アプリ手配料を除いたメーター料金です。</div>
       <div id="mHour"></div>
     </section>
     <div class="list" id="mList"></div>
@@ -1510,7 +1511,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-08 17:35</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-09 19:18</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5240,24 +5241,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end);
     return keys.map(shiftSales).filter(x=>x.has).reduce((a,x)=>a+x.amt,0)*salesCfg().tax;
   }
-  function renderMonth(){
-    if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()||todayStr()));
-    const P=PERIODS[mIdx], cf=salesCfg();
-    $("mCsvRow").hidden=!(isAdmin()||(isNakama()&&cfg.group&&cfg.group.csv));
-    $("mTitle").innerHTML=`${P.m}月度<span class="dd">▾</span><small>${md(P.start)}〜${md(P.end)}</small>`;
-    fillMPick();
-    const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end).sort();
-    const rows=keys.map(shiftSales).filter(x=>x.has||recs.some(r=>r.date===x.k));
-    const done=rows.filter(x=>x.has), tot=done.reduce((a,x)=>a+x.amt,0), cnt=done.reduce((a,x)=>a+x.cnt,0);
+  // 合計の表（月度・年間で同じもの）
+  function mSumHtml(done,cf,bonusRow,extra){
+    const tot=done.reduce((a,x)=>a+x.amt,0), cnt=done.reduce((a,x)=>a+x.cnt,0);
     const nokin=done.reduce((a,x)=>a+(x.st.nokin||0),0), locked=done.filter(x=>x.d.locked).length;
     const hai=done.reduce((a,x)=>a+x.s.haisha,0), nag=done.reduce((a,x)=>a+x.s.nagashi,0), ren=done.reduce((a,x)=>a+x.s.renzoku,0), nor=done.reduce((a,x)=>a+x.s.noriba,0);
     const pay={}; done.forEach(x=>Object.entries(x.s.byPay).forEach(([p,a])=>pay[p]=(pay[p]||0)+a));
-    const est=done.some(x=>x.est);
-    const net=tot*cf.tax, bonusNow=net*cf.pay*cf.bonus;
-    // 6月度は12月度〜5月度、12月度は6月度〜11月度の積み立てを、その月の賞与見込みとして出す
-    const bonusRow=P.m===6||P.m===12?(()=>{ let b=0; for(let i=mIdx-6;i<mIdx;i++) b+=periodNet(i)*cf.pay*cf.bonus;
-      return `<div class="row" style="margin-top:8px"><span>${P.m}月の賞与見込み<small style="font-size:13px;color:var(--muted)">（${P.m===6?"12月度〜5月度":"6月度〜11月度"}）</small></span><span class="num" style="font-size:22px;font-weight:700">${yen(b)}<small style="font-size:14px;color:var(--muted)"> 円</small></span></div>`; })():"";
-    $("mSum").innerHTML=`<div class="row"><span>税抜営収${est?"<small style='font-size:13px;color:var(--muted)'>※見込みを含む</small>":""}</span><span class="total num">${yen(net)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
+    const est=done.some(x=>x.est), net=tot*cf.tax, bonusNow=net*cf.pay*cf.bonus;
+    return `<div class="row"><span>税抜営収${est?"<small style='font-size:13px;color:var(--muted)'>※見込みを含む</small>":""}</span><span class="total num">${yen(net)}<small style="font-size:16px;color:var(--muted)"> 円</small></span></div>
       <div class="sumgrid">
         <div><span class="h">勤務</span><span class="v num">${done.length}回</span></div>
         <div><span class="h">1勤務平均</span><span class="v num">${done.length?yen(net/done.length):"—"}</span></div>
@@ -5271,7 +5262,25 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         <div><span class="h">納金の合計</span><span class="v num">${yen(nokin)}</span></div>
         <div><span class="h">照合済み</span><span class="v num">${locked}／${done.length}</span></div>
       </div>
-      ${Object.keys(pay).length?`<div class="legend">${PAYS.filter(p=>pay[p]).map(p=>`<span>${esc(payLabel(p))} <span class="num">${yen(pay[p])}</span></span>`).join("")}</div>`:""}${bonusRow}`;
+      ${Object.keys(pay).length?`<div class="legend">${PAYS.filter(p=>pay[p]).map(p=>`<span>${esc(payLabel(p))} <span class="num">${yen(pay[p])}</span></span>`).join("")}</div>`:""}${bonusRow||""}${extra||""}`;
+  }
+  function renderMonth(){
+    $("mUnitSeg").querySelectorAll("[data-mu]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.mu===mUnit)));
+    $("mPrev").setAttribute("aria-label",mUnit==="y"?"前の年":"前の月度"); $("mNext").setAttribute("aria-label",mUnit==="y"?"次の年":"次の月度");
+    $("mGoal").hidden=mUnit==="y"; $("mHourSrc").textContent=`乗車した時刻の時間帯ごとの、1勤務あたりの平均（右は${mUnit==="y"?"1年":"月度"}の合計）。金額はETC・アプリ手配料を除いたメーター料金です。`;
+    if(mUnit==="y") return renderYear();
+    if(mIdx<0) mIdx=Math.max(0,periodOf(sDay||activeDay()||todayStr()));
+    const P=PERIODS[mIdx], cf=salesCfg();
+    $("mCsvRow").hidden=!(isAdmin()||(isNakama()&&cfg.group&&cfg.group.csv)); $("mCsv").textContent="この月度の乗車明細をExcel用（CSV）で書き出す";
+    $("mTitle").innerHTML=`${P.m}月度<span class="dd">▾</span><small>${md(P.start)}〜${md(P.end)}</small>`;
+    fillMPick();
+    const keys=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end).sort();
+    const rows=keys.map(shiftSales).filter(x=>x.has||recs.some(r=>r.date===x.k));
+    const done=rows.filter(x=>x.has), net=done.reduce((a,x)=>a+x.amt,0)*cf.tax;
+    // 6月度は12月度〜5月度、12月度は6月度〜11月度の積み立てを、その月の賞与見込みとして出す
+    const bonusRow=P.m===6||P.m===12?(()=>{ let b=0; for(let i=mIdx-6;i<mIdx;i++) b+=periodNet(i)*cf.pay*cf.bonus;
+      return `<div class="row" style="margin-top:8px"><span>${P.m}月の賞与見込み<small style="font-size:13px;color:var(--muted)">（${P.m===6?"12月度〜5月度":"6月度〜11月度"}）</small></span><span class="num" style="font-size:22px;font-weight:700">${yen(b)}<small style="font-size:14px;color:var(--muted)"> 円</small></span></div>`; })():"";
+    $("mSum").innerHTML=mSumHtml(done,cf,bonusRow);
     // 時間帯別：詳細入力の勤務だけで、1勤務あたりの平均と合計
     const hd=done.filter(x=>x.d.mode!=="simple"&&x.d.rides.some(r=>!isEv(r.kind)));
     const hs=Array(24).fill(0); hd.forEach(x=>hourly(x.d).forEach((v,h)=>hs[h]+=v));
@@ -5293,15 +5302,67 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("mList").innerHTML=rows.slice().reverse().map(x=>`<button class="mrow" data-k="${x.k}">
         <span class="d num">${md(x.k)}（${dow(x.k)}）</span><span>${x.d.locked?"🔒":""}</span><span class="a num">${x.has?yen(x.amt*cf.tax)+"円":"未入力"}</span>
         <span class="s">${x.has?`${x.cnt}回${x.st.nokin!=null?"・納金 "+yen(x.st.nokin)+"円":""}${x.est?"・総営収未入力（見込み）":""}`:"この勤務の売上はまだありません"}</span></button>`).join("")||`<div class="geo">この月度の勤務はまだありません</div>`;
+    mCalcFill(cf);
+  }
+  function mCalcFill(cf){
     if(document.activeElement!==$("mTax")) $("mTax").value=cf.tax;
     if(document.activeElement!==$("mPay")) $("mPay").value=cf.pay;
     if(document.activeElement!==$("mBonus")) $("mBonus").value=Math.round(cf.bonus*1000)/10;
     if(document.activeElement!==$("mMax")) $("mMax").value=cf.maxKm;
   }
-  $("mList").addEventListener("click",e=>{ const b=e.target.closest("[data-k]"); if(!b) return; sDay=b.dataset.k; setView("day"); });
+  // ---- 年間の集計（1月度〜12月度。2026-11-09 ユーザー指定） ----
+  let mUnit="m", yNow=null; try{ mUnit=localStorage.getItem("tenko.munit")==="y"?"y":"m"; }catch(e){}
+  const allKeys=()=>[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])];
+  const perHas=p=>Object.keys(sales.days).some(k=>k>=p.start&&k<=p.end&&hasData(sales.days[k]));
+  const yearsWithData=()=>[...new Set(PERIODS.filter(perHas).map(p=>p.y))].sort((a,b)=>a-b);
+  function yearDone(y,uptoM){   // その年（uptoM があればその月度まで）の売上がある勤務
+    const ps=PERIODS.filter(p=>p.y===y&&(!uptoM||p.m<=uptoM)); if(!ps.length) return [];
+    const st=ps[0].start, en=ps[ps.length-1].end;
+    return allKeys().filter(k=>k>=st&&k<=en).sort().map(shiftSales).filter(x=>x.has);
+  }
+  function renderYear(){
+    const cf=salesCfg();
+    if(yNow==null){ const P=PERIODS[mIdx>=0?mIdx:Math.max(0,periodOf(sDay||activeDay()||todayStr()))]; yNow=P?P.y:+todayStr().slice(0,4); }
+    $("mCsvRow").hidden=!isAdmin(); $("mCsv").textContent="1年分の乗車明細をExcel用（CSV）で書き出す（試験・管理者だけ）";   // 年間のCSVは、まず管理者だけ（2026-11-09 ユーザー指定）
+    $("mTitle").innerHTML=`${yNow}年<span class="dd">▾</span><small>1月度〜12月度</small>`;
+    if(document.activeElement!==$("mPick")){ const ys=yearsWithData(); if(!ys.includes(yNow)) ys.push(yNow);
+      $("mPick").innerHTML=ys.sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}年（1月度〜12月度）</option>`).join(""); $("mPick").value=yNow; }
+    const ps=PERIODS.map((p,i)=>({p,i})).filter(o=>o.p.y===yNow);
+    const done=yearDone(yNow), net=done.reduce((a,x)=>a+x.amt,0)*cf.tax;
+    // 前の年と比べる：今年データのある最後の月度までを、前の年の同じ月度までと
+    const lastM=Math.max(0,...ps.filter(o=>perHas(o.p)).map(o=>o.p.m)), prev=lastM?yearDone(yNow-1,lastM):[];
+    const pNet=prev.reduce((a,x)=>a+x.amt,0)*cf.tax;
+    const cmp=pNet>0&&net>0?`<div class="row" style="margin-top:8px"><span>前の年と比べて<small style="font-size:13px;color:var(--muted)">（${lastM===12?"1年分":`1月度〜${lastM}月度`}どうし）</small></span><span class="num" style="font-size:20px;font-weight:700;color:${net>=pNet?"var(--ok)":"var(--warn)"}">${net>=pNet?"+":"−"}${yen(Math.abs(net-pNet))}円<small style="font-size:14px;color:var(--muted)">（${Math.round(net/pNet*100)}%）</small></span></div>
+      <div class="src">${yNow-1}年の同じ時期：税抜営収 ${yen(pNet)}円・${prev.length}勤務・1勤務平均 ${yen(pNet/prev.length)}円</div>`:"";
+    // この年に出る賞与（6月＝前の年の12月度〜5月度、12月＝6月度〜11月度の積み立て）
+    const bon=m=>{ const i=PERIODS.findIndex(p=>p.y===yNow&&p.m===m); if(i<0) return null; let b=0; for(let j=i-6;j<i;j++) b+=periodNet(j)*cf.pay*cf.bonus; return b; };
+    const b6=bon(6), b12=bon(12);
+    const bonusRow=(b6||b12)?`<div class="row" style="margin-top:8px"><span>この年の賞与見込み<small style="font-size:13px;color:var(--muted)">（6月 ${yen(b6||0)}・12月 ${yen(b12||0)}）</small></span><span class="num" style="font-size:22px;font-weight:700">${yen((b6||0)+(b12||0))}<small style="font-size:14px;color:var(--muted)"> 円</small></span></div>`:"";
+    $("mSum").innerHTML=done.length?mSumHtml(done,cf,bonusRow,cmp):`<div class="geo">${yNow}年の売上の記録はまだありません</div>`;
+    const hd=done.filter(x=>x.d.mode!=="simple"&&x.d.rides.some(r=>!isEv(r.kind)));
+    const hs=Array(24).fill(0); hd.forEach(x=>hourly(x.d).forEach((v,h)=>hs[h]+=v));
+    $("mHourCard").hidden=!hd.length; if(hd.length) $("mHour").innerHTML=hourBars(hs,hs.map(v=>v/hd.length));
+    // 月度ごとの一覧（押すとその月度へ）
+    const ms=ps.map(o=>{ const d=allKeys().filter(k=>k>=o.p.start&&k<=o.p.end).map(shiftSales).filter(x=>x.has), n=d.reduce((a,x)=>a+x.amt,0)*cf.tax;
+      const w=d.map(x=>workOf(x.k)).filter(Boolean).reduce((a,t)=>({work:a.work+t.work,net:a.net+t.net}),{work:0,net:0});
+      return {o,d,n,hr:w.work?w.net/(w.work/60):null}; });
+    const mx=Math.max(1,...ms.map(m=>m.n));
+    $("mList").innerHTML=`<h2 style="margin:6px 2px">月度ごと</h2>`+ms.slice().reverse().map(m=>`<button class="mrow" data-mi="${m.o.i}">
+        <span class="d num">${m.o.p.m}月度</span><span></span><span class="a num">${m.d.length?yen(m.n)+"円":"—"}</span>
+        <span class="s">${m.d.length?`${m.d.length}勤務・1勤務平均 ${yen(m.n/m.d.length)}円${m.hr?`・時間あたり ${yen(m.hr)}円`:""}<span style="display:block;height:6px;margin-top:4px;border-radius:3px;background:var(--accent);width:${Math.round(m.n/mx*100)}%"></span>`:"記録なし"}</span></button>`).join("");
+    mCalcFill(cf);
+  }
+  $("mUnitSeg").addEventListener("click",e=>{ const b=e.target.closest("[data-mu]"); if(!b) return; mUnit=b.dataset.mu; try{ localStorage.setItem("tenko.munit",mUnit); }catch(e){}
+    if(mUnit==="y") yNow=null; renderMonth(); });
+  $("mList").addEventListener("click",e=>{ const y=e.target.closest("[data-mi]"); if(y){ mIdx=+y.dataset.mi; mUnit="m"; try{ localStorage.setItem("tenko.munit","m"); }catch(e){} renderMonth(); window.scrollTo(0,0); return; }
+    const b=e.target.closest("[data-k]"); if(!b) return; sDay=b.dataset.k; setView("day"); });
   // CSV書き出し（管理者だけ。この月度の乗車明細を日ごとにまとめて出す）
+  function csvRange(){   // 年間のときは1月度の初日〜12月度の末日
+    if(mUnit==="y"){ const ps=PERIODS.filter(p=>p.y===yNow); return {start:ps[0].start,end:ps[ps.length-1].end,name:`乗車明細_${yNow}年.csv`}; }
+    const P=PERIODS[mIdx]; return {start:P.start,end:P.end,name:`乗車明細_${P.y}-${String(P.m).padStart(2,"0")}.csv`};
+  }
   function monthCsvRows(saved){
-    const P=PERIODS[mIdx];
+    const P=csvRange();
     const keys=Object.keys(sales.days).filter(k=>k>=P.start&&k<=P.end).sort();
     const rows=[["出庫日","No","内容","乗車時刻","降車時刻","金額","決済","ETC","社内決済","乗車地","乗車地の施設名","降車地","降車地の施設名","メモ","営業分","待ち分","営業分単価","実単価"]];
     keys.forEach(k=>{
@@ -5317,20 +5378,20 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   const toCsv=rows=>rows.map(r=>r.map(v=>{ const s=String(v??""); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(",")).join("\r\n");
   $("mCsv").onclick=async()=>{
-    const P=PERIODS[mIdx], csv="﻿"+toCsv(monthCsvRows(await placeSavedList())), name=`乗車明細_${P.y}-${String(P.m).padStart(2,"0")}.csv`;
+    const csv="﻿"+toCsv(monthCsvRows(await placeSavedList())), name=csvRange().name;
     const file=new File([csv],name,{type:"text/csv"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file]}); return; }catch(e){} }
     const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download=name; a.click();
   };
-  $("mPrev").onclick=()=>{ if(mIdx>0){ mIdx--; renderMonth(); } };
-  $("mNext").onclick=()=>{ if(mIdx<PERIODS.length-1){ mIdx++; renderMonth(); } };
+  $("mPrev").onclick=()=>{ if(mUnit==="y"){ if(PERIODS.some(p=>p.y===yNow-1)){ yNow--; renderMonth(); } return; } if(mIdx>0){ mIdx--; renderMonth(); } };
+  $("mNext").onclick=()=>{ if(mUnit==="y"){ if(PERIODS.some(p=>p.y===yNow+1)){ yNow++; renderMonth(); } return; } if(mIdx<PERIODS.length-1){ mIdx++; renderMonth(); } };
   function fillMPick(){
     if(document.activeElement===$("mPick")) return;
     const list=PERIODS.map((p,i)=>({i,p,has:Object.keys(sales.days).some(k=>k>=p.start&&k<=p.end&&hasData(sales.days[k]))||recs.some(r=>r.date>=p.start&&r.date<=p.end)})).filter(x=>x.has||x.i===mIdx).reverse();
     $("mPick").innerHTML=list.map(x=>`<option value="${x.i}">${x.p.y}年${x.p.m}月度</option>`).join("");
     $("mPick").value=mIdx;
   }
-  $("mPick").addEventListener("change",()=>{ mIdx=+$("mPick").value; renderMonth(); });
+  $("mPick").addEventListener("change",()=>{ if(mUnit==="y") yNow=+$("mPick").value; else mIdx=+$("mPick").value; renderMonth(); });
   $("mMax").addEventListener("change",()=>{ const v=+$("mMax").value; if(v>0){ sales.cfg=Object.assign(salesCfg(),{maxKm:v}); saveSales(); } renderMonth(); });
   $("mBonus").addEventListener("change",()=>{ const v=+$("mBonus").value; if($("mBonus").value!==""&&v>=0&&v<=100){ sales.cfg=Object.assign(salesCfg(),{bonus:v/100}); saveSales(); } renderMonth(); });
   ["mTax","mPay"].forEach(id=>$(id).addEventListener("change",()=>{
