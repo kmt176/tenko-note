@@ -1511,7 +1511,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-09 19:18</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-09 19:33</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2718,8 +2718,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if($("lPickOn").checked){ if(!pos&&!$("lFrom").value.trim()) getLocation(); $("lPick").focus(); }
   });
 
+  // Googleの地図は「第一ターミナル」（漢数字）だと見つけられない（NOT_FOUND）ので、送る前に「第1ターミナル」のように直す（2026-11-10）
+  const lNorm=s=>{ const K={"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10};
+    return String(s||"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/第([一二三四五六七八九十])(?=\s*(ターミナル|旅客ターミナル|ビル|駐車場|乗り場|ゲート))/g,(m,k)=>"第"+K[k]).trim(); };
   $("lRun").onclick=async()=>{
-    const dest=$("lDest").value.trim(), out=$("lResult");
+    const dest=lNorm($("lDest").value), out=$("lResult");
     if(!dest){ out.innerHTML=`<div class="err">目的地を入れてください</div>`; return; }
     if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ合言葉が入っていません。下の「仲間用の合言葉」に合言葉を入れてください。</div>`; return; }
     const body={action:"route",passcode:cfg.pass,dest,stayMin:+$("lStay").value||0,goLocal:$("lGoLocal").checked};
@@ -2728,12 +2731,12 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     else if(fromTxt) body.from=fromTxt;
     else { out.innerHTML=`<div class="err">「現在地を取得」を押すか、現在地の住所を入れてください</div>`; return; }
     if($("lPickOn").checked){
-      const pick=$("lPick").value.trim();
+      const pick=lNorm($("lPick").value);
       if(!pick){ out.innerHTML=`<div class="err">お迎え先を入れてください</div>`; return; }
       body.pickup=pick; body.pickupMin=+$("lPickMin").value||0;
     }
     if($("lViaOn").checked){
-      const vias=[$("lVia1").value.trim(),$("lVia2").value.trim()].filter(Boolean);
+      const vias=[lNorm($("lVia1").value),lNorm($("lVia2").value)].filter(Boolean);
       if(!vias.length){ out.innerHTML=`<div class="err">給油所の名前か住所を入れてください</div>`; return; }
       body.vias=vias;
     }
@@ -2741,7 +2744,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     try{
       const res=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
       const j=await res.json();
-      if(!j.ok) throw new Error(j.error||"調べられませんでした");
+      if(!j.ok) throw new Error(/NOT_FOUND/.test(j.error||"")?`入れた場所のどれか（目的地「${dest}」${body.pickup?`・お迎え先「${body.pickup}」`:""}${body.vias?"・給油所":""}）が地図で見つかりませんでした。住所か、別の書き方（例：羽田空港 第1ターミナル）で入れてください`:(j.error||"調べられませんでした"));
       if(j.office){ cfg.office=j.office; saveCfg(); }
       Object.assign(j,{goLocal:body.goLocal,fromLabel:body.from||posAddr||"現在地",dest,pickup:body.pickup||"",pickupMin:body.pickupMin||0,
         viaMin:+$("lViaMin").value||0,stationCount:(body.vias||[]).length});
