@@ -35,7 +35,8 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 .pop h3{margin:0 0 4px;font-size:16px}
 .pop ul{margin:6px 0 0;padding-left:18px;max-height:180px;overflow:auto}
 .pop a.go{display:block;text-align:center;background:var(--pk-bg);color:var(--pk-ink);border:1px solid var(--pk-line);padding:9px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px}
-.metip{position:fixed;right:10px;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 152px);z-index:1001;max-width:360px;margin-left:auto;background:#FFF1A8;color:#3A2E00;border:1px solid #E0C75A;border-radius:10px;padding:8px 10px;font-size:14px;font-weight:700;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.metip{position:fixed;left:10px;right:56px;top:calc(100% - env(safe-area-inset-bottom,0px) - 90px);z-index:1001;max-width:330px;margin-left:auto;background:#FFF1A8;color:#3A2E00;border:1px solid #E0C75A;border-radius:10px;padding:6px 9px;font-size:13px;font-weight:700;line-height:1.45;box-shadow:0 2px 8px rgba(0,0,0,.25)}   /* 右下の「現在地」ボタンの下（＋−の左）に出す。地図の真ん中を隠さない（2026-11-11 ユーザー指定） */
+.mecross{pointer-events:none}.mecross svg{display:block;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}   /* 現在地の十字（2026-11-11 ユーザー指定） */
 .metip[hidden]{display:none}
 .mebtn{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:1001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .route{border:2px solid var(--pk-line);border-radius:12px;padding:10px;display:grid;gap:8px}
@@ -71,7 +72,7 @@ body.full .panel{display:none}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-10</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-11</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
@@ -253,10 +254,12 @@ const getPos=(ok,ng)=>{ let done=false, tm=null; const fin=(f,x)=>{ if(done) ret
   if(inApp) tm=setTimeout(ask,6000);   // 6秒たっても返事がなければアプリ本体に頼む
   try{ navigator.geolocation.getCurrentPosition(p=>fin(ok,[p.coords.latitude,p.coords.longitude]),()=>ask(),{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); }catch(_){ ask(); } };
 // 現在地：地図を今いる場所に移して「今ここ」を出し、一番近い飲み屋街までの距離を出す
-let meMk=null;
+let meMk=null, meX=null;
 $("meBtn").onclick=()=>{ $("meBtn").textContent="📍 調べています…"; meTip("現在地を調べています…");
   getPos(ll=>{ $("meBtn").textContent="📍 現在地";
-    if(meMk) map.removeLayer(meMk); meMk=L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(map);
+    if(meMk) map.removeLayer(meMk); if(meX) map.removeLayer(meX);
+    meX=L.marker(ll,{interactive:false,keyboard:false,zIndexOffset:900,icon:L.divIcon({className:"mecross",iconSize:[64,64],iconAnchor:[32,32],html:'<svg width="64" height="64" viewBox="0 0 64 64"><g stroke="#fff" stroke-width="7" stroke-linecap="round"><line x1="32" y1="2" x2="32" y2="22"/><line x1="32" y1="42" x2="32" y2="62"/><line x1="2" y1="32" x2="22" y2="32"/><line x1="42" y1="32" x2="62" y2="32"/></g><g stroke="#D32F2F" stroke-width="4" stroke-linecap="round"><line x1="32" y1="2" x2="32" y2="22"/><line x1="32" y1="42" x2="32" y2="62"/><line x1="2" y1="32" x2="22" y2="32"/><line x1="42" y1="32" x2="62" y2="32"/></g><circle cx="32" cy="32" r="14" fill="none" stroke="#D32F2F" stroke-width="3"/></svg>'})}).addTo(map);
+    meMk=L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1}).bindTooltip("今ここ",{permanent:true,direction:"top",offset:[0,-16]}).addTo(map);
     map.setView(ll,Math.max(map.getZoom(),15));
     let best=null; clusters.forEach(c=>{ const d=distM(ll,[c.lat,c.lng]); if(!best||d<best.d) best={c,d}; });
     const t=best?`一番近い飲み屋街：${best.c.st?best.c.st.n+"駅の近く":""}（${best.c.n}軒）まで約${best.d>=1000?(best.d/1000).toFixed(1)+"km":Math.round(best.d/10)*10+"m"}`:"今いる場所に地図を動かしました（お店のデータを読み込み中のときは、近くの飲み屋街はまだ出ません）";
