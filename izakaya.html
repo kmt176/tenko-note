@@ -35,6 +35,8 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 .pop h3{margin:0 0 4px;font-size:16px}
 .pop ul{margin:6px 0 0;padding-left:18px;max-height:180px;overflow:auto}
 .pop a.go{display:block;text-align:center;background:var(--pk-bg);color:var(--pk-ink);border:1px solid var(--pk-line);padding:9px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px}
+.metip{position:fixed;right:10px;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 152px);z-index:1001;max-width:360px;margin-left:auto;background:#FFF1A8;color:#3A2E00;border:1px solid #E0C75A;border-radius:10px;padding:8px 10px;font-size:14px;font-weight:700;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.metip[hidden]{display:none}
 .mebtn{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:1001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .route{border:2px solid var(--pk-line);border-radius:12px;padding:10px;display:grid;gap:8px}
 .route>b{font-size:16px}
@@ -60,6 +62,7 @@ body.full .panel{display:none}
 </head>
 <body>
 <div id="map"></div>
+<div id="meTip" class="metip" role="status" hidden></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div class="favbar" id="favBar" hidden>
@@ -238,16 +241,27 @@ $("kml").onclick=async()=>{ if(!clusters.length) return; await allTowns();
 $("reload").onclick=async()=>{ if(await fetchShops()) compute(); };
 let changed=false;   // チェック・半径・軒数を変えたときは、変えたことが分かるように知らせる
 ["cIza","cPub","cBar","cNight","cFz","rad","num","cDots"].forEach(id=>$(id).addEventListener("change",()=>{ changed=true; compute(); }));
+// 現在地を取る：まずこのページで調べ、取れない・返事がないときはアプリ本体に代わりに調べてもらう（2026-11-10 アプリの中だと現在地ボタンが動かないスマホがあった）
+let meTipT=null;
+const meTip=(t,ms)=>{ const el=$("meTip"); el.textContent=t; el.hidden=false; clearTimeout(meTipT); if(ms) meTipT=setTimeout(()=>el.hidden=true,ms); };
+const inApp=window.parent!==window;
+const getPos=(ok,ng)=>{ let done=false, tm=null; const fin=(f,x)=>{ if(done) return; done=true; clearTimeout(tm); window.removeEventListener("message",onMsg); f(x); };
+  const id=Math.random().toString(36).slice(2); let asked=false;
+  const onMsg=e=>{ if(e.origin!==location.origin||!e.data||e.data.izGeoRes!==id) return; if(e.data.err) fin(ng,e.data.err); else fin(ok,[e.data.lat,e.data.lng]); };
+  const ask=()=>{ if(asked||done) return; if(!inApp){ fin(ng,"取れませんでした"); return; } asked=true; window.addEventListener("message",onMsg); try{ window.parent.postMessage({izGeo:id},location.origin); }catch(_){ fin(ng,"取れませんでした"); } tm=setTimeout(()=>fin(ng,"取れませんでした"),20000); };
+  if(!navigator.geolocation){ ask(); return; }
+  if(inApp) tm=setTimeout(ask,6000);   // 6秒たっても返事がなければアプリ本体に頼む
+  try{ navigator.geolocation.getCurrentPosition(p=>fin(ok,[p.coords.latitude,p.coords.longitude]),()=>ask(),{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); }catch(_){ ask(); } };
 // 現在地：地図を今いる場所に移して「今ここ」を出し、一番近い飲み屋街までの距離を出す
 let meMk=null;
-$("meBtn").onclick=()=>{ if(!navigator.geolocation){ $("msg").textContent="このスマホでは現在地が使えません"; return; }
-  $("meBtn").textContent="📍 調べています…";
-  navigator.geolocation.getCurrentPosition(p=>{ const ll=[p.coords.latitude,p.coords.longitude]; $("meBtn").textContent="📍 現在地";
+$("meBtn").onclick=()=>{ $("meBtn").textContent="📍 調べています…"; meTip("現在地を調べています…");
+  getPos(ll=>{ $("meBtn").textContent="📍 現在地";
     if(meMk) map.removeLayer(meMk); meMk=L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(map);
     map.setView(ll,Math.max(map.getZoom(),15));
     let best=null; clusters.forEach(c=>{ const d=distM(ll,[c.lat,c.lng]); if(!best||d<best.d) best={c,d}; });
-    if(best) $("msg").textContent=`一番近い飲み屋街：${best.c.st?best.c.st.n+"駅の近く":""}（${best.c.n}軒）まで約${best.d>=1000?(best.d/1000).toFixed(1)+"km":Math.round(best.d/10)*10+"m"}`;
-  },()=>{ $("meBtn").textContent="📍 現在地"; $("msg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; },{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); };
+    const t=best?`一番近い飲み屋街：${best.c.st?best.c.st.n+"駅の近く":""}（${best.c.n}軒）まで約${best.d>=1000?(best.d/1000).toFixed(1)+"km":Math.round(best.d/10)*10+"m"}`:"今いる場所に地図を動かしました（お店のデータを読み込み中のときは、近くの飲み屋街はまだ出ません）";
+    $("msg").textContent=t; meTip(t,8000);
+  },why=>{ $("meBtn").textContent="📍 現在地"; const t=`現在地が${why}。スマホの設定で、位置情報の許可を確認してください`; $("msg").textContent=t; meTip(t,10000); }); };
 // ===== 飲み屋街を通って戻る（2026-10-27 ユーザー指定） =====
 // 現在地→行き先のまっすぐな線から「寄り道」の距離以内の飲み屋街を、軒数の多い順に選ぶ。選んだら線の上の順（現在地に近い順）に並べてGoogleマップのナビへ
 const RK="izakayaMap.route";
@@ -359,11 +373,9 @@ const rReady=()=>{ if(!rDest()){ $("rOut").textContent="行き先の駅が見つ
   if(!clusters.length){ $("rOut").textContent="飲み屋街のデータを読み込み中です。少し待ってから押してください"; return false; } rSave(); return true; };
 $("rGoMap").onclick=()=>{ if(rReady()) rTapStart("start","地図で出発地をタップしてください"); };
 $("rGo").onclick=()=>{ const D=rDest(); if(!rReady()) return;
-  if(!navigator.geolocation){ $("rOut").textContent="このスマホでは現在地が使えません"; return; }
   $("rOut").textContent="現在地を調べています…"; rSave();
-  navigator.geolocation.getCurrentPosition(p=>{ const S=[p.coords.latitude,p.coords.longitude];
-    rShow(S,D.ll,D.name,rPick(S,D.ll,+$("rLim").value,+$("rNum").value)); },
-    ()=>{ $("rOut").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; },{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); };
+  getPos(S=>rShow(S,D.ll,D.name,rPick(S,D.ll,+$("rLim").value,+$("rNum").value)),
+    why=>{ $("rOut").textContent=`現在地が${why}。スマホの設定で、位置情報の許可を確認してください`; }); };
 $("rClear").onclick=()=>{ rLayer.clearLayers(); $("rOut").textContent=""; };
 // 拡大・縮小で、円の塗りとお店の点の大きさを切り替える
 let wasNear=near(); map.on("zoomend",()=>{ if(near()!==wasNear){ wasNear=near(); if(shops.length) compute(); } });
