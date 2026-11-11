@@ -1340,6 +1340,11 @@ body.rtfull{overflow:hidden}
       <div class="field"><label for="lStay">目的地での降車・待ち（分）</label><input type="number" id="lStay" inputmode="numeric" min="0" value="3"></div>
       <div class="field"><label for="lMargin">余裕として足す（分）</label><input type="number" id="lMargin" inputmode="numeric" min="0" value="30"></div>
     </div>
+    <label class="check"><input type="checkbox" id="lAtOn">時刻を指定して試す（シミュレーション）<br><small>「今朝7時に受けていたら」のように、前の時刻や先の時刻で調べるとき</small></label>
+    <div class="grp" id="lAtBox" hidden>
+      <div class="field"><label for="lAt">ロングを受けた（出発する）日付と時刻</label><input type="datetime-local" id="lAt"></div>
+      <div class="src">過去の時刻は道の混み方を調べられないので、同じ曜日・同じ時刻の次の週の「いつもの混み方」で調べます。間に合うかは、その時刻の勤務（点呼時間の画面の記録）で判定します。</div>
+    </div>
     <label class="check"><input type="checkbox" id="lGoLocal">行きは一般道のみ（高速を使わない）</label>
     <label class="check"><input type="checkbox" id="lViaOn">帰りに給油所に寄る<br><small>2か所のうち、帰り道で早く会社に着く方を自動で選びます</small></label>
     <div class="grp" id="lViaBox" hidden>
@@ -1512,7 +1517,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-11 04:31</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-11 22:00</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1563,6 +1568,7 @@ body.rtfull{overflow:hidden}
       <li><b>目的地</b>を入れます（例：成田空港 第1ターミナル）。</li>
       <li>給油するなら「<b>帰りに給油所に寄る</b>」にチェックを入れます。<small>陸王交通・豊玉の2か所のうち、帰り道で早く会社に着く方を自動で選びます</small></li>
       <li>「<b>時間を調べる</b>」を押します。</li>
+      <li><small>過去や先の時刻で試したいとき（例：今朝7時にロングを受けていたら）は、「<b>時刻を指定して試す</b>」にチェックして日付と時刻を入れます。過去の時刻は、同じ曜日・同じ時刻の次の週の「いつもの混み方」で調べます</small></li>
     </ol>
     <p>行きと、帰りの2通り（高速・一般道）の時間を渋滞予測込みで出し、間に合うかを判定します。待ち時間の初期値は、お迎え先5分・目的地3分・給油5分、余裕30分です。</p>
     <div class="legend-list">
@@ -2666,13 +2672,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const route=[j.fromLabel||"現在地", j.pickup?shortName(j.pickup):"", j.dest].filter(Boolean).map(esc).join(" → ");
     $("lResult").innerHTML=`<div class="res">
       ${isDemo?`<span class="tag">例の表示です（実際の経路ではありません）</span>`:""}
-      <div class="leg"><div class="h">行き　今 <span class="num">${clock(((nowAbs%DAY)+DAY)%DAY)}</span> ${route}${j.goLocal?"（一般道のみ）":""}</div>
+      ${j.sim?`<div class="geo" style="background:#FFF4D6;color:#5A4300;border-radius:8px;padding:6px 10px;font-weight:700">🕘 試し：${md(lLocal(new Date(j.now)))} ${clock(((nowAbs%DAY)+DAY)%DAY)} に出発したとして調べました${j.simWeeks?`<br><small style="font-weight:400">道の混み方は、同じ曜日・同じ時刻の ${md(lLocal(new Date(j.simQ)))} の予測（いつもの混み方）です</small>`:""}</div>`:""}
+      <div class="leg"><div class="h">行き　${j.sim?"出発":"今"} <span class="num">${clock(((nowAbs%DAY)+DAY)%DAY)}</span> ${route}${j.goLocal?"（一般道のみ）":""}</div>
         ${pickLine}
         <div class="v"><strong class="num">${tl(goArr,nowAbs)} 目的地着</strong><span class="num">${hm(j.go.sec/60+pickMin)}・${j.go.km}km</span></div>
         <div class="d">${delay(j.go)}</div></div>
       ${back("帰り　高速を使う",j.backHw)}
       ${back("帰り　一般道のみ",j.backLocal)}
-      <div class="foot">${sh&&sh.nik?`${md(sh.r.date)}出社の${shName(sh.r)}：業務後点呼の期限（13時間） <span class="num">${absToLabel(deadline)}</span>／15時間（法令の上限） <span class="num">${absToLabel(sh.hard)}</span>。`:sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 ${m2hm(NOKIN)}（納金処理があるので帰庫は${m2hm(KIKO)}まで）。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}${j.pickup?`お迎え先で <span class="num">${pickMin}</span>分、`:""}目的地で <span class="num">${+$("lStay").value||0}</span>分${j.stationCount?`、給油所で <span class="num">${j.viaMin||0}</span>分`:""}、余裕として <span class="num">${margin}</span>分を足しています。<br>行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。</div>
+      <div class="foot">${sh&&sh.nik?`${md(sh.r.date)}出社の${shName(sh.r)}：業務後点呼の期限（13時間） <span class="num">${absToLabel(deadline)}</span>／15時間（法令の上限） <span class="num">${absToLabel(sh.hard)}</span>。`:sh?`${md(sh.r.date)}出社の勤務：業務後点呼の期限 <span class="num">${absToLabel(deadline)}</span>／納金〆 ${m2hm(NOKIN)}（納金処理があるので帰庫は${m2hm(KIKO)}まで）。`:"点呼時間の画面に今日の勤務を入れると、間に合うか判定します。"}${j.pickup?`お迎え先で <span class="num">${pickMin}</span>分、`:""}目的地で <span class="num">${+$("lStay").value||0}</span>分${j.stationCount?`、給油所で <span class="num">${j.viaMin||0}</span>分`:""}、余裕として <span class="num">${margin}</span>分を足しています。<br>${j.sim?"試しの結果です。行きも帰りも「いつもの混み方」からの予測で、その日の事故や工事は入っていません。":"行きの時間は、今の渋滞（事故渋滞を含む）を反映しています。帰りの時間は「いつもの混み方」からの予測で、これから起きる事故や、工事の車線規制は含まれません。工事・事故の情報は、下のボタンから首都高・NEXCOの公式サイトで確認してください。"}</div>
     </div>`;
   }
 
@@ -2719,6 +2726,9 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if($("lPickOn").checked){ if(!pos&&!$("lFrom").value.trim()) getLocation(); $("lPick").focus(); }
   });
 
+  // 時刻を指定して試す（2026-11-11 本人の希望）：チェックしたら、今の時刻を入れておく
+  const lLocal=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+"T"+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  $("lAtOn").addEventListener("change",()=>{ $("lAtBox").hidden=!$("lAtOn").checked; if($("lAtOn").checked&&!$("lAt").value) $("lAt").value=lLocal(new Date()); });
   // Googleの地図は「第一ターミナル」（漢数字）だと見つけられない（NOT_FOUND）ので、送る前に「第1ターミナル」のように直す（2026-11-10）
   const lNorm=s=>{ const K={"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10};
     return String(s||"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/第([一二三四五六七八九十])(?=\s*(ターミナル|旅客ターミナル|ビル|駐車場|乗り場|ゲート))/g,(m,k)=>"第"+K[k]).trim(); };
@@ -2727,6 +2737,9 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(!dest){ out.innerHTML=`<div class="err">目的地を入れてください</div>`; return; }
     if(!cfg.url||!cfg.pass){ out.innerHTML=`<div class="err">まだ合言葉が入っていません。下の「仲間用の合言葉」に合言葉を入れてください。</div>`; return; }
     const body={action:"route",passcode:cfg.pass,dest,stayMin:+$("lStay").value||0,goLocal:$("lGoLocal").checked};
+    if($("lAtOn").checked){ const v=$("lAt").value, d=v?new Date(v):null;
+      if(!d||isNaN(d)){ out.innerHTML=`<div class="err">試す日付と時刻を入れてください</div>`; return; }
+      body.at=d.toISOString(); }
     const fromTxt=$("lFrom").value.trim();
     if(pos&&(!fromTxt||fromTxt===posAddr)){ body.lat=pos.lat; body.lng=pos.lng; }
     else if(fromTxt) body.from=fromTxt;
@@ -2747,6 +2760,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       const j=await res.json();
       if(!j.ok) throw new Error(/NOT_FOUND/.test(j.error||"")?`入れた場所のどれか（目的地「${dest}」${body.pickup?`・お迎え先「${body.pickup}」`:""}${body.vias?"・給油所":""}）が地図で見つかりませんでした。住所か、別の書き方（例：羽田空港 第1ターミナル）で入れてください`:(j.error||"調べられませんでした"));
       if(j.office){ cfg.office=j.office; saveCfg(); }
+      if(body.at&&!j.sim) throw new Error("サーバーがまだ「時刻を指定して試す」に対応していません（Apps Scriptの新しい版の反映が必要です）");
       Object.assign(j,{goLocal:body.goLocal,fromLabel:body.from||posAddr||"現在地",dest,pickup:body.pickup||"",pickupMin:body.pickupMin||0,
         viaMin:+$("lViaMin").value||0,stationCount:(body.vias||[]).length});
       navStation=(j.backHw&&j.backHw.station)||"";
