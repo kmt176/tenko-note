@@ -60,6 +60,24 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 /* 全画面：設定の枠を隠して地図だけにする（アプリの見出しも隠してもらう。2026-10-28 ユーザー指定） */
 .fullbtn{position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:1001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 body.full .panel{display:none}
+/* 営業時間・ほかに出すもの（2026-11-13） */
+.pop .oh{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.55}
+.warn{font-size:12.5px;color:var(--muted);line-height:1.5}
+.xpin{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;color:#fff;font-weight:800;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.4);box-sizing:border-box}
+.xpin.sq{border-radius:6px}
+.xleg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12.5px;color:var(--muted)}
+.xleg .xpin{width:20px;height:20px;font-size:11px;margin-left:4px}
+#xNightKinds{gap:4px 12px}
+.gobox{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:grid;gap:6px}
+.gobox .btn{width:100%;min-height:44px}
+.golist{max-height:160px;overflow:auto;font-size:13px;line-height:1.5}
+.golist>div{padding:4px 0;border-top:1px dashed var(--line)}
+.golist .gm{color:var(--ink);font-weight:700}
+.golist button{font-size:12.5px;margin:2px 6px 0 0;padding:3px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.hlist{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 6px}
+.hrow{display:flex;flex-wrap:wrap;gap:2px 8px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:7px 2px;font-size:14px}
+.hrow b{flex:1 1 100%;font-size:14.5px}.hrow span{font-size:12.5px;color:var(--muted)}.hrow .hgo{color:#C92A2A;font-weight:800}
+.hgrp{font-weight:800;font-size:13.5px;margin:8px 0 2px;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -75,7 +93,7 @@ body.full .panel{display:none}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-12 12:17</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-13 02:47</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
@@ -95,6 +113,20 @@ body.full .panel{display:none}
       <div class="btns"><button class="btn primary" id="rGo">現在地から探す</button><button class="btn primary" id="rGoMap">地図上から探す</button><button class="btn" id="rClear">消す</button></div>
       <div id="rOut"></div>
     </div>
+    <!-- ほかに出すもの（2026-11-13 ユーザー指定）：タクシー乗り場・ホテル（GOで呼ばれた記録）・夜遅くまで開いているお店 -->
+    <div class="route xbox"><b>🗺️ ほかに出すもの</b>
+      <div class="row"><label><input type="checkbox" id="xTaxi">🚕 タクシー乗り場</label></div>
+      <div class="xleg"><span class="xpin sq" style="background:#1971C2">駅</span>駅 <span class="xpin sq" style="background:#9C36B5">ホ</span>ホテル <span class="xpin sq" style="background:#E03131">病</span>病院 <span class="xpin sq" style="background:#495057">他</span>その他</div>
+      <div class="row"><label><input type="checkbox" id="xHotel">🏨 ホテル</label><button class="btn" id="hBtn" style="min-height:36px;padding:6px 10px">ホテルの一覧</button></div>
+      <div id="xHotelOpt" hidden><div class="row"><label><input type="checkbox" id="xLux">高級ホテルも出す（灰色）</label></div>
+        <div class="xleg"><span class="xpin" style="background:#1864AB">H</span>まだ <span class="xpin" style="background:#F08C00">1</span>GOで1〜2回 <span class="xpin" style="background:#E03131">3</span>3回以上 <span class="xpin" style="background:#ADB5BD;color:#343A40">H</span>高級</div></div>
+      <div id="hListBox" hidden><div class="row"><label>並べ方 <select id="hSort"><option value="rooms">客室数の多い順</option><option value="chain">チェーンごと</option><option value="go">GOで呼ばれた回数の多い順</option></select></label>
+        <label><input type="checkbox" id="hVis" checked>地図に見えている範囲だけ</label></div><div id="hListOut" class="hlist"></div></div>
+      <div class="row"><label><input type="checkbox" id="xNight">🌙 夜遅くまで開いているお店</label></div>
+      <div class="row" id="xNightKinds" hidden></div>
+      <div class="xleg"><span class="xpin" style="background:#C2255C">♨️</span>24時間 <span class="xpin" style="background:#F76707">🎤</span>深夜（0時すぎ）まで <span class="xpin" style="background:#868E96">📚</span>それより早い・今日休み <span class="xpin" style="background:#fff;border-color:#868E96">🎳</span>営業時間が分からない</div>
+      <div id="xMsg" class="warn"></div><div id="xInfo" class="warn"></div>
+    </div>
     <datalist id="stList"></datalist>
     <div class="row"><span>含めるお店：</span>
       <label><input type="checkbox" id="cIza" checked>居酒屋（店名・cuisine）</label>
@@ -105,6 +137,7 @@ body.full .panel{display:none}
     <div class="row"><label>半径 <select id="rad"><option>100</option><option>150</option><option selected>200</option><option>300</option><option>400</option></select> m</label>
       <label>以内に <select id="num"><option>5</option><option>8</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select> 軒以上</label>
       <label><input type="checkbox" id="cDots" checked>お店の点も出す</label></div>
+    <div class="row"><label>⏰ もうすぐ閉店＝閉店の <select id="soon"><option>15</option><option selected>30</option><option>45</option><option>60</option><option>90</option><option>120</option></select> 分前から</label></div>
     <div class="btns"><button class="btn" id="csv" hidden>CSVで保存</button><button class="btn" id="navi" hidden>カーナビタイム用CSV</button><button class="btn" id="kml" hidden>Googleマイマップ用（KML）</button><button class="btn" id="reload">データを取り直す</button></div>
     <div id="dataInfo" style="font-size:13px;color:var(--muted)"></div>
     <div id="msg">読み込んでいます…</div>
@@ -118,6 +151,9 @@ body.full .panel{display:none}
       ・点の色：橙＝居酒屋、青＝pub、紫＝bar、ピンク＝夜のお店（キャバクラ・ガールズバー・スナック・ホストクラブ・ナイトクラブ）、えんじ＝その他。<br>
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
+      ・<b>営業時間</b>：お店の点を押すと、オープンストリートマップに入っている営業時間（今日の曜日の分）と閉店時間が出ます。入っていないお店は「不明」です。朝5時までは前の日の営業として見ます。飲み屋街の円を押すと「この辺は○時台に閉まる店が多い（営業時間がわかったのは○軒中○軒）」と出ます。今開いていて、閉店まで決めた分（初期は30分）以内のお店が2軒以上、かつ今開いているお店の3割以上ある飲み屋街は、紫の点線のふちと⏰で目立たせます（5分ごとに数え直します）。祝日だけの営業時間は使っていません。<br>
+      ・<b>ほかに出すもの</b>：タクシー乗り場（名前・並べる台数。駅・ホテル・病院の乗り場は、名前か150m以内の施設から分けました。分けられないものは「その他」）、ホテル（客室数。以前作った「23区 中クラスホテル（300室以上）一覧」のチェーン名・客室数も合わせました。高級ホテルは名前・ブランドで分けて、ふだんは出しません）、夜遅くまで開いているお店（カラオケ・ボウリング場・サウナ／スーパー銭湯・漫画喫茶／ネットカフェ。ふつうの銭湯は深夜1時すぎまで開いているものだけ）。分からない項目は空欄です。データはオープンストリートマップから前もって作っています。<br>
+      ・<b>GOで呼ばれた</b>：ホテルの印を押して「🚕 GOで呼ばれた」を押すと、今の日付と時間を記録します（ひとことメモも書けます。あとから直す・消すこともできます）。記録は売上のデータと一緒にこのスマホに入り、バックアップにも入ります。呼ばれた回数が1〜2回のホテルは橙、3回以上は赤の印になります。<br>
       ・「📍 現在地」を押すと、今いる場所に青い点（今ここ）と、画面の真ん中に赤い十字が出ます。地図を指でずらすと、十字の場所から一番近い飲み屋街が下に出ます。十字が出ているときの「現在地から探す」は、十字の場所から探します。左下の印は東西南北です（この地図はいつも北が上）。<br>
       ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うのプルダウン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。「＋自分の場所を登録」で、住所・駅名・地名を文字か声で検索し、地図で印を動かして位置を直してから名前を付けて、5か所まで登録でき、よく使うのプルダウンから選べます（このスマホに覚えます）。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②は①の行き先から、③は②の行き先から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
     </details>
@@ -137,7 +173,7 @@ const AREA=[[[35.68841,139.52447],[35.6901,139.52488],[35.68956,139.52663],[35.6
 const ST=[["東京",35.68127,139.76671],["有楽町",35.67504,139.76326],["新橋",35.6663,139.75847],["浜松町",35.65541,139.75713],["田町",35.64574,139.7476],["高輪ゲートウェイ",35.63538,139.74064],["品川",35.62814,139.73854],["大崎",35.61995,139.72824],["五反田",35.62606,139.7237],["目黒",35.63341,139.71573],["恵比寿",35.64668,139.71013],["渋谷",35.65808,139.70172],["原宿",35.67132,139.70271],["代々木",35.6838,139.70221],["新宿",35.68955,139.70082],["新大久保",35.70093,139.70025],["高田馬場",35.71331,139.70397],["目白",35.72039,139.70628],["池袋",35.73027,139.71108],["大塚",35.73179,139.72794],["巣鴨",35.73372,139.74035],["駒込",35.73703,139.7484],["田端",35.73748,139.76157],["西日暮里",35.73217,139.76672],["日暮里",35.72757,139.77097],["鶯谷",35.72145,139.77803],["上野",35.71377,139.77678],["御徒町",35.70719,139.77471],["秋葉原",35.69853,139.77304],["神田",35.69177,139.77087],["赤羽",35.77753,139.72115],["東十条",35.76383,139.72674],["王子",35.75232,139.73821],["上中里",35.74689,139.74629],["大井町",35.60707,139.73501],["大森",35.58885,139.72811],["蒲田",35.56249,139.71603],["板橋",35.74503,139.7192],["十条",35.76039,139.72225],["北赤羽",35.78697,139.70583],["浮間舟渡",35.79126,139.69149],["御茶ノ水",35.6996,139.76503],["四ツ谷",35.68573,139.73056],["中野",35.70575,139.66576],["高円寺",35.70533,139.64972],["阿佐ヶ谷",35.70489,139.63626],["荻窪",35.70443,139.62025],["西荻窪",35.7038,139.59971],["吉祥寺",35.70315,139.57999],["三鷹",35.70269,139.56071],["武蔵境",35.70209,139.54355],["東中野",35.70625,139.68508],["大久保",35.70063,139.69744],["千駄ヶ谷",35.68121,139.71145],["信濃町",35.67994,139.72129],["市ヶ谷",35.69116,139.73532],["飯田橋",35.70017,139.74365],["水道橋",35.702,139.75375],["浅草橋",35.69739,139.78449],["両国",35.69575,139.79335],["錦糸町",35.69673,139.81464],["亀戸",35.69733,139.82633],["平井",35.70657,139.84258],["新小岩",35.71684,139.85773],["小岩",35.73333,139.88185],["新日本橋",35.68899,139.77416],["馬喰町",35.69334,139.78239],["三河島",35.73335,139.77729],["南千住",35.73465,139.79981],["北千住",35.74885,139.80464],["綾瀬",35.76217,139.82494],["亀有",35.76654,139.84756],["金町",35.76951,139.87039],["八丁堀",35.67462,139.77819],["越中島",35.668,139.7925],["潮見",35.65886,139.81717],["新木場",35.64599,139.82684],["葛西臨海公園",35.64417,139.86148],["尾久",35.74687,139.75373],["稲荷町",35.7114,139.78212],["浅草",35.71074,139.79777],["田原町",35.70991,139.79035],["上野広小路",35.7076,139.77297],["末広町",35.70284,139.77177],["三越前",35.68715,139.77359],["日本橋",35.6819,139.77335],["赤坂見附",35.67683,139.73737],["京橋",35.6768,139.77017],["青山一丁目",35.67278,139.72412],["溜池山王",35.67155,139.74189],["銀座",35.67141,139.76528],["外苑前",35.67037,139.71783],["虎ノ門",35.67016,139.75012],["表参道",35.66506,139.71249],["新大塚",35.72609,139.72941],["茗荷谷",35.7172,139.7369],["後楽園",35.70732,139.75106],["本郷三丁目",35.70675,139.76011],["南阿佐ヶ谷",35.69946,139.63557],["東高円寺",35.69797,139.6583],["新高円寺",35.69786,139.64851],["新中野",35.69747,139.66951],["中野坂上",35.69709,139.68221],["淡路町",35.69487,139.76746],["西新宿",35.69452,139.69256],["中野新橋",35.6917,139.674],["新宿三丁目",35.69118,139.70421],["中野富士見町",35.69082,139.66816],["新宿御苑前",35.68852,139.71091],["四谷三丁目",35.68783,139.71932],["大手町",35.68677,139.76618],["方南町",35.68351,139.65794],["国会議事堂前",35.67484,139.74534],["霞ヶ関",35.67424,139.75268],["三ノ輪",35.72928,139.79117],["入谷",35.72067,139.78455],["仲御徒町",35.70665,139.77619],["小伝馬町",35.69036,139.77881],["人形町",35.68608,139.7825],["茅場町",35.67914,139.77966],["日比谷",35.67421,139.76069],["東銀座",35.66932,139.76741],["築地",35.66799,139.77255],["虎ノ門ヒルズ",35.66733,139.74777],["六本木",35.6628,139.73116],["神谷町",35.66262,139.74472],["広尾",35.65178,139.72219],["中目黒",35.64419,139.69893],["落合",35.71064,139.68597],["早稲田",35.70568,139.72219],["神楽坂",35.70387,139.73452],["九段下",35.69608,139.75126],["竹橋",35.69044,139.75767],["門前仲町",35.67183,139.79625],["東陽町",35.66959,139.81768],["木場",35.66935,139.80712],["南砂町",35.66842,139.83169],["西葛西",35.66458,139.85935],["葛西",35.66363,139.87231],["北綾瀬",35.77689,139.8321],["町屋",35.74216,139.78011],["千駄木",35.72599,139.76337],["根津",35.71733,139.76575],["湯島",35.70679,139.76998],["新御茶ノ水",35.69693,139.76545],["二重橋前",35.6805,139.76178],["赤坂",35.67211,139.73644],["明治神宮前",35.66918,139.7038],["代々木公園",35.66912,139.68965],["代々木上原",35.6689,139.67963],["乃木坂",35.66659,139.72621],["地下鉄成増",35.77674,139.63117],["地下鉄赤塚",35.77022,139.6436],["平和台",35.75756,139.6543],["氷川台",35.74962,139.66547],["小竹向原",35.74339,139.67952],["千川",35.73817,139.6894],["要町",35.73322,139.69848],["東池袋",35.72595,139.71886],["護国寺",35.71918,139.72745],["江戸川橋",35.70929,139.73413],["麹町",35.68478,139.73735],["永田町",35.67786,139.7419],["桜田門",35.67744,139.75181],["銀座一丁目",35.6745,139.76682],["新富町",35.67046,139.77377],["月島",35.6646,139.78452],["豊洲",35.65513,139.79602],["辰巳",35.64578,139.81033],["押上",35.70868,139.81369],["神保町",35.69591,139.75783],["住吉",35.6886,139.81568],["半蔵門",35.68538,139.74169],["水天宮前",35.68305,139.78513],["清澄白河",35.68212,139.79974],["赤羽岩淵",35.78336,139.72211],["志茂",35.77802,139.7325],["王子神谷",35.76509,139.7357],["西ヶ原",35.74594,139.74226],["本駒込",35.72441,139.7538],["東大前",35.71811,139.75783],["六本木一丁目",35.66508,139.7389],["麻布十番",35.65481,139.73704],["白金高輪",35.64314,139.73428],["白金台",35.63777,139.72586],["雑司が谷",35.7202,139.71472],["西早稲田",35.70799,139.70916],["東新宿",35.70011,139.7079],["北参道",35.67824,139.70564],["本所吾妻橋",35.70859,139.80447],["蔵前",35.70332,139.79107],["東日本橋",35.69171,139.78478],["宝町",35.67567,139.77209],["大門",35.65672,139.75468],["三田",35.64784,139.74934],["泉岳寺",35.63813,139.73973],["高輪台",35.63155,139.73019],["戸越",35.61442,139.71637],["中延",35.60518,139.71359],["馬込",35.59637,139.71184],["西馬込",35.58731,139.70632],["西高島平",35.79189,139.64568],["新高島平",35.79022,139.65433],["高島平",35.78894,139.66129],["西台",35.78708,139.67268],["蓮根",35.78406,139.67906],["志村三丁目",35.77746,139.68586],["志村坂上",35.77634,139.69473],["本蓮沼",35.76899,139.70211],["板橋本町",35.7611,139.7056],["板橋区役所前",35.75131,139.71006],["新板橋",35.74884,139.71937],["西巣鴨",35.74341,139.72872],["千石",35.72796,139.74474],["白山",35.72155,139.7523],["春日",35.71,139.75323],["内幸町",35.66932,139.75541],["御成門",35.66098,139.75149],["芝公園",35.65375,139.74976],["篠崎",35.70612,139.90389],["岩本町",35.69557,139.77529],["小川町",35.69517,139.76674],["瑞江",35.69339,139.89781],["曙橋",35.69233,139.72258],["馬喰横山",35.69208,139.78285],["東大島",35.68986,139.84728],["大島",35.68977,139.83438],["西大島",35.68934,139.8263],["浜町",35.68859,139.78813],["菊川",35.68841,139.8061],["森下",35.68805,139.79798],["一之江",35.68594,139.88289],["船堀",35.68379,139.86386],["光が丘",35.75847,139.62924],["練馬春日町",35.75136,139.64076],["豊島園",35.74161,139.6492],["練馬",35.73732,139.65457],["新江古田",35.73249,139.67057],["落合南長崎",35.72344,139.68346],["中井",35.71386,139.68631],["上野御徒町",35.70797,139.77291],["新御徒町",35.70701,139.78187],["牛込神楽坂",35.70092,139.73604],["牛込柳町",35.69946,139.72519],["若松河田",35.69917,139.71819],["新宿西口",35.69316,139.69916],["都庁前",35.69059,139.69262],["西新宿五丁目",35.6899,139.68466],["国立競技場",35.67989,139.71472],["築地市場",35.66496,139.76675],["汐留",35.66499,139.76133],["勝どき",35.65893,139.77713],["赤羽橋",35.65497,139.74419]];
 const MUNI={"13101":"千代田区","13102":"中央区","13103":"港区","13104":"新宿区","13105":"文京区","13106":"台東区","13107":"墨田区","13108":"江東区","13109":"品川区","13110":"目黒区","13111":"大田区","13112":"世田谷区","13113":"渋谷区","13114":"中野区","13115":"杉並区","13116":"豊島区","13117":"北区","13118":"荒川区","13119":"板橋区","13120":"練馬区","13121":"足立区","13122":"葛飾区","13123":"江戸川区","13203":"武蔵野市","13204":"三鷹市"};
 const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const KEY="izakayaMap.v3", OV=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
+const KEY="izakayaMap.v4", KEY_OLD="izakayaMap.v3", OV=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
 const NIGHT_RE=/キャバクラ|キャバ|ガールズバー|ガールズ|スナック|ホストクラブ|ラウンジ|ナイトクラブ/;
 const NAME_RE=/居酒屋|酒場|酒処|焼き鳥|焼鳥|やきとり|やきとん|立ち飲み|立呑|立飲|串カツ|串かつ|大衆酒|もつ焼|炉端|ろばた|おでん/;
 const BB=[35.52,139.53,35.82,139.93];
@@ -160,7 +196,7 @@ map.createPane("dots"); map.getPane("dots").style.zIndex=450;   // お店の点�
 const cLayer=L.layerGroup().addTo(map), dotLayer=L.layerGroup().addTo(map);
 const NEAR_Z=15, near=()=>map.getZoom()>=NEAR_Z;   // ズーム15以上＝拡大して見ているとき
 let shops=[], clusters=[];
-// データ：[緯度,経度,名前,種類(i=居酒屋 p=pub b=bar)]
+// データ：[緯度,経度,名前,種類(i=居酒屋 p=pub b=bar),営業時間(opening_hours。なければ空)]
 async function fetchShops(){
   const t0=Date.now(), tick=setInterval(()=>{ $("msg").textContent=`オープンストリートマップからお店を取ってきています… ${Math.round((Date.now()-t0)/1000)}秒（1分ほどかかります）`; },1000);
   $("msg").textContent="オープンストリートマップからお店を取ってきています（1分ほどかかります）…"; $("reload").disabled=true;
@@ -178,7 +214,7 @@ async function fetchShops(){
     const fz=tg.amenity==="brothel";   // 風俗店（はじめは数えない。画面で切り替え）
     if(!fz&&!night&&!/^(pub|bar|restaurant|fast_food|cafe)$/.test(tg.amenity||"")&&!/izakaya|yakitori|kushi|oden/i.test(cu)) return;
     const ty=fz?"f":night?"n":/izakaya|yakitori|kushi|oden/i.test(cu)||NAME_RE.test(nm)?"i":tg.amenity==="pub"?"p":tg.amenity==="bar"?"b":"i";
-    shops.push([+la.toFixed(6),+lo.toFixed(6),nm,ty]); });
+    shops.push([+la.toFixed(6),+lo.toFixed(6),nm,ty,String(tg.opening_hours||"").trim().slice(0,200)]); });
   try{ localStorage.setItem(KEY,JSON.stringify({at:Date.now(),shops})); }catch(e){}
   showInfo(Date.now()); justFetched=true;
   return true;
@@ -187,6 +223,8 @@ let justFetched=false;
 const fmtAt=at=>{ const d=new Date(at); return `${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`; };
 function showInfo(at){ $("dataInfo").textContent=`データ：${fmtAt(at)} 取得・${shops.length.toLocaleString()}軒（区域の中）`; }
 function loadCache(){ try{ const c=JSON.parse(localStorage.getItem(KEY)||"null"); if(c&&c.shops&&c.shops.length){ shops=c.shops; return c.at; } }catch(e){} return 0; }
+// 前の形（営業時間なし）のデータ。すぐに地図を出すために使い、裏で営業時間つきのデータを取り直す（2026-11-13）
+function loadOld(){ try{ const c=JSON.parse(localStorage.getItem(KEY_OLD)||"null"); if(c&&c.shops&&c.shops.length){ shops=c.shops; return c.at; } }catch(e){} return 0; }
 // 密集エリア：半径r以内にn軒以上。多いところから順に、まだ使っていないお店で円を作る
 function compute(){
   const r=+$("rad").value, n=+$("num").value, use={i:$("cIza").checked,p:$("cPub").checked,b:$("cBar").checked,n:$("cNight").checked,f:$("cFz").checked};
@@ -212,19 +250,24 @@ function draw(xs,r,n){
   dotLayer.clearLayers(); cLayer.clearLayers();
   const DC={f:"#8B1A4A",n:"#E0338A",b:"#7B3FA0",p:"#2F6FD6",i:"#E8590C"};
   if($("cDots").checked) xs.forEach(s=>L.circleMarker([s[0],s[1]],{pane:"dots",radius:near()?6:3,color:"#fff",weight:near()?1.5:0,fillColor:DC[s[3]]||"#E8590C",fillOpacity:.9,interactive:true})
-    .bindTooltip(`${esc(s[2]||"（名前なし）")}<br><small>${TYN[s[3]]}</small>`,{direction:"top",offset:[0,-4]}).addTo(dotLayer));
+    .bindPopup(()=>`<div class="pop"><h3>${esc(s[2]||"（名前なし）")}</h3><small>${TYN[s[3]]}</small><div class="oh">${ohTxt(s[4])}</div></div>`).addTo(dotLayer));
+  let hotN=0; const B=bizNow(), SN=soonMin();
+  clusters.forEach(c=>{ c.oh=clStats(c,B,SN); if(c.oh.hot) hotN++; });
   clusters.slice().reverse().forEach((c,ri)=>{ const col=colorOf(c.n,n);
     const fo=near()?0:.25+Math.min(.45,(c.n-n)/(n*4));   // 拡大中は塗らずに縁だけ（中のお店の点が見えるように）
     const circ=L.circle([c.lat,c.lng],{radius:r,color:col,weight:near()?3:2,dashArray:near()?"6 5":null,fillColor:col,fillOpacity:fo}).addTo(cLayer);
-    L.marker([c.lat,c.lng],{icon:L.divIcon({className:"",html:`<span class="cnt">${c.n}</span>`,iconSize:[30,14],iconAnchor:[15,7]}),interactive:false}).addTo(cLayer);
+    if(c.oh.hot) L.circle([c.lat,c.lng],{radius:r,color:"#7048E8",weight:near()?6:5,dashArray:"3 6",fill:false,interactive:false}).addTo(cLayer);   // もうすぐ閉店のお店が多い飲み屋街は紫の点線のふち
+    L.marker([c.lat,c.lng],{icon:L.divIcon({className:"",html:`<span class="cnt">${c.oh.hot?"⏰":""}${c.n}</span>`,iconSize:[44,14],iconAnchor:[22,7]}),interactive:false}).addTo(cLayer);
     circ.bindPopup(()=>popup(c)); circ.on("popupopen",()=>{ if(c.town==null) townOf(c).then(()=>{ circ.setPopupContent(popup(c)); }); }); });
   const kinds=[["cIza","居酒屋"],["cPub","pub"],["cBar","bar"],["cNight","夜のお店"],["cFz","その他"]].filter(([id])=>$(id).checked).map(([,l])=>l).join("・")||"なし";
-  $("msg").textContent=(justFetched?`✅ データを取り直しました（${fmtAt(Date.now())}）。`:changed?`🔄 表示を更新しました（${kinds}・半径${r}m・${n}軒以上）→ `:"")+`お店 ${xs.length}軒のうち、半径${r}m以内に${n}軒以上の密集エリア：${clusters.length}か所`; justFetched=false;
+  $("msg").textContent=(justFetched?`✅ データを取り直しました（${fmtAt(Date.now())}）。`:changed?`🔄 表示を更新しました（${kinds}・半径${r}m・${n}軒以上）→ `:"")+`お店 ${xs.length}軒のうち、半径${r}m以内に${n}軒以上の密集エリア：${clusters.length}か所`+(hotN?`。⏰ もうすぐ閉店（${SN}分以内）のお店が多い飲み屋街：${hotN}か所（紫の点線）`:""); justFetched=false;
   if(changed){ const m=$("msg"); m.classList.add("flash"); setTimeout(()=>m.classList.remove("flash"),700); changed=false; }
 }
 function popup(c){
+  const B=bizNow(); c.oh=clStats(c,B,soonMin());
   return `<div class="pop"><h3>${c.n}軒の飲み屋街</h3>最寄り駅：${esc(c.st?c.st.n:"—")}駅（約${c.st?Math.round(c.st.d/10)*10:"—"}m）<br>地名：${c.town==null?"調べています…":esc(c.town||"—")}
-    <ul>${c.shops.slice(0,60).map(s=>`<li>${esc(s[2]||"（名前なし）")} <small>${TYN[s[3]]}</small></li>`).join("")}</ul>
+    ${clOhHtml(c.oh)}
+    <ul>${c.shops.slice(0,60).map(s=>{ const t=shopClose(s[4],B); return `<li>${esc(s[2]||"（名前なし）")} <small>${TYN[s[3]]}・${t}</small></li>`; }).join("")}</ul>
     <a class="go" href="https://www.google.com/maps/dir/?api=1&destination=${c.lat.toFixed(6)},${c.lng.toFixed(6)}&travelmode=driving" target="_blank" rel="noopener">ルート案内</a></div>`;
 }
 async function townOf(c){
@@ -402,10 +445,193 @@ $("rGo").onclick=()=>{ const D=rDest(); if(!rReady()) return;
   getPos(S=>rShow(S,D.ll,D.name,rPick(S,D.ll,+$("rLim").value,+$("rNum").value)),
     why=>{ $("rOut").textContent=`現在地が${why}。スマホの設定で、位置情報の許可を確認してください`; }); };
 $("rClear").onclick=()=>{ rLayer.clearLayers(); $("rOut").textContent=""; };
+// 説明（ポップアップ）が開くときは、上の見出しの下に入るように地図をずらす（見出しの裏に隠れないように。2026-11-13）
+L.Popup.mergeOptions({autoPanPaddingTopLeft:L.point(10,140),autoPanPaddingBottomRight:L.point(10,20)});
+// ===== 営業時間（オープンストリートマップの opening_hours。2026-11-13 ユーザー指定） =====
+// 今日の曜日の営業時間だけを読む。朝5時までは前の日の営業として見る（夜中の0時を過ぎて開いているお店のため）。
+// 読めない書き方（月・週の決まり・「〜まで」の書き方など）は「不明」。推測で埋めない
+const OH_D={Su:0,Mo:1,Tu:2,We:3,Th:4,Fr:5,Sa:6}, WDN=["日","月","火","水","木","金","土"];
+const DT="(?:Mo|Tu|We|Th|Fr|Sa|Su|PH|SH)", OH_HEAD=new RegExp(`^(${DT}(?:-${DT})?(?:\\s*,\\s*${DT}(?:-${DT})?)*)?\\s*(.*)$`);
+const ohCache=new Map();
+function ohDay(s,wd){ s=String(s||"").trim(); if(!s) return null; const ck=wd+"|"+s; if(ohCache.has(ck)) return ohCache.get(ck);
+  const v=ohParse(s,wd); ohCache.set(ck,v); return v; }
+function ohParse(s,wd){
+  if(s==="24/7") return {iv:[[0,1440]],a24:true};
+  // 「Mo-Fr 17:00-23:00, Sa 15:00-23:00」のように、時間のあとのカンマで曜日が始まるものは、別の決まりとして分ける
+  const rules=s.replace(/(\d)\s*,\s*((?:Mo|Tu|We|Th|Fr|Sa|Su|PH)\b)/g,"$1;$2").split(";").map(x=>x.trim()).filter(Boolean);
+  let res=null, anyTime=false;
+  for(const r of rules){ const m=OH_HEAD.exec(r); if(!m) return null; const dp=m[1]||"", rest=m[2].trim();
+    let cov=!dp, onlyPH=!!dp;
+    if(dp) for(const part of dp.split(/\s*,\s*/)){ if(/^(PH|SH)$/.test(part)) continue; onlyPH=false; const [a,b]=part.split("-");
+      if(!(a in OH_D)) return null;
+      if(b==null){ if(OH_D[a]===wd) cov=true; }
+      else { if(!(b in OH_D)) return null; let i=OH_D[a]; for(let k=0;k<7;k++){ if(i===wd) cov=true; if(i===OH_D[b]) break; i=(i+1)%7; } } }
+    if(onlyPH) continue;   // 祝日だけの決まりは使わない（今日が祝日かは見ていない）
+    let v;
+    if(/^(off|closed)$/i.test(rest)) v={off:true};
+    else if(rest==="24/7") v={iv:[[0,1440]],a24:true};
+    else if(!rest) return null;
+    else { const iv=[]; for(const t of rest.split(/\s*,\s*/)){ const q=/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/.exec(t); if(!q) return null;
+        const a=+q[1]*60+ +q[2]; let b=+q[3]*60+ +q[4]; if(b<=a) b+=1440; iv.push([a,b]); }
+      v={iv,a24:iv.some(x=>x[1]-x[0]>=1440)}; }
+    if(v.iv) anyTime=true;
+    if(cov) res=v; }
+  if(!anyTime&&!(res&&res.off&&!res.none)) return null;   // 「Su off」だけのように休みしか書いていないときは、ほかの曜日は分からない（不明）
+  if(!anyTime&&res&&res.off) return res;
+  return res||{off:true,none:true};   // 今日の曜日の決まりがない＝その日は休み（opening_hours の決まり）
+}
+// 今（営業日）：朝5時までは前の日の続きとして、分を24時より大きくする
+function bizNow(){ const d=new Date(); let m=d.getHours()*60+d.getMinutes(), wd=d.getDay(); if(m<300){ wd=(wd+6)%7; m+=1440; } return {m,wd}; }
+const SK="izakayaMap.soon";
+const soonMin=()=>{ let v=30; try{ v=+localStorage.getItem(SK)||30; }catch(e){} return v; };
+const fmtT=v=>{ const h=Math.floor(v/60), mm=String(v%60).padStart(2,"0"); return v>1440?`翌${h-24}:${mm}`:`${h}:${mm}`; };
+const closeOf=x=>Math.max(...x.iv.map(v=>v[1]));
+// お店1軒の営業時間の文（ピンを押したとき）
+function ohTxt(oh){ const B=bizNow(), x=ohDay(oh,B.wd), raw=oh?`<br><small>データ：${esc(oh)}</small>`:"";
+  if(!oh) return "営業時間：<b>不明</b>（地図のデータに入っていません）";
+  if(!x) return `営業時間：<b>不明</b>（${/\b(off|closed)\b/i.test(oh)&&!/\d:\d\d/.test(oh)?"休みの日だけ書いてあり、今日の営業時間は入っていません":"書き方を読めませんでした"}）${raw}`;
+  if(x.off) return `今日（${WDN[B.wd]}曜）は<b>休み</b>${x.none?"（今日の曜日の営業時間が入っていません）":""}${raw}`;
+  if(x.a24) return `<b>24時間営業</b>${raw}`;
+  const cur=x.iv.find(v=>v[0]<=B.m&&B.m<v[1]), e=closeOf(x);
+  return `今日（${WDN[B.wd]}曜）の営業：${x.iv.map(v=>fmtT(v[0])+"〜"+fmtT(v[1])).join("、")}<br>閉店：<b>${fmtT(e)}</b>　${cur?`今は開いています（閉店まで約${cur[1]-B.m}分）`:"今は閉まっています"}${raw}`; }
+// 飲み屋街の一覧の中の1行に付ける閉店時間
+function shopClose(oh,B){ const x=ohDay(oh,B.wd); if(!x) return "営業時間 不明"; if(x.off) return "今日は休み"; if(x.a24) return "24時間"; return "閉店 "+fmtT(closeOf(x)); }
+// 飲み屋街ごとのまとめ：閉店時間が分かったお店の、一番多い閉店の時間帯。何軒中何軒わかったか。もうすぐ閉店のお店の数
+function clStats(c,B,SN){ let known=0, off=0, open=0, soon=0, a24=0; const hist={};
+  c.shops.forEach(s=>{ const x=ohDay(s[4],B.wd); if(!x) return; known++; if(x.off){ off++; return; }
+    const cur=x.iv.find(v=>v[0]<=B.m&&B.m<v[1]); if(cur) open++;
+    if(x.a24){ a24++; return; }
+    const e=closeOf(x), h=Math.floor(e/60); hist[h]=(hist[h]||0)+1;   // 閉店の時間帯：23:00も23:30も「23時台」、24:00は「翌0時台」
+    if(cur&&cur[1]-B.m<=SN) soon++; });
+  let top=null; Object.entries(hist).forEach(([h,k])=>{ if(!top||k>top.k) top={h:+h,k}; });
+  const ties=top?Object.entries(hist).filter(([,k])=>k===top.k).map(([h])=>+h).sort((a,b)=>a-b):[];
+  return {n:c.shops.length,known,off,open,soon,a24,top,ties,closeN:Object.values(hist).reduce((a,b)=>a+b,0),hot:soon>=2&&soon>=open*0.3,SN}; }
+const hourTxt=h=>h>=24?`翌${h-24}時台`:`${h}時台`;
+function clOhHtml(o){
+  const base=`（営業時間がわかったのは${o.n}軒中${o.known}軒）`;
+  let t;
+  if(!o.closeN) t=`🕒 閉店の時間：<b>不明</b>${base}`;
+  else t=`🕒 この辺は<b>${o.ties.map(hourTxt).join("・")}に閉まる店が多い</b>：${o.top.k}軒${o.ties.length>1?"ずつ":""}。<br>営業時間がわかったのは<b>${o.n}軒中${o.known}軒</b>`;
+  if(o.off) t+=`<br><small>今日休みと分かったお店：${o.off}軒</small>`;
+  if(o.a24) t+=`<br><small>24時間営業のお店：${o.a24}軒</small>`;
+  if(o.known) t+=`<br>${o.hot?"⏰ <b style=\"color:#7048E8\">":""}もうすぐ閉店（${o.SN}分以内）：${o.soon}軒${o.hot?"</b>":""}<small>（今開いていると分かった${o.open}軒のうち）</small>`;
+  return `<div class="oh">${t}</div>`; }
+// 5分ごとに「もうすぐ閉店」を数え直す（お店の説明を開いているときは、閉じてから）
+let popOpen=false; map.on("popupopen",()=>popOpen=true); map.on("popupclose",()=>popOpen=false);
+setInterval(()=>{ if(shops.length&&!popOpen&&!document.hidden) compute(); },5*60*1000);
+$("soon").value=String(soonMin()); $("soon").onchange=()=>{ try{ localStorage.setItem(SK,$("soon").value); }catch(e){} changed=true; compute(); };
+
+// ===== ほかに出すもの：タクシー乗り場・ホテル（GOで呼ばれた記録つき）・夜遅くまで開いているお店（2026-11-13 ユーザー指定） =====
+// データは src/nightmap_fetch.py で作った nightmap.json（オープンストリートマップ。東京23区・武蔵野市・三鷹市）。分からない項目は空欄
+const XK="izakayaMap.extra";
+let XO={taxi:false,hotel:false,lux:false,night:false,nk:{k:true,b:true,s:true,m:true}};
+try{ const v=JSON.parse(localStorage.getItem(XK)||"{}"); Object.assign(XO,v); XO.nk=Object.assign({k:true,b:true,s:true,m:true},v.nk||{}); }catch(e){}
+const xSave=()=>{ try{ localStorage.setItem(XK,JSON.stringify(XO)); }catch(e){} };
+let NM=null, nmP=null;
+const nmLoad=()=>nmP||(nmP=fetch("nightmap.json?v="+Date.now()).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{ NM=j; return j; }).catch(e=>{ nmP=null; throw e; }));
+const xLayer=L.layerGroup().addTo(map);
+const xPin=(txt,bg,bd,sz,sq,fc)=>L.divIcon({className:"",iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],popupAnchor:[0,-sz/2],
+  html:`<div class="xpin${sq?" sq":""}" style="width:${sz}px;height:${sz}px;background:${bg};border-color:${bd};color:${fc||"#fff"};font-size:${Math.round(sz*.5)}px">${txt}</div>`});
+const TXC={"駅":["駅","#1971C2"],"ホテル":["ホ","#9C36B5"],"病院":["病","#E03131"],"その他":["他","#495057"]};
+const NKN={k:["カラオケ","🎤"],b:["ボウリング","🎳"],s:["サウナ・スーパー銭湯","♨️"],m:["漫画喫茶・ネットカフェ","📚"]};
+// GOで呼ばれた記録：アプリの売上のデータ（uriage.v1 の goHotel）。書くのはアプリ本体に頼む（アプリの外で開いたときだけ、ここで書く）
+const goAll=()=>{ try{ const s=JSON.parse(localStorage.getItem("uriage.v1")||"null"); return (s&&s.goHotel)||{}; }catch(e){ return {}; } };
+let GO=goAll();
+const goN=id=>((GO[id]&&GO[id].r)||[]).length;
+function goLocal(op){ try{ const s=JSON.parse(localStorage.getItem("uriage.v1")||"null")||{days:{}}; const g=s.goHotel||(s.goHotel={}), k=op.id, at=op.at;
+    if(op.t==="add"){ const h=g[k]||(g[k]={n:"",lat:0,lng:0,r:[]}); h.n=op.n; h.lat=op.lat; h.lng=op.lng; if(!h.r.some(x=>x.t===at)){ h.r.push({t:at,m:op.m||""}); h.r.sort((a,b)=>a.t.localeCompare(b.t)); } }
+    else if(op.t==="memo"&&g[k]){ const x=g[k].r.find(x=>x.t===at); if(x) x.m=op.m||""; }
+    else if(op.t==="del"&&g[k]){ g[k].r=g[k].r.filter(x=>x.t!==at); if(!g[k].r.length) delete g[k]; }
+    localStorage.setItem("uriage.v1",JSON.stringify(s)); return true; }catch(e){ return false; } }
+function goDo(op){ return new Promise(res=>{
+  if(!inApp){ res(goLocal(op)); GO=goAll(); return; }
+  const id=Math.random().toString(36).slice(2); let tm=null;
+  const on=e=>{ if(e.origin!==location.origin||!e.data||e.data.goHotelRes!==id) return; window.removeEventListener("message",on); clearTimeout(tm); if(e.data.data) GO=e.data.data; res(!!e.data.ok); };
+  window.addEventListener("message",on); tm=setTimeout(()=>{ window.removeEventListener("message",on); res(false); },6000);
+  try{ window.parent.postMessage({goHotel:id,op},location.origin); }catch(_){ clearTimeout(tm); res(false); } }); }
+const nowKey=()=>{ const d=new Date(), p=v=>String(v).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+const recTxt=t=>{ const d=new Date(t+":00"); return `${d.getMonth()+1}/${d.getDate()}（${WDN[d.getDay()]}）${t.slice(11)}`; };
+function goTop(r){ const h={}; r.forEach(x=>{ const k=+x.t.slice(11,13); h[k]=(h[k]||0)+1; }); const mx=Math.max(0,...Object.values(h)); if(!mx) return "";
+  return Object.entries(h).filter(([,k])=>k===mx).map(([k])=>`${k}時台`).join("・")+`（${mx}回${Object.values(h).filter(k=>k===mx).length>1?"ずつ":""}）`; }
+// ホテルの色：高級＝灰色、GOで3回以上＝赤、1〜2回＝橙、まだ＝青
+function hotelIcon(h){ const n=goN(h[0]); if(h[6]) return xPin("H","#ADB5BD","#fff",22,false,"#343A40");
+  if(n>=3) return xPin(String(n),"#E03131","#fff",32); if(n>=1) return xPin(String(n),"#F08C00","#fff",28); return xPin("H","#1864AB","#fff",22); }
+function hotelPop(h){ const g=GO[h[0]], r=(g&&g.r)||[];
+  return `<div class="pop"><h3>🏨 ${esc(h[3])}</h3>チェーン：${esc(h[4])}<br>客室数：${h[5]?`${h[5]}室${h[7]==="一覧"?"<small>（以前作った一覧から）</small>":""}`:""}`
+    +(h[6]?`<br><small>高級ホテル（名前・ブランドで分けました。ドアマンの有無は確かめていません）</small>`:"")
+    +`<div class="gobox"><div>GOで呼ばれた回数：<b>${r.length}回</b>${r.length?`<br>よく呼ばれる時間帯：<b>${goTop(r)}</b>`:""}</div>`
+    +`<button class="btn primary" data-goadd="${esc(h[0])}">🚕 GOで呼ばれた（今の時間で記録）</button>`
+    +(r.length?`<div class="golist">${r.slice().reverse().slice(0,30).map(x=>`<div>${recTxt(x.t)} ${x.m?`<span class="gm">${esc(x.m)}</span>`:""}<br><button data-gomemo="${esc(h[0])}|${x.t}">${x.m?"メモを直す":"メモを書く"}</button><button data-godel="${esc(h[0])}|${x.t}">消す</button></div>`).join("")}${r.length>30?`<small>ほか${r.length-30}件</small>`:""}</div>`:"")
+    +`<div id="goMsg" class="warn"></div></div></div>`; }
+const taxiPop=x=>`<div class="pop"><h3>🚕 ${x[2]?esc(x[2]):"タクシー乗り場"}</h3>種類：<b>${x[4]==="その他"?"その他":x[4]+"の乗り場"}</b>${x[5]?`<br><small>${esc(x[5])}から決めました</small>`:x[4]==="その他"?`<br><small>名前と近く（150m以内）の駅・ホテル・病院から決められませんでした</small>`:""}${x[3]?`<br>並べる台数：<b>${esc(x[3])}台</b>`:""}${x[2]?"":`<br><small>名前は地図のデータに入っていません</small>`}</div>`;
+// 夜のお店の色：24時間＝赤、深夜（0時すぎ）まで＝橙、それより早い・今日休み＝灰色、営業時間が分からない＝白
+function nightCol(oh){ const B=bizNow(), x=ohDay(oh,B.wd); if(!x) return ["#fff","#868E96","#343A40","不明"]; if(x.off) return ["#868E96","#fff","#fff","休み"];
+  if(x.a24) return ["#C2255C","#fff","#fff","24時間"]; return closeOf(x)>1440?["#F76707","#fff","#fff","深夜まで"]:["#868E96","#fff","#fff","早め"]; }
+const nightPop=x=>`<div class="pop"><h3>${NKN[x[3]][1]} ${esc(x[2])}</h3><small>${NKN[x[3]][0]}</small><div class="oh">${ohTxt(x[4])}</div></div>`;
+const hMk=new Map();   // ホテルのID→地図の印（一覧から開くため）
+function xDraw(){ xLayer.clearLayers(); hMk.clear(); if(!NM) return;
+  const z=map.getZoom(), b=map.getBounds().pad(.2);
+  if(z<12){ $("xMsg").textContent=(XO.taxi||XO.hotel||XO.night)?"地図を拡大すると、乗り場・ホテル・お店の印が出ます":""; return; }
+  let nt=0, nh=0, nn=0;
+  if(XO.taxi) NM.taxi.forEach(x=>{ if(!b.contains([x[0],x[1]])) return; const c=TXC[x[4]]||TXC["その他"]; nt++;
+    L.marker([x[0],x[1]],{icon:xPin(c[0],c[1],"#fff",24,true),zIndexOffset:200}).bindPopup(()=>taxiPop(x)).addTo(xLayer); });
+  if(XO.night) NM.night.forEach(x=>{ if(!XO.nk[x[3]]||!b.contains([x[0],x[1]])) return; const c=nightCol(x[4]); nn++;
+    L.marker([x[0],x[1]],{icon:xPin(NKN[x[3]][1],c[0],c[1],26,false,c[2]),zIndexOffset:150}).bindPopup(()=>nightPop(x)).addTo(xLayer); });
+  if(XO.hotel) NM.hotel.forEach(h=>{ if(h[6]&&!XO.lux) return; if(!b.contains([h[1],h[2]])) return; nh++;
+    const m=L.marker([h[1],h[2]],{icon:hotelIcon(h),zIndexOffset:300+goN(h[0])*10}).bindPopup(()=>hotelPop(h),{maxWidth:280}).addTo(xLayer); hMk.set(h[0],{m,h}); });
+  $("xMsg").textContent=[XO.taxi?`乗り場${nt}か所`:"",XO.hotel?`ホテル${nh}軒`:"",XO.night?`夜のお店${nn}軒`:""].filter(Boolean).join("・")+((XO.taxi||XO.hotel||XO.night)?"（見えている範囲）":"");
+}
+let xT=null; map.on("moveend",()=>{ if(popOpen) return; clearTimeout(xT); xT=setTimeout(xDraw,150); });   // 説明を開いて地図が動いたときは描き直さない（描き直すと説明が閉じる）
+map.on("popupclose",()=>{ clearTimeout(xT); xT=setTimeout(()=>{ if(!popOpen) xDraw(); },200); });
+async function xOn(){ if(!(XO.taxi||XO.hotel||XO.night)){ xDraw(); return; }
+  if(!NM){ $("xMsg").textContent="読み込んでいます…"; try{ await nmLoad(); }catch(e){ $("xMsg").textContent="データを読み込めませんでした。電波を確認して、もう一度チェックを入れてください"; return; }
+    $("xInfo").textContent=`データ：${NM.made}に作成（オープンストリートマップ）。乗り場${NM.taxi.length}・ホテル${NM.hotel.length}・夜のお店${NM.night.length}`; }
+  xDraw(); if($("hListBox")&&!$("hListBox").hidden) hList(); }
+function xUi(){ $("xTaxi").checked=XO.taxi; $("xHotel").checked=XO.hotel; $("xLux").checked=XO.lux; $("xNight").checked=XO.night;
+  Object.keys(NKN).forEach(k=>$("xn_"+k).checked=XO.nk[k]!==false); $("xNightKinds").hidden=!XO.night; $("xHotelOpt").hidden=!XO.hotel; }
+$("xNightKinds").innerHTML=Object.entries(NKN).map(([k,[n,e]])=>`<label><input type="checkbox" id="xn_${k}">${e} ${n}</label>`).join("");
+[["xTaxi","taxi"],["xHotel","hotel"],["xLux","lux"],["xNight","night"]].forEach(([id,k])=>$(id).addEventListener("change",()=>{ XO[k]=$(id).checked; xSave(); xUi(); xOn(); }));
+Object.keys(NKN).forEach(k=>$("xn_"+k).addEventListener("change",()=>{ XO.nk[k]=$("xn_"+k).checked; xSave(); xDraw(); }));
+xUi(); if(XO.taxi||XO.hotel||XO.night) xOn();
+// 「GOで呼ばれた」・メモ・消す（お店の説明の中のボタン）
+async function goAfter(id,msg){ const o=hMk.get(id); if(o){ o.m.setIcon(hotelIcon(o.h)); o.m.setPopupContent(hotelPop(o.h)); } const el=$("goMsg"); if(el) el.textContent=msg; if(!$("hListBox").hidden) hList(); }
+document.addEventListener("click",async e=>{ const t=e.target; if(!t||!t.dataset) return;
+  if(t.dataset.goadd){ const id=t.dataset.goadd, o=hMk.get(id); if(!o) return; t.disabled=true;
+    const at=nowKey(), ok=await goDo({t:"add",id,n:o.h[3],lat:o.h[1],lng:o.h[2],at});
+    if(!ok){ t.disabled=false; const el=$("goMsg"); if(el) el.textContent="記録できませんでした。アプリを開き直してから、もう一度押してください"; return; }
+    await goAfter(id,`${recTxt(at)} を記録しました`);
+    const m=(prompt("ひとことメモ（なくてもかまいません。例：玄関前、2人、羽田まで）","")||"").trim().slice(0,200);
+    if(m){ await goDo({t:"memo",id,at,m}); await goAfter(id,`${recTxt(at)} を記録しました（メモつき）`); } }
+  else if(t.dataset.gomemo){ const [id,at]=t.dataset.gomemo.split("|"), cur=((GO[id]&&GO[id].r)||[]).find(x=>x.t===at); if(!cur) return;
+    const m=prompt("ひとことメモ（空にすると消えます）",cur.m||""); if(m==null) return; const ok=await goDo({t:"memo",id,at,m:m.trim().slice(0,200)});
+    await goAfter(id,ok?"メモを直しました":"直せませんでした。もう一度押してください"); }
+  else if(t.dataset.godel){ const [id,at]=t.dataset.godel.split("|"); if(!confirm(`${recTxt(at)} の記録を消しますか？`)) return;
+    const ok=await goDo({t:"del",id,at}); await goAfter(id,ok?"消しました":"消せませんでした。もう一度押してください"); } });
+// ホテルの一覧：客室数の多い順・チェーンごと・GOで呼ばれた回数の多い順。押すと地図でそのホテルを開く
+function hList(){ if(!NM){ $("hListOut").innerHTML=`<div class="warn">読み込んでいます…</div>`; return; }
+  const sort=$("hSort").value, vis=$("hVis").checked, b=map.getBounds();
+  let xs=NM.hotel.filter(h=>(XO.lux||!h[6])&&(!vis||b.contains([h[1],h[2]])));
+  const byRooms=(a,c)=>(c[5]||-1)-(a[5]||-1)||a[3].localeCompare(c[3],"ja");
+  let html="";
+  if(sort==="chain"){ const g=new Map(); xs.forEach(h=>{ const k=h[4]||""; (g.get(k)||g.set(k,[]).get(k)).push(h); });
+    const ks=[...g.keys()].sort((a,c)=>(!a)-(!c)||g.get(c).length-g.get(a).length||a.localeCompare(c,"ja"));
+    let k2=0; for(const k of ks){ if(k2>=300) break; const arr=g.get(k).sort(byRooms); html+=`<div class="hgrp">${k?esc(k):"（チェーン名が分からないホテル）"}　${arr.length}軒</div>`+arr.slice(0,80).map(hRow).join(""); k2+=arr.length; } }
+  else { xs.sort(sort==="go"?(a,c)=>goN(c[0])-goN(a[0])||byRooms(a,c):byRooms); if(sort==="go") xs=xs.filter(h=>goN(h[0])>0); html=xs.slice(0,200).map(hRow).join(""); }
+  $("hListOut").innerHTML=`<div class="warn">${vis?"地図に見えている範囲の":"全部の"}ホテル ${xs.length}軒${xs.length>200&&sort!=="chain"?"（上から200軒）":""}${sort==="go"&&!xs.length?"。まだGOで呼ばれた記録がありません":""}</div>`+(html||""); }
+function hRow(h){ const n=goN(h[0]); return `<button type="button" class="hrow" data-hid="${esc(h[0])}"><b>${esc(h[3])}</b><span>${esc(h[4])}</span><span>${h[5]?h[5]+"室":""}</span>${n?`<span class="hgo">GO ${n}回</span>`:""}</button>`; }
+$("hBtn").onclick=async()=>{ const box=$("hListBox"); box.hidden=!box.hidden; if(box.hidden) return; if(!XO.hotel){ XO.hotel=true; xSave(); xUi(); }
+  await xOn(); hList(); };
+$("hSort").onchange=hList; $("hVis").onchange=hList;
+$("hListOut").addEventListener("click",e=>{ const b=e.target.closest("[data-hid]"); if(!b||!NM) return; const h=NM.hotel.find(x=>x[0]===b.dataset.hid); if(!h) return;
+  $("pbody").hidden=true; $("fold").textContent="開く";
+  map.setView([h[1],h[2]],Math.max(map.getZoom(),16)); setTimeout(()=>{ xDraw(); const o=hMk.get(h[0]); if(o) o.m.openPopup(); },250); });
+
 // 拡大・縮小で、円の塗りとお店の点の大きさを切り替える
 let wasNear=near(); map.on("zoomend",()=>{ if(near()!==wasNear){ wasNear=near(); if(shops.length) compute(); } });
 $("fold").onclick=()=>{ const h=$("pbody").hidden=!$("pbody").hidden; $("fold").textContent=h?"開く":"閉じる"; };
-(async()=>{ const at=loadCache(); if(at){ showInfo(at); compute(); } else if(await fetchShops()) compute(); })();
+(async()=>{ const at=loadCache(); if(at){ showInfo(at); compute(); return; }
+  const old=loadOld(); if(old){ showInfo(old); compute(); $("dataInfo").textContent+="（営業時間を入れたデータを取り直しています…）"; }
+  if(await fetchShops()){ compute(); try{ localStorage.removeItem(KEY_OLD); }catch(e){} } })();
 </script>
 </body>
 </html>
