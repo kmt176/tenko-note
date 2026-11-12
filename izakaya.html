@@ -79,6 +79,8 @@ body.full .panel{display:none}
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
+      <!-- 区→駅・町の2段のくるくる（高速マップと同じ places.json。2026-11-12） -->
+      <div class="row"><label>区から <select id="rWard" style="max-width:9em"></select></label><select id="rPlace" style="max-width:12em"></select></div>
       <div class="row"><label>よく使う <select id="rFav"></select></label><button class="btn" id="favAdd" style="min-height:36px;padding:6px 10px">＋自分の場所を登録</button></div>
       <div class="favbox" id="favBox" hidden>
         <b>自分の場所を登録</b>
@@ -294,6 +296,15 @@ function favDraw(){
   document.querySelectorAll("[data-fren]").forEach(b=>b.onclick=()=>{ const f=favs[+b.dataset.fren], n=(prompt("新しい名前",f.n)||"").trim().slice(0,20); if(!n) return; f.n=n; favSave(); favDraw(); });
 }
 favDraw();
+// 区→駅・町の2段のくるくる（places.json。高速マップと同じ一覧。2026-11-12 ユーザー指定）
+let PL=null;
+const plOpts=()=>{ const w=$("rWard").value, p=PL&&PL.p[w];
+  $("rPlace").innerHTML=!p?`<option value="">（先に区を選ぶ）</option>`:`<option value="">駅・町を選ぶ</option>`+(p.st.length?`<optgroup label="駅">${p.st.map((x,i)=>`<option value="s${i}">${esc(x[0])}駅</option>`).join("")}</optgroup>`:"")+(p.town.length?`<optgroup label="町">${p.town.map((x,i)=>`<option value="t${i}">${esc(x[0])}</option>`).join("")}</optgroup>`:""); };
+fetch("places.json?v="+Date.now()).then(r=>r.json()).then(j=>{ PL=j; let last=""; try{ last=localStorage.getItem("izakayaMap.ward")||""; }catch(e){}
+  $("rWard").innerHTML=`<option value="">区を選ぶ</option>`+PL.wards.map(w=>`<option${w===last?" selected":""}>${esc(w)}</option>`).join(""); plOpts(); }).catch(()=>{ $("rWard").innerHTML=`<option value="">（読み込めませんでした）</option>`; });
+$("rWard").onchange=()=>{ try{ localStorage.setItem("izakayaMap.ward",$("rWard").value); }catch(e){} plOpts(); };
+$("rPlace").onchange=()=>{ const w=$("rWard").value, v=$("rPlace").value, p=PL&&PL.p[w]; if(!p||!v) return; const x=(v[0]==="s"?p.st:p.town)[+v.slice(1)]; if(!x) return;
+  rDestLL=[x[1],x[2]]; rDestName=v[0]==="s"?x[0]+"駅":w+x[0]; $("rDest").value=rDestName; rSave(); $("rOut").textContent=`行き先を「${rDestName}」にしました。「現在地から探す」か「地図上から探す」を押してください`; };
 $("rFav").onchange=()=>{ const v=$("rFav").value; if(!v) return;
   if(v[0]==="s"){ $("rDest").value=v.slice(1); rDestLL=null; }
   else { const f=favs[+v.slice(1)]; if(!f) return; rDestLL=[f.lat,f.lng]; rDestName=f.n; $("rDest").value=f.n; }

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>高速マップ</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* 高速マップ（2026-11-12 ユーザー指定）。現在地から行き先まで、どこの入口で乗ってどこの出口で降りるかを地図と文字で見る。ナビはしない */
+:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--sh:#E8590C;--nx:#1864AB;--rt:#7B1FA2;--ok:#2B8A3E;--pk-bg:#FBE3EC;--pk-line:#EBB8CB;--pk-ink:#7A1F45}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--pk-bg:#3A2230;--pk-line:#6E3E54;--pk-ink:#F6C9DA}}
+:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--pk-bg:#3A2230;--pk-line:#6E3E54;--pk-ink:#F6C9DA}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+#map{position:fixed;inset:0;background:#f2f2ee}
+.leaflet-tile-pane{opacity:.45}   /* 背景の地図はうすく */
+.panel{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:1000;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-width:520px;margin:0 auto;max-height:calc(100% - 190px);overflow:auto}
+.ph{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.ph b{font-size:17px;flex:1}
+.ph .ver{font-size:12px;color:var(--muted);white-space:nowrap}
+.ph button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 12px;font-size:15px;font-weight:700}
+.pb{padding:0 12px 12px;display:grid;gap:10px}
+.pb[hidden]{display:none}
+.row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:15px}
+.row label{display:flex;align-items:center;gap:5px}
+select,input[type=number]{font-size:16px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.sel2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:6px;width:100%}
+.box,.pb{min-width:0}.box>*{min-width:0}#out,#r500Out{overflow-wrap:anywhere}
+.row label{flex:1 1 auto;min-width:0;white-space:nowrap}.row label select{flex:1 1 auto;min-width:0;width:0}
+#fromTxt{flex:1 1 100%}
+.sel2 select{width:100%}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:15px;font-weight:700;min-height:44px}
+.btn.primary{background:var(--pk-bg);border-color:var(--pk-line);color:var(--pk-ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--ink);padding:8px 12px;font-size:15px;font-weight:700;min-height:40px}
+.seg button[aria-pressed=true]{background:#17201E;color:#fff}
+.box{border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:8px}
+.box>b{font-size:15px}
+#out{font-size:14.5px;line-height:1.65}
+#out .big{font-size:17px;font-weight:800;line-height:1.5}
+#out .tag{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:1px}
+.tag.sh{background:var(--sh);color:#fff}.tag.nx{background:var(--nx);color:#fff}.tag.est{background:#FFF1A8;color:#3A2E00}.tag.act{background:#D3F9D8;color:#0B4D1D}.tag.unk{background:#E9ECEF;color:#343A40}
+#out .co{border-radius:10px;padding:8px;margin-top:6px;font-weight:700}
+#out .co.y{background:#D3F9D8;color:#0B4D1D}#out .co.n{background:#FFE3E3;color:#7A1010}#out .co.i{background:#E7F5FF;color:#0B3D66}
+#msg{font-size:14px;color:var(--muted);line-height:1.5}
+.warn{font-size:12.5px;color:var(--muted);line-height:1.5}
+details{font-size:14px;line-height:1.6;color:var(--muted)}
+details summary{font-weight:700;color:var(--ink);cursor:pointer}
+.list500{font-size:14px;line-height:1.7;max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.list500 .g{color:var(--ok);font-weight:800}.list500 .x{color:#868E96}
+.mebtn{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:1001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.fullbtn{position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:1001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+body.full .panel{display:none}
+.metip{position:fixed;left:10px;right:56px;top:calc(100% - env(safe-area-inset-bottom,0px) - 90px);z-index:1001;max-width:330px;margin-left:auto;background:#FFF1A8;color:#3A2E00;border:1px solid #E0C75A;border-radius:10px;padding:6px 9px;font-size:13px;font-weight:700;line-height:1.45;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.metip[hidden]{display:none}
+.legend{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:900;background:rgba(255,255,255,.92);border:1px solid #CCD6D4;border-radius:10px;padding:5px 8px;font-size:12px;font-weight:700;color:#17201E;line-height:1.6;pointer-events:none}
+.legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:3px;margin-right:4px}
+/* 地図の上の名前（大きく・白いふち） */
+.hwl{font:800 13px/1.15 -apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;white-space:nowrap;color:#17201E;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translate(-50%,-130%);pointer-events:none}
+.hwl.j{color:#5F3DC4}.hwl.p{color:#2B8A3E}.hwl.sh{color:#C2410C}.hwl.nx{color:#1864AB}
+.hwl.big{font-size:15px}
+.badge{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;color:#fff;font:800 15px/1 sans-serif;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+.badge.in{background:#2B8A3E}.badge.out{background:#C92A2A}.badge.chg{background:#5F3DC4;font-size:12px}
+.bname{font:800 15px/1.2 sans-serif;white-space:nowrap;background:#fff;border:2px solid #17201E;border-radius:8px;padding:2px 6px;color:#17201E;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="legend" aria-hidden="true"><i style="background:#E8590C"></i>首都高<br><i style="background:#1864AB"></i>その他の高速</div>
+<div id="meTip" class="metip" role="status" hidden></div>
+<button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
+<button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
+<div class="panel" id="panel">
+  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="pb" id="pbody">
+    <div class="box">
+      <b>出発</b>
+      <div class="row"><div class="seg" role="group" aria-label="出発"><button type="button" id="fromMe" aria-pressed="true">現在地</button><button type="button" id="fromMap" aria-pressed="false">地図で選ぶ</button></div><span id="fromTxt" class="warn"></span></div>
+      <b>行き先</b>
+      <div class="sel2"><select id="dWard" aria-label="区"></select><select id="dPlace" aria-label="駅・町"></select></div>
+      <div class="row"><label>よく使う <select id="dFav"></select></label><button type="button" class="btn" id="dTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
+      <div id="dTxt" class="warn"></div>
+      <div class="row"><div class="seg" role="group" aria-label="実車か帰りか"><button type="button" id="mJ" aria-pressed="false">実車</button><button type="button" id="mK" aria-pressed="true">帰り（空車・回送）</button></div></div>
+      <div class="btns"><button type="button" class="btn primary" id="go">ルートを出す</button><button type="button" class="btn" id="clr">消す</button></div>
+      <div id="out" role="status"></div>
+    </div>
+    <div class="box">
+      <b>首都高「<span id="limTxt">500</span>円ならここまで」</b>
+      <div class="btns"><button type="button" class="btn" id="r500Route">ルートの入口から</button><button type="button" class="btn" id="r500Near">一番近い入口から</button><button type="button" class="btn" id="r500Off">地図から消す</button></div>
+      <div id="r500Out"></div>
+    </div>
+    <div id="msg">読み込んでいます…</div>
+    <details><summary>設定・使い方・注意</summary>
+      <div class="row" style="margin:6px 0"><label>首都高の補助の金額 <input type="number" id="lim" min="300" max="2130" step="10" style="width:6em"> 円</label></div>
+      <div>・高速道路の線と名前はオープンストリートマップ（OSM）から作っています。<b style="color:#E8590C">橙＝首都高</b>、<b style="color:#1864AB">青＝そのほかの高速（NEXCOなど）</b>です。地図を大きくすると、出口・JCT・SA・PAの名前が出ます。</div>
+      <div>・ルートは無料の経路計算（OSRM）で出します。ナビはしません。実際の道や混み具合とは違うことがあります。</div>
+      <div>・<b>料金はすべて目安です。</b>首都高は公式の計算式（（料金距離×32.472円＋150円）×1.1、10円単位で四捨五入。下限300円・55kmで上限2,130円。2026年10月1日からの料金）に、ルートで首都高を走る距離を入れて出します。本当の料金距離は入口から出口までの決まった距離なので、少し違うことがあります。</div>
+      <div>・首都高以外の高速（NEXCOなど）は、公式の計算式をまだ確かめられていないので「不明」と出します。日報の取り込みで「高速明細」（入口・出口・金額）がたまっていて、同じ区間の実績があれば、その金額（実績）を出します。</div>
+      <div>・会社負担（日報のルールと同じ）：帰り（空車・回送）のとき、首都高以外の高速は1,000円まで会社負担、首都高は500円の補助（首都高以外の高速と乗り継いだとき）。首都高だけのときは対象外。実車中はお客様の負担です。</div>
+      <div>・入口・出口の名前が地図のデータで分からないときは「不明」と出します。</div>
+      <div id="dataInfo"></div>
+    </details>
+  </div>
+</div>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LS={get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }};
+const distM=(a,b)=>{ const ky=111320, kx=ky*Math.cos((a[0]+b[0])/2*Math.PI/180); return Math.hypot((a[0]-b[0])*ky,(a[1]-b[1])*kx); };
+const yen=n=>Math.round(n).toLocaleString("ja-JP");
+const km=m=>(m/1000).toFixed(1);
+
+// ---- 全画面（アプリの見出しも隠してもらう。飲み屋街マップと同じしくみ） ----
+function setFull(on){ document.body.classList.toggle("full",on); $("fullOff").hidden=!on;
+  try{ if(window.parent!==window) window.parent.postMessage({izFull:on},location.origin); }catch(e){} }
+$("fullOn").onclick=()=>setFull(true); $("fullOff").onclick=()=>setFull(false);
+$("fold").onclick=()=>{ const h=$("pbody").hidden=!$("pbody").hidden; $("fold").textContent=h?"開く":"閉じる"; };
+
+// ---- 首都高の料金（2026年10月1日から。普通車・ETC。公式の計算式） ----
+// （料金距離×32.472円＋150円）×1.1 を10円単位で四捨五入。下限300円、55kmを超えたら55kmの料金（上限2,130円）
+const SH_RATE=32.472, SH_BASE=150, SH_MAXKM=55, SH_MIN=300;
+const shFare=kmv=>{ const d=Math.min(Math.round(kmv*10)/10,SH_MAXKM); return Math.max(SH_MIN,Math.round((d*SH_RATE+SH_BASE)*1.1/10)*10); };
+// その金額で行ける一番長い料金距離（0.1km単位）
+const shKmFor=lim=>{ let best=null; for(let d=0;d<=SH_MAXKM*10;d++){ if(shFare(d/10)<=lim) best=d/10; } return best; };
+let LIM=+LS.get("hwMap.lim",500)||500;
+const showLim=()=>{ $("lim").value=LIM; $("limTxt").textContent=yen(LIM); };
+showLim();
+$("lim").onchange=()=>{ const v=Math.round(+$("lim").value/10)*10; if(v>=300&&v<=2130){ LIM=v; LS.set("hwMap.lim",LIM); } showLim(); if(r500Last) r500Run(r500Last); };
+
+// ---- 地図 ----
+const map=L.map("map",{zoomControl:false,preferCanvas:true}).setView([35.68,139.75],12);
+L.control.zoom({position:"bottomright"}).addTo(map);
+L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a> | 高速：© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
+const ren=L.canvas({padding:.3});
+const hwLayer=L.layerGroup().addTo(map), lblLayer=L.layerGroup().addTo(map), rtLayer=L.layerGroup().addTo(map), r5Layer=L.layerGroup().addTo(map), mkLayer=L.layerGroup().addTo(map);
+let HW=null;   // highway.json
+const COL=["#E8590C","#E8590C","#1864AB","#1864AB"], WT=[4,2.5,4,2.5];
+function drawHw(){
+  hwLayer.clearLayers(); if(!HW) return;
+  HW.ways.forEach(([c,f])=>{ const pts=[]; for(let i=0;i<f.length;i+=2) pts.push([f[i],f[i+1]]);
+    L.polyline(pts,{renderer:ren,color:COL[c],weight:WT[c],opacity:c%2?.75:.95,interactive:false}).addTo(hwLayer); });
+}
+// 名前：大きくしたときだけ、見えている範囲の分を出す（JCT・SA/PAは12から、出口は13から、料金所は15から）
+function drawLbl(){
+  lblLayer.clearLayers(); if(!HW) return;
+  const z=map.getZoom(), b=map.getBounds().pad(.1); if(z<11) return;
+  const seen=new Set();
+  HW.pts.forEach(([t,n,la,lo,c])=>{ if(!b.contains([la,lo])) return;
+    if(t==="T"&&z<15) return; if(t==="X"&&z<13) return; if((t==="J"||t==="P")&&z<12) return;
+    const key=t+n; if(seen.has(key)&&z<15) return; seen.add(key);
+    const cls=t==="J"?"j":t==="P"?"p":c===0?"sh":"nx";
+    L.marker([la,lo],{interactive:false,keyboard:false,icon:L.divIcon({className:"",iconSize:[0,0],html:`<div class="hwl ${cls}${z>=14?" big":""}">${t==="P"?"🅿 ":""}${esc(n)}</div>`})}).addTo(lblLayer); });
+}
+map.on("moveend",drawLbl);
+
+// ---- 現在地（アプリの中で取れないときは、アプリ本体に代わりに調べてもらう） ----
+const inApp=window.parent!==window;
+let meTipT=null;
+const meTip=(t,ms)=>{ const el=$("meTip"); el.textContent=t; el.hidden=false; clearTimeout(meTipT); if(ms) meTipT=setTimeout(()=>el.hidden=true,ms); };
+const getPos=(ok,ng)=>{ let done=false, tm=null; const fin=(f,x)=>{ if(done) return; done=true; clearTimeout(tm); window.removeEventListener("message",onMsg); f(x); };
+  const id=Math.random().toString(36).slice(2); let asked=false;
+  const onMsg=e=>{ if(e.origin!==location.origin||!e.data||e.data.izGeoRes!==id) return; if(e.data.err) fin(ng,e.data.err); else fin(ok,[e.data.lat,e.data.lng]); };
+  const ask=()=>{ if(asked||done) return; if(!inApp){ fin(ng,"取れませんでした"); return; } asked=true; window.addEventListener("message",onMsg); try{ window.parent.postMessage({izGeo:id},location.origin); }catch(_){ fin(ng,"取れませんでした"); } tm=setTimeout(()=>fin(ng,"取れませんでした"),20000); };
+  if(!navigator.geolocation){ ask(); return; }
+  if(inApp) tm=setTimeout(ask,6000);
+  try{ navigator.geolocation.getCurrentPosition(p=>fin(ok,[p.coords.latitude,p.coords.longitude]),()=>ask(),{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); }catch(_){ ask(); } };
+let meLL=null, meMk=null;
+const setMe=ll=>{ meLL=ll; if(meMk) map.removeLayer(meMk);
+  meMk=L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1}).bindTooltip("今ここ",{permanent:true,direction:"top",offset:[0,-8]}).addTo(map); };
+const posP=()=>new Promise((res,rej)=>getPos(res,rej));
+$("meBtn").onclick=()=>{ $("meBtn").textContent="📍 調べています…"; meTip("現在地を調べています…");
+  getPos(ll=>{ $("meBtn").textContent="📍 現在地"; setMe(ll); map.setView(ll,Math.max(map.getZoom(),14)); meTip("今いる場所に地図を動かしました",5000); if(fromMode==="me") fromLL=null; fromShow(); },
+    why=>{ $("meBtn").textContent="📍 現在地"; meTip(`現在地が${why}。位置情報の許可を確認してください`,10000); }); };
+
+// ---- 出発 ----
+let fromMode="me", fromLL=null, tapMode="";
+function fromShow(){ $("fromMe").setAttribute("aria-pressed",fromMode==="me"); $("fromMap").setAttribute("aria-pressed",fromMode==="map");
+  $("fromTxt").textContent=fromMode==="me"?(meLL?"（今の場所）":"（ルートを出すときに調べます）"):(fromLL?"（地図で選んだ場所）":"（地図をタップしてください）"); }
+$("fromMe").onclick=()=>{ fromMode="me"; fromLL=null; fromShow(); };
+$("fromMap").onclick=()=>{ fromMode="map"; fromLL=null; tapStart("from","地図で出発地をタップしてください"); fromShow(); };
+fromShow();
+
+// ---- 行き先：区→駅・町の2段のくるくる（places.json）と、飲み屋街マップで登録した場所 ----
+let PL=null, destLL=null, destName="";
+const FK="izakayaMap.favs";   // 飲み屋街マップの「自分の場所」（同じスマホ）
+function favOpts(){ const favs=LS.get(FK,[])||[];
+  $("dFav").innerHTML=`<option value="">選んでください</option>`+(favs.length?`<optgroup label="自分で登録した場所（飲み屋街マップ）">${favs.map((f,i)=>`<option value="${i}">★ ${esc(f.n)}</option>`).join("")}</optgroup>`:"")+`<option value="" disabled>（登録は飲み屋街マップの「＋自分の場所を登録」で）</option>`; }
+favOpts();
+function wardOpts(){ if(!PL) return; const last=LS.get("hwMap.ward","");
+  $("dWard").innerHTML=`<option value="">区を選ぶ</option>`+PL.wards.map(w=>`<option${w===last?" selected":""}>${esc(w)}</option>`).join(""); placeOpts(); }
+function placeOpts(){ const w=$("dWard").value, p=PL&&PL.p[w];
+  $("dPlace").innerHTML=!p?`<option value="">（先に区を選ぶ）</option>`:`<option value="">駅・町を選ぶ</option>`+(p.st.length?`<optgroup label="駅">${p.st.map((s,i)=>`<option value="s${i}">${esc(s[0])}駅</option>`).join("")}</optgroup>`:"")+(p.town.length?`<optgroup label="町">${p.town.map((s,i)=>`<option value="t${i}">${esc(s[0])}</option>`).join("")}</optgroup>`:""); }
+const setDest=(ll,name)=>{ destLL=ll; destName=name; $("dTxt").textContent=name?`行き先：${name}`:""; mkDraw(); };
+$("dWard").onchange=()=>{ LS.set("hwMap.ward",$("dWard").value); placeOpts(); };
+$("dPlace").onchange=()=>{ const w=$("dWard").value, v=$("dPlace").value, p=PL&&PL.p[w]; if(!p||!v) return; const s=(v[0]==="s"?p.st:p.town)[+v.slice(1)]; if(s) setDest([s[1],s[2]],(v[0]==="s"?s[0]+"駅":w+s[0])); $("dFav").value=""; };
+$("dFav").onchange=()=>{ const favs=LS.get(FK,[])||[], f=favs[+$("dFav").value]; if($("dFav").value===""||!f) return; setDest([f.lat,f.lng],f.n); $("dPlace").value=""; };
+$("dTap").onclick=()=>tapStart("dest","地図で行き先をタップしてください");
+function tapStart(m,t){ tapMode=m; $("pbody").hidden=true; $("fold").textContent="開く"; meTip(t,0); }
+map.on("click",e=>{ if(!tapMode) return; const ll=[e.latlng.lat,e.latlng.lng];
+  if(tapMode==="dest") setDest(ll,"地図で選んだ場所"); else { fromLL=ll; fromShow(); mkDraw(); }
+  tapMode=""; $("pbody").hidden=false; $("fold").textContent="閉じる"; $("meTip").hidden=true; });
+let fromMk=null, destMk=null;
+function mkDraw(){ mkLayer.clearLayers();
+  if(fromMode==="map"&&fromLL) L.marker(fromLL,{icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:'<div class="badge" style="background:#2F6FD6">出</div>'})}).addTo(mkLayer);
+  if(destLL) L.marker(destLL,{icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:'<div class="badge" style="background:#17201E">着</div>'})}).bindTooltip(esc(destName)).addTo(mkLayer); }
+
+// ---- 実車か帰りか ----
+let mode=LS.get("hwMap.mode","k");
+const modeShow=()=>{ $("mJ").setAttribute("aria-pressed",mode==="j"); $("mK").setAttribute("aria-pressed",mode==="k"); };
+$("mJ").onclick=()=>{ mode="j"; LS.set("hwMap.mode",mode); modeShow(); if(lastRes) showRes(lastRes); };
+$("mK").onclick=()=>{ mode="k"; LS.set("hwMap.mode",mode); modeShow(); if(lastRes) showRes(lastRes); };
+modeShow();
+
+// ---- 日報の「高速明細」の実績（このスマホの売上の記録から） ----
+const nrm=s=>String(s||"").normalize("NFKC").replace(/\s/g,"").replace(/\(.*?\)|（.*?）/g,"").replace(/首都高速?|首都高|本線|料金所|出入口|入口|出口|インターチェンジ|ＩＣ|IC|インター|ランプ|上り|下り|[上下]$/g,"");
+function actuals(){ const m={}; const s=LS.get("uriage.v1",null); if(!s||!s.days) return m;
+  Object.entries(s.days).forEach(([d,day])=>{ ((day&&day.check&&day.check.hwLog)||[]).forEach(x=>{ const k=nrm(x.in)+"→"+nrm(x.out); if(!nrm(x.in)||!nrm(x.out)) return;
+    (m[k]=m[k]||[]).push({amt:x.amt,d,kind:x.kind}); }); });
+  Object.values(m).forEach(a=>a.sort((x,y)=>y.d.localeCompare(x.d))); return m; }
+const actOf=(A,a,b)=>{ if(!a||!b||a==="不明"||b==="不明") return null; return A[nrm(a)+"→"+nrm(b)]||null; };
+
+// ---- ルート：OSRM（無料）で出し、高速の区間を地図のデータと合わせて、入口・出口・首都高かどうかを決める ----
+// 高速の線を細かい升目に入れておき、ルートの点から一番近い高速の線（の区分）を探す
+let GRID=null; const GS=0.004;
+function buildGrid(){ GRID=new Map(); HW.ways.forEach(([c,f],wi)=>{ for(let i=0;i+3<f.length;i+=2){ const a=[f[i],f[i+1]], b=[f[i+2],f[i+3]];
+  const n=Math.max(1,Math.ceil(distM(a,b)/150)); for(let k=0;k<=n;k++){ const la=a[0]+(b[0]-a[0])*k/n, lo=a[1]+(b[1]-a[1])*k/n, key=Math.floor(la/GS)+","+Math.floor(lo/GS);
+    let arr=GRID.get(key); if(!arr){ arr=[]; GRID.set(key,arr); } arr.push([c,a,b]); } } }); }
+const segD=(p,a,b)=>{ const ky=111320, kx=ky*Math.cos(p[0]*Math.PI/180); const ax=(a[1]-p[1])*kx, ay=(a[0]-p[0])*ky, bx=(b[1]-p[1])*kx, by=(b[0]-p[0])*ky, dx=bx-ax, dy=by-ay, L2=dx*dx+dy*dy;
+  let t=L2?-(ax*dx+ay*dy)/L2:0; t=Math.max(0,Math.min(1,t)); return Math.hypot(ax+t*dx,ay+t*dy); };
+function nearCls(p,maxM){ const gy=Math.floor(p[0]/GS), gx=Math.floor(p[1]/GS); let best=null, bd=maxM;
+  for(let y=gy-1;y<=gy+1;y++) for(let x=gx-1;x<=gx+1;x++){ const arr=GRID.get(y+","+x); if(!arr) continue; for(const [c,a,b] of arr){ const d=segD(p,a,b); if(d<bd){ bd=d; best=c; } } }
+  return best; }
+// 名前の点から一番近いもの
+function nearPt(p,types,maxM,cls){ let best=null, bd=maxM; HW.pts.forEach(q=>{ if(!types.includes(q[0])) return; if(cls!=null&&q[4]!==cls) return; const d=distM(p,[q[2],q[3]]); if(d<bd){ bd=d; best=q; } }); return best; }
+const clean=n=>String(n||"").replace(/料金所$/,"").trim(), base=n=>clean(n).replace(/(出入口|出口|入口)$/,"").trim();
+function entryName(p,sh){
+  if(sh){ let best=null, bd=400; HW.entries.forEach(e=>{ const d=distM(p,[e[1],e[2]]); if(d<bd&&e[0]){ bd=d; best=e[0]; } }); if(best) return best;
+    const t=nearPt(p,["T"],700); if(t) return base(t[1])+"入口"; const x=nearPt(p,["X"],900,0); if(x) return base(x[1])+"入口"; return "不明"; }
+  const x=nearPt(p,["X"],1800,2); if(x) return clean(x[1]); const t=nearPt(p,["T"],1500); if(t) return clean(t[1]); return "不明"; }
+function exitName(p,sh){ const x=nearPt(p,["X"],sh?900:1800,sh?0:2); if(x) return sh?base(x[1])+"出口":clean(x[1]);
+  const t=nearPt(p,["T"],1200); if(t) return clean(t[1]); return "不明"; }
+function chgName(p){ const j=nearPt(p,["J","T","X"],2000); return j?clean(j[1]):"不明"; }
+
+async function route(){
+  if(!HW){ $("out").textContent="高速のデータを読み込み中です。少し待ってから押してください"; return; }
+  if(!destLL){ $("out").textContent="行き先を選んでください（区→駅・町、よく使う、地図で選ぶ）"; return; }
+  let S=fromMode==="map"?fromLL:null;
+  if(fromMode==="map"&&!S){ $("out").textContent="出発地を地図でタップしてください"; return; }
+  if(!S){ $("out").textContent="現在地を調べています…"; try{ S=await posP(); setMe(S); }catch(why){ $("out").textContent=`現在地が${why}。位置情報の許可を確認するか、出発を「地図で選ぶ」にしてください`; return; } }
+  $("out").textContent="ルートを調べています…";
+  let j;
+  try{ const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${S[1]},${S[0]};${destLL[1]},${destLL[0]}?overview=false&steps=true&geometries=geojson`);
+    j=await r.json(); if(j.code!=="Ok"||!j.routes||!j.routes.length) throw new Error(j.message||j.code); }
+  catch(e){ $("out").textContent="ルートを調べられませんでした（無料の経路計算が混んでいるか、電波が弱いです）。少し待ってからもう一度押してください"; return; }
+  // 点ごとに「高速か」を決める。公開のOSRMは「高速」の印を返さないので、
+  // 道の名前が高速の名前のところと、名前のないランプ（on ramp・off ramp・fork・merge、または高速の名前の道の前後）だけを候補にし、
+  // そのうえで地図のデータの高速の線に重なっている（25m以内）点を高速とする（高架の首都高の下の一般道を高速と間違えないように）
+  const HWN=/首都高|高速|自動車道|ハイウェイ|外環|圏央|第三京浜|京葉道路|横浜新道|横浜横須賀道路|保土ヶ谷バイパス|小田原厚木道路|千葉東金道路|アクアライン|湾岸線|環状線/;
+  const steps=j.routes[0].legs[0].steps, segs=[];
+  steps.forEach((st,k)=>{ const nm=st.name||"", hw=HWN.test(nm)||HWN.test(st.ref||"")&&!/^\d+$/.test(st.ref||"");
+    const near=(k>0&&HWN.test(steps[k-1].name||""))||(k+1<steps.length&&HWN.test(steps[k+1].name||""));
+    const gate=hw||((!nm||/(入口|出口|出入口|IC|ＩＣ|JCT)$/.test(nm))&&near);   // ランプは、高速の名前の道のすぐ前かすぐ後のときだけ（一般道のランプと間違えないように）
+    const cs=st.geometry.coordinates.map(c=>[c[1],c[0]]);
+    for(let i=0;i+1<cs.length;i++){ const mid=[(cs[i][0]+cs[i+1][0])/2,(cs[i][1]+cs[i+1][1])/2], c=gate?nearCls(mid,hw?40:20):null;
+      segs.push({a:cs[i],b:cs[i+1],mw:c!=null,c}); } });
+  // 高速の区分が分からない点（地図のデータに近い線がない）は、前後の区分に合わせる
+  for(let i=0;i<segs.length;i++) if(segs[i].mw&&segs[i].c==null){ const prev=segs.slice(0,i).reverse().find(s=>s.mw&&s.c!=null), next=segs.slice(i+1).find(s=>s.mw&&s.c!=null); segs[i].c=(prev||next||{c:2}).c; }
+  // 高速を続けて走るところ（区間）に分ける。区間の中で首都高⇔その他が変わるところも記録
+  const runs=[]; let cur=null;
+  segs.forEach(s=>{ const L=distM(s.a,s.b); if(!s.mw){ cur=null; return; }
+    const sh=s.c<=1; if(!cur){ cur={start:s.a,end:s.b,parts:[]}; runs.push(cur); }
+    let p=cur.parts[cur.parts.length-1]; if(!p||p.sh!==sh){ p={sh,m:0,start:s.a,end:s.b,pts:[s.a]}; cur.parts.push(p); }
+    p.m+=L; p.end=s.b; p.pts.push(s.b); cur.end=s.b; });
+  // 短すぎる区間（100m未満。高速の下をくぐる・かすめるなど）は捨てる
+  const R=runs.map(r=>({...r,parts:r.parts.filter(p=>p.m>=100)})).filter(r=>r.parts.length);
+  R.forEach(r=>{ const p0=r.parts[0], pn=r.parts[r.parts.length-1];
+    r.inName=entryName(r.start,p0.sh); r.outName=exitName(r.end,pn.sh);
+    for(let i=1;i<r.parts.length;i++) r.parts[i].chg=chgName(r.parts[i].start); });
+  const res={S,D:destLL,dn:destName,total:j.routes[0].distance,time:j.routes[0].duration,runs:R,segs};
+  lastRes=res; drawRoute(res); showRes(res);
+}
+let lastRes=null;
+function drawRoute(res){
+  rtLayer.clearLayers();
+  // ふつうの道は細い灰色、高速は太く色付き（白いふちつき）
+  let run=[], prevMw=null;
+  const flush=(mw,sh)=>{ if(run.length<2) return; if(mw){ L.polyline(run,{color:"#fff",weight:13,opacity:.95,interactive:false}).addTo(rtLayer); L.polyline(run,{color:sh?"#E8590C":"#1864AB",weight:8,opacity:1,interactive:false}).addTo(rtLayer); }
+    else L.polyline(run,{color:"#495057",weight:4,opacity:.8,dashArray:"6 6",interactive:false}).addTo(rtLayer); };
+  let key=null;
+  res.segs.forEach(s=>{ const k=s.mw?(s.c<=1?"sh":"nx"):"rd"; if(k!==key){ flush(key&&key!=="rd",key==="sh"); run=[s.a]; key=k; } run.push(s.b); });
+  flush(key&&key!=="rd",key==="sh");
+  const bd=(ll,cls,t,name)=>{ L.marker(ll,{zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:`<div class="badge ${cls}">${t}</div>`})}).addTo(rtLayer);
+    if(name) L.marker(ll,{interactive:false,zIndexOffset:900,icon:L.divIcon({className:"",iconSize:[0,0],iconAnchor:[-18,10],html:`<div class="bname">${esc(name)}</div>`})}).addTo(rtLayer); };
+  res.runs.forEach(r=>{ bd(r.start,"in","入",r.inName); bd(r.end,"out","出",r.outName); r.parts.slice(1).forEach(p=>bd(p.start,"chg","⇄",p.chg)); });
+  mkDraw();
+  const all=res.segs.map(s=>s.a).concat([res.D]); map.fitBounds(L.latLngBounds(all),{padding:[30,30]});
+}
+function showRes(res){
+  const A=actuals(), o=[];
+  if(!res.runs.length){ $("out").innerHTML=`<div class="big">このルートは高速を使いません</div>約${km(res.total)}km・約${Math.round(res.time/60)}分（ふつうの道）`; return; }
+  let shKm=0, nxKm=0;
+  res.runs.forEach((r,ri)=>{
+    const legs=[]; r.parts.forEach(p=>{ if(p.sh) shKm+=p.m/1000; else nxKm+=p.m/1000; });
+    o.push(`<div class="big">${res.runs.length>1?`${ri+1}. `:""}${esc(r.inName)} から乗って、${esc(r.outName)} で降りる</div>`);
+    r.parts.forEach((p,i)=>{ legs.push(`${i?`<small>（${esc(p.chg)}で${p.sh?"首都高へ":"首都高以外の高速へ"}）</small> `:""}<span class="tag ${p.sh?"sh":"nx"}">${p.sh?"首都高":"首都高以外"}</span>約${km(p.m)}km`); });
+    o.push(`<div>${legs.join(" → ")}</div>`); });
+  o.push(`<div>高速は合わせて約${km((shKm+nxKm)*1000)}km（ルート全体 約${km(res.total)}km・約${Math.round(res.time/60)}分）</div>`);
+  // 料金
+  const fee=[]; let shYen=null, nxYen=null, nxUnknown=false;
+  res.runs.forEach(r=>{ r.parts.forEach((p,i)=>{
+    const a=i===0?r.inName:p.chg, b=i===r.parts.length-1?r.outName:r.parts[i+1].chg, act=actOf(A,a,b)||(r.parts.length===1?null:null);
+    if(p.sh){ const est=shFare(p.m/1000);
+      if(act){ fee.push(`<span class="tag sh">首都高</span>${esc(a)}→${esc(b)}：<b>${yen(act[0].amt)}円</b> <span class="tag act">実績</span><small>${act.length}回・最後 ${esc(act[0].d.slice(5).replace("-","/"))}</small>`); shYen=(shYen||0)+act[0].amt; }
+      else { fee.push(`<span class="tag sh">首都高</span>約${km(p.m)}km：<b>${yen(est)}円</b> <span class="tag est">目安（計算式）</span>`); shYen=(shYen||0)+est; } }
+    else { if(act){ fee.push(`<span class="tag nx">首都高以外</span>${esc(a)}→${esc(b)}：<b>${yen(act[0].amt)}円</b> <span class="tag act">実績</span><small>${act.length}回・最後 ${esc(act[0].d.slice(5).replace("-","/"))}</small>`); nxYen=(nxYen||0)+act[0].amt; }
+      else { fee.push(`<span class="tag nx">首都高以外</span>${esc(a)}→${esc(b)}（約${km(p.m)}km）：<b>不明</b> <span class="tag unk">計算式は確認中</span>`); nxUnknown=true; } } }); });
+  // 区間全体の実績（入口→出口がまとめて1件のとき）
+  res.runs.forEach(r=>{ if(r.parts.length>1){ const act=actOf(A,r.inName,r.outName); if(act) fee.push(`${esc(r.inName)}→${esc(r.outName)}（通し）：<b>${yen(act[0].amt)}円</b> <span class="tag act">実績</span><small>${act.length}回</small>`); } });
+  o.push(`<div style="margin-top:6px"><b>料金の目安（普通車・ETC）</b><br>${fee.join("<br>")}</div>`);
+  // 会社負担（日報のルール）
+  const useSh=shKm>0.1, useNx=nxKm>0.1;
+  if(mode==="j") o.push(`<div class="co i">実車中：高速代はお客様の負担です（会社負担の対象外）</div>`);
+  else if(useNx&&useSh) o.push(`<div class="co y">会社負担の対象：首都高以外の高速は1,000円まで会社負担${nxYen!=null?`（${yen(Math.min(nxYen,1000))}円）`:"（金額は不明）"}。首都高は${yen(LIM)}円の補助（乗り継ぎのため）</div>`);
+  else if(useNx) o.push(`<div class="co y">会社負担の対象：首都高以外の高速は1,000円まで会社負担${nxYen!=null?`（${yen(Math.min(nxYen,1000))}円）`:"（金額は不明）"}</div>`);
+  else o.push(`<div class="co n">首都高だけなので、会社負担の対象外（自己負担）</div>`);
+  o.push(`<div class="warn">料金・距離・入口と出口の名前は目安です。実際の料金は、首都高・NEXCOの公式の料金検索で確かめてください。</div>`);
+  $("out").innerHTML=o.join("");
+}
+$("go").onclick=route;
+$("clr").onclick=()=>{ rtLayer.clearLayers(); lastRes=null; $("out").textContent=""; };
+
+// ---- 首都高「500円ならここまで」：入口から首都高のつながり（向きつき）で一番短い距離を出し、出口ごとに色分け ----
+let ADJ=null, r500Last=null;
+function buildAdj(){ ADJ=HW.g.n.map(()=>[]); HW.g.e.forEach(([a,b,d])=>ADJ[a].push([b,d])); }
+function dijkstra(src){ const n=HW.g.n.length, D=new Float64Array(n).fill(Infinity); D[src]=0; const H=[[0,src]];
+  const push=x=>{ H.push(x); let i=H.length-1; while(i>0){ const p=(i-1)>>1; if(H[p][0]<=H[i][0]) break; [H[p],H[i]]=[H[i],H[p]]; i=p; } };
+  const pop=()=>{ const top=H[0], last=H.pop(); if(H.length){ H[0]=last; let i=0; for(;;){ const l=2*i+1, r=l+1; let m=i; if(l<H.length&&H[l][0]<H[m][0]) m=l; if(r<H.length&&H[r][0]<H[m][0]) m=r; if(m===i) break; [H[m],H[i]]=[H[i],H[m]]; i=m; } } return top; };
+  while(H.length){ const [d,u]=pop(); if(d>D[u]) continue; if(d>SH_MAXKM*1000+5000) break; for(const [v,w] of ADJ[u]){ const nd=d+w; if(nd<D[v]){ D[v]=nd; push([nd,v]); } } }
+  return D; }
+function r500Run(src){ r500Last=src; r5Layer.clearLayers(); if(!HW) return;
+  const D=dijkstra(src.node), maxKm=shKmFor(LIM), seen=new Map();
+  HW.exits.forEach(([n,la,lo,node])=>{ const d=D[node]; if(!isFinite(d)) return; const k=n; if(seen.has(k)&&seen.get(k).d<=d) return; seen.set(k,{n,la,lo,d}); });
+  const xs=[...seen.values()].filter(x=>x.d>200).sort((a,b)=>a.d-b.d);
+  xs.forEach(x=>{ const ok=shFare(x.d/1000)<=LIM;
+    L.circleMarker([x.la,x.lo],{radius:ok?9:6,color:"#fff",weight:2,fillColor:ok?"#2B8A3E":"#ADB5BD",fillOpacity:1}).addTo(r5Layer);
+    if(ok) L.marker([x.la,x.lo],{interactive:false,icon:L.divIcon({className:"",iconSize:[0,0],html:`<div class="hwl" style="color:#2B8A3E">${esc(clean(x.n))}</div>`})}).addTo(r5Layer); });
+  L.marker(src.ll,{zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:'<div class="badge in">入</div>'})}).addTo(r5Layer);
+  const ok=xs.filter(x=>shFare(x.d/1000)<=LIM), ng=xs.filter(x=>shFare(x.d/1000)>LIM).slice(0,15);
+  $("r500Out").innerHTML=`<div class="warn" style="margin:4px 0">入口：<b>${esc(src.name)}</b>。${yen(LIM)}円は料金距離 約${maxKm}kmまで（公式の計算式）。<b style="color:#2B8A3E">緑＝${yen(LIM)}円以内</b>、灰色＝超える。距離は地図のデータで入口から一番短い道のりを出した目安です。</div>`
+    +`<div class="list500">${ok.length?ok.map(x=>`<div class="g">● ${esc(clean(x.n))}　約${km(x.d)}km・${yen(shFare(x.d/1000))}円</div>`).join(""):"<div>この入口から"+yen(LIM)+"円以内の出口は見つかりませんでした</div>"}${ng.map(x=>`<div class="x">○ ${esc(clean(x.n))}　約${km(x.d)}km・${yen(shFare(x.d/1000))}円</div>`).join("")}</div>`;
+  const b=L.latLngBounds([src.ll].concat(ok.map(x=>[x.la,x.lo]))); if(ok.length) map.fitBounds(b,{padding:[40,40],maxZoom:14});
+}
+// グラフのノードで一番近いもの
+const nearNode=ll=>{ let best=-1, bd=Infinity; HW.g.n.forEach((p,i)=>{ if(!ADJ[i].length) return; const d=distM(ll,p); if(d<bd){ bd=d; best=i; } }); return {i:best,d:bd}; };
+$("r500Route").onclick=()=>{ if(!HW) return; const r=lastRes&&lastRes.runs.find(r=>r.parts[0].sh)||lastRes&&lastRes.runs.flatMap(r=>r.parts.map((p,i)=>({p,r,i}))).find(x=>x.p.sh);
+  if(!r){ $("r500Out").innerHTML=`<div class="warn">先に「ルートを出す」で、首都高を使うルートを出してください</div>`; return; }
+  const p=r.parts?r.parts[0]:r.p, ll=p.start, n=nearNode(ll); if(n.i<0||n.d>500){ $("r500Out").innerHTML=`<div class="warn">ルートの入口が首都高のつながりのデータに見つかりませんでした（不明）</div>`; return; }
+  r500Run({node:n.i,ll,name:r.parts?r.inName:p.chg}); };
+$("r500Near").onclick=async()=>{ if(!HW) return; let ll=meLL;
+  if(!ll){ $("r500Out").innerHTML=`<div class="warn">現在地を調べています…</div>`; try{ ll=await posP(); setMe(ll); }catch(why){ $("r500Out").innerHTML=`<div class="warn">現在地が${esc(why)}</div>`; return; } }
+  let best=null, bd=Infinity; HW.entries.forEach(e=>{ const d=distM(ll,[e[1],e[2]]); if(d<bd){ bd=d; best=e; } });
+  if(!best){ $("r500Out").innerHTML=`<div class="warn">首都高の入口が見つかりませんでした</div>`; return; }
+  let name=best[0]; if(!name){ const t=nearPt([best[1],best[2]],["T"],700); name=t?clean(t[1])+"入口":"名前不明の入口"; }
+  r500Run({node:best[3],ll:[best[1],best[2]],name:`${name}（現在地から約${km(bd)}km）`}); };
+$("r500Off").onclick=()=>{ r5Layer.clearLayers(); r500Last=null; $("r500Out").innerHTML=""; };
+
+// ---- データの読み込み ----
+(async()=>{
+  // 駅・町の一覧は別に読む（読めなくても高速の地図は出す）
+  fetch("places.json?v="+Date.now()).then(r=>r.json()).then(p=>{ PL=p; wardOpts(); }).catch(()=>{ $("dWard").innerHTML=`<option value="">（一覧を読み込めませんでした）</option>`; });
+  $("dWard").innerHTML=`<option value="">読み込み中…</option>`; placeOpts();
+  try{ HW=await fetch("highway.json?v="+Date.now()).then(r=>r.json());
+    buildGrid(); buildAdj(); drawHw(); drawLbl();
+    $("msg").textContent=""; $("dataInfo").textContent=`・高速のデータ：${HW.made}に作成（線${HW.ways.length}本・首都高の入口${HW.entries.length}・出口${HW.exits.length}）。`;
+  }catch(e){ $("msg").textContent="高速のデータを読み込めませんでした。電波を確認して開き直してください"; }
+})();
+})();
+</script>
+</body>
+</html>
