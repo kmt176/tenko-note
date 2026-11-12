@@ -70,6 +70,12 @@ body.full .panel{display:none}
 .gbar b{font-size:16px}
 #gMap{flex:1 1 auto;min-height:220px}
 #gInfo{padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);font-size:14.5px;line-height:1.6;max-height:45%;overflow:auto}
+.srow{display:flex;gap:6px;align-items:center;width:100%}
+.srow input{flex:1 1 auto;min-width:0;font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.srow .btn{min-height:40px;padding:6px 10px;flex:0 0 auto}
+.sres button{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px;margin-top:4px;font-size:14px;line-height:1.4}
+.sres button small{color:var(--muted)}
+#fromBox[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -80,14 +86,17 @@ body.full .panel{display:none}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 16:34</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 20:53</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
-      <div class="row"><div class="seg" role="group" aria-label="出発"><button type="button" id="fromMe" aria-pressed="true">現在地</button><button type="button" id="fromMap" aria-pressed="false">地図で選ぶ</button></div><span id="fromTxt" class="warn"></span></div>
+      <div class="row"><div class="seg" role="group" aria-label="出発"><button type="button" id="fromMe" aria-pressed="true">現在地</button><button type="button" id="fromMap" aria-pressed="false">地図で選ぶ</button><button type="button" id="fromSrch" aria-pressed="false">検索</button></div><span id="fromTxt" class="warn"></span></div>
+      <!-- 検索（文字・声）：駅・町の一覧、国土地理院の住所・地名、オープンストリートマップの施設名（2026-11-12 ユーザー指定） -->
+      <div id="fromBox" hidden><div class="srow"><input id="fromQ" placeholder="出発地：駅名・住所・施設名" autocomplete="off" enterkeyhint="search"><button type="button" class="btn" id="fromMic" hidden aria-label="声で入れる">🎤</button><button type="button" class="btn primary" id="fromGo">検索</button></div><div id="fromRes" class="sres"></div></div>
       <b>行き先</b>
       <div class="sel2"><select id="dWard" aria-label="区"></select><select id="dPlace" aria-label="駅・町"></select></div>
       <div class="row"><label>よく使う <select id="dFav"></select></label><button type="button" class="btn" id="dTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
+      <div class="srow"><input id="destQ" placeholder="行き先を探す：駅名・住所・施設名" autocomplete="off" enterkeyhint="search"><button type="button" class="btn" id="destMic" hidden aria-label="声で入れる">🎤</button><button type="button" class="btn primary" id="destGo">検索</button></div><div id="destRes" class="sres"></div>
       <div id="dTxt" class="warn"></div>
       <div class="row"><div class="seg" role="group" aria-label="実車か帰りか"><button type="button" id="mJ" aria-pressed="false">実車</button><button type="button" id="mK" aria-pressed="true">帰り（空車・回送）</button></div></div>
       <div class="btns"><button type="button" class="btn primary" id="go">ルートを出す</button><button type="button" class="btn" id="clr">消す</button></div>
@@ -185,10 +194,13 @@ $("meBtn").onclick=()=>{ $("meBtn").textContent="📍 調べています…"; me
 
 // ---- 出発 ----
 let fromMode="me", fromLL=null, tapMode="";
-function fromShow(){ $("fromMe").setAttribute("aria-pressed",fromMode==="me"); $("fromMap").setAttribute("aria-pressed",fromMode==="map");
-  $("fromTxt").textContent=fromMode==="me"?(meLL?"（今の場所）":"（ルートを出すときに調べます）"):(fromLL?"（地図で選んだ場所）":"（地図をタップしてください）"); }
+let fromName="";
+function fromShow(){ $("fromMe").setAttribute("aria-pressed",fromMode==="me"); $("fromMap").setAttribute("aria-pressed",fromMode==="map"); $("fromSrch").setAttribute("aria-pressed",fromMode==="search");
+  $("fromBox").hidden=fromMode!=="search";
+  $("fromTxt").textContent=fromMode==="me"?(meLL?"（今の場所）":"（ルートを出すときに調べます）"):fromMode==="map"?(fromLL?"（地図で選んだ場所）":"（地図をタップしてください）"):(fromLL?`（${fromName}）`:"（下で探してください）"); }
 $("fromMe").onclick=()=>{ fromMode="me"; fromLL=null; fromShow(); };
 $("fromMap").onclick=()=>{ fromMode="map"; fromLL=null; tapStart("from","地図で出発地をタップしてください"); fromShow(); };
+$("fromSrch").onclick=()=>{ fromMode="search"; fromLL=null; fromShow(); mkDraw(); setTimeout(()=>$("fromQ").focus(),50); };
 fromShow();
 
 // ---- 行き先：区→駅・町の2段のくるくる（places.json）と、飲み屋街マップで登録した場所 ----
@@ -212,8 +224,36 @@ map.on("click",e=>{ if(!tapMode) return; const ll=[e.latlng.lat,e.latlng.lng];
   tapMode=""; $("pbody").hidden=false; $("fold").textContent="閉じる"; $("meTip").hidden=true; });
 let fromMk=null, destMk=null;
 function mkDraw(){ mkLayer.clearLayers();
-  if(fromMode==="map"&&fromLL) L.marker(fromLL,{icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:'<div class="badge" style="background:#2F6FD6">出</div>'})}).addTo(mkLayer);
+  if(fromMode!=="me"&&fromLL) L.marker(fromLL,{icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:'<div class="badge" style="background:#2F6FD6">出</div>'})}).addTo(mkLayer);
   if(destLL) L.marker(destLL,{icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:'<div class="badge" style="background:#17201E">着</div>'})}).bindTooltip(esc(destName)).addTo(mkLayer); }
+
+// ---- 検索（文字・声）：駅・町の一覧 → 登録した場所 → オープンストリートマップの施設名 → 国土地理院の住所・地名 ----
+async function placeSearch(t){
+  const out=[], seen=new Set(), add=(n,sub,la,lo)=>{ if(!isFinite(la)||!isFinite(lo)) return; if(la<35.0||la>36.4||lo<138.9||lo>140.9) return; /* 首都圏の中だけ */ const k=n+"|"+la.toFixed(3)+","+lo.toFixed(3); if(seen.has(k)) return; seen.add(k); out.push({n,sub,ll:[la,lo]}); };
+  const qs=t.replace(/駅$/,"");
+  if(PL) Object.entries(PL.p).forEach(([w,p])=>{ p.st.forEach(x=>{ if(x[0]===qs||x[0].startsWith(qs)) add(x[0]+"駅",w,x[1],x[2]); }); p.town.forEach(x=>{ if(x[0]===qs||x[0].startsWith(qs)) add(w+x[0],"町",x[1],x[2]); }); });
+  (LS.get(FK,[])||[]).forEach(f=>{ if(f.n.includes(t)) add("★ "+f.n,"登録した場所",f.lat,f.lng); });
+  const [n,g]=await Promise.allSettled([
+    fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=jp&accept-language=ja&bounded=1&viewbox=139.0,36.2,140.5,35.2&q="+encodeURIComponent(t)).then(r=>r.json()),
+    fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(t)).then(r=>r.json())]);
+  if(n.status==="fulfilled") (n.value||[]).forEach(x=>{ const parts=String(x.display_name||"").split(",").map(v=>v.trim()); const w=parts.find(v=>/[区市町村]$/.test(v))||""; add(x.name||parts[0],w?w+"（施設・地名）":"施設・地名",+x.lat,+x.lon); });
+  if(g.status==="fulfilled") (g.value||[]).slice(0,8).forEach(f=>{ const c=f.geometry&&f.geometry.coordinates; if(c) add(f.properties&&f.properties.title||t,"住所・地名（国土地理院）",c[1],c[0]); });
+  return {hits:out.slice(0,15),err:n.status==="rejected"&&g.status==="rejected"}; }
+const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;
+function mkSearch(id,onPick){
+  const q=$(id+"Q"), res=$(id+"Res"); let hits=[];
+  const run=async()=>{ const t=q.value.trim(); if(!t){ res.innerHTML=`<div class="warn">場所の名前を入れてください</div>`; return; }
+    res.innerHTML=`<div class="warn">探しています…</div>`; const r=await placeSearch(t); hits=r.hits;
+    if(!hits.length){ res.innerHTML=`<div class="warn">${r.err?"検索につながりませんでした。電波を確認してください":"見つかりませんでした。駅名・住所（区・町・丁目）・施設の名前で探すか、「地図で選ぶ」を使ってください"}</div>`; return; }
+    res.innerHTML=`<div class="warn">候補を押してください</div>`+hits.map((h,i)=>`<button type="button" data-h="${i}">${esc(h.n)}<br><small>${esc(h.sub)}</small></button>`).join(""); };
+  $(id+"Go").onclick=run;
+  q.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); run(); } });
+  res.addEventListener("click",e=>{ const b=e.target.closest("[data-h]"); if(!b) return; const h=hits[+b.dataset.h]; if(!h) return; res.innerHTML=""; onPick(h); });
+  if(SRC){ $(id+"Mic").hidden=false; $(id+"Mic").onclick=()=>{ let rc; try{ rc=new SRC(); }catch(_){ return; } rc.lang="ja-JP"; rc.interimResults=false; res.innerHTML=`<div class="warn">話してください…</div>`;
+    rc.onresult=e=>{ q.value=e.results[0][0].transcript.replace(/[。、\s]/g,""); run(); };
+    rc.onerror=()=>{ res.innerHTML=`<div class="warn">声を聞き取れませんでした。キーボードのマイクでも入れられます</div>`; }; try{ rc.start(); }catch(_){ res.innerHTML=`<div class="warn">声の入力を始められませんでした。キーボードのマイクを使ってください</div>`; } }; } }
+mkSearch("from",h=>{ fromMode="search"; fromLL=h.ll; fromName=h.n; fromShow(); mkDraw(); map.setView(h.ll,Math.max(map.getZoom(),14)); });
+mkSearch("dest",h=>{ setDest(h.ll,h.n.replace(/^★ /,"")); $("dPlace").value=""; $("dFav").value=""; map.setView(h.ll,Math.max(map.getZoom(),14)); });
 
 // ---- 実車か帰りか ----
 let mode=LS.get("hwMap.mode","k");
@@ -334,8 +374,8 @@ const bearing=(a,b)=>{ const r=Math.PI/180, y=Math.sin((b[1]-a[1])*r)*Math.cos(b
 async function route(){
   if(!HW){ $("out").textContent="高速のデータを読み込み中です。少し待ってから押してください"; return; }
   if(!destLL){ $("out").textContent="行き先を選んでください（区→駅・町、よく使う、地図で選ぶ）"; return; }
-  let S=fromMode==="map"?fromLL:null;
-  if(fromMode==="map"&&!S){ $("out").textContent="出発地を地図でタップしてください"; return; }
+  let S=fromMode==="me"?null:fromLL;
+  if(fromMode!=="me"&&!S){ $("out").textContent=fromMode==="map"?"出発地を地図でタップしてください":"出発地を検索して、候補を選んでください"; return; }
   if(!S){ $("out").textContent="現在地を調べています…"; try{ S=await posP(); setMe(S); }catch(why){ $("out").textContent=`現在地が${why}。位置情報の許可を確認するか、出発を「地図で選ぶ」にしてください`; return; } }
   const D=destLL;
   $("out").textContent="ルートを調べています…（高速を使うルートと、使わないルート）";
