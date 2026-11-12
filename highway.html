@@ -86,7 +86,7 @@ body.full .panel{display:none}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 20:53</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 21:27</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -518,10 +518,27 @@ const gJa=e=>{ const st=e&&e.status, gs=e&&e.gs||"", m=String(e&&e.message||"");
   if(st===400||gs==="INVALID_ARGUMENT") return "Googleがこの出発地・行き先でルートを出せませんでした（"+esc(m.slice(0,80))+"）";
   if(e&&e.net) return "Googleにつながりませんでした。電波を確認してください";
   return "Googleでルートを出せませんでした（"+esc(m.slice(0,80)||"不明")+"）"; };
-function gErr(t){ $("gInfo").innerHTML=`<div class="co n" style="margin:0">${t}</div>`; }
+let gRtWhy="";
+function gErr(t){ $("gInfo").innerHTML=`<div class="co n" style="margin:0;line-height:1.6">${t}</div>`; }
+// Googleの地図が断られた本当の理由（Googleはコンソールにだけ「〇〇MapError」と書く）を読み取って、日本語で出す（2026-11-12）
+const G_ERR={ApiNotActivatedMapError:"このキーのプロジェクトで「Maps JavaScript API」が有効になっていません。Google Cloudの「APIとサービス」→「ライブラリ」で有効にしてください",
+  BillingNotEnabledMapError:"支払い（請求先アカウント）がこのプロジェクトに結び付いていません。Google Cloudの「お支払い」で、プロジェクトに請求先アカウントを設定してください",
+  RefererNotAllowedMapError:"キーの「使えるサイト」（ウェブサイトの制限）に、このアプリの場所が入っていません。「https://kmt176.github.io/*」を足してください",
+  ApiTargetBlockedMapError:"キーの「使えるAPI」（APIの制限）に「Maps JavaScript API」が入っていません。キーの設定で足してください（「Routes API」も）",
+  InvalidKeyMapError:"APIキーが正しくありません。コピーのとき前後に空白や文字が入っていないか、設定のキーを確かめてください",
+  MissingKeyMapError:"APIキーが入っていません。設定でキーを登録してください",
+  ExpiredKeyMapError:"APIキーが古くなっています。Google Cloudで新しいキーを作ってください",
+  DeletedApiProjectMapError:"キーのプロジェクトが削除されています。新しいプロジェクトとキーを作ってください",
+  ProjectDeniedMapError:"このプロジェクトはGoogleに止められています。Google Cloudのお知らせを確かめてください",
+  OverQuotaMapError:"使える回数を超えました。しばらく待つか、Google Cloudで上限を確かめてください"};
+let gErrCode="";
+(()=>{ const orig=console.error, wrap=(f)=>function(...a){ try{ const m=String(a[0]||"").match(/([A-Za-z]+MapError)/); if(m) gErrCode=m[1]; }catch(_){} return f.apply(console,a); };
+  console.error=wrap(orig); const ow=console.warn; console.warn=wrap(ow); })();
 function gLoad(key){ if(gLoaded) return gLoaded;
   gLoaded=new Promise((res,rej)=>{ window.__gInit=()=>res();
-    window.gm_authFailure=()=>gErr("Googleの地図を出せませんでした。キーの間違いか、「Maps JavaScript API」が有効になっていないか、キーの「使えるサイト」の制限を確かめてください");
+    window.gm_authFailure=()=>setTimeout(()=>{ gLoaded=null; gMapObj=null;   // 次に押したときに読み直す（キーを直したあと）
+      const why=G_ERR[gErrCode]||"キーの間違いか、「Maps JavaScript API」が有効になっていないか、キーの「使えるサイト」の制限（https://kmt176.github.io/*）を確かめてください";
+      gErr(`Googleの地図を出せませんでした。<br>${why}${gErrCode?`<br><small>（Googleの知らせ：${esc(gErrCode)}）</small>`:""}<br><small>このページの場所：${esc(location.origin+location.pathname)}</small>`+(gRtWhy?`<br><br>ルートの計算（Routes API）：${gRtWhy}`:"")); },300);
     const s=document.createElement("script"); s.async=true;
     s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&language=ja&region=JP&libraries=geometry&loading=async&callback=__gInit`;
     s.onerror=()=>{ gLoaded=null; rej(Object.assign(new Error("load"),{net:true})); }; document.head.appendChild(s); });
@@ -542,10 +559,13 @@ async function gRoute(key,res){
 async function gOpen(){
   const res=lastRes; if(!res) return; const key=gKey(); if(!key){ gNoKey(); return; }
   $("gMsg").innerHTML=""; $("gPanel").hidden=false; $("gInfo").innerHTML=`<div class="warn">Googleで調べています…</div>`;
+  gRtWhy=""; gErrCode="";
+  const rtP=gRoute(key,res).then(r=>{ gRtWhy=r?"使えます（地図の側だけの問題です）":"ルートが見つかりませんでした"; return r; },e=>{ gRtWhy=gJa(e); return Promise.reject(e); });
+  rtP.catch(()=>{});
   try{ await gLoad(key); }catch(e){ gErr(gJa(e)); return; }
   if(!gMapObj) gMapObj=new google.maps.Map($("gMap"),{center:{lat:res.S[0],lng:res.S[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,gestureHandling:"greedy"});
   gObjs.forEach(o=>o.setMap(null)); gObjs=[];
-  let rt; try{ rt=await gRoute(key,res); }catch(e){ gErr(gJa(e)); return; }
+  let rt; try{ rt=await rtP; }catch(e){ gErr(gJa(e)); return; }
   if(!rt){ gErr("Googleでルートが見つかりませんでした"); return; }
   const path=google.maps.geometry.encoding.decodePath(rt.polyline.encodedPolyline);
   gObjs.push(new google.maps.Polyline({map:gMapObj,path,strokeColor:"#1A73E8",strokeWeight:6,strokeOpacity:.9}));
