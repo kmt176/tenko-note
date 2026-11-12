@@ -300,7 +300,7 @@ function drawRoute(res){
 }
 function showRes(res){
   const A=actuals(), o=[];
-  if(!res.runs.length){ $("out").innerHTML=`<div class="big">このルートは高速を使いません</div>約${km(res.total)}km・約${Math.round(res.time/60)}分（ふつうの道）`; return; }
+  if(!res.runs.length){ $("out").innerHTML=`<div class="big">このルートは高速を使いません</div>約${km(res.total)}km・約${Math.round(res.time/60)}分（ふつうの道。経路計算が選んだ道です）`+planHtml(res); return; }
   let shKm=0, nxKm=0;
   res.runs.forEach((r,ri)=>{
     const legs=[]; r.parts.forEach(p=>{ if(p.sh) shKm+=p.m/1000; else nxKm+=p.m/1000; });
@@ -327,19 +327,55 @@ function showRes(res){
   else if(useNx) o.push(`<div class="co y">会社負担の対象：首都高以外の高速は1,000円まで会社負担${nxYen!=null?`（${yen(Math.min(nxYen,1000))}円）`:"（金額は不明）"}</div>`);
   else o.push(`<div class="co n">首都高だけなので、会社負担の対象外（自己負担）</div>`);
   o.push(`<div class="warn">料金・距離・入口と出口の名前は目安です。実際の料金は、首都高・NEXCOの公式の料金検索で確かめてください。</div>`);
-  $("out").innerHTML=o.join("");
+  $("out").innerHTML=o.join("")+(useSh?"":planHtml(res));
 }
+// ---- 首都高を使った場合（ルートが首都高を使わないとき）：出発地の近くの入口と行き先の近くの出口の組み合わせで、一番近道になるものを、首都高のつながりで計算する ----
+const SURF=1.3;   // 一般道は直線の1.3倍くらい走るとみなす（目安）
+function shPlan(S,Dst){
+  if(!HW||!ADJ) return null;
+  const ens=HW.entries.map(e=>({e,d:distM(S,[e[1],e[2]])})).sort((a,b)=>a.d-b.d).slice(0,5);
+  const exs=HW.exits.map(x=>({x,d:distM(Dst,[x[1],x[2]])})).sort((a,b)=>a.d-b.d).slice(0,6);
+  let best=null;
+  ens.forEach(({e,d:de})=>{ const D=dijkstra(e[3],true);
+    exs.forEach(({x,d:dx})=>{ const g=D[x[3]]; if(!isFinite(g)||g<800) return; const cost=de*SURF+g+dx*SURF;
+      if(!best||cost<best.cost) best={cost,e,x,g,de,dx,D}; }); });
+  if(!best) return null;
+  // 道の形をたどる
+  const path=[]; let v=best.x[3], guard=0;
+  while(v!==best.e[3]&&guard++<5000){ const ei=best.D.prev[v]; if(ei<0) break; const [a,b,,f]=HW.g.e[ei]; const seg=[HW.g.n[a]]; for(let i=0;i<(f||[]).length;i+=2) seg.push([f[i],f[i+1]]); seg.push(HW.g.n[b]); path.unshift(seg); v=a; }
+  best.path=path;
+  // 同じ入口から、決めた金額（500円）以内で降りられる出口のうち、行き先に一番近いもの
+  let near=null; HW.exits.forEach(x=>{ const g=best.D[x[3]]; if(!isFinite(g)||g<200||shFare(g/1000)>LIM) return; const d=distM(Dst,[x[1],x[2]]); if(!near||d<near.d) near={x,g,d}; });
+  best.lim=near; return best; }
+let planLast=null;
+function planHtml(res){
+  const p=shPlan(res.S,res.D); planLast=p; if(!p) return `<div class="box" style="margin-top:8px"><b>首都高を使った場合</b><div class="warn">近くに首都高の入口・出口が見つからないので、計算できませんでした（不明）</div></div>`;
+  const en=p.e[0]||"名前不明の入口", ex=base(p.x[0])+"出口", far=p.dx>3000;
+  if(!res._pd){ drawPlan(p); res._pd=true; }   // 実車・帰りの切り替えで2回描かないように
+  return `<div class="box" style="margin-top:8px;border-color:#E8590C"><b>首都高を使った場合（目安）</b>`
+    +`<div class="big">${esc(en)} から乗って、${esc(ex)} で降りる</div>`
+    +`<div><span class="tag sh">首都高</span>約${km(p.g)}km：<b>${yen(shFare(p.g/1000))}円</b> <span class="tag est">目安（計算式）</span></div>`
+    +`<div class="warn">出発地→${esc(en)} 約${km(p.de)}km（直線）、${esc(ex)}→行き先 約${km(p.dx)}km（直線）。${far?"行き先の近くに首都高の出口がないので、一番近い出口で計算しています。":""}</div>`
+    +`<div style="margin-top:4px"><b>${yen(LIM)}円は首都高 約${shKmFor(LIM)}kmまで</b>${p.lim?`。この入口から${yen(LIM)}円以内で、行き先に一番近い出口は <b>${esc(base(p.lim.x[0]))}出口</b>（約${km(p.lim.g)}km・${yen(shFare(p.lim.g/1000))}円、出口から行き先まで約${km(p.lim.d)}km・直線）`:`。この入口から${yen(LIM)}円以内で降りられる出口は見つかりませんでした`}</div>`
+    +(mode==="j"?`<div class="co i">実車中：高速代はお客様の負担です</div>`:`<div class="co n">首都高だけなので、会社負担の対象外（自己負担）</div>`)
+    +`<div class="btns" style="margin-top:6px"><button type="button" class="btn" id="planR500">この入口から${yen(LIM)}円の範囲を地図に出す</button></div>`
+    +`<div class="warn">経路計算のルートとは別に、首都高のつながりのデータで一番短い道のりを出した目安です（地図の橙の点線）。</div></div>`; }
+function drawPlan(p){ p.path.forEach(seg=>{ L.polyline(seg,{color:"#fff",weight:11,opacity:.9,interactive:false}).addTo(rtLayer); L.polyline(seg,{color:"#E8590C",weight:7,dashArray:"10 8",opacity:1,interactive:false}).addTo(rtLayer); });
+  const bd=(ll,cls,t,name)=>{ L.marker(ll,{zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:`<div class="badge ${cls}">${t}</div>`})}).addTo(rtLayer);
+    L.marker(ll,{interactive:false,zIndexOffset:900,icon:L.divIcon({className:"",iconSize:[0,0],iconAnchor:[-18,10],html:`<div class="bname">${esc(name)}</div>`})}).addTo(rtLayer); };
+  bd([p.e[1],p.e[2]],"in","入",(p.e[0]||"入口")+"（使う場合）"); bd([p.x[1],p.x[2]],"out","出",base(p.x[0])+"出口（使う場合）"); }
+document.addEventListener("click",e=>{ if(e.target&&e.target.id==="planR500"&&planLast){ const p=planLast; r500Run({node:p.e[3],ll:[p.e[1],p.e[2]],name:p.e[0]||"入口"}); $("r500Out").scrollIntoView({block:"nearest"}); } });
 $("go").onclick=route;
 $("clr").onclick=()=>{ rtLayer.clearLayers(); lastRes=null; $("out").textContent=""; };
 
 // ---- 首都高「500円ならここまで」：入口から首都高のつながり（向きつき）で一番短い距離を出し、出口ごとに色分け ----
 let ADJ=null, r500Last=null;
-function buildAdj(){ ADJ=HW.g.n.map(()=>[]); HW.g.e.forEach(([a,b,d])=>ADJ[a].push([b,d])); }
-function dijkstra(src){ const n=HW.g.n.length, D=new Float64Array(n).fill(Infinity); D[src]=0; const H=[[0,src]];
+function buildAdj(){ ADJ=HW.g.n.map(()=>[]); HW.g.e.forEach(([a,b,d],ei)=>ADJ[a].push([b,d,ei])); }
+function dijkstra(src,withPrev){ const n=HW.g.n.length, D=new Float64Array(n).fill(Infinity), P=new Int32Array(n).fill(-1); D[src]=0; const H=[[0,src]];
   const push=x=>{ H.push(x); let i=H.length-1; while(i>0){ const p=(i-1)>>1; if(H[p][0]<=H[i][0]) break; [H[p],H[i]]=[H[i],H[p]]; i=p; } };
   const pop=()=>{ const top=H[0], last=H.pop(); if(H.length){ H[0]=last; let i=0; for(;;){ const l=2*i+1, r=l+1; let m=i; if(l<H.length&&H[l][0]<H[m][0]) m=l; if(r<H.length&&H[r][0]<H[m][0]) m=r; if(m===i) break; [H[m],H[i]]=[H[i],H[m]]; i=m; } } return top; };
-  while(H.length){ const [d,u]=pop(); if(d>D[u]) continue; if(d>SH_MAXKM*1000+5000) break; for(const [v,w] of ADJ[u]){ const nd=d+w; if(nd<D[v]){ D[v]=nd; push([nd,v]); } } }
-  return D; }
+  while(H.length){ const [d,u]=pop(); if(d>D[u]) continue; if(d>SH_MAXKM*1000+5000) break; for(const [v,w,ei] of ADJ[u]){ const nd=d+w; if(nd<D[v]){ D[v]=nd; P[v]=ei; push([nd,v]); } } }
+  if(withPrev) D.prev=P; return D; }
 function r500Run(src){ r500Last=src; r5Layer.clearLayers(); if(!HW) return;
   const D=dijkstra(src.node), maxKm=shKmFor(LIM), seen=new Map();
   HW.exits.forEach(([n,la,lo,node])=>{ const d=D[node]; if(!isFinite(d)) return; const k=n; if(seen.has(k)&&seen.get(k).d<=d) return; seen.set(k,{n,la,lo,d}); });
