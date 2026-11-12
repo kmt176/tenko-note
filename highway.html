@@ -63,7 +63,7 @@ body.full .panel{display:none}
 .hwl.big{font-size:15px}
 .badge{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;color:#fff;font:800 15px/1 sans-serif;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
 .badge.in{background:#2B8A3E}.badge.out{background:#C92A2A}.badge.chg{background:#5F3DC4;font-size:12px}
-.bname{font:800 15px/1.2 sans-serif;white-space:nowrap;background:#fff;border:2px solid #17201E;border-radius:8px;padding:2px 6px;color:#17201E;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.bname{display:inline-block;width:max-content;font:800 15px/1.2 sans-serif;white-space:nowrap;background:#fff;border:2px solid #17201E;border-radius:8px;padding:2px 6px;color:#17201E;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .gpanel{position:fixed;inset:0;z-index:3000;background:var(--surface);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 .gpanel[hidden]{display:none}
 .gbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
@@ -74,13 +74,13 @@ body.full .panel{display:none}
 </head>
 <body>
 <div id="map"></div>
-<div class="legend" aria-hidden="true"><i style="background:#E8590C"></i>首都高<br><i style="background:#1864AB"></i>その他の高速</div>
+<div class="legend" aria-hidden="true"><i style="background:#E8590C"></i>首都高<br><i style="background:#1864AB"></i>その他の高速<br><i style="background:#40C057;outline:2px solid #0B3D1A"></i>ルート</div>
 <div id="meTip" class="metip" role="status" hidden></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 16:22</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 16:34</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -364,7 +364,7 @@ function drawRoute(res){
   rtLayer.clearLayers();
   // ふつうの道は細い灰色、高速は太く色付き（白いふちつき）
   let run=[], prevMw=null;
-  const flush=(mw,sh)=>{ if(run.length<2) return; if(mw){ L.polyline(run,{color:"#fff",weight:13,opacity:.95,interactive:false}).addTo(rtLayer); L.polyline(run,{color:sh?"#E8590C":"#1864AB",weight:8,opacity:1,interactive:false}).addTo(rtLayer); }
+  const flush=(mw,sh)=>{ if(run.length<2) return; if(mw){ L.polyline(run,{color:"#0B3D1A",weight:14,opacity:.9,interactive:false}).addTo(rtLayer); L.polyline(run,{color:"#40C057",weight:9,opacity:1,interactive:false}).addTo(rtLayer); }   // ルートの高速は緑（首都高の橙・その他の青と分けるため。2026-11-12 ユーザー指定）
     else L.polyline(run,{color:"#495057",weight:4,opacity:.8,dashArray:"6 6",interactive:false}).addTo(rtLayer); };
   let key=null;
   res.segs.forEach(s=>{ const k=s.mw?(s.c<=1?"sh":"nx"):"rd"; if(k!==key){ flush(key&&key!=="rd",key==="sh"); run=[s.a]; key=k; } run.push(s.b); });
@@ -440,8 +440,8 @@ function planHtml(res){
     +`<div style="margin-top:4px"><b>${yen(LIM)}円は首都高 約${shKmFor(LIM)}kmまで</b>${p.lim?`。この入口から${yen(LIM)}円以内で、行き先に一番近い出口は <b>${esc(base(p.lim.x[0]))}出口</b>（約${km(p.lim.g)}km・${yen(shFare(p.lim.g/1000))}円、出口から行き先まで約${km(p.lim.d)}km・直線）`:`。この入口から${yen(LIM)}円以内で降りられる出口は見つかりませんでした`}</div>`
     +(mode==="j"?`<div class="co i">実車中：高速代はお客様の負担です</div>`:`<div class="co n">首都高だけなので、会社負担の対象外（自己負担）</div>`)
     +`<div class="btns" style="margin-top:6px"><button type="button" class="btn" id="planR500">この入口から${yen(LIM)}円の範囲を地図に出す</button></div>`
-    +`<div class="warn">経路計算のルートとは別に、首都高のつながりのデータで一番短い道のりを出した目安です（地図の橙の点線）。</div></div>`; }
-function drawPlan(p){ p.path.forEach(seg=>{ L.polyline(seg,{color:"#fff",weight:11,opacity:.9,interactive:false}).addTo(rtLayer); L.polyline(seg,{color:"#E8590C",weight:7,dashArray:"10 8",opacity:1,interactive:false}).addTo(rtLayer); });
+    +`<div class="warn">経路計算のルートとは別に、首都高のつながりのデータで一番短い道のりを出した目安です（地図の緑の点線）。</div></div>`; }
+function drawPlan(p){ p.path.forEach(seg=>{ L.polyline(seg,{color:"#0B3D1A",weight:12,opacity:.85,interactive:false}).addTo(rtLayer); L.polyline(seg,{color:"#40C057",weight:7,dashArray:"10 8",opacity:1,interactive:false}).addTo(rtLayer); });
   const bd=(ll,cls,t,name)=>{ L.marker(ll,{zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,15],html:`<div class="badge ${cls}">${t}</div>`})}).addTo(rtLayer);
     L.marker(ll,{interactive:false,zIndexOffset:900,icon:L.divIcon({className:"",iconSize:[0,0],iconAnchor:[-18,10],html:`<div class="bname">${esc(name)}</div>`})}).addTo(rtLayer); };
   bd([p.e[1],p.e[2]],"in","入",(p.e[0]||"入口")+"（使う場合）"); bd([p.x[1],p.x[2]],"out","出",base(p.x[0])+"出口（使う場合）"); }
