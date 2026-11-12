@@ -147,13 +147,80 @@ const OTHER=[
   ]}
 ];
 
+// その他2：「指差し外国語シート」（東京ハイヤー・タクシー協会ほか）の文（2026-11-12 ユーザー指定。写真から書き写した）
+// 観光スポットの英語の名前は、写真に写っていなかったので、ふつうに使われている英語の名前を書いた
+const OTHER2=[
+  {g:"乗車時：行き先の確認", items:[
+    ["どちらまで行かれますか？","Where would you like to go?","ホウェア ウッジュー ライク トゥ ゴウ？"],
+    ["目的地の名前か住所を見せていただけますか？","Could you please show me the name or address of your destination?","クッジュー プリーズ ショウ ミー ザ ネイム オア アドレス オブ ユア デスティネイション？"]
+  ]},
+  {g:"乗車時：料金と時間の目安", items:[
+    ["目的地までの料金の目安です。","This is about how much it will cost to get there.","ディス イズ アバウト ハウ マッチ イット ウィル コスト トゥ ゲット ゼア。"],
+    ["（料金）1,000円まで／1,000〜3,000円／3,000〜5,000円／5,000〜10,000円／10,000円以上","Up to 1,000 yen. / 1,000 to 3,000 yen. / 3,000 to 5,000 yen. / 5,000 to 10,000 yen. / Over 10,000 yen.","アップ トゥ ワン サウザンド イェン／ワン サウザンド トゥ スリー サウザンド イェン／スリー サウザンド トゥ ファイヴ サウザンド イェン／ファイヴ サウザンド トゥ テン サウザンド イェン／オウヴァー テン サウザンド イェン"],
+    ["目的地までの所要時間（分）の目安です。","This is about how long it will take to get there.","ディス イズ アバウト ハウ ロング イット ウィル テイク トゥ ゲット ゼア。"],
+    ["（時間）15分まで／15〜30分／30〜60分／60分以上","Up to 15 minutes. / 15 to 30 minutes. / 30 to 60 minutes. / Over 60 minutes.","アップ トゥ フィフティーン ミニッツ／フィフティーン トゥ サーティ ミニッツ／サーティ トゥ シックスティ ミニッツ／オウヴァー シックスティ ミニッツ"]
+  ]},
+  {g:"乗車時：有料道路の選択", items:[
+    ["その目的地の場合、時間短縮のために有料道路を使うことをおすすめします。","For your destination, I recommend getting on a toll road to arrive there earlier.","フォー ユア デスティネイション、アイ レコメンド ゲッティング オン ア トウル ロウド トゥ アライヴ ゼア アーリアー。"],
+    ["有料道路を使うと、別途料金が加算されます。","A toll road will cost you more.","ア トウル ロウド ウィル コスト ユー モア。"],
+    ["有料道路を使いますか？","Would you like to get on a toll road?","ウッジュー ライク トゥ ゲット オン ア トウル ロウド？"],
+    ["○ はい、使います。","Yes, I would like to get on a toll road.","イエス、アイ ウッド ライク トゥ ゲット オン ア トウル ロウド。"],
+    ["× いいえ、使いません。","No, I would prefer not to get on a toll road.","ノウ、アイ ウッド プリファー ノット トゥ ゲット オン ア トウル ロウド。"]
+  ]},
+  {g:"降車時", items:[
+    ["目的地に到着しました。","We have arrived at your destination.","ウィ ハヴ アライヴド アット ユア デスティネイション。"],
+    ["メーター料金をお支払いください。","Please pay the fare shown on the meter.","プリーズ ペイ ザ フェア ショウン オン ザ ミーター。"],
+    ["日本円の現金でお支払いください。","Please pay in Japanese yen.","プリーズ ペイ イン ジャパニーズ イェン。"],
+    ["日本円でもクレジットカードでもお支払いいただけます。（ただし、海外発行のカードは使えない場合があります。）","You can pay either in Japanese yen or with your credit card. (However, some cards issued from overseas cannot be used.)","ユー キャン ペイ イーザー イン ジャパニーズ イェン オア ウィズ ユア クレディット カード。（ハウエヴァー、サム カーズ イシュード フロム オウヴァーシーズ キャンノット ビー ユーズド。）"],
+    ["ご乗車ありがとうございました。領収書をどうぞ。","Thank you for choosing our taxi company. Here is your receipt.","サンキュー フォー チュージング アワ タクシー カンパニー。ヒア イズ ユア リシート。"],
+    ["お忘れ物にお気をつけください。（ドアの開閉は乗務員におまかせください。）","Please be sure to take all your belongings with you. (The driver will open and close the door for you.)","プリーズ ビー シュア トゥ テイク オール ユア ビロンギングズ ウィズ ユー。（ザ ドライヴァー ウィル オウプン アンド クロウズ ザ ドア フォー ユー。）"]
+  ]},
+  {g:"その他：料金について・ベルト", items:[
+    ["料金はメーターで表示されます。","The fare is shown on the meter.","ザ フェア イズ ショウン オン ザ ミーター。"],
+    ["料金は、距離と時間によって決まります。","The fare is based on the travel distance and time.","ザ フェア イズ ベイスト オン ザ トラヴェル ディスタンス アンド タイム。"],
+    ["夜10時から朝5時までは、割増の深夜料金が適用されます。","The fares are higher between 10 p.m. and 5 a.m.","ザ フェアズ アー ハイアー ビトウィーン テン ピーエム アンド ファイヴ エーエム。"],
+    ["シートベルトの着用が法律で義務づけられています。","You are required by law to fasten your seat belt.","ユー アー リクワイアド バイ ロー トゥ ファスン ユア シートベルト。"]
+  ]},
+  {g:"観光スポットなど：観光", items:[
+    ["浅草寺","Senso-ji Temple","センソウジ テンプル"],
+    ["明治神宮","Meiji Jingu Shrine","メイジ ジングウ シュライン"],
+    ["東京タワー","Tokyo Tower","トウキョウ タワー"],
+    ["東京スカイツリー","Tokyo Skytree","トウキョウ スカイツリー"],
+    ["六本木ヒルズ","Roppongi Hills","ロッポンギ ヒルズ"],
+    ["サンシャインシティ","Sunshine City","サンシャイン シティ"],
+    ["ポケモンセンターメガトウキョー","Pokemon Center Mega Tokyo","ポケモン センター メガ トウキョウ"],
+    ["大江戸温泉物語","Oedo Onsen Monogatari","オオエド オンセン モノガタリ"],
+    ["両国国技館","Ryogoku Kokugikan (Sumo Hall)","リョウゴク コクギカン（スモウ ホール）"],
+    ["東京ドーム","Tokyo Dome","トウキョウ ドウム"],
+    ["東京ディズニーランド／東京ディズニーシー","Tokyo Disneyland / Tokyo DisneySea","トウキョウ ディズニーランド／トウキョウ ディズニーシー"],
+    ["国会議事堂","National Diet Building","ナショナル ダイエット ビルディング"],
+    ["東京国立博物館","Tokyo National Museum","トウキョウ ナショナル ミュージアム"],
+    ["東京国立近代美術館","The National Museum of Modern Art, Tokyo","ザ ナショナル ミュージアム オブ モダン アート、トウキョウ"],
+    ["江戸東京博物館","Edo-Tokyo Museum","エド トウキョウ ミュージアム"],
+    ["東京都庭園美術館","Tokyo Metropolitan Teien Art Museum","トウキョウ メトロポリタン テイエン アート ミュージアム"],
+    ["東京都庁","Tokyo Metropolitan Government Building","トウキョウ メトロポリタン ガヴァメント ビルディング"],
+    ["アメ横","Ameyoko","アメヨコ"],
+    ["東京ビッグサイト","Tokyo Big Sight","トウキョウ ビッグ サイト"],
+    ["東京国際フォーラム","Tokyo International Forum","トウキョウ インターナショナル フォーラム"]
+  ]},
+  {g:"観光スポットなど：公園", items:[
+    ["皇居・二重橋","Imperial Palace / Nijubashi Bridge","インペリアル パレス／ニジュウバシ ブリッジ"],
+    ["浜離宮恩賜庭園","Hama-rikyu Gardens","ハマリキュウ ガーデンズ"],
+    ["日比谷公園","Hibiya Park","ヒビヤ パーク"],
+    ["六義園","Rikugien Gardens","リクギエン ガーデンズ"],
+    ["新宿御苑","Shinjuku Gyoen National Garden","シンジュク ギョエン ナショナル ガーデン"]
+  ]}
+];
+
 // ===== 文例集 =====
 // 読み上げる英語は SAY に集めて、ボタンには番号だけ持たせる
 const SAY=[];
 const phHtml=(no,ja,en,kana)=>{ SAY.push(en); return `<div class="ph"><span class="no">${no}</span><div><div class="ja">${esc(ja)}</div><div class="en" lang="en">${esc(en)}</div><div class="kana">${esc(kana)}</div></div><button type="button" class="btn play" data-i="${SAY.length-1}" aria-label="英語で読む">▶</button></div>`; };
 $("list").innerHTML=ITEMS.map((x,i)=>(i===0?`<div class="grp">乗車のとき</div>`:i===OFF_FROM?`<div class="grp">降車のとき</div>`:"")+phHtml(x[0],x[1],x[2],x[3])).join("")+
   `<h2 class="other">その他（タクシーでよく使う英語）</h2>`+
-  OTHER.map(s=>`<div class="grp">${esc(s.g)}</div>`+s.items.map(x=>phHtml("・",x[0],x[1],x[2])).join("")).join("");
+  OTHER.map(s=>`<div class="grp">${esc(s.g)}</div>`+s.items.map(x=>phHtml("・",x[0],x[1],x[2])).join("")).join("")+
+  `<h2 class="other">その他2（指差し外国語シートより）</h2>`+
+  OTHER2.map(s=>`<div class="grp">${esc(s.g)}</div>`+s.items.map(x=>phHtml("・",x[0],x[1],x[2])).join("")).join("");
 let slow=true; try{ slow=localStorage.getItem("tenko.enSlow")!=="0"; }catch(e){}
 $("slow").checked=slow;
 $("slow").onchange=()=>{ slow=$("slow").checked; try{ localStorage.setItem("tenko.enSlow",slow?"1":"0"); }catch(e){} };
