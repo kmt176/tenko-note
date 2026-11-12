@@ -588,6 +588,16 @@ body.rtfull{overflow:hidden}
   .hcambtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .hcambtns .btn{min-height:42px}
   .hcamlv{display:inline-block;padding:2px 8px;border-radius:8px;color:#fff;font-weight:700}
+.leaflet-tooltip.hndlbl{background:transparent;border:0;box-shadow:none;color:#A0386A;font-weight:800;font-size:13px;text-shadow:0 0 3px #fff,0 0 3px #fff}.leaflet-tooltip.hndlbl::before{display:none}
+.tkpad button.tktg{grid-column:1/-1;font-size:16px;background:#FBE3EC;border-color:#EBB8CB;color:#7A1F45}   /* 定額（2026-11-12） */
+.tgtbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.tgtbl th,.tgtbl td{border:1px solid var(--line);padding:4px 3px;text-align:right;white-space:nowrap}
+.tgtbl th{background:var(--bg,#f4f6f5);font-size:11.5px;text-align:center;white-space:normal}
+.tgtbl td.ar{text-align:left;white-space:normal;font-size:12.5px;min-width:5.2em}.tgtbl th{padding:4px 2px}
+.tg4{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tg4 div{border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+.tg4 b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.tg4 small{font-size:12px;color:var(--sub,#5F6368)}
 </style>
 
 <div id="docView" class="docview" hidden role="dialog" aria-modal="true" aria-labelledby="docTitle"><div class="docbar"><b id="docTitle"></b><button type="button" class="btn" id="docClose">✕ 閉じる</button></div><iframe id="docFrame" title="資料" allow="microphone; autoplay; geolocation"></iframe></div>
@@ -970,6 +980,9 @@ body.rtfull{overflow:hidden}
         <div class="btnrow"><button class="btn" id="wcShopLoad">🔍 地図に見えている範囲を検索</button><button class="btn" id="wcShopCsv" hidden>CSVで保存（管理者）</button></div>
         <div class="geo" id="wcShopMsg" style="font-size:13.5px"></div>
       </div></div>
+      <!-- 羽田空港の定額運賃の対象外の区（2026-11-12 ユーザー指定。羽田空港定額運賃の表に載っていない23区） -->
+      <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowHnd">✈️ 羽田定額の対象外の区（薄いピンク）</label>
+        <div style="font-size:13px;color:#5F6368">中央区・港区・品川区・目黒区・大田区・江東区。羽田空港の定額運賃の表に載っていない6区です（メーター運賃）。境目はおおまかです</div></div>
       <div class="msg" id="wcMsg" role="status"></div>
       <div id="wcMapWrap" class="mapwrap"><div id="wcMap" class="bigmap" style="height:440px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="wcFullBtn">全画面</button></div></div>
@@ -1486,6 +1499,12 @@ body.rtfull{overflow:hidden}
     </div>
   </details>
 
+  <section class="card" id="teigakuCard" hidden>
+    <div class="pair"><div class="field"><label for="tgvTo">行き先</label><select id="tgvTo"></select></div><div class="field"><label for="tgvArea">区</label><select id="tgvArea"></select></div></div>
+    <div id="tgvOut" style="margin-top:8px"></div>
+    <details id="tgvAll" style="margin-top:12px"><summary><b>料金表の一覧（読み取りの確認用）</b></summary><div id="tgvTbl" style="margin-top:6px;overflow-x:auto"></div></details>
+  </section>
+
   <section class="card" id="placeCard" hidden>
     <h2>施設名をまとめて確かめる（管理者・グループ1）</h2>
     <div class="src">月を選ぶと、手上げ以外で乗せた場所を、近いところ（40m以内）どうしでまとめて、乗せた回数の多い順に出します。病院・駅・ホテルなどの施設なら「✅ 合っている」か「名前を入れる」を押してください。施設でない場所（家の前など）は、何も押さずに飛ばして大丈夫です。ホテル・乗り場・駅・空港の近くと、確かめ済みの場所は出しません。<span id="pbWho"></span></div>
@@ -1522,7 +1541,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-11 22:18</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-12 11:20</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1693,6 +1712,7 @@ body.rtfull{overflow:hidden}
       <button type="button" data-tk="1">1</button><button type="button" data-tk="2">2</button><button type="button" data-tk="3">3</button>
       <button type="button" data-tk="00">00</button><button type="button" data-tk="0">0</button><button type="button" data-tk="bs" aria-label="1文字消す">⌫</button>
       <button type="button" class="tkw" data-tk="clr">クリア</button><button type="button" class="tkw" data-tk="kb">キーボード</button><button type="button" class="tkw tkok" data-tk="ok">決定</button>
+      <button type="button" class="tktg" data-tk="tg">定額（羽田・成田・ディズニー）</button>
     </div>
     <div class="pair" id="rAmtPair">
       <div class="field"><label for="rAmt">金額（円）</label><input type="text" class="yenin" id="rAmt" inputmode="none" readonly autocomplete="off"></div>
@@ -1700,6 +1720,14 @@ body.rtfull{overflow:hidden}
         <select id="rPay"><option>現金</option><option value="A:GOPAY">A:ネット/QR</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
     </div>
     <small class="src" id="rAmtHint" style="margin-top:-6px">金額は現収＋未収（ETC・手配料も含める）</small>
+    <!-- 定額運賃（羽田空港・成田空港・東京ディズニーリゾート。2026-11-12 ユーザー指定） -->
+    <div id="tgRow"><button type="button" class="btn" id="tgBtn" style="min-height:40px;padding:6px 12px">定額</button></div>
+    <div class="grp" id="tgBox" hidden>
+      <div class="pair"><div class="field"><label for="tgTo">行き先</label><select id="tgTo"></select></div><div class="field"><label for="tgArea">乗せた区</label><select id="tgArea"></select></div></div>
+      <label class="check"><input type="checkbox" id="tgDis"><span class="chktext">障害者割引</span></label>
+      <div class="live" id="tgOut"></div>
+      <div class="btnrow"><button type="button" class="btn" id="tgOff">定額をやめる</button></div>
+    </div>
     <div class="src" id="rPlace" hidden></div>
     <div class="src" id="rPlaceOff" hidden></div>
     <div class="field"><label for="rKind">内容</label>
@@ -2829,7 +2857,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const MENU_GROUPS=[
     ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["toilet","🗺️","マップ","マップ"],["izakaya","🍶","飲み屋街","飲み屋街マップ"],["air","✈️","飛行機","飛行機"],["flash","👥","仲間の速報","仲間の速報"],["ame","☔","雨予報","エリア別 雨予報（試験）"],["hosp","🏥","病院外来","病院の外来終了時間（試験）"],["rest","☕","休憩場","休憩場"]]],   // 並びは 2026-11-01 ユーザー指定
-    ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"]]],
+    ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"],["teigaku","💴","定額運賃","定額運賃（羽田・成田・ディズニー）"]]],
     ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","施設名","施設名をまとめて確かめる"],["help","📖","使い方","使い方"]]],
     ["コミュニケーション","th-green",[["othello","⚫","オセロ","みんなのオセロ"],["mahjong","🀄","麻雀","みんなの三人麻雀"],["akabus","🚏","帰りのバス","帰りのバス（試験）"]],"仲間と遊ぶゲームです。別の画面で開きます。名前と合言葉を入れると、同じ合言葉の人と同じ部屋に入れます"]];
@@ -2842,6 +2870,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     set:{t:"⚙️ 設定",d:"合言葉・車種・画面に出す機能・メニューの表示・計算の設定と、管理者からのお知らせです。",ids:["noticeCard","cfgBox","calcBox"]},
     bk:{t:"💾 バックアップ",d:"点呼と売上をまとめたバックアップを作る・戻すところです。機種変更のときもここから。",ids:["bkBox"]},
     pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]},
+    teigaku:{t:"💴 定額運賃",d:"羽田空港・成田空港・東京ディズニーリゾートの定額運賃です。行き先と区を選ぶと、4つの料金が出ます。有料道路の料金は別です。",ids:["teigakuCard"]},
     place:{t:"🏥 施設名をまとめて確かめる",d:"乗せた場所の施設名を、一覧でまとめて確かめます（管理者とグループ1の人だけ）。",ids:["placeCard"]}};
   const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
@@ -2850,6 +2879,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const G1ONLY=new Set(["place","akabus"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
   const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help"||k==="othello"||k==="mahjong") return true; if(k==="pay") return isAdmin();
     if(k==="izakaya") return true;   // 飲み屋街マップは全員（2026-10-28 ユーザー指定）
+    if(k==="teigaku") return true;   // 定額運賃は全員（2026-11-12）
     if(k==="ame"||k==="hosp") return true;   // 雨予報・病院外来は全員（2026-10-29 ユーザー指定）
     if(k==="shin") return isAdmin();   // 新幹線は管理者だけ（2026-11-01 ユーザー指定）
     if(k==="toilet") return true;   // マップ（トイレ・パーキングメーター）は全員（2026-10-31 ユーザー指定）
@@ -2920,6 +2950,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     curSub=k; $("subSet").hidden=false; $("menuBack").hidden=false; $("menuBackTitle").textContent=pg.t;
     if(k==="pay"&&typeof renderPayDiff==="function") renderPayDiff();
     if(k==="place") pbOpen();
+    if(k==="teigaku"){ $("teigakuCard").hidden=false; tgvRender(); }
   }
   const showSet=()=>showPage("set");
   function showHelp(){ showTab(0); $("helpBack").hidden=menuStyle!=="tile"; }
@@ -3143,6 +3174,15 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let wcData=null, wcMapObj=null, wcLayer=null, wcMeMarker=null, wcMarks={}, clusterP=null, wcMeters=null, wcPkMk=null, wcPkLn=null, wcPkMarks={};
   const wcOpt={wc:true,pk:true,ok:true,shop:false,shopM:50,st:{},own:false,smOnly:false,showNo:false,allCvs:false}; try{ Object.assign(wcOpt,JSON.parse(localStorage.getItem("tenko.wcOpt")||"{}")); }catch(e){}
   $("wcShowWc").checked=wcOpt.wc; $("wcShowPk").checked=wcOpt.pk; $("wcPkOk").checked=wcOpt.ok;
+  // 羽田定額の対象外の6区を薄いピンクで塗る（境目はOpenStreetMapをおおまかにしたもの。2026-11-12 ユーザー指定）
+  const HND_OUT={"中央区":[[[35.66863,139.75856],[35.66698,139.7622],[35.66549,139.76314],[35.66399,139.76319],[35.659,139.75952],[35.65548,139.76596],[35.64826,139.7641],[35.6402,139.76817],[35.65418,139.78977],[35.66889,139.78808],[35.67287,139.78657],[35.67692,139.7878],[35.68354,139.79268],[35.68503,139.79315],[35.68779,139.792],[35.69141,139.78905],[35.6948,139.7889],[35.69661,139.78273],[35.69618,139.78269],[35.6963,139.78175],[35.69525,139.7816],[35.69513,139.78285],[35.69466,139.78276],[35.69284,139.78029],[35.6932,139.77994],[35.69146,139.77661],[35.68859,139.76793],[35.68624,139.77039],[35.6838,139.77094],[35.67702,139.7671],[35.67335,139.76389],[35.67233,139.76064],[35.66863,139.75856]]],"港区":[[[35.66418,139.70874],[35.65974,139.71397],[35.65867,139.71339],[35.65859,139.71262],[35.65722,139.7146],[35.65641,139.71793],[35.65707,139.71824],[35.65575,139.72208],[35.65637,139.72296],[35.65392,139.7217],[35.65236,139.72162],[35.65234,139.72221],[35.64785,139.72284],[35.64673,139.72393],[35.64464,139.72273],[35.64413,139.72097],[35.64373,139.72138],[35.6412,139.71939],[35.63991,139.71676],[35.63792,139.71668],[35.63796,139.71732],[35.63614,139.71794],[35.63514,139.71735],[35.63533,139.71933],[35.63434,139.7198],[35.6359,139.72223],[35.63489,139.72621],[35.6342,139.72679],[35.633,139.72634],[35.63189,139.72687],[35.63184,139.72748],[35.63315,139.72804],[35.63293,139.72871],[35.63187,139.72822],[35.62996,139.73108],[35.62806,139.73148],[35.62766,139.73087],[35.62664,139.73087],[35.62542,139.73192],[35.62595,139.73229],[35.62598,139.7338],[35.62304,139.73531],[35.62368,139.73823],[35.62495,139.73801],[35.62415,139.73945],[35.62511,139.74347],[35.62339,139.74428],[35.62313,139.74644],[35.62527,139.75122],[35.62532,139.75272],[35.62421,139.75266],[35.62406,139.75348],[35.6243,139.75768],[35.62774,139.75754],[35.62777,139.75943],[35.62777,139.76609],[35.62724,139.76603],[35.62751,139.76671],[35.62647,139.76879],[35.62354,139.77122],[35.6305,139.78293],[35.63758,139.77703],[35.6402,139.76817],[35.64826,139.7641],[35.65548,139.76596],[35.659,139.75952],[35.66399,139.76319],[35.66681,139.76237],[35.67063,139.7521],[35.67015,139.7518],[35.67093,139.74948],[35.6696,139.74761],[35.67137,139.74313],[35.67374,139.73892],[35.67881,139.73656],[35.67898,139.73367],[35.68131,139.73199],[35.68111,139.73079],[35.68249,139.73],[35.68263,139.72813],[35.67974,139.72644],[35.67868,139.72414],[35.67916,139.71978],[35.67841,139.71974],[35.67857,139.71916],[35.67534,139.71986],[35.67401,139.71865],[35.67322,139.71627],[35.67215,139.71648],[35.67295,139.71484],[35.67036,139.714],[35.66964,139.71509],[35.66942,139.71392],[35.66418,139.70874]]],"品川区":[[[35.60811,139.69519],[35.60457,139.69741],[35.6016,139.70087],[35.60081,139.71194],[35.59991,139.71487],[35.59915,139.71403],[35.59743,139.71452],[35.59651,139.71758],[35.59584,139.71727],[35.59202,139.71915],[35.59259,139.72028],[35.59443,139.72099],[35.59455,139.72808],[35.59272,139.72917],[35.59216,139.73039],[35.58959,139.72925],[35.58946,139.72988],[35.58838,139.72939],[35.58728,139.72991],[35.58724,139.73577],[35.58793,139.73577],[35.58773,139.73826],[35.59059,139.74797],[35.58886,139.74849],[35.5893,139.75051],[35.58988,139.75055],[35.58972,139.75526],[35.58449,139.75542],[35.58467,139.7629],[35.59495,139.76233],[35.59489,139.76534],[35.59253,139.7671],[35.59902,139.7799],[35.60881,139.77183],[35.61663,139.76672],[35.62036,139.77365],[35.62647,139.76879],[35.62751,139.76671],[35.62724,139.76603],[35.62777,139.76609],[35.62774,139.75754],[35.6243,139.75768],[35.62406,139.75348],[35.62421,139.75266],[35.62532,139.75272],[35.62527,139.75122],[35.62313,139.74644],[35.62339,139.74428],[35.62511,139.74347],[35.62415,139.73945],[35.62495,139.73801],[35.62368,139.73823],[35.62304,139.73531],[35.62598,139.7338],[35.62595,139.73229],[35.62542,139.73192],[35.62664,139.73087],[35.62766,139.73087],[35.62806,139.73148],[35.62996,139.73108],[35.63187,139.72822],[35.63293,139.72871],[35.63315,139.72804],[35.63184,139.72748],[35.63189,139.72687],[35.633,139.72634],[35.6342,139.72679],[35.63489,139.72621],[35.6359,139.72223],[35.63434,139.7198],[35.63533,139.71933],[35.63514,139.71735],[35.63614,139.71794],[35.63796,139.71732],[35.63792,139.71668],[35.63991,139.71676],[35.6412,139.71939],[35.64159,139.71897],[35.64064,139.71559],[35.6381,139.71396],[35.63863,139.7132],[35.63809,139.71384],[35.63752,139.71333],[35.63599,139.71391],[35.63553,139.71341],[35.63426,139.71463],[35.63156,139.71427],[35.63001,139.71521],[35.62961,139.71422],[35.6292,139.71452],[35.62555,139.70732],[35.62477,139.70407],[35.62536,139.70384],[35.62486,139.70247],[35.62569,139.7022],[35.62613,139.70086],[35.62495,139.69622],[35.62358,139.70106],[35.62202,139.70398],[35.6216,139.70285],[35.61524,139.69832],[35.61359,139.6958],[35.60981,139.69589],[35.60811,139.69519]]],"目黒区":[[[35.63195,139.66161],[35.63028,139.66249],[35.62748,139.66181],[35.62678,139.66345],[35.62364,139.66414],[35.62086,139.66644],[35.62053,139.6657],[35.61858,139.66638],[35.61838,139.6648],[35.61648,139.6646],[35.6152,139.66309],[35.61254,139.66267],[35.61256,139.66335],[35.6118,139.66284],[35.60986,139.66403],[35.60952,139.66333],[35.60854,139.6633],[35.60652,139.66816],[35.60818,139.67321],[35.60815,139.67701],[35.60541,139.6795],[35.60368,139.67941],[35.60303,139.6802],[35.60062,139.68027],[35.60057,139.6808],[35.60413,139.68061],[35.60399,139.68285],[35.60258,139.68308],[35.60224,139.6843],[35.60689,139.68518],[35.61308,139.68421],[35.61169,139.68616],[35.61109,139.69142],[35.60816,139.6956],[35.61359,139.6958],[35.61524,139.69832],[35.6216,139.70285],[35.62202,139.70398],[35.62358,139.70106],[35.62495,139.69622],[35.62613,139.70086],[35.62569,139.7022],[35.62486,139.70247],[35.62536,139.70384],[35.62477,139.70407],[35.62555,139.70732],[35.6292,139.71452],[35.62961,139.71422],[35.63001,139.71521],[35.63156,139.71427],[35.63426,139.71463],[35.63553,139.71341],[35.63599,139.71391],[35.63752,139.71333],[35.63809,139.71384],[35.63863,139.7132],[35.6381,139.71396],[35.64064,139.71559],[35.64158,139.71775],[35.64306,139.71534],[35.64204,139.71508],[35.64166,139.71354],[35.64235,139.7125],[35.64203,139.71048],[35.6415,139.71026],[35.64211,139.70879],[35.64344,139.70652],[35.64404,139.70644],[35.64733,139.70025],[35.64884,139.69916],[35.65084,139.69609],[35.6588,139.689],[35.66161,139.68736],[35.66309,139.68403],[35.66403,139.6797],[35.66411,139.67495],[35.66278,139.67596],[35.6599,139.67669],[35.65971,139.6778],[35.6572,139.67949],[35.65663,139.68059],[35.65568,139.6806],[35.6556,139.68177],[35.65449,139.68186],[35.65451,139.68315],[35.65305,139.68295],[35.65285,139.68415],[35.65276,139.68255],[35.65227,139.68246],[35.65139,139.68469],[35.64918,139.68405],[35.646,139.68437],[35.64622,139.68502],[35.64505,139.68556],[35.64459,139.68415],[35.6428,139.68502],[35.64255,139.68424],[35.63939,139.68661],[35.63795,139.6862],[35.62996,139.68126],[35.62505,139.67939],[35.6253,139.67832],[35.6274,139.67673],[35.62995,139.67207],[35.63202,139.6645],[35.63195,139.66161]]],"大田区":[[[35.59599,139.65283],[35.59346,139.65822],[35.59319,139.65698],[35.58998,139.65549],[35.58943,139.65879],[35.5898,139.6638],[35.58559,139.66871],[35.56688,139.67599],[35.56299,139.67879],[35.55713,139.69001],[35.55569,139.69934],[35.55261,139.70373],[35.55117,139.70422],[35.54941,139.70353],[35.5454,139.69844],[35.54438,139.69801],[35.5405,139.6984],[35.53757,139.70118],[35.53625,139.70574],[35.53767,139.71595],[35.53854,139.71866],[35.54151,139.72237],[35.54357,139.72656],[35.54291,139.73035],[35.54087,139.73375],[35.54122,139.73495],[35.54439,139.73766],[35.5451,139.7394],[35.54383,139.74677],[35.54475,139.75004],[35.54456,139.75684],[35.53942,139.76797],[35.51457,139.81082],[35.50735,139.81848],[35.48166,139.85775],[35.53083,139.85782],[35.58099,139.79742],[35.58865,139.81171],[35.59768,139.80444],[35.58887,139.78857],[35.5913,139.78445],[35.59419,139.78261],[35.59684,139.78181],[35.59902,139.7799],[35.59253,139.7671],[35.59489,139.76534],[35.59495,139.76233],[35.58467,139.7629],[35.58449,139.75542],[35.58972,139.75526],[35.58988,139.75055],[35.5893,139.75051],[35.58886,139.74849],[35.59059,139.74797],[35.58773,139.73826],[35.58793,139.73577],[35.58724,139.73577],[35.58728,139.72991],[35.58838,139.72939],[35.58946,139.72988],[35.58959,139.72925],[35.59216,139.73039],[35.59272,139.72917],[35.59455,139.72808],[35.59443,139.72099],[35.59259,139.72028],[35.59202,139.71915],[35.59584,139.71727],[35.59651,139.71758],[35.59743,139.71452],[35.59915,139.71403],[35.59991,139.71487],[35.60081,139.71194],[35.6016,139.70087],[35.60457,139.69741],[35.60948,139.6939],[35.61109,139.69142],[35.61173,139.68604],[35.61311,139.68436],[35.60689,139.68518],[35.60224,139.6843],[35.60258,139.68308],[35.60399,139.68285],[35.60413,139.68061],[35.60066,139.68115],[35.60061,139.68035],[35.59877,139.68021],[35.59901,139.68066],[35.5982,139.68117],[35.59812,139.68029],[35.59782,139.6808],[35.59485,139.68081],[35.59179,139.67606],[35.59923,139.66984],[35.59816,139.66893],[35.59888,139.66711],[35.59952,139.6672],[35.59875,139.66501],[35.59977,139.66413],[35.5986,139.66268],[35.60001,139.65932],[35.59788,139.65622],[35.59748,139.65659],[35.59646,139.65559],[35.59728,139.65363],[35.59599,139.65283]]],"江東区":[[[35.61663,139.76672],[35.60881,139.77183],[35.59684,139.78181],[35.59419,139.78261],[35.5913,139.78445],[35.58938,139.78703],[35.58887,139.78857],[35.59768,139.80444],[35.58865,139.81171],[35.60114,139.83476],[35.59153,139.84248],[35.63299,139.84464],[35.65438,139.84647],[35.6587,139.84573],[35.67505,139.84701],[35.67965,139.84854],[35.68122,139.84564],[35.68299,139.84677],[35.68383,139.84602],[35.68859,139.84768],[35.69374,139.84801],[35.69851,139.84517],[35.70318,139.83545],[35.70301,139.83079],[35.70809,139.81864],[35.69333,139.81965],[35.69297,139.81324],[35.69218,139.81331],[35.69207,139.81137],[35.68878,139.81173],[35.68859,139.80942],[35.68694,139.80956],[35.6867,139.80485],[35.68835,139.8047],[35.68814,139.80058],[35.68992,139.79957],[35.68855,139.79668],[35.68992,139.7964],[35.69016,139.79349],[35.69072,139.79345],[35.69067,139.79239],[35.68921,139.79047],[35.68779,139.792],[35.68503,139.79315],[35.68354,139.79268],[35.67692,139.7878],[35.67287,139.78657],[35.66889,139.78808],[35.65418,139.78977],[35.6402,139.76817],[35.63758,139.77703],[35.6305,139.78293],[35.62354,139.77122],[35.62036,139.77365],[35.61663,139.76672]]]};
+  let wcHndLy=null;
+  const drawHnd=()=>{ if(!wcMapObj) return; if(!wcHndLy){ if(!wcMapObj.getPane("hndPane")){ const pn=wcMapObj.createPane("hndPane"); pn.style.zIndex=350; pn.style.pointerEvents="none"; }
+      wcHndLy=L.layerGroup(Object.entries(HND_OUT).map(([n,rs])=>L.polygon(rs,{pane:"hndPane",interactive:false,color:"#D9779B",weight:1.5,opacity:.9,fillColor:"#F8BBD0",fillOpacity:.38})
+        .bindTooltip(n,{permanent:true,direction:"center",className:"hndlbl",pane:"hndPane"}))); }
+    if(wcOpt.hnd) wcHndLy.addTo(wcMapObj); else wcHndLy.remove(); };
+  $("wcShowHnd").checked=!!wcOpt.hnd;
+  $("wcShowHnd").onchange=()=>{ wcOpt.hnd=$("wcShowHnd").checked; try{ localStorage.setItem("tenko.wcOpt",JSON.stringify(wcOpt)); }catch(e){} drawHnd(); };
   function loadCluster(){   // ピンをまとめる部品（Leaflet.markercluster）
     if(window.L&&L.markerClusterGroup) return Promise.resolve();
     if(!clusterP) clusterP=new Promise((ok,ng)=>{
@@ -3230,7 +3270,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(wcMapObj);
       wcMapObj.setView([35.69,139.70],12);
       wcMapObj.on("zoomend",()=>{ if(!wcPkLn) return; if(wcMapObj.getZoom()>=WC_LN_Z) wcPkLn.addTo(wcMapObj); else wcPkLn.remove(); }); }
-    setTimeout(()=>wcMapObj.invalidateSize(),60);
+    setTimeout(()=>wcMapObj.invalidateSize(),60); drawHnd();
     if(!wcData||!pkData){ m.textContent="データを読み込んでいます…";
       const r=await Promise.allSettled([loadWc(),loadPk()]);
       m.textContent=r[0].status==="rejected"?"トイレのデータを読み込めませんでした。開き直してください":r[1].status==="rejected"?"パーキングのデータを読み込めませんでした。開き直してください":"";
@@ -6534,7 +6574,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     // 時刻の欄は、時刻が主な入力のとき（休憩・回送など／手で追加）と押し忘れの印があるときだけ開いておく
     $("rTimeBox").open=isEv(r.kind||"")||!id||!!r.onUnsure||!!r.offUnsure; rTimeSum();
     $("rSheet").hidden=$("rBg").hidden=false;
-    rPadKb(false); rPadOpen(!!afterOff);
+    rPadKb(false); rPadOpen(!!afterOff); tgReset(id?r:null);
   }
   // 乗車地の施設名（2026-10-28 ユーザー指定：管理者とグループ1の人だけ）。Googleで調べた「候補」を出し、
   // 病院・駅などの施設で乗せたときだけ「この施設で合っている」を押す（施設でない乗車の方が多いので、何も押さなければ町名のまま）。
@@ -7299,6 +7339,87 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     sales.days[to]=d; delete sales.days[from]; saveSales();
     sDay=to; queueFlash(to); $("sMoveBox").hidden=true; renderSales();
   };
+  // ===== 定額運賃（2026-11-12 ユーザー指定）=====
+  // 会社の料金表（写真 temp\1112\IMG_8091〜8093）の金額をそのまま使う。アプリでは計算しない。
+  // 並び：[区分の名前, 選べる区, 定額, 深夜早朝割増, 障害者割引, 深夜早朝割増＋障害者割引]（円。有料道路の料金は別）
+  // 読み取りの確かめ：障害者割引は「1割引きで100円未満切り捨て」に全部の行が合っている（2026-11-12）
+  const TG={
+    haneda:{n:"羽田空港",zone:false,rows:[
+      ["江戸川区",["江戸川区"],9000,10500,8100,9400],["台東区",["台東区"],9100,10800,8100,9700],["墨田区",["墨田区"],9100,10700,8100,9600],
+      ["文京区",["文京区"],9300,10900,8300,9800],["千代田区",["千代田区"],7600,9000,6800,8100],["新宿区",["新宿区"],9000,10700,8100,9600],
+      ["渋谷区",["渋谷区"],8500,10000,7600,9000],["足立区",["足立区"],11100,13100,9900,11700],["葛飾区",["葛飾区"],11300,13400,10100,12000],
+      ["荒川区",["荒川区"],10400,12200,9300,10900],["北区",["北区"],11000,13000,9900,11700],["豊島区",["豊島区"],11200,13200,10000,11800],
+      ["中野区",["中野区"],9900,11700,8900,10500],["杉並区",["杉並区"],10800,12600,9700,11300],["世田谷区",["世田谷区"],8900,10400,8000,9300],
+      ["板橋区",["板橋区"],12300,14500,11000,13000],["練馬区",["練馬区"],12800,15100,11500,13500],["武蔵野市",["武蔵野市"],14000,16500,12600,14800],
+      ["三鷹市",["三鷹市"],13300,15700,11900,14100]],
+      note:"中央区・港区・品川区・目黒区・大田区・江東区は、羽田空港の定額の表にありません（メーター運賃）"},
+    narita:{n:"成田空港",zone:true,rows:[
+      ["A",["葛飾区","江戸川区","墨田区","江東区","港区台場","品川区東八潮"],21000,25000,18900,22500],
+      ["B",["足立区","荒川区","台東区","文京区","千代田区","中央区"],26000,30000,23400,27000],
+      ["C",["北区","豊島区","新宿区","渋谷区","港区（台場を除く）","目黒区","品川区（東八潮を除く）","大田区"],28000,33000,25200,29700],
+      ["D",["板橋区","練馬区","中野区","杉並区","世田谷区","武蔵野市","三鷹市"],30000,36000,27000,32400]],note:"ご利用には事前予約が必要です（成田空港の表の注意書き）"},
+    tdr:{n:"東京ディズニーリゾート",zone:true,rows:[
+      ["1",["北区","豊島区","新宿区","渋谷区","目黒区"],9000,10500,8100,9400],
+      ["2",["板橋区","練馬区","中野区","杉並区","世田谷区"],10000,11500,9000,10300],
+      ["3",["武蔵野市","三鷹市"],13500,16000,12100,14400]],note:"ご利用には事前予約が必要です（東京ディズニーリゾートの表の注意書き）"}};
+  const TG_COL=["定額","深夜早朝割増","障害者割引","深夜早朝割増＋障害者割引"];
+  // 区を選ぶ一覧：値は「行の番号.区の番号」。ゾーンの表は「区（Aゾーン）」と出す
+  const tgAreaOpts=to=>{ const t=TG[to]; return t.rows.map((r,i)=>r[1].map((a,j)=>`<option value="${i}.${j}">${esc(a)}${t.zone?`（${esc(r[0])}ゾーン）`:""}</option>`).join("")).join(""); };
+  const tgToOpts=()=>Object.entries(TG).map(([k,t])=>`<option value="${k}">${esc(t.n)}</option>`).join("");
+  const tgRow=(to,v)=>{ const t=TG[to]; if(!t||v==null||v==="") return null; const i=+String(v).split(".")[0]; return t.rows[i]||null; };
+  // 深夜割増：乗車と降車（支払い）の両方が22時〜翌5時の間のときだけ（会社のルール。片方でも外れたら通常）
+  const tgIsNight=m=>{ const x=((m%DAY)+DAY)%DAY; return x>=22*60||x<5*60; };
+  const tgNight=(on,off)=>on!=null&&off!=null&&tgIsNight(on)&&tgIsNight(off);
+  const tgPick=(row,night,dis)=>dis?(night?row[5]:row[4]):(night?row[3]:row[2]);
+
+  // --- 乗車の入力画面 ---
+  let tgLast=null, tgMemoS=false;   // tgLast＝定額で最後に入れた金額（手で直したら自動で上書きしない）、tgMemoS＝メモの「S」を定額で付けたか
+  $("tgTo").innerHTML=tgToOpts();
+  const tgTimes=()=>{ const on0=toMin($("rOn").value), off0=toMin($("rOff").value);
+    const on=on0==null?null:on0+($("rOnNext").checked?DAY:0); let off=off0==null?null:off0+($("rOffNext").checked?DAY:0);
+    let offNow=false; if(off==null){ off=nowMin(sDay); offNow=true; }   // 降車の時刻がまだなければ今の時刻で判定
+    return {on,off,offNow}; };
+  function tgApply(force){
+    const to=$("tgTo").value, row=tgRow(to,$("tgArea").value), dis=$("tgDis").checked, {on,off,offNow}=tgTimes(), night=tgNight(on,off);
+    if(!row){ $("tgOut").textContent=""; return; }
+    const fare=tgPick(row,night,dis), etc=numOf($("rEtc").value)||0, amt=fare+etc, a=$("rAmt");
+    const cur=numOf(a.value);
+    if(force||cur==null||cur===tgLast){ a.value=fmtYen(amt); tgLast=amt; a.dispatchEvent(new Event("input",{bubbles:true})); }
+    // 障害者割引：メモに日報と同じ「S」を付ける（定額で付けたものだけ、外したら消す）
+    const m=$("rMemo"); if(dis&&!/S/.test(m.value)){ m.value=(m.value+"S").trim(); tgMemoS=true; } else if(!dis&&tgMemoS){ m.value=m.value.replace("S","").trim(); tgMemoS=false; }
+    const hm=x=>x==null?"—":clock(((x%DAY)+DAY)%DAY);
+    $("tgOut").innerHTML=`<b>${esc(TG[to].n)}・${night?"深夜早朝割増":"通常"}${dis?"・障害者割引":""}</b>　定額 <b class="num">${yen(fare)}円</b>${etc?`＋ETC ${yen(etc)}円`:""}<br>`
+      +`<small>乗車 ${hm(on)}・降車 ${hm(off)}${offNow?"（降車はまだなので今の時刻）":""}。深夜割増は、乗車と降車の両方が22時〜翌5時のときだけです。</small>`
+      +(numOf(a.value)!==amt?`<div class="err" style="margin-top:4px">金額を手で直しているので、定額の金額は入れていません。</div>`:"");
+  }
+  function tgOpen(r){ $("tgBox").hidden=false; $("tgBtn").hidden=true;
+    if(r&&r.tg&&TG[r.tg.to]){ $("tgTo").value=r.tg.to; $("tgArea").innerHTML=tgAreaOpts(r.tg.to); $("tgArea").value=r.tg.a; $("tgDis").checked=!!r.tg.dis; }
+    else { if(!TG[$("tgTo").value]) $("tgTo").value="haneda"; $("tgArea").innerHTML=`<option value="">選んでください</option>`+tgAreaOpts($("tgTo").value); $("tgDis").checked=false; } }
+  function tgReset(r){ tgLast=r&&r.tg?numOf(fmtYen(r.amt)):null; tgMemoS=false;
+    if(r&&r.tg){ tgOpen(r); tgApply(false); } else { $("tgBox").hidden=true; $("tgBtn").hidden=false; $("tgOut").textContent=""; } }
+  $("tgBtn").onclick=()=>{ tgOpen(null); rPadOpen(false); };
+  $("tgTo").onchange=()=>{ $("tgArea").innerHTML=`<option value="">選んでください</option>`+tgAreaOpts($("tgTo").value); $("tgOut").textContent=""; };
+  $("tgArea").onchange=()=>tgApply(true);
+  $("tgDis").onchange=()=>tgApply(true);
+  $("tgOff").onclick=()=>{ if(tgMemoS){ $("rMemo").value=$("rMemo").value.replace("S","").trim(); tgMemoS=false; } tgLast=null; $("tgBox").hidden=true; $("tgBtn").hidden=false; $("tgOut").textContent=""; };
+  ["rOn","rOff","rOnNext","rOffNext"].forEach(id=>$(id).addEventListener("change",()=>{ if(!$("tgBox").hidden) tgApply(false); }));
+  $("rEtc").addEventListener("input",()=>{ if(!$("tgBox").hidden) tgApply(false); });
+  const tgSaved=()=>{ if($("tgBox").hidden) return null; const row=tgRow($("tgTo").value,$("tgArea").value); return row?{to:$("tgTo").value,a:$("tgArea").value,dis:$("tgDis").checked}:null; };
+
+  // --- 料金表のページ ---
+  $("tgvTo").innerHTML=tgToOpts();
+  function tgvRender(){
+    const to=$("tgvTo").value, t=TG[to]; if(!t) return;
+    if($("tgvArea").dataset.to!==to){ $("tgvArea").innerHTML=tgAreaOpts(to); $("tgvArea").dataset.to=to; }
+    const row=tgRow(to,$("tgvArea").value);
+    $("tgvOut").innerHTML=row?`<div class="tg4">${TG_COL.map((c,i)=>`<div><small>${c}</small><b>${yen(row[2+i])}円</b></div>`).join("")}</div>`
+      +`<div class="src" style="margin-top:6px">${esc(t.n)}${t.zone?`・${esc(row[0])}ゾーン（${row[1].map(esc).join("、")}）`:""}。有料道路の料金は別です。深夜早朝割増は、乗車と降車の両方が22時〜翌5時のときだけです。</div>`:"";
+    $("tgvTbl").innerHTML=`<table class="tgtbl"><thead><tr><th>${t.zone?"ゾーン・区":"区"}</th>${TG_COL.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>`
+      +t.rows.map(r=>`<tr><td class="ar">${t.zone?`<b>${esc(r[0])}</b> ${r[1].map(esc).join("、")}`:esc(r[0])}</td>${[2,3,4,5].map(i=>`<td>${r[i]!=null?yen(r[i]):"<b style='color:#B3261E'>読めず</b>"}</td>`).join("")}</tr>`).join("")
+      +`</tbody></table>${t.note?`<div class="src" style="margin-top:6px">${esc(t.note)}</div>`:""}<div class="src" style="margin-top:4px">会社の料金表の写真から読み取った金額です。違っていたら教えてください。</div>`;
+  }
+  $("tgvTo").onchange=tgvRender; $("tgvArea").onchange=tgvRender;
+
   // 金額のテンキー：金額の欄を押すと、欄の上に出る。「キーボード」でスマホのキーボードに切り替え（次に開くまで）
   function rPadShow(){ const n=numOf($("rAmt").value); $("rPadShow").textContent=(n?fmtYen(n):"0")+"円"; }
   function rPadOpen(on){ $("rPad").hidden=!on; if(on){ rPadShow(); $("rPad").scrollIntoView({block:"nearest"}); } }
@@ -7307,6 +7428,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("rPad").addEventListener("click",e=>{ const b=e.target.closest("[data-tk]"); if(!b) return; const k=b.dataset.tk, a=$("rAmt");
     let v=String(numOf(a.value)||"").replace(/\D/g,"");
     if(k==="ok"){ rPadOpen(false); return; }
+    if(k==="tg"){ rPadOpen(false); tgOpen(null); $("tgBox").scrollIntoView({block:"nearest"}); return; }
     if(k==="kb"){ rPadOpen(false); rPadKb(true); a.focus(); return; }
     if(k==="clr") v=""; else if(k==="bs") v=v.slice(0,-1); else if(v.length<7) v=(v+k).replace(/^0+/,"");
     a.value=v?fmtYen(+v):""; a.dispatchEvent(new Event("input",{bubbles:true})); rPadShow(); });
@@ -7322,6 +7444,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     Object.assign(r,{kind:$("rKind").value,on,off,memo:$("rMemo").value.trim()});
     if(isEv(r.kind)){ delete r.amt; delete r.pay; delete r.etc; delete r.wxSel; }
     else { Object.assign(r,{amt:numOf($("rAmt").value),pay:r.kind==="B空転"?"B空転":$("rPay").value,etc:numOf($("rEtc").value),wxSel:rWxSel});
+      const tg=tgSaved(); if(tg) r.tg=tg; else delete r.tg;   // 定額で入れたとき：行き先・区・障害者割引を覚える（2026-11-12）
       // 自動の判定と同じなら持たない（あとで決済を変えたときに自動で付け直せるように）
       const auto=appAuto(r); if(isHai(r.kind)&&$("rInhouse").checked!==auto) r.inhouse=$("rInhouse").checked; else delete r.inhouse;
       // サンキューのチェックを出していないとき（車種や「画面に出す機能」で外したとき）は、前の印をそのまま残す
