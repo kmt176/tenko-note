@@ -1391,6 +1391,14 @@ body.rtfull{overflow:hidden}
   <details id="cfgBox">
     <summary id="cfgSum">合言葉（仲間の速報・ロング判定）</summary>
     <div class="body">
+      <!-- 自分のGoogle APIキー（高速マップの「渋滞込みで見る」。このスマホの中だけに保存。2026-11-12 ユーザー指定） -->
+      <div class="grp" id="gKeyGrp">
+        <h3>自分のGoogle APIキー（高速マップの渋滞込みの時間）</h3>
+        <div class="field"><label for="gKeyIn">APIキー</label><input type="password" id="gKeyIn" autocomplete="off" spellcheck="false" placeholder="未登録"></div>
+        <div class="btnrow"><button class="btn primary" id="gKeySave">登録・変更</button><button class="btn" id="gKeyShow">表示</button><button class="btn danger" id="gKeyDel">削除</button></div>
+        <div class="msg" id="gKeyMsg" role="status"></div>
+        <div class="src">キーはこのスマホの中だけに保存します。サーバー・スプレッドシート・バックアップには入れません。<br>作り方：Google Cloud（console.cloud.google.com）に登録し、支払い用のクレジットカードを登録 → プロジェクトを作って「Maps JavaScript API」と「Routes API」を有効にする → 「認証情報」でAPIキーを作る。毎月一定の回数までは無料です（超えると料金がかかります。Google Cloudで上限を決めておけます）。キーの「使えるサイト」を https://kmt176.github.io/* に制限しておくと安心です。</div>
+      </div>
       <div class="grp">
         <h3>車種</h3>
         <div class="field"><label for="carSel">乗っている車種</label><select id="carSel"></select></div>
@@ -1550,7 +1558,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-12 13:08</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-12 16:25</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2910,6 +2918,17 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     else showSub(k);
     window.scrollTo(0,0);
   }
+  // 自分のGoogle APIキー（このスマホの中だけ。tenko.gmapkey。バックアップ・サーバーには入れない）
+  (()=>{ const K="tenko.gmapkey", get=()=>{ try{ return localStorage.getItem(K)||""; }catch(e){ return ""; } };
+    const show=()=>{ const v=get(); $("gKeyIn").value=v; $("gKeyMsg").textContent=v?"登録しています（このスマホの中だけ）":"まだ登録していません"; };
+    $("gKeySave").onclick=()=>{ const v=$("gKeyIn").value.trim(); if(!v){ $("gKeyMsg").textContent="キーを入れてください"; return; } try{ localStorage.setItem(K,v); }catch(e){} show(); $("gKeyMsg").textContent="登録しました。高速マップの「渋滞込みで見る」が使えます"; };
+    $("gKeyDel").onclick=()=>{ if(!get()) return; if(!confirm("Google APIキーを削除しますか？")) return; try{ localStorage.removeItem(K); }catch(e){} show(); $("gKeyMsg").textContent="削除しました"; };
+    $("gKeyShow").onclick=()=>{ const t=$("gKeyIn").type==="password"; $("gKeyIn").type=t?"text":"password"; $("gKeyShow").textContent=t?"隠す":"表示"; };
+    show();
+    // 高速マップの「設定のキーの欄へ」：窓を閉じて設定を開き、キーの欄へ
+    window.addEventListener("message",e=>{ if(e.origin!==location.origin||!e.data||!e.data.goGKey) return;
+      $("docClose").click();   // 窓を閉じるのは「閉じる」ボタンと同じ処理で
+      showPage("set"); const c=$("cfgBox"); if(c) c.open=true; setTimeout(()=>{ $("gKeyGrp").scrollIntoView({block:"center"}); $("gKeyIn").focus(); },150); }); })();
   // 飲み屋街マップ（同じサイトのページ）から「全画面にする・戻す」を受け取って、上の見出しを隠す・出す
   window.addEventListener("message",e=>{ if(e.origin!==location.origin||!e.data||e.data.izFull==null) return; $("docView").classList.toggle("docfull",!!e.data.izFull); });
   // 飲み屋街マップの中から現在地が取れないスマホのために、アプリ本体が代わりに位置を調べて返す（2026-11-10 現在地ボタンが動かなかった）

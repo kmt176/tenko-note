@@ -64,6 +64,12 @@ body.full .panel{display:none}
 .badge{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;color:#fff;font:800 15px/1 sans-serif;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
 .badge.in{background:#2B8A3E}.badge.out{background:#C92A2A}.badge.chg{background:#5F3DC4;font-size:12px}
 .bname{font:800 15px/1.2 sans-serif;white-space:nowrap;background:#fff;border:2px solid #17201E;border-radius:8px;padding:2px 6px;color:#17201E;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.gpanel{position:fixed;inset:0;z-index:3000;background:var(--surface);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.gpanel[hidden]{display:none}
+.gbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.gbar b{font-size:16px}
+#gMap{flex:1 1 auto;min-height:220px}
+#gInfo{padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);font-size:14.5px;line-height:1.6;max-height:45%;overflow:auto}
 </style>
 </head>
 <body>
@@ -72,8 +78,9 @@ body.full .panel{display:none}
 <div id="meTip" class="metip" role="status" hidden></div>
 <button id="meBtn" class="mebtn" aria-label="現在地">📍 現在地</button>
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
+<div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 15:28</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-12 16:22</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -94,6 +101,7 @@ body.full .panel{display:none}
     <div id="msg">読み込んでいます…</div>
     <details><summary>設定・使い方・注意</summary>
       <div class="row" style="margin:6px 0"><label>首都高の補助の金額 <input type="number" id="lim" min="300" max="2130" step="10" style="width:6em"> 円</label></div>
+      <div class="row" style="margin:6px 0"><label>入口・出口の名前を探す範囲 <input type="number" id="rad" min="100" max="2000" step="50" style="width:6em"> m</label></div>
       <div>・高速道路の線と名前はオープンストリートマップ（OSM）から作っています。<b style="color:#E8590C">橙＝首都高</b>、<b style="color:#1864AB">青＝そのほかの高速（NEXCOなど）</b>です。地図を大きくすると、出口・JCT・SA・PAの名前が出ます。</div>
       <div>・ルートは無料の経路計算（OSRM）で出します。ナビはしません。実際の道や混み具合とは違うことがあります。</div>
       <div>・<b>料金はすべて目安です。</b>首都高は公式の計算式（（料金距離×32.472円＋150円）×1.1、10円単位で四捨五入。下限300円・55kmで上限2,130円。2026年10月1日からの料金）に、ルートで首都高を走る距離を入れて出します。本当の料金距離は入口から出口までの決まった距離なので、少し違うことがあります。</div>
@@ -236,13 +244,92 @@ function nearCls(p,maxM){ const gy=Math.floor(p[0]/GS), gx=Math.floor(p[1]/GS); 
 // 名前の点から一番近いもの
 function nearPt(p,types,maxM,cls){ let best=null, bd=maxM; HW.pts.forEach(q=>{ if(!types.includes(q[0])) return; if(cls!=null&&q[4]!==cls) return; const d=distM(p,[q[2],q[3]]); if(d<bd){ bd=d; best=q; } }); return best; }
 const clean=n=>String(n||"").replace(/料金所$/,"").trim(), base=n=>clean(n).replace(/(出入口|出口|入口)$/,"").trim();
-function entryName(p,sh){
-  if(sh){ let best=null, bd=400; HW.entries.forEach(e=>{ const d=distM(p,[e[1],e[2]]); if(d<bd&&e[0]){ bd=d; best=e[0]; } }); if(best) return best;
-    const t=nearPt(p,["T"],700); if(t) return base(t[1])+"入口"; const x=nearPt(p,["X"],900,0); if(x) return base(x[1])+"入口"; return "不明"; }
-  const x=nearPt(p,["X"],1800,2); if(x) return clean(x[1]); const t=nearPt(p,["T"],1500); if(t) return clean(t[1]); return "不明"; }
-function exitName(p,sh){ const x=nearPt(p,["X"],sh?900:1800,sh?0:2); if(x) return sh?base(x[1])+"出口":clean(x[1]);
-  const t=nearPt(p,["T"],1200); if(t) return clean(t[1]); return "不明"; }
+// ---- 入口・出口の名前（2026-11-12 ユーザー指定：上から順に探し、どの方法で決めたかも覚える。管理者だけ画面に出す） ----
+let RAD=+LS.get("hwMap.rad",300)||300;
+const isAdmin=(()=>{ try{ const c=JSON.parse(localStorage.getItem("tenko.cfg")||"{}"); return c.admin===true&&!!c.apass; }catch(e){ return false; } })();
+function nearLk(p,maxM,sh){ let best=null,bd=maxM; (HW.lk||[]).forEach(k=>{ if(sh!=null&&k[5]!==(sh?1:0)) return; [[k[1],k[2]],[k[3],k[4]]].forEach(q=>{ const d=distM(p,q); if(d<bd){ bd=d; best={k,d}; } }); }); return best; }
+// 出入口の一覧：首都高の入口・出口の点・名前のある料金所
+const isPA=n=>/(PA|ＰＡ|SA|ＳＡ|パーキング|サービスエリア)/.test(n||"");
+function nearX(p,maxM,cls){ let best=null, bd=maxM; HW.pts.forEach(q=>{ if(q[0]!=="X"||isPA(q[1])) return; if(cls!=null&&q[4]!==cls) return; const d=distM(p,[q[2],q[3]]); if(d<bd){ bd=d; best=q; } }); return best; }
+function ioList(p,maxM){ let best=null,bd=maxM; const c=(n,la,lo)=>{ if(!n) return; const d=distM(p,[la,lo]); if(d<bd){ bd=d; best={n,d}; } };
+  HW.entries.forEach(e=>c(e[0],e[1],e[2])); HW.pts.forEach(q=>{ if(isPA(q[1])) return; if(q[0]==="X"||(q[0]==="T"&&base(q[1])&&!/^(入口|出口|改札口|TB|ＴＢ|ETC)$/.test(base(q[1])))) c(q[1],q[2],q[3]); }); return best; }
+const RAMPW=/(出入口|出口|入口|IC|ＩＣ)$/;
+// side＝"in"（乗る）か"out"（降りる）、p＝高速に乗った（離れた）地点、sh＝首都高か、hint＝経路計算の案内にあった名前
+function ioName(p,side,sh,hint){
+  const suf=side==="in"?"入口":"出口", fmt=n=>sh?base(n)+suf:clean(n);
+  // 1. 半径RAD m以内の出口の点（motorway_junction）。乗るときは首都高の入口の一覧も
+  if(side==="in"&&sh){ let best=null,bd=RAD; HW.entries.forEach(e=>{ const d=distM(p,[e[1],e[2]]); if(e[0]&&d<bd){ bd=d; best=e; } }); if(best) return {n:best[0],how:`1. 入口の点（${Math.round(bd)}m）`}; }
+  const x=nearX(p,RAD,sh?0:2); if(x) return {n:fmt(x[1]),how:`1. 出口の点（${Math.round(distM(p,[x[2],x[3]]))}m）`};
+  // 2. 出口・入口の道（motorway_link）の name・exit_to・destination（経路計算の案内の名前も同じ情報）
+  if(hint) return {n:sh?base(hint)+suf:hint,how:"2. 出口・入口の道の名前（経路計算の案内）"};
+  const k=nearLk(p,Math.max(RAD,200),sh); if(k) return {n:/方面$/.test(k.k[0])?k.k[0]+"の"+suf:fmt(k.k[0]),how:`2. 出口・入口の道の名前（${Math.round(k.d)}m）`};
+  // 3. 出入口の一覧で一番近いもの（3km以内）
+  const l=ioList(p,3000); if(l) return {n:fmt(l.n),how:`3. 出入口の一覧（${Math.round(l.d)}m）`};
+  return {n:"不明",how:"見つかりませんでした"}; }
 function chgName(p){ const j=nearPt(p,["J","T","X"],2000); return j?clean(j[1]):"不明"; }
+
+$("rad").value=RAD; $("rad").onchange=()=>{ const v=Math.round(+$("rad").value/50)*50; if(v>=100&&v<=2000){ RAD=v; LS.set("hwMap.rad",RAD); } $("rad").value=RAD; };
+// ---- 経路計算 ----
+const VAL="https://valhalla1.openstreetmap.de/route?json=";
+const ll=p=>({lat:p[0],lon:p[1]});
+const HO={use_highways:1,use_tolls:1}, NO={use_highways:0,use_tolls:0,exclude_tolls:true};
+function dec6(s){ let i=0,la=0,lo=0; const o=[]; while(i<s.length){ for(let k=0;k<2;k++){ let b,sh=0,r=0; do{ b=s.charCodeAt(i++)-63; r|=(b&31)<<sh; sh+=5; }while(b>=32); const d=(r&1)?~(r>>1):(r>>1); if(k) lo+=d; else la+=d; } o.push([la/1e6,lo/1e6]); } return o; }
+// Valhalla（高速を優先できる無料の経路計算）。道ごとの「高速（highway）・有料（toll）」の印と、出口の案内の名前を使う
+async function valTrip(locs,opts){
+  const q={locations:locs,costing:"auto",costing_options:{auto:opts},units:"kilometers",language:"ja-JP"};
+  const r=await fetch(VAL+encodeURIComponent(JSON.stringify(q))); const j=await r.json(); if(!j.trip) throw new Error(j.error||"no route");
+  const segs=[];
+  j.trip.legs.forEach(Lg=>{ const sp=dec6(Lg.shape); Lg.maneuvers.forEach(m=>{ const mw=!!(m.highway||m.toll), a=m.begin_shape_index, b=m.end_shape_index;
+    let len=0; for(let i=a;i<b;i++) len+=distM(sp[i],sp[i+1]);
+    const names=(m.street_names||[]).concat(((m.sign||{}).exit_name_elements||[]).map(x=>x.text)), hint=names.find(n=>RAMPW.test(n))||"";
+    for(let i=a;i<b;i++){ const L2=distM(sp[i],sp[i+1]); segs.push({a:sp[i],b:sp[i+1],mw,t:len?m.time*L2/len:0,nm:names.join(" "),hint}); } }); });
+  // 首都高かどうか：まず道の名前で（首都高・自動車道など）、名前で分からないランプなどは地図のデータで
+  const NXN=/(自動車道|E\d+|東関東|京葉道路|第三京浜|外環|圏央|横浜新道|横浜横須賀|アクアライン|東名|中央道|関越|東北道|常磐道|小田原厚木|保土ヶ谷バイパス|千葉東金)/;
+  // 首都高かどうか：まず地図のデータの線で（経路計算の道の名前は、首都高4号から中央道へ続くところも「首都高速4号新宿線」とまとめて返すことがあるので後回し）
+  segs.forEach(s=>{ if(!s.mw){ s.c=null; return; } s.c=nearCls([(s.a[0]+s.b[0])/2,(s.a[1]+s.b[1])/2],60);
+    if(s.c==null){ const a1=/首都高/.test(s.nm), a2=NXN.test(s.nm.replace(/首都高[^ ]*/g,"")); s.c=a1&&!a2?0:2; } });
+  return {segs,km:j.trip.summary.length,sec:j.trip.summary.time,src:"Valhalla"}; }
+// 予備：OSRM（Valhallaが使えないとき）。高速の印がないので、道の名前と地図のデータで見分ける
+const HWN=/首都高|高速|自動車道|ハイウェイ|外環|圏央|第三京浜|京葉道路|横浜新道|横浜横須賀道路|保土ヶ谷バイパス|小田原厚木道路|千葉東金道路|アクアライン|湾岸線|環状線/;
+async function osrmTrip(S,D){
+  const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${S[1]},${S[0]};${D[1]},${D[0]}?overview=false&steps=true&geometries=geojson`);
+  const j=await r.json(); if(j.code!=="Ok"||!j.routes||!j.routes.length) throw new Error(j.message||j.code);
+  const steps=j.routes[0].legs[0].steps, segs=[];
+  steps.forEach((st,k)=>{ const nm=st.name||"", hw=HWN.test(nm)||HWN.test(st.ref||"")&&!/^\d+$/.test(st.ref||"");
+    const near=(k>0&&HWN.test(steps[k-1].name||""))||(k+1<steps.length&&HWN.test(steps[k+1].name||""));
+    const gate=hw||((!nm||RAMPW.test(nm))&&near);   // ランプは、高速の名前の道のすぐ前かすぐ後のときだけ
+    const cs=st.geometry.coordinates.map(c=>[c[1],c[0]]); let len=0; for(let i=0;i+1<cs.length;i++) len+=distM(cs[i],cs[i+1]);
+    for(let i=0;i+1<cs.length;i++){ const mid=[(cs[i][0]+cs[i+1][0])/2,(cs[i][1]+cs[i+1][1])/2], c=gate?nearCls(mid,hw?40:20):null, L2=distM(cs[i],cs[i+1]);
+      segs.push({a:cs[i],b:cs[i+1],mw:c!=null,c,t:len?st.duration*L2/len:0,nm,hint:RAMPW.test(nm)?nm:""}); } });
+  return {segs,km:j.routes[0].distance/1000,sec:j.routes[0].duration,src:"OSRM"}; }
+// 高速の区間（runs）に分け、入口・出口の名前と、区間ごとの距離・時間を出す
+function analyze(T){
+  const segs=T.segs, runs=[]; let cur=null;
+  segs.forEach((s,i)=>{ const L=distM(s.a,s.b); if(!s.mw){ cur=null; return; }
+    const sh=s.c<=1; if(!cur){ cur={start:s.a,end:s.b,i0:i,i1:i,parts:[]}; runs.push(cur); }
+    let p=cur.parts[cur.parts.length-1]; if(!p||p.sh!==sh){ p={sh,m:0,start:s.a,end:s.b}; cur.parts.push(p); }
+    p.m+=L; p.end=s.b; cur.end=s.b; cur.i1=i; });
+  // 300m未満の短い切れ目（JCTのつなぎ・地図のデータの重なりなど）は前の区間（最初なら次の区間）にまとめ、同じ種類が続けば1つにする
+  runs.forEach(r=>{ let ps=r.parts;
+    for(let k=0;k<ps.length&&ps.length>1;){ if(ps[k].m<300){ const q=k>0?ps[k-1]:ps[k+1]; q.m+=ps[k].m; if(k>0) q.end=ps[k].end; else q.start=ps[k].start; ps.splice(k,1); } else k++; }
+    const out=[]; ps.forEach(p=>{ const l=out[out.length-1]; if(l&&l.sh===p.sh){ l.m+=p.m; l.end=p.end; } else out.push({...p}); }); r.parts=out; });
+  const R=runs.filter(r=>r.parts.reduce((a,p)=>a+p.m,0)>=100);
+  R.forEach(r=>{ const p0=r.parts[0], pn=r.parts[r.parts.length-1];
+    const hin=(segs.slice(r.i0,r.i0+40).find(s=>s.hint&&/(入口|出入口|IC|ＩＣ)$/.test(s.hint))||{}).hint||"";
+    const hout=(segs.slice(Math.max(r.i0,r.i1-40),r.i1+1).reverse().find(s=>s.hint&&/(出口|出入口|IC|ＩＣ)$/.test(s.hint))||{}).hint||"";
+    const a=ioName(r.start,"in",p0.sh,hin), b=ioName(r.end,"out",pn.sh,hout); r.inName=a.n; r.inHow=a.how; r.outName=b.n; r.outHow=b.how;
+    for(let i=1;i<r.parts.length;i++) r.parts[i].chg=chgName(r.parts[i].start); });
+  // 区間ごと：入口まで（一般道）・入口から出口まで（高速）・出口から行き先まで（一般道）
+  const sum=(a,b)=>segs.slice(a,b).reduce((o,s)=>(o.m+=distM(s.a,s.b),o.t+=s.t,o),{m:0,t:0});
+  let sect=null;
+  if(R.length){ const i0=R[0].i0, i1=R[R.length-1].i1+1; sect={pre:sum(0,i0),mid:sum(i0,i1),post:sum(i1,segs.length),hwm:R.reduce((a,r)=>a+r.parts.reduce((x,p)=>x+p.m,0),0)}; }
+  return {runs:R,sect}; }
+// 高速を使う出口・入口の、首都高の上を通る点（向きつき）
+function viaEntry(e){ const ed=(ADJ[e[3]]||[])[0]; if(!ed) return null; const [a,b,,f]=HW.g.e[ed[2]]; const pts=[HW.g.n[a]]; for(let i=0;i<(f||[]).length;i+=2) pts.push([f[i],f[i+1]]); pts.push(HW.g.n[b]);
+  const q=pts[pts.length-1], p=pts[pts.length-2]; return {lat:q[0],lon:q[1],type:"through",heading:bearing(p,q),heading_tolerance:60,search_filter:{min_road_class:"motorway"}}; }
+function viaExit(D,x){ const ei=D.prev[x[3]]; if(ei<0) return null; const [a,b,,f]=HW.g.e[ei]; const pts=[HW.g.n[a]]; for(let i=0;i<(f||[]).length;i+=2) pts.push([f[i],f[i+1]]); pts.push(HW.g.n[b]);
+  const q=pts[pts.length-1], p=pts[pts.length-2]; return {lat:q[0],lon:q[1],type:"through",heading:bearing(p,q),heading_tolerance:60,search_filter:{min_road_class:"motorway"}}; }
+const bearing=(a,b)=>{ const r=Math.PI/180, y=Math.sin((b[1]-a[1])*r)*Math.cos(b[0]*r), x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos((b[1]-a[1])*r); return Math.round((Math.atan2(y,x)/r+360)%360); };
 
 async function route(){
   if(!HW){ $("out").textContent="高速のデータを読み込み中です。少し待ってから押してください"; return; }
@@ -250,37 +337,27 @@ async function route(){
   let S=fromMode==="map"?fromLL:null;
   if(fromMode==="map"&&!S){ $("out").textContent="出発地を地図でタップしてください"; return; }
   if(!S){ $("out").textContent="現在地を調べています…"; try{ S=await posP(); setMe(S); }catch(why){ $("out").textContent=`現在地が${why}。位置情報の許可を確認するか、出発を「地図で選ぶ」にしてください`; return; } }
-  $("out").textContent="ルートを調べています…";
-  let j;
-  try{ const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${S[1]},${S[0]};${destLL[1]},${destLL[0]}?overview=false&steps=true&geometries=geojson`);
-    j=await r.json(); if(j.code!=="Ok"||!j.routes||!j.routes.length) throw new Error(j.message||j.code); }
-  catch(e){ $("out").textContent="ルートを調べられませんでした（無料の経路計算が混んでいるか、電波が弱いです）。少し待ってからもう一度押してください"; return; }
-  // 点ごとに「高速か」を決める。公開のOSRMは「高速」の印を返さないので、
-  // 道の名前が高速の名前のところと、名前のないランプ（on ramp・off ramp・fork・merge、または高速の名前の道の前後）だけを候補にし、
-  // そのうえで地図のデータの高速の線に重なっている（25m以内）点を高速とする（高架の首都高の下の一般道を高速と間違えないように）
-  const HWN=/首都高|高速|自動車道|ハイウェイ|外環|圏央|第三京浜|京葉道路|横浜新道|横浜横須賀道路|保土ヶ谷バイパス|小田原厚木道路|千葉東金道路|アクアライン|湾岸線|環状線/;
-  const steps=j.routes[0].legs[0].steps, segs=[];
-  steps.forEach((st,k)=>{ const nm=st.name||"", hw=HWN.test(nm)||HWN.test(st.ref||"")&&!/^\d+$/.test(st.ref||"");
-    const near=(k>0&&HWN.test(steps[k-1].name||""))||(k+1<steps.length&&HWN.test(steps[k+1].name||""));
-    const gate=hw||((!nm||/(入口|出口|出入口|IC|ＩＣ|JCT)$/.test(nm))&&near);   // ランプは、高速の名前の道のすぐ前かすぐ後のときだけ（一般道のランプと間違えないように）
-    const cs=st.geometry.coordinates.map(c=>[c[1],c[0]]);
-    for(let i=0;i+1<cs.length;i++){ const mid=[(cs[i][0]+cs[i+1][0])/2,(cs[i][1]+cs[i+1][1])/2], c=gate?nearCls(mid,hw?40:20):null;
-      segs.push({a:cs[i],b:cs[i+1],mw:c!=null,c}); } });
-  // 高速の区分が分からない点（地図のデータに近い線がない）は、前後の区分に合わせる
-  for(let i=0;i<segs.length;i++) if(segs[i].mw&&segs[i].c==null){ const prev=segs.slice(0,i).reverse().find(s=>s.mw&&s.c!=null), next=segs.slice(i+1).find(s=>s.mw&&s.c!=null); segs[i].c=(prev||next||{c:2}).c; }
-  // 高速を続けて走るところ（区間）に分ける。区間の中で首都高⇔その他が変わるところも記録
-  const runs=[]; let cur=null;
-  segs.forEach(s=>{ const L=distM(s.a,s.b); if(!s.mw){ cur=null; return; }
-    const sh=s.c<=1; if(!cur){ cur={start:s.a,end:s.b,parts:[]}; runs.push(cur); }
-    let p=cur.parts[cur.parts.length-1]; if(!p||p.sh!==sh){ p={sh,m:0,start:s.a,end:s.b,pts:[s.a]}; cur.parts.push(p); }
-    p.m+=L; p.end=s.b; p.pts.push(s.b); cur.end=s.b; });
-  // 短すぎる区間（100m未満。高速の下をくぐる・かすめるなど）は捨てる
-  const R=runs.map(r=>({...r,parts:r.parts.filter(p=>p.m>=100)})).filter(r=>r.parts.length);
-  R.forEach(r=>{ const p0=r.parts[0], pn=r.parts[r.parts.length-1];
-    r.inName=entryName(r.start,p0.sh); r.outName=exitName(r.end,pn.sh);
-    for(let i=1;i<r.parts.length;i++) r.parts[i].chg=chgName(r.parts[i].start); });
-  const res={S,D:destLL,dn:destName,total:j.routes[0].distance,time:j.routes[0].duration,runs:R,segs};
-  lastRes=res; drawRoute(res); showRes(res); compare(res);
+  const D=destLL;
+  $("out").textContent="ルートを調べています…（高速を使うルートと、使わないルート）";
+  const [m0,s0]=await Promise.allSettled([valTrip([ll(S),ll(D)],HO),valTrip([ll(S),ll(D)],NO)]);
+  let T=m0.status==="fulfilled"?m0.value:null; const surf=s0.status==="fulfilled"?s0.value:null;
+  if(!T){ try{ T=await osrmTrip(S,D); }catch(e){ $("out").textContent="ルートを調べられませんでした（無料の経路計算が混んでいるか、電波が弱いです）。少し待ってからもう一度押してください"; return; } }
+  let A=analyze(T), forced=false;
+  // 高速をほとんど使わないルートになったときは、入口と出口を経由地にして計算し、一番早いものにする
+  const hwm=A.sect?A.sect.hwm:0;
+  if(T.src==="Valhalla"&&T.km>4&&hwm<Math.max(1000,T.km*1000*0.15)&&ADJ){
+    $("out").textContent="高速をあまり使わないルートだったので、入口と出口を変えて調べ直しています…";
+    const ens=HW.entries.filter(e=>e[0]).map(e=>({e,d:distM(S,[e[1],e[2]])})).filter(x=>x.d<4000).sort((a,b)=>a.d-b.d).slice(0,3);
+    const exs=HW.exits.map(x=>({x,d:distM(D,[x[1],x[2]])})).filter(x=>x.d<5000).sort((a,b)=>a.d-b.d).slice(0,2);
+    const tries=[];
+    ens.forEach(({e})=>{ const Dj=dijkstra(e[3],true), vi=viaEntry(e); if(!vi) return;
+      exs.forEach(({x})=>{ const g=Dj[x[3]]; if(!isFinite(g)||g<800) return; const vx=viaExit(Dj,x); if(!vx) return;
+        tries.push(valTrip([ll(S),vi,vx,ll(D)],HO).then(t=>({t,e,x})).catch(()=>null)); }); });
+    const got=(await Promise.all(tries)).filter(Boolean).map(o=>Object.assign(o,{A:analyze(o.t)})).filter(o=>o.A.sect&&o.A.sect.hwm>=1000).sort((a,b)=>a.t.sec-b.t.sec);
+    if(got.length){ T=Object.assign(got[0].t,{src:"Valhalla（入口と出口を指定）"}); A=got[0].A; forced=true; }
+  }
+  const res={S,D,dn:destName,total:T.km*1000,time:T.sec,runs:A.runs,sect:A.sect,segs:T.segs,src:T.src,forced,surf};
+  lastRes=res; drawRoute(res); showRes(res);
 }
 let lastRes=null;
 function drawRoute(res){
@@ -300,14 +377,15 @@ function drawRoute(res){
 }
 function showRes(res){
   const A=actuals(), o=[];
-  if(!res.runs.length){ $("out").innerHTML=`<div class="big">このルートは高速を使いません</div>約${km(res.total)}km・約${Math.round(res.time/60)}分（ふつうの道。経路計算が選んだ道です）`+planHtml(res)+cmpHtml(res); return; }
+  if(!res.runs.length){ $("out").innerHTML=`<div class="big">このルートは高速を使いません</div>約${km(res.total)}km・約${Math.round(res.time/60)}分（経路計算が選んだ道です）`+timeHtml(res)+planHtml(res); return; }
   let shKm=0, nxKm=0;
   res.runs.forEach((r,ri)=>{
     const legs=[]; r.parts.forEach(p=>{ if(p.sh) shKm+=p.m/1000; else nxKm+=p.m/1000; });
     o.push(`<div class="big">${res.runs.length>1?`${ri+1}. `:""}${esc(r.inName)} から乗って、${esc(r.outName)} で降りる</div>`);
     r.parts.forEach((p,i)=>{ legs.push(`${i?`<small>（${esc(p.chg)}で${p.sh?"首都高へ":"首都高以外の高速へ"}）</small> `:""}<span class="tag ${p.sh?"sh":"nx"}">${p.sh?"首都高":"首都高以外"}</span>約${km(p.m)}km`); });
-    o.push(`<div>${legs.join(" → ")}</div>`); });
-  o.push(`<div>高速は合わせて約${km((shKm+nxKm)*1000)}km（ルート全体 約${km(res.total)}km・約${Math.round(res.time/60)}分）</div>`);
+    o.push(`<div>${legs.join(" → ")}</div>`);
+    if(isAdmin) o.push(`<div class="warn">（管理者だけ）名前の決め方：入口 ${esc(r.inHow)}／出口 ${esc(r.outHow)}</div>`); });
+  o.push(`<div>高速は合わせて約${km((shKm+nxKm)*1000)}km</div>`);
   // 料金
   const fee=[]; let shYen=null, nxYen=null, nxUnknown=false;
   res.runs.forEach(r=>{ r.parts.forEach((p,i)=>{
@@ -330,7 +408,7 @@ function showRes(res){
   else if(useNx) o.push(`<div class="co y">会社負担の対象：首都高以外の高速は1,000円まで会社負担${nxYen!=null?`（${yen(Math.min(nxYen,1000))}円）`:"（金額は不明）"}</div>`);
   else o.push(`<div class="co n">首都高だけなので、会社負担の対象外（自己負担）</div>`);
   o.push(`<div class="warn">料金・距離・入口と出口の名前は目安です。実際の料金は、首都高・NEXCOの公式の料金検索で確かめてください。</div>`);
-  $("out").innerHTML=o.join("")+(useSh?"":planHtml(res))+cmpHtml(res);
+  $("out").innerHTML=o.join("")+timeHtml(res);
 }
 // ---- 首都高を使った場合（ルートが首都高を使わないとき）：出発地の近くの入口と行き先の近くの出口の組み合わせで、一番近道になるものを、首都高のつながりで計算する ----
 const SURF=1.3;   // 一般道は直線の1.3倍くらい走るとみなす（目安）
@@ -368,34 +446,81 @@ function drawPlan(p){ p.path.forEach(seg=>{ L.polyline(seg,{color:"#fff",weight:
     L.marker(ll,{interactive:false,zIndexOffset:900,icon:L.divIcon({className:"",iconSize:[0,0],iconAnchor:[-18,10],html:`<div class="bname">${esc(name)}</div>`})}).addTo(rtLayer); };
   bd([p.e[1],p.e[2]],"in","入",(p.e[0]||"入口")+"（使う場合）"); bd([p.x[1],p.x[2]],"out","出",base(p.x[0])+"出口（使う場合）"); }
 document.addEventListener("click",e=>{ if(e.target&&e.target.id==="planR500"&&planLast){ const p=planLast; r500Run({node:p.e[3],ll:[p.e[1],p.e[2]],name:p.e[0]||"入口"}); $("r500Out").scrollIntoView({block:"nearest"}); } });
-// ---- 高速を使った場合と一般道だけの場合の距離・時間（Valhalla・無料。混み具合は入っていない目安）（2026-11-12 ユーザー指定） ----
-const bearing=(a,b)=>{ const r=Math.PI/180, y=Math.sin((b[1]-a[1])*r)*Math.cos(b[0]*r), x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos((b[1]-a[1])*r); return Math.round((Math.atan2(y,x)/r+360)%360); };
-async function valRoute(locs,opts){
-  const q={locations:locs,costing:"auto",costing_options:{auto:opts},units:"kilometers",directions_type:"none"};
-  const r=await fetch("https://valhalla1.openstreetmap.de/route?json="+encodeURIComponent(JSON.stringify(q))); const j=await r.json();
-  if(!j.trip) throw new Error(j.error||"no route"); return {km:j.trip.summary.length, min:j.trip.summary.time/60, toll:!!j.trip.summary.has_toll}; }
-async function compare(res){
-  const ll=p=>({lat:p[0],lon:p[1]}), out={};
-  const surf=valRoute([ll(res.S),ll(res.D)],{use_highways:0,use_tolls:0,exclude_tolls:true}).then(v=>out.surf=v).catch(()=>out.surf=null);
-  // 高速あり・なしを同じ経路計算（Valhalla）で比べる（OSRMとは速さの見積もり方が違うので混ぜない）
-  const viaX=()=>{ const p=planLast; if(!p||!p.path.length) return null; const l=p.path[p.path.length-1];
-    // 出口の手前の首都高の上を通るように（向きも合わせる）。入口は経路計算に任せる（入口まで決め打ちすると遠回りすることがあった）
-    return {lat:l[l.length-1][0],lon:l[l.length-1][1],type:"through",heading:bearing(l[Math.max(0,l.length-2)],l[l.length-1]),heading_tolerance:60,search_filter:{min_road_class:"motorway"}}; };
-  const HO={use_highways:1,use_tolls:1};
-  const hw=valRoute([ll(res.S),ll(res.D)],HO).then(async v=>{
-      if(v.toll) return out.hw=Object.assign(v,{src:"有料道路を使うルート"});
-      const X=viaX(); if(X){ const w=await valRoute([ll(res.S),X,ll(res.D)],HO); return out.hw=Object.assign(w,{src:"首都高を使った場合"}); }
-      out.hw=Object.assign(v,{src:"（経路計算は高速を使いませんでした）"}); }).catch(()=>out.hw=null);
-  await Promise.all([surf,hw]); res.cmp=out; if(lastRes===res) showRes(res); }
-function cmpHtml(res){
-  const c=res.cmp; if(!c) return `<div class="box" style="margin-top:8px"><b>高速と一般道の比べ</b><div class="warn">距離と時間を調べています…</div></div>`;
-  const row=(t,v)=>v?`<tr><td>${t}</td><td style="text-align:right"><b>約${v.km.toFixed(1)}km</b></td><td style="text-align:right"><b>約${Math.round(v.min)}分</b></td></tr>`:`<tr><td>${t}</td><td colspan="2" style="text-align:right">不明（調べられませんでした）</td></tr>`;
-  const d=c.hw&&c.surf?Math.round(c.surf.min-c.hw.min):null;
-  return `<div class="box" style="margin-top:8px"><b>高速と一般道の比べ（目安）</b><table style="width:100%;border-collapse:collapse;font-size:14.5px">`
-    +`<tr style="color:var(--muted);font-size:12.5px"><td></td><td style="text-align:right">距離</td><td style="text-align:right">時間</td></tr>`
-    +row(`高速を使う<br><small>${esc(c.hw?c.hw.src:"")}</small>`,c.hw)+row("一般道だけ<br><small>有料道路を使わない</small>",c.surf)+`</table>`
-    +(d!=null?`<div style="margin-top:4px;font-weight:800">${d>0?`高速を使うと 約${d}分 早い`:d<0?`一般道のほうが 約${-d}分 早い`:"時間はほとんど同じ"}</div>`:"")
-    +`<div class="warn">高速あり・なしとも同じ無料の経路計算（Valhalla）で出した目安です。混み具合は入っていません。上の地図のルート（OSRM）とは、通る道や距離が少し違うことがあります。</div></div>`; }
+// ---- 距離と時間（渋滞なしの目安）：入口まで・高速・出口から・合計・高速を使わない場合 ----
+function timeHtml(res){
+  const mn=t=>Math.max(1,Math.round(t/60));
+  const row=(t,m,s,b)=>`<tr><td style="padding:3px 0">${t}</td><td style="text-align:right;white-space:nowrap">約${km(m)}km</td><td style="text-align:right;white-space:nowrap">${b?"<b>":""}約${mn(s)}分${b?"</b>":""}</td></tr>`;
+  const sc=res.sect, sv=res.surf;
+  let h=`<div class="box" style="margin-top:8px"><b>距離と時間（渋滞なしの目安）</b><table style="width:100%;border-collapse:collapse;font-size:14px">`;
+  if(sc) h+=row("① 出発地→入口（一般道）",sc.pre.m,sc.pre.t)+row(`② 入口→出口（高速${res.runs.length>1?"。途中で一度降ります":""}）`,sc.mid.m,sc.mid.t)+row("③ 出口→行き先（一般道）",sc.post.m,sc.post.t);
+  h+=`<tr style="border-top:1px solid var(--line)"><td style="padding:3px 0"><b>合計${sc?"（高速を使う）":"（このルート）"}</b></td><td style="text-align:right;white-space:nowrap">約${km(res.total)}km</td><td style="text-align:right;white-space:nowrap"><b>約${mn(res.time)}分</b></td></tr>`;
+  h+=sv?row("高速を使わない場合（一般道だけ）",sv.km*1000,sv.sec,true):`<tr><td>高速を使わない場合</td><td colspan="2" style="text-align:right">不明</td></tr>`;
+  h+=`</table>`;
+  if(sc&&sv){ const d=Math.round((sv.sec-res.time)/60); h+=`<div style="margin-top:4px;font-weight:800">${d>0?`高速を使うと 約${d}分 早い`:d<0?`高速を使わないほうが 約${-d}分 早い`:"時間はほとんど同じ"}</div>`; }
+  h+=`<div class="warn">この地図の時間は、渋滞を入れていない目安です（無料の経路計算 ${esc(res.src)}${res.src==="OSRM"?"。高速を使わない場合はValhallaなので、比べると少しずれます":""}）。${res.forced?"高速をあまり使わないルートだったので、入口と出口を指定して出し直しました。":""}</div>`;
+  h+=`<div class="btns" style="margin-top:6px"><button type="button" class="btn primary" id="gBtn">🚦 渋滞込みで見る（Google）</button></div><div id="gMsg"></div></div>`;
+  return h; }
+
+// ---- Googleで渋滞込みの時間を見る（各自のAPIキー。2026-11-12 ユーザー指定） ----
+// 規約に合わせて、Googleのルートと時間はGoogleの地図（下の画面）の上だけに出す。この地図には載せない。結果は保存しない
+const GK="tenko.gmapkey";   // キーはこのスマホの中だけ（サーバー・スプレッドシート・バックアップには入れない）
+const gKey=()=>{ try{ return (localStorage.getItem(GK)||"").trim(); }catch(e){ return ""; } };
+let gLoaded=null, gMapObj=null, gObjs=[];
+function gNoKey(){
+  $("gMsg").innerHTML=`<div class="box" style="margin-top:6px;border-color:#E0C75A;background:#FFFBE6;color:#3A2E00"><b>GoogleのAPIキーを登録すると、渋滞を入れた時間が見られます。</b>`
+    +(inApp?`<div class="btns"><button type="button" class="btn" id="gGoKey">設定のキーの欄へ</button></div>`
+      :`<div class="row"><input id="gKeyIn" type="password" autocomplete="off" placeholder="APIキー" style="flex:1;min-width:0;font-size:16px;padding:6px 8px;border-radius:8px;border:1px solid var(--line)"><button type="button" class="btn" id="gKeySave">登録</button></div>`)
+    +`<div style="font-size:12.5px;line-height:1.6">キーの作り方：<br>① Google Cloud（console.cloud.google.com）に登録し、支払い用のクレジットカードを登録します。<br>② プロジェクトを作り、「Maps JavaScript API」と「Routes API」を有効にします。<br>③「認証情報」でAPIキーを作り、設定に貼り付けます。<br>毎月一定の回数までは無料です（それを超えると料金がかかります。Google Cloudで上限を決めておけます）。キーには「使えるサイト」を https://kmt176.github.io/* に制限しておくと安心です。キーはこのスマホの中だけに保存し、サーバーには送りません。</div></div>`; }
+const gJa=e=>{ const st=e&&e.status, gs=e&&e.gs||"", m=String(e&&e.message||"");
+  if(/API key not valid|API_KEY_INVALID/i.test(m)) return "APIキーが正しくありません。設定のキーを確かめてください";
+  if(st===403||gs==="PERMISSION_DENIED") return "このAPIキーでは使えません。Google Cloudで「Routes API」が有効になっているか、キーの制限（使えるサイト・使えるAPI）を確かめてください";
+  if(st===429||gs==="RESOURCE_EXHAUSTED") return "使える回数を超えました。しばらく待つか、Google Cloudで回数の上限を確かめてください";
+  if(st===400||gs==="INVALID_ARGUMENT") return "Googleがこの出発地・行き先でルートを出せませんでした（"+esc(m.slice(0,80))+"）";
+  if(e&&e.net) return "Googleにつながりませんでした。電波を確認してください";
+  return "Googleでルートを出せませんでした（"+esc(m.slice(0,80)||"不明")+"）"; };
+function gErr(t){ $("gInfo").innerHTML=`<div class="co n" style="margin:0">${t}</div>`; }
+function gLoad(key){ if(gLoaded) return gLoaded;
+  gLoaded=new Promise((res,rej)=>{ window.__gInit=()=>res();
+    window.gm_authFailure=()=>gErr("Googleの地図を出せませんでした。キーの間違いか、「Maps JavaScript API」が有効になっていないか、キーの「使えるサイト」の制限を確かめてください");
+    const s=document.createElement("script"); s.async=true;
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&language=ja&region=JP&libraries=geometry&loading=async&callback=__gInit`;
+    s.onerror=()=>{ gLoaded=null; rej(Object.assign(new Error("load"),{net:true})); }; document.head.appendChild(s); });
+  return gLoaded; }
+// 高速を使うルートで出す：こちらのルートの最後の高速の区間の、出口の少し手前を経由地にする（向きつき）
+function gVia(res){ if(!res.runs.length) return null; const r=res.runs[res.runs.length-1]; let acc=0;
+  for(let i=r.i1;i>r.i0;i--){ const s=res.segs[i]; acc+=distM(s.a,s.b); if(acc>=400) return {lat:s.a[0],lng:s.a[1],h:bearing(s.a,s.b)}; }
+  const s=res.segs[r.i0]; return {lat:s.a[0],lng:s.a[1],h:bearing(s.a,s.b)}; }
+async function gRoute(key,res){
+  const P=p=>({location:{latLng:{latitude:p[0],longitude:p[1]}}});
+  const body={origin:P(res.S),destination:P(res.D),travelMode:"DRIVE",routingPreference:"TRAFFIC_AWARE",computeAlternativeRoutes:false,routeModifiers:{avoidTolls:false,avoidHighways:false},languageCode:"ja",units:"METRIC"};
+  const v=gVia(res); if(v) body.intermediates=[{via:true,location:{latLng:{latitude:v.lat,longitude:v.lng},heading:v.h}}];
+  let r; try{ r=await fetch("https://routes.googleapis.com/directions/v2:computeRoutes",{method:"POST",headers:{"Content-Type":"application/json","X-Goog-Api-Key":key,"X-Goog-FieldMask":"routes.duration,routes.staticDuration,routes.distanceMeters,routes.polyline.encodedPolyline"},body:JSON.stringify(body)}); }
+  catch(e){ throw Object.assign(new Error("net"),{net:true}); }
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw Object.assign(new Error(j.error&&j.error.message||String(r.status)),{status:r.status,gs:j.error&&j.error.status});
+  return (j.routes||[])[0]||null; }
+async function gOpen(){
+  const res=lastRes; if(!res) return; const key=gKey(); if(!key){ gNoKey(); return; }
+  $("gMsg").innerHTML=""; $("gPanel").hidden=false; $("gInfo").innerHTML=`<div class="warn">Googleで調べています…</div>`;
+  try{ await gLoad(key); }catch(e){ gErr(gJa(e)); return; }
+  if(!gMapObj) gMapObj=new google.maps.Map($("gMap"),{center:{lat:res.S[0],lng:res.S[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,gestureHandling:"greedy"});
+  gObjs.forEach(o=>o.setMap(null)); gObjs=[];
+  let rt; try{ rt=await gRoute(key,res); }catch(e){ gErr(gJa(e)); return; }
+  if(!rt){ gErr("Googleでルートが見つかりませんでした"); return; }
+  const path=google.maps.geometry.encoding.decodePath(rt.polyline.encodedPolyline);
+  gObjs.push(new google.maps.Polyline({map:gMapObj,path,strokeColor:"#1A73E8",strokeWeight:6,strokeOpacity:.9}));
+  gObjs.push(new google.maps.Marker({map:gMapObj,position:{lat:res.S[0],lng:res.S[1]},label:"出"}),new google.maps.Marker({map:gMapObj,position:{lat:res.D[0],lng:res.D[1]},label:"着"}));
+  const b=new google.maps.LatLngBounds(); path.forEach(p=>b.extend(p)); gMapObj.fitBounds(b,40);
+  const sec=s=>Math.round(parseInt(String(s||"0").replace("s",""),10)/60);
+  const t1=sec(rt.duration), t0=sec(rt.staticDuration), d=t1-t0;
+  $("gInfo").innerHTML=`<div class="big" style="font-size:17px;font-weight:800">渋滞込み 約${t1}分　<small style="font-weight:700">（約${(rt.distanceMeters/1000).toFixed(1)}km）</small></div>`
+    +`<div>渋滞がないとき 約${t0}分${d>0?`（今は渋滞で 約${d}分 多くかかる）`:"（今は渋滞の影響はほとんどありません）"}</div>`
+    +`<div class="warn">Googleの経路と時間です（${res.runs.length?"高速を使うルートで出しています。":""}今の時刻の混み具合を入れた目安）。Googleの結果はこの画面の中だけに出し、保存していません。</div>`; }
+document.addEventListener("click",e=>{ const id=e.target&&e.target.id;
+  if(id==="gBtn") gOpen();
+  else if(id==="gGoKey"){ try{ window.parent.postMessage({goGKey:1},location.origin); }catch(_){} }
+  else if(id==="gKeySave"){ const v=($("gKeyIn").value||"").trim(); if(!v) return; try{ localStorage.setItem(GK,v); }catch(_){} $("gMsg").innerHTML=`<div class="warn">キーを登録しました。もう一度「渋滞込みで見る」を押してください</div>`; }
+  else if(id==="gClose"){ $("gPanel").hidden=true; } });
 $("go").onclick=route;
 $("clr").onclick=()=>{ rtLayer.clearLayers(); lastRes=null; $("out").textContent=""; };
 
