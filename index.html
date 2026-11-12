@@ -598,6 +598,13 @@ body.rtfull{overflow:hidden}
 .tg4 div{border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
 .tg4 b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
 .tg4 small{font-size:12px;color:var(--sub,#5F6368)}
+.tgc{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:var(--surface,#fff)}
+.tgc.hit{background:#FBE3EC;border:2px solid #E58BB0;color:#3A1022}
+.tgc.miss{background:var(--bg,#f4f6f5);color:var(--sub,#5F6368)}
+.tgc h3{margin:0 0 4px;font-size:16px}
+.tgc .tg4 div{background:rgba(255,255,255,.75);padding:6px}
+.tgc .tg4 b{font-size:19px;color:#17201E}
+.tgtbl tr.tghit td{background:#FBE3EC;font-weight:800;color:#3A1022}   /* 現在地の区（2026-11-12） */
 </style>
 
 <div id="docView" class="docview" hidden role="dialog" aria-modal="true" aria-labelledby="docTitle"><div class="docbar"><b id="docTitle"></b><button type="button" class="btn" id="docClose">✕ 閉じる</button></div><iframe id="docFrame" title="資料" allow="microphone; autoplay; geolocation"></iframe></div>
@@ -1500,6 +1507,8 @@ body.rtfull{overflow:hidden}
   </details>
 
   <section class="card" id="teigakuCard" hidden>
+    <div class="btnrow"><button type="button" class="btn primary" id="tgvHere">📍 現在地から調べる</button></div>
+    <div id="tgvHereOut" role="status" style="margin-bottom:10px"></div>
     <div class="pair"><div class="field"><label for="tgvTo">行き先</label><select id="tgvTo"></select></div><div class="field"><label for="tgvArea">区</label><select id="tgvArea"></select></div></div>
     <div id="tgvOut" style="margin-top:8px"></div>
     <details id="tgvAll" style="margin-top:12px"><summary><b>料金表の一覧（読み取りの確認用）</b></summary><div id="tgvTbl" style="margin-top:6px;overflow-x:auto"></div></details>
@@ -1541,7 +1550,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-12 11:20</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-12 11:33</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -7415,10 +7424,31 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     $("tgvOut").innerHTML=row?`<div class="tg4">${TG_COL.map((c,i)=>`<div><small>${c}</small><b>${yen(row[2+i])}円</b></div>`).join("")}</div>`
       +`<div class="src" style="margin-top:6px">${esc(t.n)}${t.zone?`・${esc(row[0])}ゾーン（${row[1].map(esc).join("、")}）`:""}。有料道路の料金は別です。深夜早朝割増は、乗車と降車の両方が22時〜翌5時のときだけです。</div>`:"";
     $("tgvTbl").innerHTML=`<table class="tgtbl"><thead><tr><th>${t.zone?"ゾーン・区":"区"}</th>${TG_COL.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>`
-      +t.rows.map(r=>`<tr><td class="ar">${t.zone?`<b>${esc(r[0])}</b> ${r[1].map(esc).join("、")}`:esc(r[0])}</td>${[2,3,4,5].map(i=>`<td>${r[i]!=null?yen(r[i]):"<b style='color:#B3261E'>読めず</b>"}</td>`).join("")}</tr>`).join("")
+      +t.rows.map((r,ri)=>`<tr${tgvHereAt&&String(tgMatch(to,tgvHereAt.ward,tgvHereAt.town)||"").split(".")[0]===String(ri)?' class="tghit"':""}><td class="ar">${t.zone?`<b>${esc(r[0])}</b> ${r[1].map(esc).join("、")}`:esc(r[0])}</td>${[2,3,4,5].map(i=>`<td>${r[i]!=null?yen(r[i]):"<b style='color:#B3261E'>読めず</b>"}</td>`).join("")}</tr>`).join("")
       +`</tbody></table>${t.note?`<div class="src" style="margin-top:6px">${esc(t.note)}</div>`:""}<div class="src" style="margin-top:4px">会社の料金表の写真から読み取った金額です。違っていたら教えてください。</div>`;
   }
   $("tgvTo").onchange=tgvRender; $("tgvArea").onchange=tgvRender;
+  // 現在地から調べる：今いる区（国土地理院の住所）から、羽田・成田・ディズニーそれぞれの料金を色付きで出す（2026-11-12 ユーザー指定）
+  let tgvHereAt=null;   // {ward:"港区", town:"台場一丁目"}
+  const tgMatch=(to,w,town)=>{ const t=TG[to]; if(!t||!w) return null; const daiba=/^台場/.test(town||""), hachi=/^東八潮/.test(town||"");
+    for(let i=0;i<t.rows.length;i++) for(let j=0;j<t.rows[i][1].length;j++){ const a=t.rows[i][1][j];
+      if(a===w||(w==="港区"&&(a==="港区台場"&&daiba||a==="港区（台場を除く）"&&!daiba))||(w==="品川区"&&(a==="品川区東八潮"&&hachi||a==="品川区（東八潮を除く）"&&!hachi))) return i+"."+j; }
+    return null; };
+  function tgvHereRender(){
+    const h=tgvHereAt; if(!h) return;
+    $("tgvHereOut").innerHTML=`<div class="src" style="margin-top:6px">現在地：<b>${esc(h.ward+(h.town||""))}</b>（色付きが今いる区の料金です。有料道路の料金は別）</div>`
+      +Object.entries(TG).map(([to,t])=>{ const v=tgMatch(to,h.ward,h.town), row=tgRow(to,v);
+        if(!row) return `<div class="tgc miss"><h3>${esc(t.n)}</h3>${esc(h.ward)}は定額の表にありません（メーター運賃）</div>`;
+        return `<div class="tgc hit"><h3>${esc(t.n)}　<small>${t.zone?`${esc(row[0])}ゾーン`:esc(row[0])}</small></h3><div class="tg4">${TG_COL.map((c,i)=>`<div><small>${c}</small><b>${yen(row[2+i])}円</b></div>`).join("")}</div></div>`; }).join("");
+    const v=tgMatch($("tgvTo").value,h.ward,h.town); if(v) $("tgvArea").value=v;
+    tgvRender(); }
+  $("tgvHere").onclick=async()=>{ const o=$("tgvHereOut"), b=$("tgvHere"); b.disabled=true; o.innerHTML=`<div class="src">現在地を調べています…</div>`;
+    try{ const p=await getPos(true); if(!p){ o.innerHTML=`<div class="err">現在地が取れませんでした。位置情報の許可を確認してください</div>`; return; }
+      const r=await fetch(`https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=${p.lat}&lon=${p.lng}`), x=(await r.json()).results;
+      const ward=x&&MUNI[String(x.muniCd).trim()]||""; if(!ward){ o.innerHTML=`<div class="err">今いる場所の区が分かりませんでした。区を選んでください</div>`; return; }
+      tgvHereAt={ward,town:x.lv01Nm&&x.lv01Nm!=="－"?x.lv01Nm:""}; tgvHereRender();
+    }catch(e){ o.innerHTML=`<div class="err">住所を調べられませんでした。電波を確認してください</div>`; }
+    finally{ b.disabled=false; } };
 
   // 金額のテンキー：金額の欄を押すと、欄の上に出る。「キーボード」でスマホのキーボードに切り替え（次に開くまで）
   function rPadShow(){ const n=numOf($("rAmt").value); $("rPadShow").textContent=(n?fmtYen(n):"0")+"円"; }
