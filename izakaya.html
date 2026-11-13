@@ -60,7 +60,7 @@ details summary{font-weight:700;color:var(--ink);cursor:pointer}
 /* 全画面：設定の枠を隠して地図だけにする（アプリの見出しも隠してもらう。2026-10-28 ユーザー指定） */
 .fullbtn{position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:1001;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:16px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 body.full .panel{display:none}
-/* 営業時間・ほかに出すもの（2026-11-13） */
+/* 営業時間・夜遅くまで開いているお店（2026-11-13） */
 .pop .oh{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.55}
 .warn{font-size:12.5px;color:var(--muted);line-height:1.5}
 .xpin{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;color:#fff;font-weight:800;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.4);box-sizing:border-box}
@@ -68,16 +68,6 @@ body.full .panel{display:none}
 .xleg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12.5px;color:var(--muted)}
 .xleg .xpin{width:20px;height:20px;font-size:11px;margin-left:4px}
 #xNightKinds{gap:4px 12px}
-.gobox{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:grid;gap:6px}
-.gobox .btn{width:100%;min-height:44px}
-.golist{max-height:160px;overflow:auto;font-size:13px;line-height:1.5}
-.golist>div{padding:4px 0;border-top:1px dashed var(--line)}
-.golist .gm{color:var(--ink);font-weight:700}
-.golist button{font-size:12.5px;margin:2px 6px 0 0;padding:3px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
-.hlist{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 6px}
-.hrow{display:flex;flex-wrap:wrap;gap:2px 8px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:7px 2px;font-size:14px}
-.hrow b{flex:1 1 100%;font-size:14.5px}.hrow span{font-size:12.5px;color:var(--muted)}.hrow .hgo{color:#C92A2A;font-weight:800}
-.hgrp{font-weight:800;font-size:13.5px;margin:8px 0 2px;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -93,7 +83,7 @@ body.full .panel{display:none}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-13 02:47</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-13 08:47</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
@@ -113,16 +103,9 @@ body.full .panel{display:none}
       <div class="btns"><button class="btn primary" id="rGo">現在地から探す</button><button class="btn primary" id="rGoMap">地図上から探す</button><button class="btn" id="rClear">消す</button></div>
       <div id="rOut"></div>
     </div>
-    <!-- ほかに出すもの（2026-11-13 ユーザー指定）：タクシー乗り場・ホテル（GOで呼ばれた記録）・夜遅くまで開いているお店 -->
-    <div class="route xbox"><b>🗺️ ほかに出すもの</b>
-      <div class="row"><label><input type="checkbox" id="xTaxi">🚕 タクシー乗り場</label></div>
-      <div class="xleg"><span class="xpin sq" style="background:#1971C2">駅</span>駅 <span class="xpin sq" style="background:#9C36B5">ホ</span>ホテル <span class="xpin sq" style="background:#E03131">病</span>病院 <span class="xpin sq" style="background:#495057">他</span>その他</div>
-      <div class="row"><label><input type="checkbox" id="xHotel">🏨 ホテル</label><button class="btn" id="hBtn" style="min-height:36px;padding:6px 10px">ホテルの一覧</button></div>
-      <div id="xHotelOpt" hidden><div class="row"><label><input type="checkbox" id="xLux">高級ホテルも出す（灰色）</label></div>
-        <div class="xleg"><span class="xpin" style="background:#1864AB">H</span>まだ <span class="xpin" style="background:#F08C00">1</span>GOで1〜2回 <span class="xpin" style="background:#E03131">3</span>3回以上 <span class="xpin" style="background:#ADB5BD;color:#343A40">H</span>高級</div></div>
-      <div id="hListBox" hidden><div class="row"><label>並べ方 <select id="hSort"><option value="rooms">客室数の多い順</option><option value="chain">チェーンごと</option><option value="go">GOで呼ばれた回数の多い順</option></select></label>
-        <label><input type="checkbox" id="hVis" checked>地図に見えている範囲だけ</label></div><div id="hListOut" class="hlist"></div></div>
-      <div class="row"><label><input type="checkbox" id="xNight">🌙 夜遅くまで開いているお店</label></div>
+    <!-- 夜遅くまで開いているお店（2026-11-13 ユーザー指定）。タクシー乗り場・ホテルは同じ日に🗺️マップへ移した -->
+    <div class="route xbox"><b>🌙 夜遅くまで開いているお店</b>
+      <div class="row"><label><input type="checkbox" id="xNight">地図に出す</label></div>
       <div class="row" id="xNightKinds" hidden></div>
       <div class="xleg"><span class="xpin" style="background:#C2255C">♨️</span>24時間 <span class="xpin" style="background:#F76707">🎤</span>深夜（0時すぎ）まで <span class="xpin" style="background:#868E96">📚</span>それより早い・今日休み <span class="xpin" style="background:#fff;border-color:#868E96">🎳</span>営業時間が分からない</div>
       <div id="xMsg" class="warn"></div><div id="xInfo" class="warn"></div>
@@ -152,8 +135,7 @@ body.full .panel{display:none}
       ・無料のデータなので、登録されていないお店もあります。日本のオープンストリートマップでは、居酒屋の多くが「pub」として登録されています。<br>
       ・区域の外（東京23区・武蔵野市・三鷹市以外）は暗くして、数えていません。<br>
       ・<b>営業時間</b>：お店の点を押すと、オープンストリートマップに入っている営業時間（今日の曜日の分）と閉店時間が出ます。入っていないお店は「不明」です。朝5時までは前の日の営業として見ます。飲み屋街の円を押すと「この辺は○時台に閉まる店が多い（営業時間がわかったのは○軒中○軒）」と出ます。今開いていて、閉店まで決めた分（初期は30分）以内のお店が2軒以上、かつ今開いているお店の3割以上ある飲み屋街は、紫の点線のふちと⏰で目立たせます（5分ごとに数え直します）。祝日だけの営業時間は使っていません。<br>
-      ・<b>ほかに出すもの</b>：タクシー乗り場（名前・並べる台数。駅・ホテル・病院の乗り場は、名前か150m以内の施設から分けました。分けられないものは「その他」）、ホテル（客室数。以前作った「23区 中クラスホテル（300室以上）一覧」のチェーン名・客室数も合わせました。高級ホテルは名前・ブランドで分けて、ふだんは出しません）、夜遅くまで開いているお店（カラオケ・ボウリング場・サウナ／スーパー銭湯・漫画喫茶／ネットカフェ。ふつうの銭湯は深夜1時すぎまで開いているものだけ）。分からない項目は空欄です。データはオープンストリートマップから前もって作っています。<br>
-      ・<b>GOで呼ばれた</b>：ホテルの印を押して「🚕 GOで呼ばれた」を押すと、今の日付と時間を記録します（ひとことメモも書けます。あとから直す・消すこともできます）。記録は売上のデータと一緒にこのスマホに入り、バックアップにも入ります。呼ばれた回数が1〜2回のホテルは橙、3回以上は赤の印になります。<br>
+      ・<b>夜遅くまで開いているお店</b>：カラオケ・ボウリング場・サウナ／スーパー銭湯・漫画喫茶／ネットカフェ（種類ごとにオン・オフ。ふつうの銭湯は深夜1時すぎまで開いているものだけ）。印を押すと今日の営業時間が出ます。分からない項目は空欄です。データはオープンストリートマップから前もって作っています。タクシー乗り場・ホテル（GOで呼ばれた記録）は、メニューの「🗺️ マップ」にあります。<br>
       ・「📍 現在地」を押すと、今いる場所に青い点（今ここ）と、画面の真ん中に赤い十字が出ます。地図を指でずらすと、十字の場所から一番近い飲み屋街が下に出ます。十字が出ているときの「現在地から探す」は、十字の場所から探します。左下の印は東西南北です（この地図はいつも北が上）。<br>
       ・「🧭 飲み屋街を通って戻る」：行き先（駅名・よく使うのプルダウン・地図で選ぶ）を決めて「現在地から探す」を押すと（「地図上から探す」は、出発地を地図でタップして決めます）、出発地と行き先を結ぶまっすぐな線から「寄り道」の距離以内にある飲み屋街を、軒数の多い順に選びます（近すぎる2つは1つにまとめます）。選んだ所は現在地→行き先の順に並べ、Googleマップのナビを経由地つきで開きます。線はまっすぐな線なので、実際の道とは少しずれます。経由地は10か所まで選べます。「＋自分の場所を登録」で、住所・駅名・地名を文字か声で検索し、地図で印を動かして位置を直してから名前を付けて、5か所まで登録でき、よく使うのプルダウンから選べます（このスマホに覚えます）。スマホのGoogleマップはリンクで開くときの経由地が3か所までなので、4か所以上のときはナビを「ナビ①」「ナビ②」…に分けます。①の行き先に着いたら②を押してください（②は①の行き先から、③は②の行き先から始まります）。寄り道の距離と経由地の数は、このスマホに覚えておきます。
     </details>
@@ -521,111 +503,40 @@ let popOpen=false; map.on("popupopen",()=>popOpen=true); map.on("popupclose",()=
 setInterval(()=>{ if(shops.length&&!popOpen&&!document.hidden) compute(); },5*60*1000);
 $("soon").value=String(soonMin()); $("soon").onchange=()=>{ try{ localStorage.setItem(SK,$("soon").value); }catch(e){} changed=true; compute(); };
 
-// ===== ほかに出すもの：タクシー乗り場・ホテル（GOで呼ばれた記録つき）・夜遅くまで開いているお店（2026-11-13 ユーザー指定） =====
+// ===== 夜遅くまで開いているお店（2026-11-13 ユーザー指定）。タクシー乗り場・ホテル（GOの記録）は同じ日に🗺️マップへ移した =====
 // データは src/nightmap_fetch.py で作った nightmap.json（オープンストリートマップ。東京23区・武蔵野市・三鷹市）。分からない項目は空欄
 const XK="izakayaMap.extra";
-let XO={taxi:false,hotel:false,lux:false,night:false,nk:{k:true,b:true,s:true,m:true}};
-try{ const v=JSON.parse(localStorage.getItem(XK)||"{}"); Object.assign(XO,v); XO.nk=Object.assign({k:true,b:true,s:true,m:true},v.nk||{}); }catch(e){}
+let XO={night:false,nk:{k:true,b:true,s:true,m:true}};
+try{ const v=JSON.parse(localStorage.getItem(XK)||"{}"); XO.night=!!v.night; XO.nk=Object.assign({k:true,b:true,s:true,m:true},v.nk||{}); }catch(e){}
 const xSave=()=>{ try{ localStorage.setItem(XK,JSON.stringify(XO)); }catch(e){} };
 let NM=null, nmP=null;
 const nmLoad=()=>nmP||(nmP=fetch("nightmap.json?v="+Date.now()).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{ NM=j; return j; }).catch(e=>{ nmP=null; throw e; }));
 const xLayer=L.layerGroup().addTo(map);
 const xPin=(txt,bg,bd,sz,sq,fc)=>L.divIcon({className:"",iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],popupAnchor:[0,-sz/2],
   html:`<div class="xpin${sq?" sq":""}" style="width:${sz}px;height:${sz}px;background:${bg};border-color:${bd};color:${fc||"#fff"};font-size:${Math.round(sz*.5)}px">${txt}</div>`});
-const TXC={"駅":["駅","#1971C2"],"ホテル":["ホ","#9C36B5"],"病院":["病","#E03131"],"その他":["他","#495057"]};
 const NKN={k:["カラオケ","🎤"],b:["ボウリング","🎳"],s:["サウナ・スーパー銭湯","♨️"],m:["漫画喫茶・ネットカフェ","📚"]};
-// GOで呼ばれた記録：アプリの売上のデータ（uriage.v1 の goHotel）。書くのはアプリ本体に頼む（アプリの外で開いたときだけ、ここで書く）
-const goAll=()=>{ try{ const s=JSON.parse(localStorage.getItem("uriage.v1")||"null"); return (s&&s.goHotel)||{}; }catch(e){ return {}; } };
-let GO=goAll();
-const goN=id=>((GO[id]&&GO[id].r)||[]).length;
-function goLocal(op){ try{ const s=JSON.parse(localStorage.getItem("uriage.v1")||"null")||{days:{}}; const g=s.goHotel||(s.goHotel={}), k=op.id, at=op.at;
-    if(op.t==="add"){ const h=g[k]||(g[k]={n:"",lat:0,lng:0,r:[]}); h.n=op.n; h.lat=op.lat; h.lng=op.lng; if(!h.r.some(x=>x.t===at)){ h.r.push({t:at,m:op.m||""}); h.r.sort((a,b)=>a.t.localeCompare(b.t)); } }
-    else if(op.t==="memo"&&g[k]){ const x=g[k].r.find(x=>x.t===at); if(x) x.m=op.m||""; }
-    else if(op.t==="del"&&g[k]){ g[k].r=g[k].r.filter(x=>x.t!==at); if(!g[k].r.length) delete g[k]; }
-    localStorage.setItem("uriage.v1",JSON.stringify(s)); return true; }catch(e){ return false; } }
-function goDo(op){ return new Promise(res=>{
-  if(!inApp){ res(goLocal(op)); GO=goAll(); return; }
-  const id=Math.random().toString(36).slice(2); let tm=null;
-  const on=e=>{ if(e.origin!==location.origin||!e.data||e.data.goHotelRes!==id) return; window.removeEventListener("message",on); clearTimeout(tm); if(e.data.data) GO=e.data.data; res(!!e.data.ok); };
-  window.addEventListener("message",on); tm=setTimeout(()=>{ window.removeEventListener("message",on); res(false); },6000);
-  try{ window.parent.postMessage({goHotel:id,op},location.origin); }catch(_){ clearTimeout(tm); res(false); } }); }
-const nowKey=()=>{ const d=new Date(), p=v=>String(v).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
-const recTxt=t=>{ const d=new Date(t+":00"); return `${d.getMonth()+1}/${d.getDate()}（${WDN[d.getDay()]}）${t.slice(11)}`; };
-function goTop(r){ const h={}; r.forEach(x=>{ const k=+x.t.slice(11,13); h[k]=(h[k]||0)+1; }); const mx=Math.max(0,...Object.values(h)); if(!mx) return "";
-  return Object.entries(h).filter(([,k])=>k===mx).map(([k])=>`${k}時台`).join("・")+`（${mx}回${Object.values(h).filter(k=>k===mx).length>1?"ずつ":""}）`; }
-// ホテルの色：高級＝灰色、GOで3回以上＝赤、1〜2回＝橙、まだ＝青
-function hotelIcon(h){ const n=goN(h[0]); if(h[6]) return xPin("H","#ADB5BD","#fff",22,false,"#343A40");
-  if(n>=3) return xPin(String(n),"#E03131","#fff",32); if(n>=1) return xPin(String(n),"#F08C00","#fff",28); return xPin("H","#1864AB","#fff",22); }
-function hotelPop(h){ const g=GO[h[0]], r=(g&&g.r)||[];
-  return `<div class="pop"><h3>🏨 ${esc(h[3])}</h3>チェーン：${esc(h[4])}<br>客室数：${h[5]?`${h[5]}室${h[7]==="一覧"?"<small>（以前作った一覧から）</small>":""}`:""}`
-    +(h[6]?`<br><small>高級ホテル（名前・ブランドで分けました。ドアマンの有無は確かめていません）</small>`:"")
-    +`<div class="gobox"><div>GOで呼ばれた回数：<b>${r.length}回</b>${r.length?`<br>よく呼ばれる時間帯：<b>${goTop(r)}</b>`:""}</div>`
-    +`<button class="btn primary" data-goadd="${esc(h[0])}">🚕 GOで呼ばれた（今の時間で記録）</button>`
-    +(r.length?`<div class="golist">${r.slice().reverse().slice(0,30).map(x=>`<div>${recTxt(x.t)} ${x.m?`<span class="gm">${esc(x.m)}</span>`:""}<br><button data-gomemo="${esc(h[0])}|${x.t}">${x.m?"メモを直す":"メモを書く"}</button><button data-godel="${esc(h[0])}|${x.t}">消す</button></div>`).join("")}${r.length>30?`<small>ほか${r.length-30}件</small>`:""}</div>`:"")
-    +`<div id="goMsg" class="warn"></div></div></div>`; }
-const taxiPop=x=>`<div class="pop"><h3>🚕 ${x[2]?esc(x[2]):"タクシー乗り場"}</h3>種類：<b>${x[4]==="その他"?"その他":x[4]+"の乗り場"}</b>${x[5]?`<br><small>${esc(x[5])}から決めました</small>`:x[4]==="その他"?`<br><small>名前と近く（150m以内）の駅・ホテル・病院から決められませんでした</small>`:""}${x[3]?`<br>並べる台数：<b>${esc(x[3])}台</b>`:""}${x[2]?"":`<br><small>名前は地図のデータに入っていません</small>`}</div>`;
-// 夜のお店の色：24時間＝赤、深夜（0時すぎ）まで＝橙、それより早い・今日休み＝灰色、営業時間が分からない＝白
+// 色：24時間＝赤、深夜（0時すぎ）まで＝橙、それより早い・今日休み＝灰色、営業時間が分からない＝白
 function nightCol(oh){ const B=bizNow(), x=ohDay(oh,B.wd); if(!x) return ["#fff","#868E96","#343A40","不明"]; if(x.off) return ["#868E96","#fff","#fff","休み"];
   if(x.a24) return ["#C2255C","#fff","#fff","24時間"]; return closeOf(x)>1440?["#F76707","#fff","#fff","深夜まで"]:["#868E96","#fff","#fff","早め"]; }
 const nightPop=x=>`<div class="pop"><h3>${NKN[x[3]][1]} ${esc(x[2])}</h3><small>${NKN[x[3]][0]}</small><div class="oh">${ohTxt(x[4])}</div></div>`;
-const hMk=new Map();   // ホテルのID→地図の印（一覧から開くため）
-function xDraw(){ xLayer.clearLayers(); hMk.clear(); if(!NM) return;
+function xDraw(){ xLayer.clearLayers(); if(!NM||!XO.night){ $("xMsg").textContent=""; return; }
   const z=map.getZoom(), b=map.getBounds().pad(.2);
-  if(z<12){ $("xMsg").textContent=(XO.taxi||XO.hotel||XO.night)?"地図を拡大すると、乗り場・ホテル・お店の印が出ます":""; return; }
-  let nt=0, nh=0, nn=0;
-  if(XO.taxi) NM.taxi.forEach(x=>{ if(!b.contains([x[0],x[1]])) return; const c=TXC[x[4]]||TXC["その他"]; nt++;
-    L.marker([x[0],x[1]],{icon:xPin(c[0],c[1],"#fff",24,true),zIndexOffset:200}).bindPopup(()=>taxiPop(x)).addTo(xLayer); });
-  if(XO.night) NM.night.forEach(x=>{ if(!XO.nk[x[3]]||!b.contains([x[0],x[1]])) return; const c=nightCol(x[4]); nn++;
+  if(z<12){ $("xMsg").textContent="地図を拡大すると、お店の印が出ます"; return; }
+  let nn=0;
+  NM.night.forEach(x=>{ if(!XO.nk[x[3]]||!b.contains([x[0],x[1]])) return; const c=nightCol(x[4]); nn++;
     L.marker([x[0],x[1]],{icon:xPin(NKN[x[3]][1],c[0],c[1],26,false,c[2]),zIndexOffset:150}).bindPopup(()=>nightPop(x)).addTo(xLayer); });
-  if(XO.hotel) NM.hotel.forEach(h=>{ if(h[6]&&!XO.lux) return; if(!b.contains([h[1],h[2]])) return; nh++;
-    const m=L.marker([h[1],h[2]],{icon:hotelIcon(h),zIndexOffset:300+goN(h[0])*10}).bindPopup(()=>hotelPop(h),{maxWidth:280}).addTo(xLayer); hMk.set(h[0],{m,h}); });
-  $("xMsg").textContent=[XO.taxi?`乗り場${nt}か所`:"",XO.hotel?`ホテル${nh}軒`:"",XO.night?`夜のお店${nn}軒`:""].filter(Boolean).join("・")+((XO.taxi||XO.hotel||XO.night)?"（見えている範囲）":"");
-}
+  $("xMsg").textContent=`夜遅くまでのお店 ${nn}軒（見えている範囲）`; }
 let xT=null; map.on("moveend",()=>{ if(popOpen) return; clearTimeout(xT); xT=setTimeout(xDraw,150); });   // 説明を開いて地図が動いたときは描き直さない（描き直すと説明が閉じる）
 map.on("popupclose",()=>{ clearTimeout(xT); xT=setTimeout(()=>{ if(!popOpen) xDraw(); },200); });
-async function xOn(){ if(!(XO.taxi||XO.hotel||XO.night)){ xDraw(); return; }
+async function xOn(){ if(!XO.night){ xDraw(); return; }
   if(!NM){ $("xMsg").textContent="読み込んでいます…"; try{ await nmLoad(); }catch(e){ $("xMsg").textContent="データを読み込めませんでした。電波を確認して、もう一度チェックを入れてください"; return; }
-    $("xInfo").textContent=`データ：${NM.made}に作成（オープンストリートマップ）。乗り場${NM.taxi.length}・ホテル${NM.hotel.length}・夜のお店${NM.night.length}`; }
-  xDraw(); if($("hListBox")&&!$("hListBox").hidden) hList(); }
-function xUi(){ $("xTaxi").checked=XO.taxi; $("xHotel").checked=XO.hotel; $("xLux").checked=XO.lux; $("xNight").checked=XO.night;
-  Object.keys(NKN).forEach(k=>$("xn_"+k).checked=XO.nk[k]!==false); $("xNightKinds").hidden=!XO.night; $("xHotelOpt").hidden=!XO.hotel; }
+    $("xInfo").textContent=`データ：${NM.made}に作成（オープンストリートマップ）。${NM.night.length}軒`; }
+  xDraw(); }
+function xUi(){ $("xNight").checked=XO.night; Object.keys(NKN).forEach(k=>$("xn_"+k).checked=XO.nk[k]!==false); $("xNightKinds").hidden=!XO.night; }
 $("xNightKinds").innerHTML=Object.entries(NKN).map(([k,[n,e]])=>`<label><input type="checkbox" id="xn_${k}">${e} ${n}</label>`).join("");
-[["xTaxi","taxi"],["xHotel","hotel"],["xLux","lux"],["xNight","night"]].forEach(([id,k])=>$(id).addEventListener("change",()=>{ XO[k]=$(id).checked; xSave(); xUi(); xOn(); }));
+$("xNight").addEventListener("change",()=>{ XO.night=$("xNight").checked; xSave(); xUi(); xOn(); });
 Object.keys(NKN).forEach(k=>$("xn_"+k).addEventListener("change",()=>{ XO.nk[k]=$("xn_"+k).checked; xSave(); xDraw(); }));
-xUi(); if(XO.taxi||XO.hotel||XO.night) xOn();
-// 「GOで呼ばれた」・メモ・消す（お店の説明の中のボタン）
-async function goAfter(id,msg){ const o=hMk.get(id); if(o){ o.m.setIcon(hotelIcon(o.h)); o.m.setPopupContent(hotelPop(o.h)); } const el=$("goMsg"); if(el) el.textContent=msg; if(!$("hListBox").hidden) hList(); }
-document.addEventListener("click",async e=>{ const t=e.target; if(!t||!t.dataset) return;
-  if(t.dataset.goadd){ const id=t.dataset.goadd, o=hMk.get(id); if(!o) return; t.disabled=true;
-    const at=nowKey(), ok=await goDo({t:"add",id,n:o.h[3],lat:o.h[1],lng:o.h[2],at});
-    if(!ok){ t.disabled=false; const el=$("goMsg"); if(el) el.textContent="記録できませんでした。アプリを開き直してから、もう一度押してください"; return; }
-    await goAfter(id,`${recTxt(at)} を記録しました`);
-    const m=(prompt("ひとことメモ（なくてもかまいません。例：玄関前、2人、羽田まで）","")||"").trim().slice(0,200);
-    if(m){ await goDo({t:"memo",id,at,m}); await goAfter(id,`${recTxt(at)} を記録しました（メモつき）`); } }
-  else if(t.dataset.gomemo){ const [id,at]=t.dataset.gomemo.split("|"), cur=((GO[id]&&GO[id].r)||[]).find(x=>x.t===at); if(!cur) return;
-    const m=prompt("ひとことメモ（空にすると消えます）",cur.m||""); if(m==null) return; const ok=await goDo({t:"memo",id,at,m:m.trim().slice(0,200)});
-    await goAfter(id,ok?"メモを直しました":"直せませんでした。もう一度押してください"); }
-  else if(t.dataset.godel){ const [id,at]=t.dataset.godel.split("|"); if(!confirm(`${recTxt(at)} の記録を消しますか？`)) return;
-    const ok=await goDo({t:"del",id,at}); await goAfter(id,ok?"消しました":"消せませんでした。もう一度押してください"); } });
-// ホテルの一覧：客室数の多い順・チェーンごと・GOで呼ばれた回数の多い順。押すと地図でそのホテルを開く
-function hList(){ if(!NM){ $("hListOut").innerHTML=`<div class="warn">読み込んでいます…</div>`; return; }
-  const sort=$("hSort").value, vis=$("hVis").checked, b=map.getBounds();
-  let xs=NM.hotel.filter(h=>(XO.lux||!h[6])&&(!vis||b.contains([h[1],h[2]])));
-  const byRooms=(a,c)=>(c[5]||-1)-(a[5]||-1)||a[3].localeCompare(c[3],"ja");
-  let html="";
-  if(sort==="chain"){ const g=new Map(); xs.forEach(h=>{ const k=h[4]||""; (g.get(k)||g.set(k,[]).get(k)).push(h); });
-    const ks=[...g.keys()].sort((a,c)=>(!a)-(!c)||g.get(c).length-g.get(a).length||a.localeCompare(c,"ja"));
-    let k2=0; for(const k of ks){ if(k2>=300) break; const arr=g.get(k).sort(byRooms); html+=`<div class="hgrp">${k?esc(k):"（チェーン名が分からないホテル）"}　${arr.length}軒</div>`+arr.slice(0,80).map(hRow).join(""); k2+=arr.length; } }
-  else { xs.sort(sort==="go"?(a,c)=>goN(c[0])-goN(a[0])||byRooms(a,c):byRooms); if(sort==="go") xs=xs.filter(h=>goN(h[0])>0); html=xs.slice(0,200).map(hRow).join(""); }
-  $("hListOut").innerHTML=`<div class="warn">${vis?"地図に見えている範囲の":"全部の"}ホテル ${xs.length}軒${xs.length>200&&sort!=="chain"?"（上から200軒）":""}${sort==="go"&&!xs.length?"。まだGOで呼ばれた記録がありません":""}</div>`+(html||""); }
-function hRow(h){ const n=goN(h[0]); return `<button type="button" class="hrow" data-hid="${esc(h[0])}"><b>${esc(h[3])}</b><span>${esc(h[4])}</span><span>${h[5]?h[5]+"室":""}</span>${n?`<span class="hgo">GO ${n}回</span>`:""}</button>`; }
-$("hBtn").onclick=async()=>{ const box=$("hListBox"); box.hidden=!box.hidden; if(box.hidden) return; if(!XO.hotel){ XO.hotel=true; xSave(); xUi(); }
-  await xOn(); hList(); };
-$("hSort").onchange=hList; $("hVis").onchange=hList;
-$("hListOut").addEventListener("click",e=>{ const b=e.target.closest("[data-hid]"); if(!b||!NM) return; const h=NM.hotel.find(x=>x[0]===b.dataset.hid); if(!h) return;
-  $("pbody").hidden=true; $("fold").textContent="開く";
-  map.setView([h[1],h[2]],Math.max(map.getZoom(),16)); setTimeout(()=>{ xDraw(); const o=hMk.get(h[0]); if(o) o.m.openPopup(); },250); });
-
+xUi(); if(XO.night) xOn();
 // 拡大・縮小で、円の塗りとお店の点の大きさを切り替える
 let wasNear=near(); map.on("zoomend",()=>{ if(near()!==wasNear){ wasNear=near(); if(shops.length) compute(); } });
 $("fold").onclick=()=>{ const h=$("pbody").hidden=!$("pbody").hidden; $("fold").textContent=h?"開く":"閉じる"; };

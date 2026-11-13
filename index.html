@@ -565,6 +565,24 @@ body.rtfull{overflow:hidden}
 .wcnear{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
 .wcnear .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;font-size:20px;line-height:1.1;min-width:0;margin:0}.wcnear .btn small{font-size:12.5px;font-weight:700;white-space:nowrap}
 .shopclu{width:36px;height:36px;border-radius:50%;background:rgba(142,68,173,.85);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+/* タクシー乗り場・ホテル（2026-11-13） */
+.xpin{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;color:#fff;font-weight:800;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.4);box-sizing:border-box}
+.xpin.sq{border-radius:6px}
+.htc{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:rgba(24,100,171,.88);color:#fff;font:800 14px/1 sans-serif;border:3px solid rgba(255,255,255,.9);box-shadow:0 1px 5px rgba(0,0,0,.4);box-sizing:border-box}
+.htc small{font-size:9px;opacity:.9;margin-bottom:1px}
+.xleg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12.5px;color:#5F6368}
+.xleg .xpin{width:20px;height:20px;font-size:11px;margin-left:4px}
+.xpop{font-size:14.5px;line-height:1.55;min-width:180px}.xpop .xh{display:block;font-size:16px;margin-bottom:2px}
+.gobox{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:grid;gap:6px}
+.gobox .btn{width:100%;min-height:44px}
+.golist{max-height:160px;overflow:auto;font-size:13px;line-height:1.5}
+.golist>div{padding:4px 0;border-top:1px dashed var(--line)}
+.golist .gm{font-weight:700}
+.golist button{font-size:12.5px;margin:2px 6px 0 0;padding:3px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card,#fff);color:inherit}
+.hlist{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 6px}
+.hrow{display:flex;flex-wrap:wrap;gap:2px 8px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;padding:7px 2px;font-size:14px}
+.hrow b{flex:1 1 100%;font-size:14.5px}.hrow span{font-size:12.5px;color:#5F6368}.hrow .hgo{color:#C92A2A;font-weight:800}
+.hgrp{font-weight:800;font-size:13.5px;margin:8px 0 2px}
 .wcgrp{margin-top:6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:15px;display:flex;flex-direction:column;gap:4px}
 .wcgrp>label{display:flex;align-items:center;gap:6px;padding-left:24px}.wcgrp>label.wcmain{padding-left:0;font-weight:800;font-size:16px}
 .airbanner{background:#1F3A6E}.airbanner #airBannerText{flex:1;text-align:left;font-size:16px;font-weight:800;line-height:1.4;padding:0}
@@ -990,6 +1008,17 @@ body.rtfull{overflow:hidden}
       <!-- 羽田空港の定額運賃の対象外の区（2026-11-12 ユーザー指定。羽田空港定額運賃の表に載っていない23区） -->
       <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowHnd">✈️ 羽田定額の対象外の区（薄いピンク）</label>
         <div style="font-size:13px;color:#5F6368">中央区・港区・品川区・目黒区・大田区・江東区。羽田空港の定額運賃の表に載っていない6区です（メーター運賃）。境目はおおまかです</div></div>
+      <!-- タクシー乗り場・ホテル（GOで呼ばれた記録）。最初はオフ（2026-11-13 ユーザー指定。飲み屋街マップから移した） -->
+      <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowTx">🚕 タクシー乗り場</label>
+        <div class="xleg" id="wcTxLeg" hidden><span class="xpin sq" style="background:#1971C2">駅</span>駅 <span class="xpin sq" style="background:#9C36B5">ホ</span>ホテル <span class="xpin sq" style="background:#E03131">病</span>病院 <span class="xpin sq" style="background:#495057">他</span>その他（名前か、150m以内の施設から分けました）</div></div>
+      <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowHt">🏨 ホテル（GOで呼ばれた記録）</label>
+        <div id="wcHtBox" hidden><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="wcLux">高級ホテルも出す（灰色）</label>
+          <div class="xleg"><span class="xpin" style="background:#1864AB">H</span>まだ <span class="xpin" style="background:#F08C00">1</span>GOで1〜2回 <span class="xpin" style="background:#E03131">3</span>3回以上 <span class="xpin" style="background:#ADB5BD;color:#343A40">H</span>高級 <span class="htc" style="width:24px;height:24px;font-size:10px;margin-left:4px"><small style="font-size:7px">H</small>12</span>まとめた数（拡大すると1軒ずつ）</div>
+          <div style="font-size:13px;color:#5F6368">ホテルの印を押して「🚕 GOで呼ばれた」を押すと、日付と時間を記録します（ひとことメモも）。記録は売上のデータと一緒に保存し、バックアップにも入ります</div>
+          <div class="btnrow"><button class="btn" id="hBtn">ホテルの一覧</button></div>
+          <div id="hListBox" hidden><div style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:15px;margin:6px 0"><label>並べ方 <select id="hSort"><option value="rooms">客室数の多い順</option><option value="chain">チェーンごと</option><option value="go">GOで呼ばれた回数の多い順</option></select></label>
+            <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hVis" checked>地図に見えている範囲だけ</label></div><div id="hListOut" class="hlist"></div></div></div></div>
+      <div class="src" id="wxMsg"></div><div class="src" id="wxInfo"></div>
       <div class="msg" id="wcMsg" role="status"></div>
       <div id="wcMapWrap" class="mapwrap"><div id="wcMap" class="bigmap" style="height:440px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="wcFullBtn">全画面</button></div></div>
@@ -1558,7 +1587,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-13 03:02</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-13 09:41</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3321,7 +3350,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(first){ getPos().then(p=>{ if(p){ setWcMe(p); wcMapObj.setView([p.lat,p.lng],15); } }); }
     if(wcData) $("wcDate").textContent=`（トイレ${wcData.items.length}か所、${wcData.made.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1年$2月$3日")}に取り込み）`;
     if(pkData) wcPkDateTxt();
-    shopOpen();
+    shopOpen(); wxOn();
   }
   [["wcShowWc","wc"],["wcShowPk","pk"],["wcPkOk","ok"]].forEach(([id,k])=>$(id).onchange=()=>{ wcOpt[k]=$(id).checked; try{ localStorage.setItem("tenko.wcOpt",JSON.stringify(wcOpt)); }catch(e){}
     if(k==="wc") drawWc(); else drawWcPk(); $("wcMsg").textContent=""; });
@@ -3330,6 +3359,126 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(!p){ $("wcMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; }
     $("wcMsg").textContent=""; setWcMe(p); wcMapObj.setView([p.lat,p.lng],Math.max(wcMapObj.getZoom(),16)); };
   setupFull("wcFullBtn","wcMapWrap",()=>wcMapObj);
+  // ===== 🚕 タクシー乗り場・🏨 ホテル（GOで呼ばれた記録つき）（2026-11-13 ユーザー指定。飲み屋街マップから移した） =====
+  // データは src/nightmap_fetch.py で作った nightmap.json（オープンストリートマップ。東京23区・武蔵野市・三鷹市）。分からない項目は空欄。
+  // 最初はオフ（ごちゃごちゃしないように）。GOで呼ばれた記録は売上のデータ（sales.goHotel）に入れるので、バックアップにも入る
+  let NM=null, nmP=null, wxLy=null, wxBound=false, wxTm=null; const hMk=new Map();
+  const nmLoad=()=>nmP||(nmP=fetch("nightmap.json",{cache:"no-cache"}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{ NM=j; return j; }).catch(e=>{ nmP=null; throw e; }));
+  const xPin=(txt,bg,bd,sz,sq,fc)=>L.divIcon({className:"",iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],popupAnchor:[0,-sz/2],
+    html:`<div class="xpin${sq?" sq":""}" style="width:${sz}px;height:${sz}px;background:${bg};border-color:${bd};color:${fc||"#fff"};font-size:${Math.round(sz*.5)}px">${txt}</div>`});
+  const TXC={"駅":["駅","#1971C2"],"ホテル":["ホ","#9C36B5"],"病院":["病","#E03131"],"その他":["他","#495057"]}, WDJ=["日","月","火","水","木","金","土"];
+  const goAll=()=>(sales.goHotel&&typeof sales.goHotel==="object")?sales.goHotel:{};
+  const goN=id=>((goAll()[id]&&goAll()[id].r)||[]).length;
+  function goDo(op){ try{ const g=sales.goHotel&&typeof sales.goHotel==="object"?sales.goHotel:(sales.goHotel={}), k=op.id, at=op.at;
+      if(op.t==="add"){ const h=g[k]||(g[k]={n:"",lat:0,lng:0,r:[]}); h.n=String(op.n||"").slice(0,80); h.lat=+op.lat||0; h.lng=+op.lng||0;
+        if(!h.r.some(x=>x.t===at)){ h.r.push({t:at,m:String(op.m||"").slice(0,200)}); h.r.sort((a,b)=>a.t.localeCompare(b.t)); if(h.r.length>1000) h.r.shift(); } }
+      else if(op.t==="memo"&&g[k]){ const x=g[k].r.find(x=>x.t===at); if(!x) return false; x.m=String(op.m||"").slice(0,200); }
+      else if(op.t==="del"&&g[k]){ const i=g[k].r.findIndex(x=>x.t===at); if(i<0) return false; g[k].r.splice(i,1); if(!g[k].r.length) delete g[k]; }
+      else return false;
+      saveSales(); goSend(op); return true; }catch(e){ return false; } }
+  // スプレッドシート「GOで呼ばれた」にも送る（社員コード・ホテル名・ホテルの情報・呼ばれた日時。2026-11-13 ユーザー指定）。
+  // 社員コードがないときは送らない。電波がなくて送れなかった分はこのスマホにためておき、次に送れたときにまとめて送る
+  const GOQ="tenko.goQ", goCode=()=>String(cfg.empCode||"").replace(/[^0-9]/g,"");
+  function goSend(op){ const code=goCode(); if(!/^\d{3,10}$/.test(code)) return;
+    const h=NM&&op.t==="add"?NM.hotel.find(x=>x[0]===op.id):null;
+    const o={op:op.t,code,id:op.id,at:op.at};
+    if(op.t==="add") Object.assign(o,{n:op.n,chain:h?h[4]:"",rooms:h&&h[5]?h[5]:"",lat:op.lat,lng:op.lng,memo:op.m||""});
+    if(op.t==="memo") o.memo=op.m||"";
+    let q=[]; try{ q=JSON.parse(localStorage.getItem(GOQ)||"[]")||[]; }catch(e){} q.push(o); try{ localStorage.setItem(GOQ,JSON.stringify(q.slice(-500))); }catch(e){}
+    goFlush(); }
+  let goBusy=false;
+  async function goFlush(){ if(goBusy||!cfg.url) return; goBusy=true;
+    try{ let q=[]; try{ q=JSON.parse(localStorage.getItem(GOQ)||"[]")||[]; }catch(e){}
+      while(q.length){ let j=null; try{ j=await post(Object.assign({action:"goLog"},q[0])); }catch(e){ break; }   // 電波がない：あとで
+        if(!j||(!j.ok&&!/内容が正しくありません|社員コード|見つかりませんでした/.test(j.error||""))) break;   // サーバーがまだ古いときなど：あとで
+        q.shift(); try{ localStorage.setItem(GOQ,JSON.stringify(q)); }catch(e){} } }
+    finally{ goBusy=false; } }
+  // 前から入っている記録（飲み屋街マップで付けた分など）も、最初の1回だけまとめて送る
+  function goSendOld(){ try{ if(localStorage.getItem("tenko.goSent1")||!/^\d{3,10}$/.test(goCode())) return; const g=goAll();
+      Object.entries(g).forEach(([id,h])=>(h.r||[]).forEach(x=>goSend({t:"add",id,n:h.n,lat:h.lat,lng:h.lng,at:x.t,m:x.m})));
+      localStorage.setItem("tenko.goSent1","1"); }catch(e){} }
+  const nowKey=()=>{ const d=new Date(), p=v=>String(v).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const recTxt=t=>{ const d=new Date(t+":00"); return `${d.getMonth()+1}/${d.getDate()}（${WDJ[d.getDay()]}）${t.slice(11)}`; };
+  function goTop(r){ const h={}; r.forEach(x=>{ const k=+x.t.slice(11,13); h[k]=(h[k]||0)+1; }); const mx=Math.max(0,...Object.values(h)); if(!mx) return "";
+    return Object.entries(h).filter(([,k])=>k===mx).map(([k])=>`${k}時台`).join("・")+`（${mx}回${Object.values(h).filter(k=>k===mx).length>1?"ずつ":""}）`; }
+  // ホテルの色：高級＝灰色、GOで3回以上＝赤、1〜2回＝橙、まだ＝青
+  function hotelIcon(h){ const n=goN(h[0]); if(h[6]) return xPin("H","#ADB5BD","#fff",22,false,"#343A40");
+    if(n>=3) return xPin(String(n),"#E03131","#fff",32); if(n>=1) return xPin(String(n),"#F08C00","#fff",28); return xPin("H","#1864AB","#fff",22); }
+  function hotelPop(h){ const g=goAll()[h[0]], r=(g&&g.r)||[];
+    return `<div class="xpop"><b class="xh">🏨 ${esc(h[3])}</b>チェーン：${esc(h[4])}<br>客室数：${h[5]?`${h[5]}室${h[7]==="一覧"?"<small>（以前作った一覧から）</small>":""}`:""}`
+      +(h[6]?`<br><small>高級ホテル（名前・ブランドで分けました。ドアマンの有無は確かめていません）</small>`:"")
+      +`<div class="gobox"><div>GOで呼ばれた回数：<b>${r.length}回</b>${r.length?`<br>よく呼ばれる時間帯：<b>${goTop(r)}</b>`:""}</div>`
+      +`<button class="btn primary" data-goadd="${esc(h[0])}">🚕 GOで呼ばれた（今の時間で記録）</button>`
+      +(r.length?`<div class="golist">${r.slice().reverse().slice(0,30).map(x=>`<div>${recTxt(x.t)} ${x.m?`<span class="gm">${esc(x.m)}</span>`:""}<br><button data-gomemo="${esc(h[0])}|${x.t}">${x.m?"メモを直す":"メモを書く"}</button><button data-godel="${esc(h[0])}|${x.t}">消す</button></div>`).join("")}${r.length>30?`<small>ほか${r.length-30}件</small>`:""}</div>`:"")
+      +`<div class="src">${/^\d{3,10}$/.test(goCode())?"記録はスプレッドシートにも送ります（社員コードつき）":"設定で社員コードを入れると、スプレッドシートにも記録します"}</div>`
+      +`<div id="goMsg" class="src"></div></div></div>`; }
+  const taxiPop=x=>`<div class="xpop"><b class="xh">🚕 ${x[2]?esc(x[2]):"タクシー乗り場"}</b>種類：<b>${x[4]==="その他"?"その他":x[4]+"の乗り場"}</b>${x[5]?`<br><small>${esc(x[5])}から決めました</small>`:x[4]==="その他"?`<br><small>名前と近く（150m以内）の駅・ホテル・病院から決められませんでした</small>`:""}${x[3]?`<br>並べる台数：<b>${esc(x[3])}台</b>`:""}${x[2]?"":`<br><small>名前は地図のデータに入っていません</small>`}</div>`;
+  const wxPopOpen=()=>!!(wcMapObj&&wcMapObj._popup&&wcMapObj._popup.isOpen());
+  // タクシー乗り場：拡大したとき（12以上）に、見えている範囲だけ出す
+  function wxDraw(){ if(!wcMapObj) return; if(!wxLy) wxLy=L.layerGroup().addTo(wcMapObj); wxLy.clearLayers();
+    let nt=0, z=wcMapObj.getZoom();
+    if(NM&&wcOpt.tx&&z>=12){ const b=wcMapObj.getBounds().pad(.2); NM.taxi.forEach(x=>{ if(!b.contains([x[0],x[1]])) return; const c=TXC[x[4]]||TXC["その他"]; nt++;
+      L.marker([x[0],x[1]],{icon:xPin(c[0],c[1],"#fff",24,true),zIndexOffset:200}).bindPopup(()=>taxiPop(x),WC_POP).addTo(wxLy); }); }
+    const t=[]; if(NM&&wcOpt.tx) t.push(z>=12?`乗り場${nt}か所（見えている範囲）`:"乗り場は地図を拡大すると出ます");
+    if(NM&&wcOpt.ht) t.push(`ホテル${htCnt}軒（広く見ているときは近くのホテルをまとめて数字で出します。GOで呼ばれたホテルはいつも出します）`);
+    $("wxMsg").textContent=t.join("・"); }
+  // ホテル：トイレと同じように、広く見ているときは近くのホテルをまとめて数字で出す（拡大すると1軒ずつ。2026-11-13 ユーザー指定）。
+  // GOで呼ばれたことのあるホテルは、まとめずにいつも出す（目立たせるため）
+  let htLy=null, htGoLy=null, htCnt=0, htDirty=false;
+  const htClusterIcon=c=>{ const n=c.getChildCount(), sz=n<10?32:n<100?38:44; return L.divIcon({className:"",iconSize:[sz,sz],html:`<div class="htc" style="width:${sz}px;height:${sz}px"><small>H</small>${n}</div>`}); };
+  function htBuild(){ if(!wcMapObj) return; htDirty=false;
+    if(htLy){ htLy.remove(); htLy=null; } if(htGoLy){ htGoLy.remove(); htGoLy=null; } hMk.clear(); htCnt=0;
+    if(!NM||!wcOpt.ht) return;
+    htLy=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:50,disableClusteringAtZoom:16,chunkedLoading:true,iconCreateFunction:htClusterIcon});
+    htGoLy=L.layerGroup();
+    NM.hotel.forEach(h=>{ if(h[6]&&!wcOpt.lux) return; htCnt++; const n=goN(h[0]);
+      const m=L.marker([h[1],h[2]],{icon:hotelIcon(h),zIndexOffset:300+n*10}).bindPopup(()=>hotelPop(h),Object.assign({maxWidth:220,minWidth:200},WC_POP));
+      m.addTo(n?htGoLy:htLy); hMk.set(h[0],{m,h,go:n>0}); });
+    htLy.addTo(wcMapObj); htGoLy.addTo(wcMapObj); }
+  function wxBind(){ if(wxBound||!wcMapObj) return; wxBound=true;
+    wcMapObj.on("moveend",()=>{ if(wxPopOpen()) return; clearTimeout(wxTm); wxTm=setTimeout(wxDraw,150); });   // 説明を開いて地図が動いたときは描き直さない（描き直すと説明が閉じる）
+    wcMapObj.on("popupclose",()=>{ clearTimeout(wxTm); wxTm=setTimeout(()=>{ if(wxPopOpen()) return; if(htDirty) htBuild(); wxDraw(); },200); }); }
+  async function wxOn(){ wxUi(); if(!wcMapObj) return; wxBind();
+    if((wcOpt.tx||wcOpt.ht)&&!NM){ $("wxMsg").textContent="読み込んでいます…"; try{ await nmLoad(); }catch(e){ $("wxMsg").textContent="データを読み込めませんでした。電波を確認して、もう一度チェックを入れてください"; return; }
+      $("wxInfo").textContent=`データ：${NM.made}に作成（オープンストリートマップ）。乗り場${NM.taxi.length}・ホテル${NM.hotel.length}`; goSendOld(); }
+    goFlush();
+    htBuild(); wxDraw(); if(!$("hListBox").hidden) hList(); }
+  function wxUi(){ $("wcShowTx").checked=!!wcOpt.tx; $("wcShowHt").checked=!!wcOpt.ht; $("wcLux").checked=!!wcOpt.lux; $("wcHtBox").hidden=!wcOpt.ht; $("wcTxLeg").hidden=!wcOpt.tx; }
+  [["wcShowTx","tx"],["wcShowHt","ht"],["wcLux","lux"]].forEach(([id,k])=>$(id).addEventListener("change",()=>{ wcOpt[k]=$(id).checked; try{ localStorage.setItem("tenko.wcOpt",JSON.stringify(wcOpt)); }catch(e){} wxOn(); }));
+  wxUi();
+  // 「GOで呼ばれた」・メモ・消す（ホテルの説明の中のボタン）
+  // まとめる・まとめないが変わるとき（はじめてGOで呼ばれたときなど）は、説明を閉じてから描き直す
+  function goAfter(id,msg){ const o=hMk.get(id); if(o){ o.m.setIcon(hotelIcon(o.h)); o.m.setPopupContent(hotelPop(o.h)); if(o.go!==(goN(id)>0)) htDirty=true; } const el=$("goMsg"); if(el) el.textContent=msg; if(!$("hListBox").hidden) hList(); }
+  document.addEventListener("click",e=>{ const t=e.target; if(!t||!t.dataset||$("subToilet").hidden) return;
+    if(t.dataset.goadd){ const id=t.dataset.goadd, o=hMk.get(id); if(!o) return;
+      const at=nowKey(); if(!goDo({t:"add",id,n:o.h[3],lat:o.h[1],lng:o.h[2],at})){ const el=$("goMsg"); if(el) el.textContent="記録できませんでした。もう一度押してください"; return; }
+      goAfter(id,`${recTxt(at)} を記録しました`);
+      const m=(prompt("ひとことメモ（なくてもかまいません。例：玄関前、2人、羽田まで）","")||"").trim().slice(0,200);
+      if(m){ goDo({t:"memo",id,at,m}); goAfter(id,`${recTxt(at)} を記録しました（メモつき）`); } }
+    else if(t.dataset.gomemo){ const [id,at]=t.dataset.gomemo.split("|"), cur=((goAll()[id]&&goAll()[id].r)||[]).find(x=>x.t===at); if(!cur) return;
+      const m=prompt("ひとことメモ（空にすると消えます）",cur.m||""); if(m==null) return; goAfter(id,goDo({t:"memo",id,at,m:m.trim()})?"メモを直しました":"直せませんでした。もう一度押してください"); }
+    else if(t.dataset.godel){ const [id,at]=t.dataset.godel.split("|"); if(!confirm(`${recTxt(at)} の記録を消しますか？`)) return;
+      goAfter(id,goDo({t:"del",id,at})?"消しました":"消せませんでした。もう一度押してください"); } });
+  // ホテルの一覧：客室数の多い順・チェーンごと・GOで呼ばれた回数の多い順。押すと地図でそのホテルを開く
+  function hList(){ if(!NM||!wcMapObj){ $("hListOut").innerHTML=`<div class="src">読み込んでいます…</div>`; return; }
+    const sort=$("hSort").value, vis=$("hVis").checked, b=wcMapObj.getBounds();
+    let xs=NM.hotel.filter(h=>(wcOpt.lux||!h[6])&&(!vis||b.contains([h[1],h[2]])));
+    const byRooms=(a,c)=>(c[5]||-1)-(a[5]||-1)||a[3].localeCompare(c[3],"ja");
+    let html="";
+    if(sort==="chain"){ const g=new Map(); xs.forEach(h=>{ const k=h[4]||""; (g.get(k)||g.set(k,[]).get(k)).push(h); });
+      const ks=[...g.keys()].sort((a,c)=>(!a)-(!c)||g.get(c).length-g.get(a).length||a.localeCompare(c,"ja"));
+      let k2=0; for(const k of ks){ if(k2>=300) break; const arr=g.get(k).sort(byRooms); html+=`<div class="hgrp">${k?esc(k):"（チェーン名が分からないホテル）"}　${arr.length}軒</div>`+arr.slice(0,80).map(hRow).join(""); k2+=arr.length; } }
+    else { xs.sort(sort==="go"?(a,c)=>goN(c[0])-goN(a[0])||byRooms(a,c):byRooms); if(sort==="go") xs=xs.filter(h=>goN(h[0])>0); html=xs.slice(0,200).map(hRow).join(""); }
+    $("hListOut").innerHTML=`<div class="src">${vis?"地図に見えている範囲の":"全部の"}ホテル ${xs.length}軒${xs.length>200&&sort!=="chain"?"（上から200軒）":""}${sort==="go"&&!xs.length?"。まだGOで呼ばれた記録がありません":""}</div>`+html; }
+  function hRow(h){ const n=goN(h[0]); return `<button type="button" class="hrow" data-hid="${esc(h[0])}"><b>${esc(h[3])}</b><span>${esc(h[4])}</span><span>${h[5]?h[5]+"室":""}</span>${n?`<span class="hgo">GO ${n}回</span>`:""}</button>`; }
+  $("hBtn").onclick=async()=>{ const box=$("hListBox"); box.hidden=!box.hidden; if(box.hidden) return; await wxOn(); hList(); };
+  $("hSort").onchange=hList; $("hVis").onchange=hList;
+  $("hListOut").addEventListener("click",e=>{ const b=e.target.closest("[data-hid]"); if(!b||!NM||!wcMapObj) return; const h=NM.hotel.find(x=>x[0]===b.dataset.hid); if(!h) return;
+    $("wcMapWrap").scrollIntoView({block:"start",behavior:"smooth"});
+    setTimeout(()=>{ const o=hMk.get(h[0]); if(!o) return;
+      if(o.go){ wcMapObj.setView([h[1],h[2]],Math.max(wcMapObj.getZoom(),16)); setTimeout(()=>o.m.openPopup(),400); }
+      else htLy.zoomToShowLayer(o.m,()=>setTimeout(()=>o.m.openPopup(),350)); },350); });   // まとめた中のホテルは、まとめを開いてから説明を出す（トイレと同じ）
+
   // 一番近いトイレ：押したときに現在地を取り直し、全部のトイレ（上のチェックで絞っていればその中）を距離の近い順に並べて一番上を選ぶ
   $("wcNear").onclick=async()=>{
     const m=$("wcMsg");
