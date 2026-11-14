@@ -1606,7 +1606,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-14 21:13</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-14 23:02</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3201,7 +3201,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const pos=await getPos(true);   // 押したときに取り直す（前の位置は使わない）
     if(!pos){ m.textContent="場所が取れませんでした。位置情報の許可を確認してください"; return; }
     const near=cs.map(x=>({x,d:distM([pos.lat,pos.lng],[x.lat,x.lng])})).sort((a,b)=>a.d-b.d), best=near[0].x, bestD=near[0].d;   // 距離の近い順に並べて一番上
-    const fd=d=>d>=1000?r1(d/1000)+"km":Math.round(d/10)*10+"m", url=`https://www.google.com/maps/dir/?api=1&destination=${best.lat},${best.lng}&travelmode=driving`;
+    const fd=d=>d>=1000?r1(d/1000)+"km":Math.round(d/10)*10+"m", url=navUrl(best.lat,best.lng);
     if(restMapObj){ if(restMeMarker) restMapObj.removeLayer(restMeMarker);
       restMeMarker=L.circleMarker([pos.lat,pos.lng],{radius:9,color:"#fff",weight:3,fillColor:"#D23C2F",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(restMapObj);
       restMapObj.fitBounds(L.latLngBounds([[pos.lat,pos.lng],[best.lat,best.lng]]),{padding:[40,40],maxZoom:16}); }
@@ -3232,8 +3232,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       $("restMapWrap").hidden=false; $("restMap").hidden=false;
       await loadLeaflet();
       if(!restMapObj){
-        restMapObj=L.map("restMap",{zoomControl:true,attributionControl:true});
-        L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(restMapObj);
+        restMapObj=mkMap("restMap");
         // 地図をタップ（クリック）した場所を、追加する場所として選べる
         restMapObj.on("click",e=>{ restPick={lat:+e.latlng.lat.toFixed(6),lng:+e.latlng.lng.toFixed(6)}; renderRestPick(); $("restMsg").textContent="地図で選んだ場所に追加します。メモを入れて（省略できます）「この場所を休憩場として追加」を押してください"; });
       }
@@ -3248,7 +3247,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       try{ if(!GS.rest2.pts) await geoLoad("rest2",true);
         const S2=GS.rest2, RC=["#8B5A2B","#2F6FD6","#7B3FA0","#3E9B4F"];
         (S2.pts||[]).filter(x=>!GEO.rest2.alertG(S2.groups[x[1]]||"")).forEach(x=>{ const c=x[2][0], cl=RC[x[1]%RC.length];
-          L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(`<div style="font-size:15px;line-height:1.5;min-width:180px;max-width:260px"><b>${esc(x[0])}</b><div style="color:${cl};font-weight:700">${esc(S2.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}<a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(restLayer); });
+          L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(`<div style="font-size:15px;line-height:1.5;min-width:180px;max-width:260px"><b>${esc(x[0])}</b><div style="color:${cl};font-weight:700">${esc(S2.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}<a href="${navUrl(c[0],c[1])}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`).addTo(restLayer); });
         const nSm=(S2.pts||[]).filter(x=>!GEO.rest2.alertG(S2.groups[x[1]]||"")).length; if(nSm) m.textContent+=`・マイマップの喫煙所など ${nSm}か所`;
       }catch(e){}
       if(j.items.length) setTimeout(()=>{ restMapObj.invalidateSize(); restMapObj.fitBounds(L.latLngBounds(j.items.map(x=>[x.lat,x.lng])),{padding:[20,20],maxZoom:16}); },60);
@@ -3341,7 +3340,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const ps=pkState(x,new Date()), st=ps.st, cl=ps.k==="on"?PK_ON:ps.k==="free"?PK_FREE:PK_OFF;
     const day=["日曜・休日・1月1日〜3日は使えません","毎日（1月1日〜3日を除く）","土曜・日曜・休日・1月1日〜3日は使えません"][x.day];
     const veh=[x.fl&1?"普通車":"",x.fl&4?"二輪車":"",x.fl&2?"貨物車用の枠あり":"",x.fl&8?"標章車専用の枠あり":""].filter(Boolean).join("・");
-    return `<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b>パーキング・${x.k?"チケット":"メーター"}</b><div style="font-size:13px">${esc(x.t)}${x.r?`・<b>${esc(x.r)}</b>`:""}</div><div style="color:${st.ok?PK_ON:"#5F6368"};font-weight:700">${st.ok?"今使えます":"今は使えません"}（${esc(st.why)}）</div>${ps.k==="free"?`<div style="color:${PK_FREE};font-weight:700">みんなの確認：時間外も止められる</div>`:""}<div>時間 ${esc(x.h.replace("-","〜"))}</div><div style="font-size:13px">${day}</div><div>制限 <b>${x.lim}分</b>・${x.fee}円</div><div style="font-size:13px">${veh}</div>${pkBox(x)}<a href="https://www.google.com/maps/dir/?api=1&destination=${x.c[0]},${x.c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`;
+    return `<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b>パーキング・${x.k?"チケット":"メーター"}</b><div style="font-size:13px">${esc(x.t)}${x.r?`・<b>${esc(x.r)}</b>`:""}</div><div style="color:${st.ok?PK_ON:"#5F6368"};font-weight:700">${st.ok?"今使えます":"今は使えません"}（${esc(st.why)}）</div>${ps.k==="free"?`<div style="color:${PK_FREE};font-weight:700">みんなの確認：時間外も止められる</div>`:""}<div>時間 ${esc(x.h.replace("-","〜"))}</div><div style="font-size:13px">${day}</div><div>制限 <b>${x.lim}分</b>・${x.fee}円</div><div style="font-size:13px">${veh}</div>${pkBox(x)}<a href="${navUrl(x.c[0],x.c[1])}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a></div>`;
   }
   const pkIcon=cl=>L.divIcon({className:"",html:`<div style="width:20px;height:20px;border-radius:5px;background:${cl};color:#fff;font:700 13px/20px sans-serif;text-align:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)">P</div>`,iconSize:[24,24],iconAnchor:[12,12]});
   // 区間の線までのいちばん近い距離（m）。近い範囲なので、緯度経度を平面とみなして線分への垂線で測る
@@ -3402,7 +3401,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const wcHours=h=>{ if(!h) return ""; if(/^24\/7$/.test(h.trim())) return "24時間";
     const D={Mo:"月",Tu:"火",We:"水",Th:"木",Fr:"金",Sa:"土",Su:"日",PH:"祝日"};
     return h.replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su|PH)\b/g,m=>D[m]).replace(/\boff\b/g,"休み").replace(/\bclosed\b/g,"休み").replace(/\bsunset\b/g,"日の入り").replace(/\bsunrise\b/g,"日の出").replace(/([月火水木金土日])-([月火水木金土日])/g,"$1〜$2").replace(/;\s*/g,"／"); };
-  const wcNav=x=>`https://www.google.com/maps/dir/?api=1&destination=${x[0]},${x[1]}&travelmode=driving`;
+  const wcNav=x=>navUrl(x[0],x[1]);
   function wcPop(x){
     const nd="<span style=\"color:#5F6368\">情報なし</span>", row=(k,v)=>`<div><span style="color:#5F6368">${k}</span>　${v}</div>`;
     const wc={1:"対応",2:"一部対応",0:"非対応"}[x[5]], now=new Date(), o=wcOsmPk(x), mm=wcMeterNow(x,now), pks=[];
@@ -3455,8 +3454,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const m=$("wcMsg");
     try{ await loadLeaflet(); await loadCluster(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
     let first=false;
-    if(!wcMapObj){ first=true; wcMapObj=L.map("wcMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(wcMapObj);
+    if(!wcMapObj){ first=true; wcMapObj=mkMap("wcMap");
       wcMapObj.setView([35.69,139.70],12);
       wcMapObj.on("zoomend",()=>{ if(!wcPkLn) return; if(wcMapObj.getZoom()>=WC_LN_Z) wcPkLn.addTo(wcMapObj); else wcPkLn.remove(); }); }
     setTimeout(()=>wcMapObj.invalidateSize(),60); drawHnd();
@@ -3709,7 +3707,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const T=SHOP_T.find(a=>a[0]===x.kind), nm=x.t.name||x.t.brand||"（名前の登録なし）";
     const pk=(j.src==="chk"?"<b style=\"color:#1E8E3E\">みんなの確認で駐車場あり</b><br>":j.src==="chkno"?"<b style=\"color:#C0392B\">みんなの確認で駐車場なし</b><br>":"")+(j.src==="rest"?`<b>休憩場（${esc(x.grp)}）に登録あり</b>：駐車場があるお店<br>`:"")+(j.src==="data"?"お店の情報に「駐車場あり」<br>":"")+(isFinite(j.dOwn)&&j.dOwn<=300?`お店専用の駐車場 <b>約${fdm(j.dOwn)}</b><br>`:"")+(isFinite(j.d)?`一番近い駐車場 <b>約${fdm(j.d)}</b>`:"近くに駐車場の登録なし");
     return `<div style="font-size:15px;line-height:1.55;min-width:170px;max-width:220px"><b>${esc(nm)}</b><div><span style="color:#5F6368">種類</span>　${esc(T[1])}</div>${cvsBox(x)}<div style="margin-top:6px"><span style="color:#5F6368">地図の情報</span>　${pk}</div><div style="font-size:12.5px;color:#5F6368">オープンストリートマップの情報です。止められるかは現地で確かめてください</div>`+
-      `<a href="https://www.google.com/maps/dir/?api=1&destination=${x.lat},${x.lng}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${T[3]};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">Googleマップで道案内</a></div>`;
+      `<a href="${navUrl(x.lat,x.lng)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${T[3]};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">Googleマップで道案内</a></div>`;
   }
   // 出すお店（駐車場ありと決めたもの・種類がオンのもの）
   const shopShown=()=>{ const all=Object.values(shopEls), rs=all.filter(x=>x.rest);
@@ -3869,7 +3867,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     m.innerHTML=`一番近いお店：<b>${esc(nm(near[0]))}</b>（${esc(T[1])}）<br>現在地から<b>約${fdm(d)}</b>（まっすぐの距離）・`+
       (ck.pk==="あり"||j.src==="chk"?"みんなの確認で駐車場あり":ck.pk==="なし"?"みんなの確認で駐車場なし":j.ok?"駐車場ありと思われるお店":"駐車場はまだ分からない")+
       (near[1]?`<br><small>次に近いのは ${esc(nm(near[1]))}（約${fdm(near[1].d)}）</small>`:"")+
-      `<br><a class="btn primary" style="margin-top:6px;display:inline-block" href="https://www.google.com/maps/dir/?api=1&destination=${x.lat},${x.lng}&travelmode=driving" target="_blank" rel="noopener">Googleマップで道案内</a>`;
+      `<br><a class="btn primary" style="margin-top:6px;display:inline-block" href="${navUrl(x.lat,x.lng)}" target="_blank" rel="noopener">Googleマップで道案内</a>`;
   };
   // 広く見すぎているときは、地図のまん中を中心に拡大してから検索する（拡大し終わると、地図が動いたときの自動の検索で読み込む）
   $("wcShopLoad").onclick=()=>{ if(wcMapObj&&wcMapObj.getZoom()<(shopData?12:SHOP_Z)){ $("wcShopMsg").textContent="地図を拡大して、見えている範囲を検索します…"; wcMapObj.setZoom(SHOP_Z+1); return; } loadShops(false); };
@@ -3963,7 +3961,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const xs=pkData.items.filter(x=>x.fl&1).map(x=>{ const ps=pkState(x,now); return {x,st:ps.st,free:ps.k==="free",d:pkDist(pos,x)}; }).filter(o=>!onlyOk||o.st.ok||o.free).sort((a,b)=>a.d-b.d).slice(0,5);
     if(!xs.length){ box.innerHTML=`<div class="geo">${onlyOk?"今使える区間がありません（時間外・日曜など）。「今使えるパーキングだけ」を外すと、時間外の区間も出します":"見つかりませんでした"}</div>`; return; }
     const dtxt=d=>d>=1000?"約"+r1(d/1000)+"km":"約"+Math.round(d)+"m";
-    box.innerHTML=`<table class="cmpt" style="font-size:14.5px;margin-top:6px"><tbody>${xs.map(o=>`<tr data-wpk="${o.x.id}" style="cursor:pointer"><td class="num">${dtxt(o.d)}</td><td><b style="color:${o.st.ok?PK_ON:o.free?PK_FREE:"#5F6368"}">${o.st.ok?"使える":o.free?"時間外OK（みんなの確認）":"使えない"}</b> ${esc(o.x.t)}${o.x.r?`・${esc(o.x.r)}`:""}<br><small>${o.x.k?"チケット":"メーター"}・${o.x.lim}分${o.x.fee}円・${esc(o.st.why)}</small></td><td class="num"><a href="https://www.google.com/maps/dir/?api=1&destination=${o.x.c[0]},${o.x.c[1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a></td></tr>`).join("")}</tbody></table><div class="geo" style="font-size:13px">距離はまっすぐ測ったものです。行をタップすると地図で見られます。</div>`;
+    box.innerHTML=`<table class="cmpt" style="font-size:14.5px;margin-top:6px"><tbody>${xs.map(o=>`<tr data-wpk="${o.x.id}" style="cursor:pointer"><td class="num">${dtxt(o.d)}</td><td><b style="color:${o.st.ok?PK_ON:o.free?PK_FREE:"#5F6368"}">${o.st.ok?"使える":o.free?"時間外OK（みんなの確認）":"使えない"}</b> ${esc(o.x.t)}${o.x.r?`・${esc(o.x.r)}`:""}<br><small>${o.x.k?"チケット":"メーター"}・${o.x.lim}分${o.x.fee}円・${esc(o.st.why)}</small></td><td class="num"><a href="${navUrl(o.x.c[0],o.x.c[1])}" target="_blank" rel="noopener">ルート</a></td></tr>`).join("")}</tbody></table><div class="geo" style="font-size:13px">距離はまっすぐ測ったものです。行をタップすると地図で見られます。</div>`;
     if(!wcOpt.pk){ wcOpt.pk=true; $("wcShowPk").checked=true; drawWcPk(); }
     setWcMe(pos);
     wcMapObj.fitBounds(L.latLngBounds([[pos.lat,pos.lng],...xs.map(o=>o.x.c)]),{padding:[30,30],maxZoom:17});
@@ -4020,7 +4018,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const n=parseFloat(m[1].replace(/,/g,"")); return isNaN(n)?-1:n*(m[2]==="万"?1e4:m[2]==="千"?1e3:1); };
   // 一覧の並び：開催中（まもなく終了なども）→開始前→終了。その中は集客見込みの多い順（2026-11-01 ユーザー指定）
   const evGrp=st=>st.l==="終了"?2:st.l==="開始前"?1:0;
-  const evRoute=e=>`https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lng}&travelmode=driving`;
+  const evRoute=e=>navUrl(e.lat,e.lng);
   function evPopup(e,st){ return `<div style="font-size:15px;line-height:1.5;min-width:200px"><b style="font-size:16px">${esc(e.name)}</b>
       ${st.l?`<div style="color:${st.c};font-weight:700">${esc(st.l)}</div>`:""}
       <div>開始：${evClock(st.S)}</div><div>終了見込み：${evClock(st.E)}</div>${evCap(e)?`<div><b>集客見込み：${esc(evCap(e))}</b></div>`:""}${e.auto?`<div style="color:#5A6866;font-size:13px">自動で読み込んだイベント</div>`:""}
@@ -4053,8 +4051,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function renderTrainTab(first,noFit){
     const m=$("trMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
-    if(!trMap){ trMap=L.map("trMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(trMap);
+    if(!trMap){ trMap=mkMap("trMap");
       trMap.setView([35.69,139.75],11);
       addAreaMask(trMap); }
     setTimeout(()=>trMap.invalidateSize(),60);
@@ -4092,8 +4089,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function renderEv(first,fit){
     const m=$("evMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
-    if(!evMap){ evMap=L.map("evMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(evMap);
+    if(!evMap){ evMap=mkMap("evMap");
       evMap.setView([35.68,139.76],11); addAreaMask(evMap); }
     setTimeout(()=>evMap.invalidateSize(),60);
     if(first){ m.textContent="イベントを読み込んでいます…"; await evFetch(); }
@@ -4207,8 +4203,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function renderHosp(first){
     const m=$("hospMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
-    if(!hospMap){ hospMap=L.map("hospMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(hospMap);
+    if(!hospMap){ hospMap=mkMap("hospMap");
       hospMap.setView([35.72,139.70],12); addAreaMask(hospMap); }
     setTimeout(()=>hospMap.invalidateSize(),60);
     if(first){ m.textContent="病院の表を読み込んでいます…"; await hospFetch(); await hospShowMe(false); }
@@ -4311,8 +4306,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function dmDraw(stops,now,label){
     const m=$("dmMsg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした"; return; }
-    if(!dmMap){ dmMap=L.map("dmMap",{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(dmMap);
+    if(!dmMap){ dmMap=mkMap("dmMap");
       dmMap.setView([35.69,139.75],11); addAreaMask(dmMap); }
     setTimeout(()=>dmMap.invalidateSize(),60);
     if(dmLayer) dmLayer.remove(); dmLayer=L.layerGroup().addTo(dmMap);
@@ -4461,8 +4455,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("cmpSeg").querySelectorAll("[data-cmp]").forEach(b=>b.onclick=()=>{ cmpTab=b.dataset.cmp; cmpRender(); });
   ["cmpDow","cmpHour","cmpOff"].forEach(id=>$(id).addEventListener("change",()=>cmpRender()));
   $("cmpDate").addEventListener("change",()=>{ cmpWhoCode=null; cmpRender(); });
-  async function cmpMapInit(id,old){ await loadLeaflet(); if(old) return old; const m=L.map(id,{zoomControl:true,attributionControl:true});
-    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
+  async function cmpMapInit(id,old){ await loadLeaflet(); if(old) return old; const m=mkMap(id);
     m.setView([35.68,139.74],11); addAreaMask(m); return m; }
   async function cmpRender(){
     if(!cmpData) return;
@@ -4915,7 +4908,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     // ① ターミナルの枠：行（深夜着・欠航・遅れ）を押すと、下にその便が出る。ルートは「ルート ›」だけ
     $("airCards").innerHTML=Object.entries(AIR_TERM[airAp]).map(([k,[la,ln,nm]])=>{ const xs=up.filter(x=>x.term===k), n={ok:xs.filter(CAT.ok.f).length,late:xs.filter(CAT.late.f).length,cancel:xs.filter(CAT.cancel.f).length,delay:xs.filter(CAT.delay.f).length};
       const line=c=>`<button class="aircat${airSel&&airSel.term===k&&airSel.cat===c?" on":""}" data-sel="${k}|${c}">${CAT[c].l} <b class="num"${c==="cancel"&&n[c]?' style="color:#D23C2F"':""}>${n[c]}</b></button>`;
-      return `<div class="aircard${n.late?" hot":""}"><b>${esc(nm.replace(/^.. /,"").replace("ターミナル",""))} <small style="font-weight:400;color:var(--muted)">これから${xs.length}便</small></b>${line("ok")}${line("late")}${line("cancel")}${line("delay")}<a href="https://www.google.com/maps/dir/?api=1&destination=${la},${ln}&travelmode=driving" target="_blank" rel="noopener">ルート ›</a></div>`; }).join("");
+      return `<div class="aircard${n.late?" hot":""}"><b>${esc(nm.replace(/^.. /,"").replace("ターミナル",""))} <small style="font-weight:400;color:var(--muted)">これから${xs.length}便</small></b>${line("ok")}${line("late")}${line("cancel")}${line("delay")}<a href="${navUrl(la,ln)}" target="_blank" rel="noopener">ルート ›</a></div>`; }).join("");
     $("airCards").querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>{ const [term,cat]=b.dataset.sel.split("|"); airSel=airSel&&airSel.term===term&&airSel.cat===cat?null:{term,cat}; renderAir(); if(airSel) $("airAttn").scrollIntoView({behavior:"smooth",block:"start"}); });
     // ② 時間帯ごとの便の数（羽田だけ。これから8時間）
     if(airAp==="HND"){ const now=new Date().getHours(), hs=[...Array(9)].map((_,i)=>(now+i)%24), cnt=h=>airFilter(airUp).filter(x=>!x.cancel&&x.when!=null&&Math.floor(x.when/60)===h).length, mx=Math.max(1,...hs.map(cnt));
@@ -6141,8 +6134,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(A.needWx) anWxLoad(A.S.map(s=>s.k)).then(got=>{ if(got&&sView==="anal") renderAnal(); else if($("anWxMsg")) $("anWxMsg").textContent="天気のデータを読み込めなかった勤務は、雨の比較から外しています。"; });
   }
   function anMapsDraw(A){
-    const mk=(id,fit)=>{ const el=$(id); if(!el||typeof L==="undefined") return null; const m=L.map(el,{zoomControl:true,attributionControl:true});
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
+    const mk=(id,fit)=>{ const el=$(id); if(!el||typeof L==="undefined") return null; const m=mkMap(el);
       anMaps.push(m); if(fit&&fit.length) m.fitBounds(L.latLngBounds(fit).pad(0.15),{maxZoom:15}); else m.setView([35.69,139.70],12); setTimeout(()=>m.invalidateSize(),50); return m; };
     // この先の地図：1勤務あたりの売上で色の濃さを変える
     if(A.ahead&&A.ahead.cells.length&&$("anAheadMap")){ const cs=A.ahead.cells, mx=Math.max(...cs.map(c=>c.f)), m=mk("anAheadMap",cs.map(c=>[c.lat,c.lng]));
@@ -7248,6 +7240,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 地図（Leaflet＋地理院タイル）は、ルートのある勤務を開いたときだけ読み込む
   let leafletP=null, rtMapObj=null, rtLayer=null, rtKey="", rtSelId="", rtSelDay="";
   $("rtSel").addEventListener("change",()=>{ rtSelId=$("rtSel").value; rtKey=""; renderSales(); });
+  // ===== 地図の共通の部品（2026-11-14 見直しの提案6）：各画面は、これを呼んで地図を作り、ナビのリンクを作る =====
+  // mkMap(場所, 地図の種類)：国土地理院の地図（pale＝白っぽい地図。std＝色つきの地図）。＋−と出典の表示つき
+  function mkMap(el,tile){ const m=L.map(el,{zoomControl:true,attributionControl:true});
+    L.tileLayer(`https://cyberjapandata.gsi.go.jp/xyz/${tile||"pale"}/{z}/{x}/{y}.png`,{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
+    return m; }
+  // navUrl(緯度, 経度)：Googleマップで、その場所までの車のナビを開くリンク
+  function navUrl(lat,lng){ return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`; }
   function loadLeaflet(){
     if(window.L) return Promise.resolve();
     if(!leafletP) leafletP=new Promise((ok,ng)=>{
@@ -7376,8 +7375,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(key===rtKey&&rtMapObj) return; rtKey=key;
     loadLeaflet().then(()=>{
       if(!rtMapObj){
-        rtMapObj=L.map("rtMap",{zoomControl:true,attributionControl:true});
-        L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(rtMapObj);
+        rtMapObj=mkMap("rtMap");
       }
       if(rtLayer) rtLayer.remove();
       rtLayer=L.layerGroup().addTo(rtMapObj);
@@ -8314,9 +8312,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   async function renderGeoTab(k,first){
     const G=GEO[k], S=GS[k], P=G.pre, m=$(P+"Msg");
     try{ await loadLeaflet(); }catch(e){ m.textContent="地図を読み込めませんでした。電波を確認してください"; return; }
-    if(!S.map){ S.map=L.map(P+"Map",{zoomControl:true,attributionControl:true});
-      // 地図は、飲み屋街マップと同じ白っぽい地図（淡色地図）。優良乗り場だけは元の色の地図（2026-10-28 ユーザー指定）
-      L.tileLayer(`https://cyberjapandata.gsi.go.jp/xyz/${k==="yuryo"?"std":"pale"}/{z}/{x}/{y}.png`,{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(S.map);
+    // 地図は、飲み屋街マップと同じ白っぽい地図（淡色地図）。優良乗り場だけは元の色の地図（2026-10-28 ユーザー指定）
+    if(!S.map){ S.map=mkMap(P+"Map",k==="yuryo"?"std":"pale");
       S.map.setView([35.69,139.75],12); addAreaMask(S.map); }
     setTimeout(()=>S.map.invalidateSize(),60);
     if(!S.pts){ m.textContent="場所を読み込んでいます…"; await geoLoad(k,true); if(!S.pts){ m.textContent="場所を読み込めませんでした。電波を確認してください"; return; } }
@@ -8328,7 +8325,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     if(S.layer) S.layer.remove(); S.layer=L.layerGroup().addTo(S.map);
     const xs=S.pts.filter(x=>!S.offG[x[1]]&&gShow(x[1],x));
     xs.forEach(x=>{ const c=x[2][0], cl=col(x[1]);
-      const link=G.route?`<a href="https://www.google.com/maps/dir/?api=1&destination=${c[0]},${c[1]}&travelmode=driving" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
+      const link=G.route?`<a href="${navUrl(c[0],c[1])}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
       const gp=geoPlace(k,x);
       const pop=`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(gp.place)}</b>${gp.kind?`<div style="font-weight:700">${esc(gp.kind)}</div>`:""}<div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]&&x[3]!==gp.place&&!/多発地点/.test(x[3])?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
       if((x[4]||"P")==="A") L.polygon(x[2],{color:cl,weight:3,fillColor:cl,fillOpacity:.22}).bindPopup(pop).addTo(S.layer);
@@ -8337,7 +8334,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     const setMe=p=>{ if(S.me) S.map.removeLayer(S.me); S.me=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(S.map); };
     if(first){ const p=await getPos(); if(p){ setMe(p); S.map.setView([p.lat,p.lng],15); } else if(xs.length) S.map.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
     if(S.me){ const me=S.me.getLatLng(), near=xs.map(x=>({x,d:geoD({lat:me.lat,lng:me.lng},x)})).sort((a,b)=>a.d-b.d).slice(0,15);
-      $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${col(x[1])}"><div class="trname"><b>${esc(geoPlace(k,x).place)}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${geoPlace(k,x).kind?esc(geoPlace(k,x).kind)+"・":""}${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="https://www.google.com/maps/dir/?api=1&destination=${x[2][0][0]},${x[2][0][1]}&travelmode=driving" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
+      $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${col(x[1])}"><div class="trname"><b>${esc(geoPlace(k,x).place)}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${geoPlace(k,x).kind?esc(geoPlace(k,x).kind)+"・":""}${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="${navUrl(x[2][0][0],x[2][0][1])}" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
       $(P+"List").querySelectorAll("[data-geopin]").forEach(b=>b.onclick=()=>{ const x=S.pts[+b.dataset.geopin]; S.map.setView(x[2][0],17); $(P+"Map").scrollIntoView({behavior:"smooth",block:"center"}); }); }
     else $(P+"List").innerHTML=`<div class="src">「現在地」を押すと、近い順の一覧を出します。</div>`;
     m.textContent=`${xs.length}か所を表示しています`;

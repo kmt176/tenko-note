@@ -68,6 +68,9 @@ body.full .panel{display:none}
 .xleg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12.5px;color:var(--muted)}
 .xleg .xpin{width:20px;height:20px;font-size:11px;margin-left:4px}
 #xNightKinds{gap:4px 12px}
+/* 文字の大きさ（2026-11-14 ユーザー指定：アプリの中の枠で開くので、指で広げる拡大ができないため） */
+.fsrow{display:flex;white-space:nowrap;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.fsrow button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 10px;font-size:15px;font-weight:700;min-height:36px}
 </style>
 </head>
 <body>
@@ -83,8 +86,9 @@ body.full .panel{display:none}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-13 08:47</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-14 23:01</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
+    <div class="fsrow">文字の大きさ <button id="fsDn" aria-label="文字を小さく">小さく</button><button id="fsUp" aria-label="文字を大きく">大きく</button><span id="fsNow"></span></div>
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
       <div class="row"><label>行き先 <input id="rDest" list="stList" placeholder="駅名（例：新宿）" autocomplete="off"></label><button class="btn" id="rTap" style="min-height:36px;padding:6px 10px">地図で選ぶ</button></div>
       <!-- 区→駅・町の2段のくるくる（高速マップと同じ places.json。2026-11-12） -->
@@ -539,6 +543,11 @@ Object.keys(NKN).forEach(k=>$("xn_"+k).addEventListener("change",()=>{ XO.nk[k]=
 xUi(); if(XO.night) xOn();
 // 拡大・縮小で、円の塗りとお店の点の大きさを切り替える
 let wasNear=near(); map.on("zoomend",()=>{ if(near()!==wasNear){ wasNear=near(); if(shops.length) compute(); } });
+/* 文字の大きさ：設定の枠とお店の吹き出しを、まとめて大きく・小さくする（端末に覚える） */
+(()=>{ const LV=[1,1.15,1.3,1.45], K="izakayaMap.fs"; let i=0; try{ i=+localStorage.getItem(K)||0; }catch(e){} if(!(i>=0&&i<LV.length)) i=0;
+  const st=document.createElement("style"); document.head.appendChild(st);
+  const ap=()=>{ const z=LV[i]; st.textContent=z===1?"":`#pbody>:not(.fsrow){zoom:${z}} .leaflet-popup-content{zoom:${z};max-width:${Math.round(250/z)}px}`; $("fsNow").textContent=Math.round(z*100)+"%"; $("fsDn").disabled=i===0; $("fsUp").disabled=i===LV.length-1; try{ localStorage.setItem(K,String(i)); }catch(e){} };
+  $("fsDn").onclick=()=>{ if(i>0){ i--; ap(); } }; $("fsUp").onclick=()=>{ if(i<LV.length-1){ i++; ap(); } }; ap(); })();
 $("fold").onclick=()=>{ const h=$("pbody").hidden=!$("pbody").hidden; $("fold").textContent=h?"開く":"閉じる"; };
 (async()=>{ const at=loadCache(); if(at){ showInfo(at); compute(); return; }
   const old=loadOld(); if(old){ showInfo(old); compute(); $("dataInfo").textContent+="（営業時間を入れたデータを取り直しています…）"; }
