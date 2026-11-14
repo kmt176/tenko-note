@@ -570,6 +570,7 @@ body.rtfull{overflow:hidden}
 .xpin.sq{border-radius:6px}
 .htc{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:rgba(24,100,171,.88);color:#fff;font:800 14px/1 sans-serif;border:3px solid rgba(255,255,255,.9);box-shadow:0 1px 5px rgba(0,0,0,.4);box-sizing:border-box}
 .htc small{font-size:9px;opacity:.9;margin-bottom:1px}
+.htc.mnc{background:rgba(11,114,133,.88)}
 .xleg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12.5px;color:#5F6368}
 .xleg .xpin{width:20px;height:20px;font-size:11px;margin-left:4px}
 .xpop{font-size:14.5px;line-height:1.55;min-width:180px}.xpop .xh{display:block;font-size:16px;margin-bottom:2px}
@@ -712,7 +713,7 @@ body.rtfull{overflow:hidden}
   <details id="bkBox">
     <summary>バックアップ・機種変更</summary>
     <div class="body">
-      <div>「バックアップを作る」→「コピー」か「ファイルに保存」で、点呼と売上をまとめたバックアップを、メモ・OneDrive・iCloud Driveなどに保存してください。ファイルにした場合、復元は「ファイルから読み込む」でそのファイルを選ぶだけです。文字は暗号化されているので、見ても内容は分かりません。新しいスマホでは、貼り付けて「復元」を押します。</div>
+      <div>「バックアップを作る」→「コピー」か「ファイルに保存」で、点呼と売上と設定（場所の登録・表示の好みも。合言葉・パスワード・APIキーは入れません）をまとめたバックアップを、メモ・OneDrive・iCloud Driveなどに保存してください。ファイルにした場合、復元は「ファイルから読み込む」でそのファイルを選ぶだけです。文字は暗号化されているので、見ても内容は分かりません。新しいスマホでは、貼り付けて「復元」を押します。</div>
       <div class="field"><label for="bkPass">パスワード（付けなくてもよい）</label><input type="password" id="bkPass" autocomplete="new-password" placeholder="付けないときは空のまま">
         <small class="src">付けると、そのパスワードを知らない人は誰も復元できません。<b>忘れると、自分でも復元できなくなります。</b></small></div>
       <div class="btnrow"><button class="btn primary" id="makeBtn">バックアップを作る</button><button class="btn" id="copyBtn" disabled>コピー</button><button class="btn" id="saveFileBtn" disabled>ファイルに保存</button></div>
@@ -720,6 +721,7 @@ body.rtfull{overflow:hidden}
       <textarea id="importBox" placeholder="ここに貼り付け" aria-label="復元する文字"></textarea>
       <div class="btnrow"><button class="btn" data-pickfor="importBox">ファイルから読み込む</button></div>
       <div class="field" id="imPassF" hidden><label for="imPass">バックアップのパスワード</label><input type="password" id="imPass" autocomplete="off"></div>
+      <label class="check"><input type="checkbox" id="imSetOn" checked>設定と場所の登録も戻す<br><small>社員コード・車種・目標・メニューの形・マップや飲み屋街・高速マップの表示と登録した場所など。合言葉・パスワード・GoogleとGeminiのAPIキーはバックアップに入れていないので、戻したあとに入れ直してください</small></label>
       <label class="check"><input type="checkbox" id="imTenkoOnly">点呼だけ戻す（売上はそのまま）<br><small>点呼の記録だけを消してしまったときなどに使います。チェックしないと、点呼と売上の両方がバックアップの内容に置き換わります</small></label>
       <div class="btnrow">
         <button class="btn" id="importBtn">復元</button>
@@ -1019,6 +1021,16 @@ body.rtfull{overflow:hidden}
           <div id="hListBox" hidden><div style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:15px;margin:6px 0"><label>並べ方 <select id="hSort"><option value="rooms">客室数の多い順</option><option value="chain">チェーンごと</option><option value="go">GOで呼ばれた回数の多い順</option></select></label>
             <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hVis" checked>地図に見えている範囲だけ</label></div><div id="hListOut" class="hlist"></div></div></div></div>
       <div class="src" id="wxMsg"></div><div class="src" id="wxInfo"></div>
+      <!-- マンション（中規模以上）。最初はオフ（2026-11-14 ユーザー指定） -->
+      <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowMn">🏢 マンション（中規模以上）</label>
+        <div id="wcMnBox" hidden>
+          <div style="display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:15px"><input type="number" id="mnLv" inputmode="numeric" style="width:4.2em;font-size:16px;padding:4px 6px"> 階以上　または　<input type="number" id="mnFl" inputmode="numeric" style="width:4.6em;font-size:16px;padding:4px 6px"> 戸以上</div>
+          <div class="xleg"><span class="xpin" style="background:#F76707">M</span>部屋数が分かる <span class="xpin" style="background:#0B7285">M</span>部屋数が分からない <span class="htc mnc" style="width:24px;height:24px;font-size:10px;margin-left:4px"><small style="font-size:7px">M</small>12</span>まとめた数</div>
+          <div class="btnrow"><button class="btn" id="mnBtn">区ごとのリスト</button></div>
+          <div id="mnListBox" hidden><div style="margin:6px 0;font-size:15px"><label>区 <select id="mnWard"></select></label></div><div id="mnListOut" class="hlist"></div>
+            <div style="font-size:13px;color:#5F6368">部屋数の多い順です。部屋数が分からないものは、そのあとに階数の多い順で並べています。行を押すと、地図でその場所を出します。分からない項目は空欄です</div></div>
+        </div></div>
+      <div class="src" id="mnMsg"></div><div class="src" id="mnInfo"></div>
       <div class="msg" id="wcMsg" role="status"></div>
       <div id="wcMapWrap" class="mapwrap"><div id="wcMap" class="bigmap" style="height:440px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="wcFullBtn">全画面</button></div></div>
@@ -1587,7 +1599,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-14 11:18</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-14 20:39</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2126,13 +2138,31 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(u[0]===1){ data=await gzip(data,false).catch(()=>null); if(!data) throw new Error("old"); }
     return JSON.parse(new TextDecoder().decode(data));
   }
+  // 設定と場所の登録もバックアップに入れる（2026-11-14 見直しの提案1）。スマホの中の tenko.・izakayaMap.・hwMap. の項目を集める。
+  // 入れないもの：点呼・売上（別に入る）、取り直せる控え（お店・イベント・車種・お知らせなど）、送り待ち、この端末だけのもの、
+  // 合言葉・管理者の合言葉・パスワード・APIキー（バックアップのファイルが人の目に触れても漏れないように）
+  const BK_SKIP=new Set(["tenko.v2","uriage.v1","tenko.gmapkey","tenko.gemkey","tenko.devId","tenko.useDay","tenko.flashq","tenko.flashsig","tenko.fullsig","tenko.goQ","tenko.goSent1",
+    "tenko.cars","tenko.events","tenko.notices","tenko.anWx","tenko.shinNext","tenko.hosp","tenko.patrol","tenko.stand","tenko.rest2","tenko.yuryo","izakayaMap.v3","izakayaMap.v4","tenko.adminLock"]);
+  const BK_SKIP_RE=/^tenko\.(taxiSeen\.|gem)/, BK_KEY_RE=/^(tenko|izakayaMap|hwMap)\./, CFG_SECRET=["pass","npass","apass","abkPass","svpass","url","admin","member"];
+  function bkSettings(){ const o={};
+    try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(!k||!BK_KEY_RE.test(k)||BK_SKIP.has(k)||BK_SKIP_RE.test(k)) continue;
+        let v=localStorage.getItem(k); if(v==null||v.length>100000) continue;
+        if(k===CFG_KEY){ try{ const c=JSON.parse(v)||{}; CFG_SECRET.forEach(f=>delete c[f]); v=JSON.stringify(c); }catch(e){ continue; } }
+        o[k]=v; } }catch(e){}
+    return o; }
+  // 戻す：設定は、今の合言葉・パスワード・送り先は残したまま重ねる。ほかの項目はそのまま書く
+  function bkSettingsRestore(o){ let n=0;
+    Object.entries(o||{}).forEach(([k,v])=>{ if(typeof v!=="string"||!BK_KEY_RE.test(k)||BK_SKIP.has(k)||BK_SKIP_RE.test(k)) return;
+      try{ if(k===CFG_KEY){ const c=JSON.parse(v)||{}; CFG_SECRET.forEach(f=>{ delete c[f]; if(cfg[f]!=null) c[f]=cfg[f]; }); cfg=c; saveCfg(); }
+        else localStorage.setItem(k,v); n++; }catch(e){} });
+    return n; }
   let prepared=null;
   function resetBackup(){ prepared=null; $("copyBtn").disabled=true; $("saveFileBtn").disabled=true; $("exportBox").hidden=true; $("exportBox").value=""; }
   $("makeBtn").onclick=async()=>{
     msg("作っています…");
     try{
       const pass=$("bkPass").value;
-      prepared=await packBackup({v:3,tenko:recs,uriage:sales},pass);
+      prepared=await packBackup({v:4,tenko:recs,uriage:sales,ls:bkSettings()},pass);
       $("copyBtn").disabled=false; $("saveFileBtn").disabled=false;
       msg(`できました（${pass?"パスワード付き":"パスワードなし"}）。「コピー」か「ファイルに保存」を押してください`);
     }catch(e){ resetBackup(); msg("作れませんでした。ブラウザを最新にしてください"); }
@@ -2172,15 +2202,18 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       const v=await unpackBackup(text,$("imPass").value);
       const t=Array.isArray(v)?v:v&&Array.isArray(v.tenko)?v.tenko:null; if(!t) throw new Error("bad");
       const only=$("imTenkoOnly").checked, hasU=!Array.isArray(v)&&v.uriage&&v.uriage.days, nU=hasU?Object.keys(v.uriage.days).length:0;
-      const sig=text.length+"|"+only;
+      const hasS=!Array.isArray(v)&&v.ls&&typeof v.ls==="object"&&Object.keys(v.ls).length>0, setOn=hasS&&!only&&$("imSetOn").checked;
+      const sig=text.length+"|"+only+"|"+setOn;
       if(restoreArmed!==sig){ restoreArmed=sig;
-        msg(`このバックアップには、点呼 ${t.length}件${hasU?`・売上 ${nU}勤務`:""}が入っています。${only?"点呼だけ":"点呼と売上"}を、この内容に置き換えます。よければもう一度「復元」を押してください`); return; }
+        msg(`このバックアップには、点呼 ${t.length}件${hasU?`・売上 ${nU}勤務`:""}${hasS?`・設定と場所の登録 ${Object.keys(v.ls).length}項目`:"（設定は入っていない前の形）"}が入っています。${only?"点呼だけ":"点呼と売上"}${setOn?"と設定":""}を、この内容に置き換えます。よければもう一度「復元」を押してください`); return; }
       restoreArmed=null;
       if(!t.length&&only){ msg("このバックアップには点呼の記録がありません（0件）。戻しませんでした"); return; }
       recs=t; save();
       let n="";
       if(!only&&hasU){ sales=v.uriage; saveSales(); n="、売上 "+nU+"勤務"; }
-      $("importBox").value=""; $("imPass").value=""; $("imPassF").hidden=true; render(); msg("復元しました（点呼 "+t.length+"件"+n+(only?"。売上はそのままです":"")+"）");
+      let nS=0; if(setOn) nS=bkSettingsRestore(v.ls);
+      $("importBox").value=""; $("imPass").value=""; $("imPassF").hidden=true; render(); msg("復元しました（点呼 "+t.length+"件"+n+(only?"。売上はそのままです":"")+(nS?`、設定と場所の登録 ${nS}項目`:"")+"）"+(nS?"。設定を使うため、3秒後に開き直します。合言葉・パスワード・APIキーは入れ直してください":""));
+      if(nS) setTimeout(()=>location.reload(),3000);
     }catch(e){
       const c=e.message;
       if(c==="needpass"){ $("imPassF").hidden=false; $("imPass").focus(); msg("パスワード付きのバックアップです。パスワードを入れて、もう一度「復元」を押してください"); }
@@ -2201,7 +2234,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function abkPut(quiet){
     const id=(cfg.abkId||"").trim(), pass=cfg.abkPass||""; if(!id||!pass||!cfg.url) return false;
     if(!quiet) abkMsg("預けています…");
-    try{ const data=await packBackup({v:3,tenko:recs,uriage:sales},pass);
+    try{ const data=await packBackup({v:4,tenko:recs,uriage:sales,ls:bkSettings()},pass);
       // うまくいかなかったら、20秒あけてもう1回だけ試す（鍵をかけた直後は、ほかの送信と重なりやすい。2026-11-07）
       const send=()=>post({action:"abkPut",id,token,data});
       const token=await abkToken(id,pass);
@@ -2777,35 +2810,43 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(body.vias&&body.vias.length){ say("給油所に寄るときは、高速優先のルートは調べません"); return; }
     if(!j.destLL||!j.officeLL){ say("不明（サーバーの版が古いか、目的地・会社の場所が分かりませんでした）"); return; }
     say("高速をいちばん優先したルートを調べています…");
-    let segs=[];
-    try{ const q={locations:[{lat:j.destLL.lat,lon:j.destLL.lng},{lat:j.officeLL.lat,lon:j.officeLL.lng}],costing:"auto",costing_options:{auto:{use_highways:1,use_tolls:1}},units:"kilometers",language:"ja-JP"};
+    // 無料の経路計算に、高速優先の道を最大3本（別の道の候補つき）出してもらう
+    let trips=[];
+    try{ const q={locations:[{lat:j.destLL.lat,lon:j.destLL.lng},{lat:j.officeLL.lat,lon:j.officeLL.lng}],costing:"auto",costing_options:{auto:{use_highways:1,use_tolls:1}},alternates:2,units:"kilometers",language:"ja-JP"};
       const r=await fetch(L_VAL+encodeURIComponent(JSON.stringify(q))); const t=await r.json(); if(!t.trip) throw new Error("no");
-      t.trip.legs.forEach(Lg=>{ const sp=lDec6(Lg.shape); Lg.maneuvers.forEach(m=>{ const mw=!!(m.highway||m.toll), nm=(m.street_names||[]).join(" ");
-        for(let i=m.begin_shape_index;i<m.end_shape_index;i++) segs.push({a:sp[i],b:sp[i+1],mw,nm,m:distM(sp[i],sp[i+1])}); }); });
+      trips=[t.trip].concat((t.alternates||[]).map(a=>a.trip).filter(Boolean));
     }catch(e){ say("高速優先のルートを調べられませんでした（無料の経路計算が混んでいるか、電波が弱いです。不明）"); return; }
-    const i0=segs.findIndex(x=>x.mw), i1=segs.length-1-[...segs].reverse().findIndex(x=>x.mw), hwm=segs.filter(x=>x.mw).reduce((a,x)=>a+x.m,0);
-    if(i0<0||hwm<1000){ say("このあたりから会社までは、高速を使うルートが見つかりませんでした"); return; }
-    // 経由地：高速に乗って500m先と、降りる500m手前（短いときは真ん中）。道の上の点なので、Googleでも同じ向きの車線になる
-    const at=(from,step,dist)=>{ let acc=0; for(let i=from;i>=0&&i<segs.length;i+=step){ if(!segs[i].mw) continue; acc+=segs[i].m; if(acc>=dist) return step>0?segs[i].b:segs[i].a; } return null; };
-    const lim=Math.min(500,hwm/3), P1=at(i0,1,lim), P2=at(i1,-1,lim);
-    if(!P1||!P2){ say("高速優先のルートの経由地を決められませんでした（不明）"); return; }
-    let shKm=0, nxKm=0; const roads=[];
-    segs.forEach(x=>{ if(!x.mw) return; if(/首都高/.test(x.nm)) shKm+=x.m/1000; else nxKm+=x.m/1000; x.nm.split(" ").forEach(n=>{ if(n&&/(道|線|バイパス|首都高)/.test(n)&&!/(出口|入口|ランプ|IC|JCT)/.test(n)&&!roads.includes(n)) roads.push(n); }); });
-    say("Googleで渋滞予測込みの時間を調べています…");
-    let k;
-    try{ k=await post({action:"routePri",passcode:cfg.pass,pts:[j.destLL,{lat:P1[0],lng:P1[1]},{lat:P2[0],lng:P2[1]},j.officeLL],leave:j.leave,at:body.at}); }
-    catch(e){ say("通信できませんでした（不明）"); return; }
-    if(!k||!k.ok){ say(esc((k&&k.error)==="不明な操作です"?"サーバーがまだ高速優先に対応していません（Apps Scriptの新しい版の反映が必要です）":(k&&k.error)||"調べられませんでした")); return; }
-    const pr=k.pri, hw=j.backHw, mn=v=>Math.round(v/60);
-    const fee=`${shKm>=0.1?`首都高 約${lShFare(shKm).toLocaleString()}円（目安）`:""}${shKm>=0.1&&nxKm>=0.1?"＋":""}${nxKm>=0.1?"首都高以外 不明":""}`||"不明";
+    // 候補ごとに：高速に乗って500m先と、降りる500m手前（短いときは3分の1）を経由地にする。道の上の点なので、Googleでも同じ向きの車線になる
+    const cands=[];
+    trips.forEach(tr=>{ const segs=[];
+      tr.legs.forEach(Lg=>{ const sp=lDec6(Lg.shape); Lg.maneuvers.forEach(m=>{ const mw=!!(m.highway||m.toll), nm=(m.street_names||[]).join(" ");
+        for(let i=m.begin_shape_index;i<m.end_shape_index;i++) segs.push({a:sp[i],b:sp[i+1],mw,nm,m:distM(sp[i],sp[i+1])}); }); });
+      const i0=segs.findIndex(x=>x.mw), i1=segs.length-1-[...segs].reverse().findIndex(x=>x.mw), hwm=segs.filter(x=>x.mw).reduce((a,x)=>a+x.m,0);
+      if(i0<0||hwm<1000) return;
+      const at=(from,step,dist)=>{ let acc=0; for(let i=from;i>=0&&i<segs.length;i+=step){ if(!segs[i].mw) continue; acc+=segs[i].m; if(acc>=dist) return step>0?segs[i].b:segs[i].a; } return null; };
+      const lim=Math.min(500,hwm/3), P1=at(i0,1,lim), P2=at(i1,-1,lim); if(!P1||!P2) return;
+      if(cands.some(c=>distM(c.P1,P1)<1000&&distM(c.P2,P2)<1000)) return;   // 乗る所も降りる所も同じ候補は1つに
+      let shKm=0, nxKm=0; const roads=[];
+      segs.forEach(x=>{ if(!x.mw) return; if(/首都高/.test(x.nm)) shKm+=x.m/1000; else nxKm+=x.m/1000; x.nm.split(" ").forEach(n=>{ if(n&&/(道|線|バイパス|首都高)/.test(n)&&!/(出口|入口|ランプ|IC|JCT)/.test(n)&&!roads.includes(n)) roads.push(n); }); });
+      cands.push({P1,P2,shKm,nxKm,roads}); });
+    if(!cands.length){ say("このあたりから会社までは、高速を使うルートが見つかりませんでした"); return; }
+    say(`Googleで渋滞予測込みの時間を調べています…（高速の乗り降りの組み合わせ ${cands.length}通り）`);
+    let notNew=false;
+    await Promise.all(cands.map(async c=>{ try{ const k=await post({action:"routePri",passcode:cfg.pass,pts:[j.destLL,{lat:c.P1[0],lng:c.P1[1]},{lat:c.P2[0],lng:c.P2[1]},j.officeLL],leave:j.leave,at:body.at});
+      if(k&&k.ok) c.pri=k.pri; else { c.err=(k&&k.error)||"調べられませんでした"; if(c.err==="不明な操作です") notNew=true; } }catch(e){ c.err="通信できませんでした"; } }));
+    const okc=cands.filter(c=>c.pri).sort((a,b)=>a.pri.sec-b.pri.sec);
+    if(!okc.length){ say(esc(notNew?"サーバーがまだ高速優先に対応していません（Apps Scriptの新しい版の反映が必要です）":cands[0].err+"（不明）")); return; }
+    const best=okc[0], pr=best.pri, hw=j.backHw, mn=v=>Math.round(v/60);
+    const feeOf=c=>`${c.shKm>=0.1?`首都高 約${lShFare(c.shKm).toLocaleString()}円（目安）`:""}${c.shKm>=0.1&&c.nxKm>=0.1?"＋":""}${c.nxKm>=0.1?"首都高以外 不明":""}`||"不明";
     let cmp="";
     if(hw&&hw.ok){ const d=mn(hw.sec)-mn(pr.sec); cmp=d>0?`高速優先のほうが 約${d}分 早い`:d<0?`今までのルート（Googleが選んだ道）のほうが 約${-d}分 早い`:"時間はほとんど同じ"; }
-    box.innerHTML=lBackFn("帰り　高速優先（高速をいちばん優先した道）",Object.assign({},pr,{via:roads.slice(0,6).join("・")}))
+    const rows=okc.map((c,n)=>`<tr><td>高速優先${okc.length>1?`（${n+1}）`:""}${n===0&&okc.length>1?"<b>＝一番早い</b>":""}<br><small>${esc(c.roads.slice(0,5).join("・"))}</small></td><td class="num">${mn(c.pri.sec)}分</td><td class="num">${c.pri.km}km</td><td>${feeOf(c)}</td></tr>`).join("");
+    box.innerHTML=lBackFn("帰り　高速優先（高速をいちばん優先した道）",Object.assign({},pr,{via:best.roads.slice(0,6).join("・")}))
       +`<div class="leg"><div class="h">帰りの比べ（どちらもGoogleの渋滞予測込み）</div>
         <table class="cmpt" style="font-size:14px;width:100%"><thead><tr><th></th><th>時間</th><th>距離</th><th>高速料金</th></tr></thead><tbody>
         <tr><td>今まで（Googleが選んだ道）</td><td class="num">${hw&&hw.ok?mn(hw.sec)+"分":"不明"}</td><td class="num">${hw&&hw.ok?hw.km+"km":"不明"}</td><td>不明</td></tr>
-        <tr><td>高速優先</td><td class="num">${mn(pr.sec)}分</td><td class="num">${pr.km}km</td><td>${fee}</td></tr></tbody></table>
-        <div class="d"><b>${cmp}</b>。料金の差は、Googleの道の料金が分からないので不明です。高速優先の料金は、首都高だけ計算式の目安で、ほかの高速は不明です。</div></div>`;
+        ${rows}</tbody></table>
+        <div class="d"><b>${cmp}</b>。高速の乗り降りの組み合わせを${cands.length}通り調べて、一番早いものを「帰り 高速優先」に出しています${cands.length>okc.length?`（${cands.length-okc.length}通りは調べられませんでした）`:""}。料金の差は、Googleの道の料金が分からないので不明です。高速優先の料金は、首都高だけ計算式の目安で、ほかの高速は不明です。</div></div>`;
   }
 
   function showDemo(){
@@ -3489,10 +3530,55 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if((wcOpt.tx||wcOpt.ht)&&!NM){ $("wxMsg").textContent="読み込んでいます…"; try{ await nmLoad(); }catch(e){ $("wxMsg").textContent="データを読み込めませんでした。電波を確認して、もう一度チェックを入れてください"; return; }
       $("wxInfo").textContent=`データ：${NM.made}に作成（オープンストリートマップ）。乗り場${NM.taxi.length}・ホテル${NM.hotel.length}`; goSendOld(); }
     goFlush();
-    htBuild(); wxDraw(); if(!$("hListBox").hidden) hList(); }
+    htBuild(); wxDraw(); if(!$("hListBox").hidden) hList(); mnOn(); }
   function wxUi(){ $("wcShowTx").checked=!!wcOpt.tx; $("wcShowHt").checked=!!wcOpt.ht; $("wcLux").checked=!!wcOpt.lux; $("wcHtBox").hidden=!wcOpt.ht; $("wcTxLeg").hidden=!wcOpt.tx; }
   [["wcShowTx","tx"],["wcShowHt","ht"],["wcLux","lux"]].forEach(([id,k])=>$(id).addEventListener("change",()=>{ wcOpt[k]=$(id).checked; try{ localStorage.setItem("tenko.wcOpt",JSON.stringify(wcOpt)); }catch(e){} wxOn(); }));
   wxUi();
+  // ===== 🏢 マンション（中規模以上）（2026-11-14 ユーザー指定） =====
+  // データは src/mansion_fetch.py で作った mansion.json（オープンストリートマップの building=apartments。階数か戸数が入っているものだけ）。
+  // 行＝[緯度, 経度, 名前, 区の番号, 住所, 階数, 戸数]。順位付けや部屋数の見積もりはしない。分からない項目は空欄。最初はオフ
+  let MN=null, mnP=null, mnLy=null, mnFlLy=null, mnMk=new Map(), mnCnt=0;
+  const mnLoad=()=>mnP||(mnP=fetch("mansion.json",{cache:"no-cache"}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{ MN=j; return j; }).catch(e=>{ mnP=null; throw e; }));
+  const mnLv=()=>Math.max(MN?MN.floor[0]:6,+wcOpt.mnLv||10), mnFl=()=>Math.max(MN?MN.floor[1]:30,+wcOpt.mnFl||50);
+  const mnOk=r=>(r[5]||0)>=mnLv()||(r[6]||0)>=mnFl();
+  const mnPop=r=>`<div class="xpop"><b class="xh">🏢 ${r[2]?esc(r[2]):"マンション"}</b>${r[2]?"":`<small>名前は地図のデータに入っていません</small><br>`}階数：${r[5]?r[5]+"階":""}<br>部屋数：${r[6]?`<b>${r[6]}戸</b>`:""}${r[4]?`<br>住所：${esc(r[4])}`:""}<br><small>${esc(MN.wards[r[3]])}</small></div>`;
+  const mnClusterIcon=c=>{ const n=c.getChildCount(), sz=n<10?32:n<100?38:44; return L.divIcon({className:"",iconSize:[sz,sz],html:`<div class="htc mnc" style="width:${sz}px;height:${sz}px"><small>M</small>${n}</div>`}); };
+  // 部屋数が分かるマンション＝橙（まとめずにいつも出す）、分からないもの＝青緑（広く見ているときはまとめて数字）
+  function mnBuild(){ if(!wcMapObj) return;
+    if(mnLy){ mnLy.remove(); mnLy=null; } if(mnFlLy){ mnFlLy.remove(); mnFlLy=null; } mnMk.clear(); mnCnt=0;
+    if(!MN||!wcOpt.mn){ $("mnMsg").textContent=""; return; }
+    mnLy=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:60,disableClusteringAtZoom:17,chunkedLoading:true,iconCreateFunction:mnClusterIcon});
+    mnFlLy=L.layerGroup(); let nf=0;
+    const icA=xPin("M","#F76707","#fff",26), icB=xPin("M","#0B7285","#fff",20);
+    MN.rows.forEach((r,i)=>{ if(!mnOk(r)) return; mnCnt++; if(r[6]) nf++;
+      const m=L.marker([r[0],r[1]],{icon:r[6]?icA:icB,zIndexOffset:r[6]?120:50}).bindPopup(()=>mnPop(r),Object.assign({maxWidth:220,minWidth:180},WC_POP)); m.addTo(r[6]?mnFlLy:mnLy); mnMk.set(i,m); });
+    mnLy.addTo(wcMapObj); mnFlLy.addTo(wcMapObj);
+    $("mnMsg").textContent=`マンション ${mnCnt}棟（${mnLv()}階以上か${mnFl()}戸以上。部屋数が分かる ${nf}棟は橙でいつも出します。ほかは、広く見ているときにまとめて数字で出します）`; }
+  async function mnOn(){ $("wcShowMn").checked=!!wcOpt.mn; $("wcMnBox").hidden=!wcOpt.mn; if(!wcMapObj) return;
+    if(wcOpt.mn&&!MN){ $("mnMsg").textContent="読み込んでいます…"; try{ await mnLoad(); }catch(e){ $("mnMsg").textContent="データを読み込めませんでした。電波を確認して、もう一度チェックを入れてください"; return; }
+      $("mnLv").min=MN.floor[0]; $("mnFl").min=MN.floor[1]; $("mnLv").value=mnLv(); $("mnFl").value=mnFl();
+      $("mnWard").innerHTML=`<option value="">区を選ぶ</option>`+MN.wards.map((w,i)=>`<option value="${i}">${esc(w)}</option>`).join("");
+      $("mnInfo").textContent=`データ：${MN.made}に作成（オープンストリートマップ）。階数か戸数が入っているマンションだけです。入っていないマンションは出ません`; }
+    mnBuild(); if(!$("mnListBox").hidden) mnList(); }
+  const mnSave=()=>{ try{ localStorage.setItem("tenko.wcOpt",JSON.stringify(wcOpt)); }catch(e){} };
+  $("wcShowMn").addEventListener("change",()=>{ wcOpt.mn=$("wcShowMn").checked; mnSave(); mnOn(); });
+  [["mnLv","mnLv",0],["mnFl","mnFl",1]].forEach(([id,k,fi])=>$(id).addEventListener("change",()=>{ const lo=MN?MN.floor[fi]:1, v=Math.round(+$(id).value);
+    if(!(v>=lo)){ $(id).value=k==="mnLv"?mnLv():mnFl(); $("mnMsg").textContent=`${lo}より小さい数字にはできません（データに入れてあるのは${MN?MN.floor[0]:6}階以上か${MN?MN.floor[1]:30}戸以上です）`; return; }
+    wcOpt[k]=v; mnSave(); mnBuild(); if(!$("mnListBox").hidden) mnList(); }));
+  // 区ごとのリスト：部屋数の多い順。部屋数が分からないものは、そのあとに階数の多い順。行を押すと地図でその場所を出す
+  function mnList(){ if(!MN) return; const w=$("mnWard").value;
+    if(w===""){ $("mnListOut").innerHTML=`<div class="src">区（武蔵野市・三鷹市も）を選んでください</div>`; return; }
+    const xs=MN.rows.map((r,i)=>({r,i})).filter(o=>o.r[3]===+w&&mnOk(o.r))
+      .sort((a,b)=>(b.r[6]?1:0)-(a.r[6]?1:0)||(b.r[6]||0)-(a.r[6]||0)||(b.r[5]||0)-(a.r[5]||0)||String(a.r[2]).localeCompare(String(b.r[2]),"ja"));
+    const nf=xs.filter(o=>o.r[6]).length;
+    $("mnListOut").innerHTML=`<div class="src">${esc(MN.wards[+w])}：${xs.length}棟（部屋数が分かる ${nf}棟）${xs.length>400?"。上から400棟を出しています":""}</div>`
+      +xs.slice(0,400).map(o=>`<button type="button" class="hrow" data-mni="${o.i}"><b>${o.r[6]?`<span class="xpin" style="width:18px;height:18px;font-size:10px;background:#F76707;margin-right:4px">M</span>`:""}${o.r[2]?esc(o.r[2]):""}</b><span>${esc(o.r[4])}</span><span>${o.r[5]?o.r[5]+"階":""}</span><span${o.r[6]?` class="hgo" style="color:#D9480F"`:""}>${o.r[6]?o.r[6]+"戸":""}</span></button>`).join(""); }
+  $("mnBtn").onclick=async()=>{ const box=$("mnListBox"); box.hidden=!box.hidden; if(box.hidden) return; await mnOn(); mnList(); };
+  $("mnWard").onchange=mnList;
+  $("mnListOut").addEventListener("click",e=>{ const b=e.target.closest("[data-mni]"); if(!b||!MN||!wcMapObj) return; const i=+b.dataset.mni, r=MN.rows[i], m=mnMk.get(i); if(!m) return;
+    $("wcMapWrap").scrollIntoView({block:"start",behavior:"smooth"});
+    setTimeout(()=>{ if(r[6]){ wcMapObj.setView([r[0],r[1]],Math.max(wcMapObj.getZoom(),17)); setTimeout(()=>m.openPopup(),400); }
+      else mnLy.zoomToShowLayer(m,()=>setTimeout(()=>m.openPopup(),350)); },350); });
   // 「GOで呼ばれた」・メモ・消す（ホテルの説明の中のボタン）
   // まとめる・まとめないが変わるとき（はじめてGOで呼ばれたときなど）は、説明を閉じてから描き直す
   function goAfter(id,msg){ const o=hMk.get(id); if(o){ o.m.setIcon(hotelIcon(o.h)); o.m.setPopupContent(hotelPop(o.h)); if(o.go!==(goN(id)>0)) htDirty=true; } const el=$("goMsg"); if(el) el.textContent=msg; if(!$("hListBox").hidden) hList(); }
