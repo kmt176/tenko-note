@@ -110,6 +110,16 @@ input[type=checkbox],input[type=radio]{width:22px;height:22px;flex:none;margin:1
 details summary{padding:11px 0;font-size:15px}
 .leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:24px!important}
 .jcb{font-size:15px}
+/* 全体の高さを詰める（2026-11-15 本人の指示：地図の画面と同じく、枠と枠の間は1px、枠の中の余白も少なく。ボタン・入力欄の高さ44pxはそのまま） */
+.ph{padding:4px 8px;gap:6px}
+.pb{padding:0 6px 6px;gap:1px}
+.route,.box{padding:4px 6px;gap:3px}
+.row{gap:3px 8px}
+.btns{gap:4px}
+.favbox{padding:4px;gap:3px}
+details summary{padding:6px 0}
+#msg{padding:2px 6px}
+.fsrow{gap:6px}
 </style>
 </head>
 <body>
@@ -121,7 +131,7 @@ details summary{padding:11px 0;font-size:15px}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 00:29</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 00:33</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
