@@ -1365,6 +1365,7 @@ body.rtfull{overflow:hidden}
     <section class="card">
       <h2>駐車禁止ポイント</h2>
       <div class="src">マイマップ「休憩ポイント&amp;クレーム発生ポイント」の<b style="color:#8E24AA">クレーム発生ポイント（駐車禁止）</b>を地図と一覧に出します。道の線やエリアの囲みでも描いています。近づいたとき（エリアの中に入ったときも）、音（ビー・ビー・ビー）とオレンジの帯で知らせます。「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。喫煙所・長時間駐車可は「休憩場」の地図に出しています。</div>
+      <div class="src" style="margin-top:4px">港区の掲示物の<b>駐停車・客待ちの注意地点</b>も出します（<b style="color:#D32F2F">赤＝ご意見・苦情が特に多い場所</b>、<b style="color:#F08C00">オレンジ＝それ以外</b>）。下のチェックで地区ごとにオン・オフできます。近づいたら知らせます（距離は設定の「港区の注意地点を知らせる距離」。赤の場所は、地区をオフにしていても知らせます）。</div>
       <div class="btnrow"><button class="btn" id="rsTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="rsTestSnd">🔊 音だけテスト</button></div>
       <div id="rsGroups" class="btnrow" style="flex-wrap:wrap"></div>
       <div id="rsMapWrap" class="mapwrap">
@@ -1373,6 +1374,13 @@ body.rtfull{overflow:hidden}
       </div>
       <div class="msg" id="rsMsg" role="status"></div>
       <div id="rsList"></div>
+      <!-- 港区の注意地点の位置の一覧（2026-11-15）。管理者は位置を手で直せる -->
+      <details id="mzBox" style="margin-top:10px"><summary><b>港区の注意地点の位置の一覧（39か所）</b></summary>
+        <div class="src" style="margin:6px 0">港区の掲示物の住所から、国土地理院の住所検索で場所を出しました。「番地」は番地の真ん中の点なので、広い場所では少しずれることがあります。<b>未確定</b>は住所に番地がなく、場所を置いていません（地図にも出ず、知らせもしません）。</div>
+        <div id="mzMsg" class="msg" role="status"></div>
+        <div id="mzList"></div>
+        <div class="btnrow" id="mzAdmBtns" hidden><button type="button" class="btn" id="mzExport">直した位置を書き出す（コピー）</button><button type="button" class="btn danger" id="mzReset">このスマホで直した位置を消す</button></div>
+      </details>
     </section>
   </div>
 
@@ -1499,6 +1507,7 @@ body.rtfull{overflow:hidden}
       <div class="field"><label for="standDist">日交乗り場を知らせる距離</label><select id="standDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
       <div class="field"><label for="yuryoDist">優良乗り場を知らせる距離</label><select id="yuryoDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
       <div class="field"><label for="restDist">駐車禁止ポイントを知らせる距離</label><select id="restDist"><option value="30">30m手前</option><option value="50" selected>50m手前</option><option value="100">100m手前</option><option value="200">200m手前</option></select></div>
+      <div class="field"><label for="mzDist">港区の注意地点を知らせる距離（苦情が特に多い場所は、地区をオフにしていても知らせます）</label><select id="mzDist"><option value="50">50m手前</option><option value="100" selected>100m手前</option><option value="150">150m手前</option><option value="200">200m手前</option><option value="300">300m手前</option></select></div>
       <div class="src">場所は、マイマップ「東京都内_公開・重点取締り」「専用乗り場・優良乗り場」「休憩ポイント&amp;クレーム発生ポイント」から読み込みます（地図が更新されると数時間で反映）。近づいている途中だけ鳴らし、同じ場所は10分間は鳴らしません。iPhoneはマナーモードだと鳴らないことがあります。</div>
       <h3 style="margin-top:12px">メニューの表示</h3>
       <div class="seg" role="tablist" aria-label="メニューの表示" id="menuStyleSeg"><button role="tab" data-ms="tile" aria-selected="true">ボタンの一覧（新）</button><button role="tab" data-ms="bar" aria-selected="false">今までの横並び</button></div>
@@ -1641,7 +1650,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 01:46</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 02:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -8081,8 +8090,8 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     yuryo:{act:"standPts",store:"tenko.yuryo",dist:"yuryoDist",ban:"yuryoBanner",pre:"yr",col:["#2F6FD6","#3E9B4F","#E8890C","#7B3FA0","#D23C2F"],chime:"pirorin",route:true,grpF:(g,x)=>/優良/.test(g)||!!(x&&/優良/.test(x[0])),
       msg:(x,g,d)=>`【優】優良乗り場：${x[0].replace(/優良タクシー乗り場|タクシー乗り場|優良/g,"").trim()||x[0]}まで約${d}m`},
     rest2:{act:"restPts",store:"tenko.rest2",dist:"restDist",ban:"restBanner",pre:"rs",col:["#8B5A2B","#2F6FD6","#8E24AA","#7B3FA0","#3E9B4F"],   /* 駐車禁止は紫（地図の赤い家並みと見分けやすいように。2026-10-28 ユーザー指定） */chime:"ponpon",route:true,
-      alertG:g=>/クレーム|禁止/.test(g),   // 知らせる・この画面に出すのは駐車禁止（クレーム発生ポイント）だけ。喫煙所・長時間駐車可は「休憩場」の地図に出す
-      msg:(x,g,d)=>d===0?`🚫 駐車禁止：${x[0]}（エリアの中です）`:`🚫 駐車禁止：${x[0]}まで約${d}m`}};
+      alertG:g=>/クレーム|禁止|港区の注意地点/.test(g),   // 知らせる・この画面に出すのは駐車禁止（クレーム発生ポイント）だけ。喫煙所・長時間駐車可は「休憩場」の地図に出す
+      msg:(x,g,d)=>x[5]&&x[5].mz?`⚠ 港区の注意地点：${x[0]}まで約${d}m`:d===0?`🚫 駐車禁止：${x[0]}（エリアの中です）`:`🚫 駐車禁止：${x[0]}まで約${d}m`}};
   // 場所までの距離（m）：点は一番近い点、線は線のどこか、エリアは縁まで（中にいれば0）
   function geoD(p,x){
     const c=x[2], sh=x[4]||"P", P=[p.lat,p.lng];
@@ -8105,14 +8114,30 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     try{ const v=localStorage.getItem("tenko."+GEO[k].dist); if(v) $(GEO[k].dist).value=v; }catch(e){}
     $(GEO[k].dist).addEventListener("change",()=>{ try{ localStorage.setItem("tenko."+GEO[k].dist,$(GEO[k].dist).value); }catch(e){} });
     $(GEO[k].ban+"Close").onclick=()=>{ $(GEO[k].ban).hidden=true; }; });
+  // ===== 港区の注意地点（2026-11-15 ユーザー指示書）：掲示物の39か所。★＝網掛け（ご意見・苦情が特に多い）は赤、それ以外はオレンジ =====
+  // 場所は国土地理院の住所検索で「番」まで合ったものだけ（src/minato_fetch.py → minato_spots.json を build.py が埋めこむ）。合わないものは置かない（推測しない）。
+  // マイマップの駐車禁止と同じしくみ（地図・近い順・近づいたら音と帯）に、地区ごとのグループとして足す。管理者は位置を手で直せる（このスマホに覚え、書き出して全員の分に反映）
+  const MZ=[{"no":1,"star":0,"area":"芝地区","addr":"芝四丁目1番","name":"芝四丁目1番17番 三田いきいきプラザ付近","pts":[[35.649269,139.749573]],"ok":"番地","why":"東京都港区芝四丁目１番"},{"no":2,"star":0,"area":"芝地区","addr":"芝公園一丁目4番","name":"都立芝公園内指定喫煙場所付近","pts":[[35.657688,139.750717]],"ok":"番地","why":"東京都港区芝公園一丁目４番"},{"no":3,"star":0,"area":"芝地区","addr":"芝大門二丁目13番〜芝二丁目1番","name":"将監橋の上（芝大門二丁目13番先〜芝二丁目1番先）","pts":[[35.653446,139.753387],[35.65324,139.751038]],"ok":"番地","why":"東京都港区芝大門二丁目１３番 〜 東京都港区芝二丁目１番"},{"no":4,"star":1,"area":"芝地区","addr":"芝公園三丁目4番","name":"都立23号地裏路上（正則高等学校裏）","pts":[[35.6586,139.746796]],"ok":"番地","why":"東京都港区芝公園三丁目４番"},{"no":5,"star":1,"area":"芝地区","addr":"芝公園四丁目10番17号","name":"芝公園野球場付近","pts":[[35.65358,139.748581]],"ok":"番地","why":"東京都港区芝公園四丁目１０番"},{"no":6,"star":1,"area":"芝地区","addr":"芝大門一丁目13番","name":"大門駅A6出口指定喫煙場所付近","pts":[[35.657234,139.753311]],"ok":"番地","why":"東京都港区芝大門一丁目１３番"},{"no":7,"star":1,"area":"芝地区","addr":"新橋五丁目19番7号","name":"塩釜公園付近","pts":[[35.663193,139.754623]],"ok":"番地","why":"東京都港区新橋五丁目１９番"},{"no":8,"star":1,"area":"芝地区","addr":"東新橋一丁目8番8号","name":"汐留シオサイト周辺","pts":[[35.664555,139.762268]],"ok":"番地","why":"東京都港区東新橋一丁目８番"},{"no":9,"star":0,"area":"麻布地区","addr":"麻布十番二丁目15番1号","name":"網代公園付近","pts":[[35.654484,139.735535]],"ok":"番地","why":"東京都港区麻布十番二丁目１５番"},{"no":10,"star":1,"area":"麻布地区","addr":"六本木七丁目","name":"六本木トンネル付近","pts":[],"ok":"","why":"番地がない（丁目まで）"},{"no":11,"star":0,"area":"麻布地区","addr":"六本木七丁目17番8号","name":"六本木西公園前","pts":[[35.662937,139.729218]],"ok":"番地","why":"東京都港区六本木七丁目１７番"},{"no":12,"star":0,"area":"麻布地区","addr":"六本木七丁目23番〜南青山二丁目34番","name":"都立青山公園前（六本木七丁目23番先〜南青山二丁目34番先）","pts":[[35.663242,139.725082],[35.663982,139.72319]],"ok":"番地","why":"東京都港区六本木七丁目２３番 〜 東京都港区南青山二丁目３４番"},{"no":13,"star":0,"area":"麻布地区","addr":"西麻布二丁目1番〜南青山四丁目4番","name":"笄児童遊園、青山陸橋周辺（西麻布二丁目1番先〜南青山四丁目4番先）","pts":[[35.664398,139.720108],[35.664673,139.719864]],"ok":"番地","why":"東京都港区西麻布二丁目１番 〜 東京都港区南青山四丁目４番"},{"no":14,"star":0,"area":"麻布地区","addr":"東麻布一丁目30番1号","name":"中ノ橋児童遊園","pts":[[35.654945,139.743423]],"ok":"番地","why":"東京都港区東麻布一丁目３０番"},{"no":15,"star":0,"area":"麻布地区","addr":"麻布台一丁目3番","name":"麻布台ヒルズ周辺","pts":[[35.661549,139.740921]],"ok":"番地","why":"東京都港区麻布台一丁目３番"},{"no":16,"star":0,"area":"麻布地区","addr":"六本木二丁目1番32号","name":"今井町公衆トイレ付近","pts":[[35.66713,139.737122]],"ok":"番地","why":"東京都港区六本木二丁目１番"},{"no":17,"star":0,"area":"麻布地区","addr":"南麻布五丁目10番38号","name":"セブンイレブン広尾駅北店周辺","pts":[[35.653286,139.722626]],"ok":"番地","why":"東京都港区南麻布五丁目１０番"},{"no":18,"star":0,"area":"麻布地区","addr":"六本木二丁目1番","name":"アメリカ大使館宿舎の北側の道路","pts":[[35.66713,139.737122]],"ok":"番地","why":"東京都港区六本木二丁目１番"},{"no":19,"star":0,"area":"麻布地区","addr":"東麻布三丁目9番12号","name":"一の橋公衆トイレ付近","pts":[[35.655628,139.737274]],"ok":"番地","why":"東京都港区東麻布三丁目９番"},{"no":20,"star":0,"area":"麻布地区","addr":"南麻布二丁目15番1号","name":"古川橋児童遊園前","pts":[[35.646584,139.734726]],"ok":"番地","why":"東京都港区南麻布二丁目１５番"},{"no":21,"star":1,"area":"赤坂地区","addr":"赤坂六丁目10番","name":"区立氷川神社境内遊び場付近","pts":[[35.668682,139.735565]],"ok":"番地","why":"東京都港区赤坂六丁目１０番"},{"no":22,"star":1,"area":"赤坂地区","addr":"赤坂七丁目3番","name":"区立高橋是清翁記念公園付近","pts":[[35.67326,139.728806]],"ok":"番地","why":"東京都港区赤坂七丁目３番"},{"no":23,"star":1,"area":"赤坂地区","addr":"南青山二丁目5番","name":"都立青山公園付近","pts":[[35.671913,139.723022]],"ok":"番地","why":"東京都港区南青山二丁目５番"},{"no":24,"star":1,"area":"赤坂地区","addr":"南青山二丁目32番","name":"東京都青山霊園付近","pts":[[35.66835,139.720688]],"ok":"番地","why":"東京都港区南青山二丁目３２番"},{"no":25,"star":0,"area":"赤坂地区","addr":"北青山二丁目","name":"スタジアム通り・秩父宮ラグビー場付近","pts":[],"ok":"","why":"番地がない（丁目まで）"},{"no":26,"star":0,"area":"高輪地区","addr":"白金三丁目1番","name":"白金公園","pts":[[35.646797,139.729843]],"ok":"番地","why":"東京都港区白金三丁目１番"},{"no":27,"star":0,"area":"高輪地区","addr":"白金台一丁目2番","name":"明治学院付近","pts":[[35.636738,139.730743]],"ok":"番地","why":"東京都港区白金台一丁目２番"},{"no":28,"star":0,"area":"高輪地区","addr":"白金台四丁目6番","name":"東大医科研裏門付近","pts":[[35.6404,139.723465]],"ok":"番地","why":"東京都港区白金台四丁目６番"},{"no":29,"star":0,"area":"高輪地区","addr":"白金台四丁目","name":"白金台四・五丁目プラチナ通り（外苑西通り）","pts":[],"ok":"","why":"番地がない（丁目まで）"},{"no":30,"star":0,"area":"高輪地区","addr":"白金台五丁目10番","name":"首都高架下","pts":[[35.641472,139.719849]],"ok":"番地","why":"東京都港区白金台五丁目１０番"},{"no":31,"star":1,"area":"高輪地区","addr":"白金一丁目28番8号","name":"白金高輪駅3番出口前指定喫煙場所付近","pts":[[35.643627,139.733444]],"ok":"番地","why":"東京都港区白金一丁目２８番"},{"no":32,"star":0,"area":"高輪地区","addr":"三田四丁目16番20号","name":"亀塚公園前（聖坂側及び階段下側）","pts":[[35.643562,139.740967]],"ok":"番地","why":"東京都港区三田四丁目１６番"},{"no":33,"star":0,"area":"芝浦港南地区","addr":"芝浦一丁目11番","name":"街区周辺","pts":[[35.647484,139.753815]],"ok":"番地","why":"東京都港区芝浦一丁目１１番"},{"no":34,"star":0,"area":"芝浦港南地区","addr":"芝浦一丁目5番","name":"愛育病院と新芝運河沿い緑地の間の道路","pts":[[35.649052,139.756073]],"ok":"番地","why":"東京都港区芝浦一丁目５番"},{"no":35,"star":1,"area":"芝浦港南地区","addr":"芝浦三丁目1番","name":"田町駅東口タクシー乗り場","pts":[[35.644985,139.748886]],"ok":"番地","why":"東京都港区芝浦三丁目１番"},{"no":36,"star":0,"area":"芝浦港南地区","addr":"芝浦四丁目20番","name":"夕凪橋遊び場付近","pts":[[35.639462,139.751404]],"ok":"番地","why":"東京都港区芝浦四丁目２０番"},{"no":37,"star":0,"area":"芝浦港南地区","addr":"港南二丁目15番","name":"品川インターシティ付近","pts":[[35.626335,139.742004]],"ok":"番地","why":"東京都港区港南二丁目１５番"},{"no":38,"star":1,"area":"芝浦港南地区","addr":"港南二丁目18番","name":"品川駅港南口タクシー乗り場","pts":[[35.628937,139.740784]],"ok":"番地","why":"東京都港区港南二丁目１８番"},{"no":39,"star":1,"area":"芝浦港南地区","addr":"港南三丁目2番2号","name":"港南三丁目遊び場と軽自動車協会の間の路上","pts":[[35.633347,139.75029]],"ok":"番地","why":"東京都港区港南三丁目２番"}], MZ_AREAS=["芝地区","麻布地区","赤坂地区","高輪地区","芝浦港南地区"];
+  let mzFix={}; try{ mzFix=JSON.parse(localStorage.getItem("tenko.mzFix")||"{}")||{}; }catch(e){}
+  const mzPts=r=>mzFix[r.no]||r.pts;
+  function mzMerge(){ const S=GS.rest2;
+    S.pts=(S.pts||[]).filter(x=>!(x[5]&&x[5].mz)); S.groups=(S.groups||[]).filter(g=>!/^港区の注意地点/.test(g));
+    const base=S.groups.length; MZ_AREAS.forEach(a=>S.groups.push(`港区の注意地点（${a}）`));
+    MZ.forEach(r=>{ const c=mzPts(r); if(!c||!c.length) return;
+      S.pts.push([`No.${r.no} ${r.name}`,base+MZ_AREAS.indexOf(r.area),c,r.addr,c.length>1?"L":"P",{mz:1,no:r.no,star:r.star,area:r.area,nm:r.name,addr:r.addr}]); }); }
+  mzMerge();
+  try{ const v=localStorage.getItem("tenko.mzDist"); if(v) $("mzDist").value=v; }catch(e){}
+  $("mzDist").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.mzDist",$("mzDist").value); }catch(e){} });
+  let geoChimeAt=0;   // 最後に知らせの音を鳴らした時刻（港区の注意地点は、ほかの知らせと音が重ならないよう5秒あける）
   let geoWid=null;
   async function geoLoad(k,force){
     if(!cfg.url) return; let at=0; try{ at=+(localStorage.getItem(GEO[k].store+"At")||0); }catch(e){}
     if(!force&&GS[k].pts&&Date.now()-at<6*3600e3) return;
     try{ const j=await post({action:GEO[k].act}); if(j&&j.ok&&Array.isArray(j.pts)){ GS[k].pts=j.pts; GS[k].groups=geoGroups(k,j.groups);
-      try{ localStorage.setItem(GEO[k].store,JSON.stringify({pts:j.pts,groups:GS[k].groups})); localStorage.setItem(GEO[k].store+"At",String(Date.now())); }catch(e){} geoWatch(); } }catch(e){}
+      try{ localStorage.setItem(GEO[k].store,JSON.stringify({pts:j.pts,groups:GS[k].groups})); localStorage.setItem(GEO[k].store+"At",String(Date.now())); }catch(e){} if(k==="rest2") mzMerge(); geoWatch(); } }catch(e){}
   }
   function geoChime(kind){
+    geoChimeAt=Date.now();
     try{ if(navigator.vibrate) navigator.vibrate(kind==="pipo"?[200,100,200]:[120,60,120]); }catch(e){}
     if(!trAudio){ try{ const C=window.AudioContext||window.webkitAudioContext; if(C) trAudio=new C(); }catch(e){} }
     if(!trAudio) return;
@@ -8184,7 +8209,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   const sdArrowSvg=col=>`<svg class="sbarrow sdArrow" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="28" fill="#fff" stroke="${col}" stroke-width="3"/><path d="M30 7 L45 40 L30 32 L15 40 Z" fill="${col}"/></svg>`;
   const SD_LOOK={stand:{col:"#1E5A36",t:(x,g)=>`🚕 ${g}`,nm:x=>x[0].replace(/^\d+_/,"")},
     yuryo:{col:"#1E5A36",t:()=>"【優】優良乗り場",nm:x=>x[0].replace(/優良タクシー乗り場|タクシー乗り場|優良/g,"").trim()||x[0]},
-    rest2:{col:"#7A3B00",t:(x,g,d)=>`🚫 駐車禁止${d===0?"（エリアの中です）":""}`,nm:x=>x[0]}};
+    rest2:{col:"#7A3B00",t:(x,g,d)=>x[5]&&x[5].mz?`⚠ 港区の注意地点${x[5].star?"（苦情が特に多い）":""}`:`🚫 駐車禁止${d===0?"（エリアの中です）":""}`,nm:x=>x[5]&&x[5].mz?x[5].nm:x[0]}};
   function sdShow(x,d,test,k){
     k=k||"stand"; const S=GS[k], L0=SD_LOOK[k], ban=GEO[k].ban, nm=L0.nm(x), avail=Math.max(200,window.innerWidth-100);
     const fs=Math.max(26,Math.min(42,Math.floor(avail*2/Math.max(1,nm.length))));   // 名前は2行に収まる大きさ（42pxまで）
@@ -8378,8 +8403,11 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
         if(G.alertG&&!G.alertG(S.groups[x[1]]||"")) return;
         if(G.grpF&&!G.grpF(S.groups[x[1]]||"",x)) return;
         const bb=geoBB(x); if(p.lat<bb[0]-dLat||p.lat>bb[1]+dLat||p.lng<bb[2]-dLng||p.lng>bb[3]+dLng){ delete S.prev[i]; return; }
+        const mz=x[5]&&x[5].mz; if(mz&&S.offG[x[1]]&&!x[5].star) return;
         const d=geoD(p,x), prev=S.prev[i]; S.prev[i]=d;
-        if(d<=th&&prev!=null&&(d<prev-2||(d===0&&prev>0))&&!(S.last[i]&&now-S.last[i]<10*60e3)){ S.last[i]=now; geoChime(G.chime); geoShow(k,x,d,false); }
+        if(d<=(mz?(+$("mzDist").value||100):th)&&prev!=null&&(d<prev-2||(d===0&&prev>0))&&!(S.last[i]&&now-S.last[i]<10*60e3)){
+          if(mz&&now-geoChimeAt<5000){ S.prev[i]=prev; return; }   // ほかの知らせ（取締りなど）が鳴ったばかり：次の位置で鳴らす
+          S.last[i]=now; geoChime(G.chime); geoShow(k,x,d,false); }
       }); });
   }
   function geoWatch(){
@@ -8399,23 +8427,27 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     setTimeout(()=>S.map.invalidateSize(),60);
     if(!S.pts){ m.textContent="場所を読み込んでいます…"; await geoLoad(k,true); if(!S.pts){ m.textContent="場所を読み込めませんでした。電波を確認してください"; return; } }
     else if(first){ let at=0; try{ at=+(localStorage.getItem(G.store+"At")||0); }catch(e){} if(Date.now()-at>60e3) geoLoad(k,true).then(()=>{ if(curSub===k) renderGeoTab(k,false); }); }   // 画面を開くたびに裏で読み直す（1分以内に読んだばかりのときは除く）。古い記録のせいで駐車禁止が0か所・日交乗り場に優良が混ざる、を防ぐ（2026-10-29）
-    const col=i=>G.col[i%G.col.length];
+    const col=i=>k==="rest2"&&/^港区の注意地点/.test(S.groups[i]||"")?"#F08C00":G.col[i%G.col.length];
+    const pcol=x=>x[5]&&x[5].mz?(x[5].star?"#D32F2F":"#F08C00"):col(x[1]);   // 港区：★＝赤、それ以外＝オレンジ
     const gShow=(i,x)=>(!(G.alertG&&k==="rest2")||G.alertG(S.groups[i]||""))&&(!G.grpF||G.grpF(S.groups[i]||"",x));   // 駐車禁止＝禁止だけ、日交乗り場＝優良以外、優良乗り場＝優良だけ
     $(P+"Groups").innerHTML=S.groups.map((g,i)=>gShow(i)?`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-geog="${i}" ${S.offG[i]?"":"checked"}><b style="color:${col(i)}">●</b>${esc(g)}（${S.pts.filter(x=>x[1]===i).length}）</label>`:"").join("");
     $(P+"Groups").querySelectorAll("[data-geog]").forEach(b=>b.onchange=()=>{ if(b.checked) delete S.offG[b.dataset.geog]; else S.offG[b.dataset.geog]=true; try{ localStorage.setItem(G.store+"Off",JSON.stringify(S.offG)); }catch(e){} renderGeoTab(k,false); });
     if(S.layer) S.layer.remove(); S.layer=L.layerGroup().addTo(S.map);
     const xs=S.pts.filter(x=>!S.offG[x[1]]&&gShow(x[1],x));
-    xs.forEach(x=>{ const c=x[2][0], cl=col(x[1]);
+    xs.forEach(x=>{ const c=x[2][0], cl=pcol(x);
       const link=G.route?`<a href="${navUrl(c[0],c[1])}" target="_blank" rel="noopener" style="display:block;text-align:center;background:${cl};color:#fff;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:8px">ルート案内</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${c[0]},${c[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
       const gp=geoPlace(k,x);
-      const pop=`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(gp.place)}</b>${gp.kind?`<div style="font-weight:700">${esc(gp.kind)}</div>`:""}<div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]&&x[3]!==gp.place&&!/多発地点/.test(x[3])?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
+      const mzx=x[5]&&x[5].mz?x[5]:null;
+      const pop=mzx?`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">No.${mzx.no} ${esc(mzx.nm)}</b><div>場所：${esc(mzx.addr)}</div><div>${esc(mzx.area)}（港区）</div>${mzx.star?`<div style="color:#D32F2F;font-weight:800">★ ご意見・苦情が特に多い場所</div>`:`<div style="color:#B35C00;font-weight:700">駐停車・客待ちの注意地点</div>`}${link}</div>`
+        :`<div style="font-size:15px;line-height:1.5;min-width:190px;max-width:260px"><b style="font-size:16px">${esc(gp.place)}</b>${gp.kind?`<div style="font-weight:700">${esc(gp.kind)}</div>`:""}<div style="color:${cl};font-weight:700">${esc(S.groups[x[1]]||"")}</div>${x[3]&&x[3]!==x[0]&&x[3]!==gp.place&&!/多発地点/.test(x[3])?`<div style="font-size:13px">${esc(String(x[3]).replace(x[0],"").trim())}</div>`:""}${link}</div>`;
       if((x[4]||"P")==="A") L.polygon(x[2],{color:cl,weight:3,fillColor:cl,fillOpacity:.22}).bindPopup(pop).addTo(S.layer);
       else if(x[2].length>1) L.polyline(x[2],{color:cl,weight:6,opacity:.85}).bindPopup(pop).addTo(S.layer);
-      else L.circleMarker(c,{radius:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
+      else L.circleMarker(c,{radius:mzx&&mzx.star?10:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
+    if(k==="rest2") mzListDraw();
     const setMe=p=>{ if(S.me) S.map.removeLayer(S.me); S.me=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(S.map); };
     if(first){ const p=await getPos(); if(p){ setMe(p); S.map.setView([p.lat,p.lng],15); } else if(xs.length) S.map.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
     if(S.me){ const me=S.me.getLatLng(), near=xs.map(x=>({x,d:geoD({lat:me.lat,lng:me.lng},x)})).sort((a,b)=>a.d-b.d).slice(0,15);
-      $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${col(x[1])}"><div class="trname"><b>${esc(geoPlace(k,x).place)}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${geoPlace(k,x).kind?esc(geoPlace(k,x).kind)+"・":""}${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="${navUrl(x[2][0][0],x[2][0][1])}" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
+      $(P+"List").innerHTML=`<h3 style="margin:12px 0 6px">近い順（15か所）</h3>`+near.map(({x,d})=>`<div class="tritem" style="border-left-color:${pcol(x)}"><div class="trname"><b>${esc(geoPlace(k,x).place)}<span class="trdist">現在地から ${d>=1000?(d/1000).toFixed(1)+"km":Math.round(d/10)*10+"m"}</span></b><small>${geoPlace(k,x).kind?esc(geoPlace(k,x).kind)+"・":""}${esc(S.groups[x[1]]||"")}</small></div><button class="btn" data-geopin="${S.pts.indexOf(x)}">地図</button>${G.route?`<a class="btn primary trroute" href="${navUrl(x[2][0][0],x[2][0][1])}" target="_blank" rel="noopener">ルート</a>`:""}</div>`).join("");
       $(P+"List").querySelectorAll("[data-geopin]").forEach(b=>b.onclick=()=>{ const x=S.pts[+b.dataset.geopin]; S.map.setView(x[2][0],17); $(P+"Map").scrollIntoView({behavior:"smooth",block:"center"}); }); }
     else $(P+"List").innerHTML=`<div class="src">「現在地」を押すと、近い順の一覧を出します。</div>`;
     m.textContent=`${xs.length}か所を表示しています`;
@@ -8439,6 +8471,29 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
         if(d<30){ clearInterval(S.testIv); setTimeout(()=>{ $("patrolBanner").hidden=true; },1200); return; }
         geoShow(k,x,d,true,60e3); },350); };
     setupFull(G.pre+"FullBtn",G.pre+"MapWrap",()=>S.map); });
+  // 港区の注意地点の位置の一覧と、手で直す（管理者だけ）。直した位置は、このスマホに覚える（tenko.mzFix）。書き出して src/minato_fetch.py の FIX に入れると全員に反映
+  let mzEdit=null;
+  function mzListDraw(){ const box=$("mzList"); if(!box) return; const adm=isAdmin(); $("mzAdmBtns").hidden=!adm;
+    const nUn=MZ.filter(r=>!mzPts(r).length).length;
+    box.innerHTML=(nUn?`<div class="src" style="color:#B3261E;font-weight:700;margin-bottom:6px">⚠ 場所が決まっていないもの：${nUn}か所（${MZ.filter(r=>!mzPts(r).length).map(r=>"No."+r.no).join("・")}）</div>`:"")+
+      MZ.map(r=>{ const c=mzPts(r), st=mzFix[r.no]?"手で直した":c.length?"番地":"未確定";
+        return `<div class="tritem" style="border-left-color:${r.star?"#D32F2F":"#F08C00"}"><div class="trname"><b>No.${r.no} ${r.star?"★ ":""}${esc(r.name)}</b><small>${esc(r.addr)}・${esc(r.area)}・<b style="color:${st==="未確定"?"#B3261E":"inherit"}">${st}</b>${c.length>1?"・線":""}</small></div>${c.length?`<button class="btn" data-mzgo="${r.no}">地図</button>`:""}${adm?`<button class="btn" data-mzfix="${r.no}">${c.length?"直す":"置く"}</button>`:""}</div>`; }).join("");
+    box.querySelectorAll("[data-mzgo]").forEach(b=>b.onclick=()=>{ const r=MZ.find(z=>z.no===+b.dataset.mzgo), S=GS.rest2; if(!S.map) return; S.map.setView(mzPts(r)[0],17); $("rsMap").scrollIntoView({behavior:"smooth",block:"center"}); });
+    box.querySelectorAll("[data-mzfix]").forEach(b=>b.onclick=()=>mzStartEdit(MZ.find(z=>z.no===+b.dataset.mzfix))); }
+  function mzStartEdit(r){ const S=GS.rest2; if(!S.map) return; mzEndEdit();
+    const c=mzPts(r), two=/〜/.test(r.addr), ctr=S.map.getCenter(), start=c.length?c:[[ctr.lat,ctr.lng]].concat(two?[[ctr.lat+0.0005,ctr.lng+0.0005]]:[]);
+    const icon=t=>L.divIcon({className:"",iconSize:[34,34],iconAnchor:[17,17],html:`<div style="width:34px;height:34px;border-radius:50%;background:#D32F2F;color:#fff;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.5);font:800 14px/28px sans-serif;text-align:center">${t}</div>`});
+    const mks=start.map((q,i)=>L.marker(q,{draggable:true,icon:icon(start.length>1?(i?"終":"始"):r.no),zIndexOffset:3000}).addTo(S.map));
+    mzEdit={r,mks}; S.map.setView(start[0],17); $("rsMap").scrollIntoView({behavior:"smooth",block:"center"});
+    $("rsMsg").innerHTML=`<b>No.${r.no} ${esc(r.name)}</b>：赤い丸を指で正しい場所まで動かして「ここに決める」を押してください${start.length>1?"（始＝始まり、終＝終わり）":""}。<div class="btnrow" style="margin-top:6px"><button class="btn primary" id="mzOk">ここに決める</button><button class="btn" id="mzNo">やめる</button></div>`;
+    $("mzOk").onclick=()=>{ mzFix[r.no]=mks.map(m=>{ const q=m.getLatLng(); return [+q.lat.toFixed(6),+q.lng.toFixed(6)]; }); try{ localStorage.setItem("tenko.mzFix",JSON.stringify(mzFix)); }catch(e){}
+      mzEndEdit(); mzMerge(); renderGeoTab("rest2",false); $("mzMsg").textContent=`No.${r.no} の位置を直しました（このスマホだけ。全員に反映するときは「直した位置を書き出す」で送ってください）`; };
+    $("mzNo").onclick=()=>{ mzEndEdit(); renderGeoTab("rest2",false); }; }
+  function mzEndEdit(){ if(mzEdit){ mzEdit.mks.forEach(m=>m.remove()); mzEdit=null; } }
+  $("mzExport").onclick=()=>{ const t=JSON.stringify(mzFix); if(t==="{}"){ $("mzMsg").textContent="まだ直した位置がありません"; return; }
+    const ok=()=>{ $("mzMsg").textContent="コピーしました。チャットに貼って送ってください"; };
+    if(navigator.clipboard) navigator.clipboard.writeText(t).then(ok,()=>{ $("mzMsg").textContent=t; }); else $("mzMsg").textContent=t; };
+  $("mzReset").onclick=()=>{ if(!confirm("このスマホで直した港区の位置を消して、元の位置に戻しますか？")) return; mzFix={}; try{ localStorage.removeItem("tenko.mzFix"); }catch(e){} mzMerge(); renderGeoTab("rest2",false); };
   // 電車の帯：運転中でも見えるよう、大きな太字で3段（2026-10-25 ユーザー指定。取締りの帯と同じ形）
   function trBig(head,xs,foot,test){
     const names=xs.slice(0,2).map(x=>x.l).join("・"), more=xs.length>2?`ほか${xs.length-2}路線`:"";
