@@ -584,6 +584,12 @@ body.rtfull{overflow:hidden}
 .hrow{display:flex;flex-wrap:wrap;gap:2px 8px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;padding:7px 2px;font-size:14px}
 .hrow b{flex:1 1 100%;font-size:14.5px}.hrow span{font-size:12.5px;color:#5F6368}.hrow .hgo{color:#C92A2A;font-weight:800}
 .hgrp{font-weight:800;font-size:13.5px;margin:8px 0 2px}
+/* 保存できなかったときの赤い帯（2026-11-14 見直しの提案3） */
+.saveerr{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:5000;max-width:560px;margin:0 auto;background:var(--bad-soft);color:var(--bad);border:2px solid var(--bad);border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.saveerr .btnrow{margin-top:8px}
+/* 新しい版のお知らせの帯（2026-11-14 見直しの提案4） */
+.updbar{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:4900;max-width:560px;margin:0 auto;background:var(--accent-soft);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.updbar .btnrow{margin-top:8px}
 .wcgrp{margin-top:6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:15px;display:flex;flex-direction:column;gap:4px}
 .wcgrp>label{display:flex;align-items:center;gap:6px;padding-left:24px}.wcgrp>label.wcmain{padding-left:0;font-weight:800;font-size:16px}
 .airbanner{background:#1F3A6E}.airbanner #airBannerText{flex:1;text-align:left;font-size:16px;font-weight:800;line-height:1.4;padding:0}
@@ -713,6 +719,7 @@ body.rtfull{overflow:hidden}
   <details id="bkBox">
     <summary>バックアップ・機種変更</summary>
     <div class="body">
+      <div class="src" id="lsUse"></div>
       <div>「バックアップを作る」→「コピー」か「ファイルに保存」で、点呼と売上と設定（場所の登録・表示の好みも。合言葉・パスワード・APIキーは入れません）をまとめたバックアップを、メモ・OneDrive・iCloud Driveなどに保存してください。ファイルにした場合、復元は「ファイルから読み込む」でそのファイルを選ぶだけです。文字は暗号化されているので、見ても内容は分かりません。新しいスマホでは、貼り付けて「復元」を押します。</div>
       <div class="field"><label for="bkPass">パスワード（付けなくてもよい）</label><input type="password" id="bkPass" autocomplete="new-password" placeholder="付けないときは空のまま">
         <small class="src">付けると、そのパスワードを知らない人は誰も復元できません。<b>忘れると、自分でも復元できなくなります。</b></small></div>
@@ -953,7 +960,7 @@ body.rtfull{overflow:hidden}
   <div id="subSet" hidden><section class="card" id="setHeadCard"><h2 id="setHead"></h2><div class="src" id="setDesc"></div></section><div id="setSlot"></div></div>
   <div id="setPark" hidden></div>
   <div class="seg" role="tablist" aria-label="メニュー">
-    <button role="tab" data-sub="long" id="segLong" aria-selected="true">朝のロング判定</button>
+    <button role="tab" data-sub="long" id="segLong" aria-selected="true">ロング判定</button>
     <button role="tab" data-sub="wx" aria-selected="false" hidden>天気</button>
     <button role="tab" data-sub="rail" aria-selected="false" hidden>電車</button>
     <button role="tab" data-sub="fl" aria-selected="false" hidden>到着便</button>
@@ -963,7 +970,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="event" aria-selected="false">イベント</button>
     <button role="tab" data-sub="hosp" aria-selected="false" id="segHosp" hidden>病院（試験）</button>
     <button role="tab" data-sub="train" aria-selected="false">電車が止まったら</button>
-    <button role="tab" data-sub="air" aria-selected="false">飛行機</button>
+    <button role="tab" data-sub="air" aria-selected="false">到着便</button>
     <button role="tab" data-sub="cmp" aria-selected="false" id="segCmp" hidden>乗務員比較（試験）</button>
     <button role="tab" data-sub="demand" aria-selected="false" id="segDemand" hidden>需要予想（試験）</button>
     <button role="tab" data-sub="patrol" aria-selected="false" id="segPatrol">取締り</button>
@@ -978,7 +985,7 @@ body.rtfull{overflow:hidden}
 
   <div class="wrap" id="subToilet" hidden>
     <section class="card" aria-live="polite">
-      <h2>マップ</h2>
+      <h2>地図（トイレ・駐車場・ホテルなど）</h2>
       <!-- 近くを探すボタンは小さく横1列（2026-11-01 ユーザー指定） -->
       <div class="wcnear"><button class="btn" id="wcNear">🚻<small>近いトイレ</small></button><button class="btn" id="wcPkNearBtn">🅿️<small>近いP 5件</small></button><button class="btn" id="wcShopNear">🏪<small>近いお店</small></button><button class="btn" id="wcMe">📍<small>現在地</small></button></div>
       <!-- 地図に出すもの：トイレ・パーキング・コンビニ飲食店の3つの枠に分ける（2026-11-01 ユーザー指定） -->
@@ -1599,7 +1606,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-14 20:39</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-14 21:13</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -1642,8 +1649,8 @@ body.rtfull{overflow:hidden}
   </section>
 
   <section class="card help member-only">
-    <h2>朝のロング判定</h2>
-    <p>「メニュー」→「朝のロング判定」で開きます。合言葉なしで使えます。</p>
+    <h2>ロング判定（間に合うか）</h2>
+    <p>「メニュー」→「ロング判定」で開きます。合言葉なしで使えます。</p>
     <ol class="steps">
       <li>「<b>現在地を取得</b>」を押します。住所が自動で入ります（違っていたら直せます）。</li>
       <li><b>お迎え先に向かう前</b>なら「出発点（お迎え先）を入力する」にチェックを入れ、お迎え先を入れます。<small>チェックすると現在地も自動で取得します。お迎え先に着いてから調べるときは、チェック不要です</small></li>
@@ -1726,6 +1733,8 @@ body.rtfull{overflow:hidden}
   <div id="nowBody"></div>
   <div class="btnrow"><button class="btn primary" id="nowSpeak">🔊 読み上げる</button><button class="btn" id="nowAgain">もう一度考える</button></div>
 </div></div>
+<div id="saveErr" class="saveerr" role="alert" hidden></div>
+<div id="updBar" class="updbar" role="status" hidden></div>
 <nav class="tabbar" role="tablist" aria-label="画面の切り替え">
   <button role="tab" id="tb0" aria-selected="false" aria-controls="tabHelp" class="tb-help"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span>使い方</span></button>
   <button role="tab" id="tb1" aria-selected="true" aria-controls="tabTenko"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>点呼時間</span></button>
@@ -1886,17 +1895,36 @@ body.rtfull{overflow:hidden}
   const SAMPLE=[["2026-09-25","12:56","08:48"],["2026-09-28","12:50","09:00"],["2026-09-30","12:50","08:50"],["2026-10-02","12:50","09:00"],["2026-10-04","12:50","09:30"],["2026-10-08","12:50","09:00"],["2026-10-10","12:50","09:00"],["2026-10-12","12:50","07:00"],["2026-10-15","12:50","09:00"],["2026-10-17","12:50","09:30"],["2026-10-19","12:50","09:30"],["2026-10-22","12:50","09:00"],["2026-10-24","12:50","09:00"],["2026-10-26","12:50","09:30"]]
     .map(([d,b,a],i)=>({id:"s"+i,date:d,pb:b,pa:a,ab:b,aa:a}));
 
+  // ===== 保存の共通の部品（2026-11-14 見直しの提案3）：大事な保存（点呼・売上・設定・送り待ち）が失敗したら、画面の上に赤い帯で知らせる =====
+  // スマホの中の保存場所には上限がある（およそ5MB。このアプリ・飲み屋街マップ・高速マップで一緒に使う）。いっぱいになると保存が失敗する
+  let lsErrAt=0;
+  const lsEsc=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));   // 起動の途中でも使えるように、ここだけの部品
+  function lsSave(k,v,what){ try{ localStorage.setItem(k,v); return true; }catch(e){ lsFail(what,e); return false; } }
+  function lsFail(what,e){ const now=Date.now(); if(now-lsErrAt<60000) return; lsErrAt=now;   // 続けて失敗しても、1分に1回だけ出す
+    const el=document.getElementById("saveErr"); if(!el) return;
+    const full=e&&(e.name==="QuotaExceededError"||e.code===22||/quota/i.test(String(e.message||"")));
+    el.innerHTML=`<b>⚠ ${lsEsc(what)}を保存できませんでした。</b>${full?"スマホの中の保存場所がいっぱいです。":""}このままアプリを閉じると、今入れた分が消えることがあります。すぐにバックアップを作ってください。<div class="btnrow"><button class="btn primary" id="saveErrBk">バックアップを開く</button><button class="btn" id="saveErrX">閉じる</button></div>`;
+    // 「バックアップを開く」は、メニューのタブに切り替えてから、バックアップの画面を出す
+    el.hidden=false; document.getElementById("saveErrBk").onclick=()=>{ el.hidden=true; showTab(2); showPage("bk"); window.scrollTo(0,0); }; document.getElementById("saveErrX").onclick=()=>{ el.hidden=true; }; }
+  // スマホの中の使用量（設定の「バックアップ・機種変更」に出す）。文字の数×2バイトで数える
+  const LS_NAME=[[/^uriage\.v1$/,"売上の記録"],[/^tenko\.v2$/,"点呼の記録"],[/^izakayaMap\.v[34]$/,"飲み屋街のお店の控え"],[/^tenko\.(patrol|stand|rest2|yuryo)$/,"乗り場・取締りの地点の控え"],[/^tenko\.events$/,"イベントの控え"],[/^tenko\.anWx$/,"天気の控え"],[/^tenko\.dmLog$/,"需要予想の記録"]];
+  function lsUseShow(){ const el=document.getElementById("lsUse"); if(!el) return; let tot=0; const g={};
+    try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i), v=localStorage.getItem(k)||"", n=(k.length+v.length)*2; tot+=n;
+        const nm=(LS_NAME.find(([re])=>re.test(k))||[0,"そのほか"])[1]; g[nm]=(g[nm]||0)+n; } }catch(e){ el.textContent="スマホの中の使用量：調べられませんでした"; return; }
+    const mb=x=>(x/1048576).toFixed(x<104858?2:1);
+    el.innerHTML=`スマホの中の使用量：<b>約${mb(tot)}MB</b>（上限はおよそ5MB）${tot>4*1048576?`<br><b style="color:var(--bad)">⚠ 上限に近づいています。バックアップを作ってください</b>`:""}<br><small>多いもの：${Object.entries(g).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>`${lsEsc(k)} ${mb(v)}MB`).join("、")}</small>`; }
+  { const bk=document.getElementById("bkBox"); if(bk) bk.addEventListener("toggle",()=>{ if(bk.open) lsUseShow(); }); setTimeout(lsUseShow,1500); }
   const SKEY="uriage.v1";   // 売上（勤務ごと）。点呼と同じく、このスマホの中だけに保存
   let recs=load(), pIdx=0, editId=null, delArmed=false, sales=loadSales();
   function loadSales(){ try{ const v=JSON.parse(localStorage.getItem(SKEY)||"null"); if(v&&v.days) return v; }catch(e){} return {days:{}}; }
-  function saveSales(){ try{ localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} resetBackup(); if(typeof queueFlash==="function"&&sDay) queueFlash(sDay); }
+  function saveSales(){ lsSave(SKEY,JSON.stringify(sales),"売上"); resetBackup(); if(typeof queueFlash==="function"&&sDay) queueFlash(sDay); }
 
   // 試作版は保存が空なら例のデータで始める。本番は空から始める
   function load(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(Array.isArray(v)&&(PROD||v.length)) return v; }catch(e){} return PROD?[]:SAMPLE.map(r=>({...r})); }
-  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(recs)); }catch(e){} if(typeof queueShift==="function") queueShift(); }
+  function save(){ lsSave(KEY,JSON.stringify(recs),"点呼の記録"); if(typeof queueShift==="function") queueShift(); }
   // 公休出勤（公出）の印は点呼時間の勤務に付ける（2026-10-21）。前に売上の勤務に付けた印は、点呼の勤務に移す
   { let moved=false; Object.keys(sales.days).forEach(k=>{ if(!sales.days[k].kode) return; const r=recs.find(x=>x.date===k); if(!r) return; r.kode=true; delete sales.days[k].kode; moved=true; });
-    if(moved){ try{ localStorage.setItem(KEY,JSON.stringify(recs)); localStorage.setItem(SKEY,JSON.stringify(sales)); }catch(e){} } }
+    if(moved){ lsSave(KEY,JSON.stringify(recs),"点呼の記録"); lsSave(SKEY,JSON.stringify(sales),"売上"); } }
   const isKode=k=>{ const r=recs.find(x=>x.date===k); return !!((r&&r.kode)||(sales.days[k]&&sales.days[k].kode)); };
 
   const $=id=>document.getElementById(id);
@@ -2302,7 +2330,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   delete cfg.svpass; delete cfg.svtest;   // 接遇お試し用の合言葉はやめた（2026-10-21）。前に入れた人の分を消す
   if(SCRIPT_URL){ cfg.url=SCRIPT_URL; $("lUrl").closest(".field").hidden=true; }
   if(!PROD){ $("demoNote").hidden=false; $("sampleBtn").hidden=false; }   // 試作の説明は、最初から隠しておく（本番で開いた瞬間に見えないように。2026-10-28）
-  const saveCfg=()=>{ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} };
+  const saveCfg=()=>{ lsSave(CFG_KEY,JSON.stringify(cfg),"設定"); };
   $("lUrl").value=cfg.url||""; $("lPass").value=cfg.pass||"";
 
   // ===== 会社の予定表から計画を入れる =====
@@ -2988,13 +3016,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 横並びに戻すと、全部もとの場所に戻す
   // ボタン：[キー, アイコン（Lucide・線画。ISCライセンス）, ボタンの名前（1行に入る短い名前）, 画面の見出しの名前]。グループごとにテーマ色
   const MICON={"event": "<path d=\"M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z\"/><path d=\"M13 5v2\"/><path d=\"M13 17v2\"/><path d=\"M13 11v2\"/>", "taxi": "<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><path d=\"M10 6h4\"/><path d=\"M10 10h4\"/><path d=\"M10 14h4\"/><path d=\"M10 18h4\"/>", "train": "<path d=\"M8 3.1V7a4 4 0 0 0 8 0V3.1\"/><path d=\"m9 15-1-1\"/><path d=\"m15 15 1-1\"/><path d=\"M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z\"/><path d=\"m8 19-2 3\"/><path d=\"m16 19 2 3\"/>", "air": "<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>", "rest": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>", "flash": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "long": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>", "cmp": "<path d=\"M3 3v18h18\"/><path d=\"M18 17V9\"/><path d=\"M13 17V5\"/><path d=\"M8 17v-3\"/>", "bus": "<path d=\"M8 6v6\"/><path d=\"M15 6v6\"/><path d=\"M2 12h19.6\"/><path d=\"M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/><path d=\"M9 18h5\"/><circle cx=\"16\" cy=\"18\" r=\"2\"/>", "ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>", "pay": "<polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"/><polyline points=\"16 7 22 7 22 13\"/>", "set": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bk": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "help": "<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>"};
+  // 並び（2026-11-14 見直しの提案5・ユーザー指定）：走りながら見る → お客様の対応 → 知らせてもらう → コミュニケーション → 設定・その他 → 管理者だけ
   const MENU_GROUPS=[
-    ["📳 開いている間だけ知らせる","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
-    ["営業中に見る","th-blue",[["event","🎫","イベント","イベント"],["toilet","🗺️","マップ","マップ"],["izakaya","🍶","飲み屋街","飲み屋街マップ"],["highway","🛣️","高速マップ","高速マップ"],["air","✈️","飛行機","飛行機"],["flash","👥","仲間の速報","仲間の速報"],["ame","☔","雨予報","エリア別 雨予報（試験）"],["hosp","🏥","病院外来","病院の外来終了時間（試験）"],["rest","☕","休憩場","休憩場"]]],   // 並びは 2026-11-01 ユーザー指定
-    ["お客様の対応","th-green",[["long","📏","朝のロング","朝のロング判定"],["teigaku","💴","定額運賃","定額運賃（羽田・成田・ディズニー）"]]],
-    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]],
-    ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","施設名","施設名をまとめて確かめる"],["help","📖","使い方","使い方"]]],
-    ["コミュニケーション","th-green",[["othello","⚫","オセロ","みんなのオセロ"],["mahjong","🀄","麻雀","みんなの三人麻雀"],["akabus","🚏","帰りのバス","帰りのバス（試験）"]],"仲間と遊ぶゲームです。別の画面で開きます。名前と合言葉を入れると、同じ合言葉の人と同じ部屋に入れます"]];
+    ["走りながら見る","th-blue",[["toilet","🗺️","地図","地図（トイレ・駐車場・ホテルなど）"],["izakaya","🍶","飲み屋街","飲み屋街マップ"],["highway","🛣️","高速マップ","高速マップ"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["event","🎫","イベント","イベント"],["hosp","🏥","病院外来","病院の外来終了時間（試験）"],["ame","☔","雨予報","エリア別 雨予報（試験）"]]],
+    ["お客様の対応","th-green",[["long","📏","ロング判定","ロング判定（間に合うか）"],["teigaku","💴","定額運賃","定額運賃（羽田・成田・ディズニー）"]]],
+    ["📳 知らせてもらう","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"],["air","✈️","到着便","羽田・成田の到着便"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
+    ["コミュニケーション","th-green",[["othello","⚫","オセロ","みんなのオセロ"],["mahjong","🀄","麻雀","みんなの三人麻雀"],["akabus","🚏","帰りのバス","帰りのバス（試験）"]],"仲間と遊ぶゲームです。別の画面で開きます。名前と合言葉を入れると、同じ合言葉の人と同じ部屋に入れます"],
+    ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","乗せた場所","乗せた場所の名前をまとめて確かめる"],["help","📖","使い方","使い方"]]],
+    ["管理者だけ（試験）","th-gray",[["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]]];
   // ゲーム（2026-10-28 ユーザー指定：全員に見せる。画面はGoogle Apps Scriptのまま、別の画面で開く）
   const GAME_URL={othello:"https://script.google.com/macros/s/AKfycbxYp1KUeMFi78Bosu62ENpUEGMhDmKF5i6ZGtnW1Lb-fcr72h1xVTeOb4QKe9tXvuLboQ/exec",mahjong:"https://script.google.com/macros/s/AKfycbzXOEdFxs6r-ftUzyWLZbU7qdX2DX3tshv5Vn2KOlE7BXjVQgNnYPqjNjvpBFuyOQ_2/exec"};
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
@@ -3005,7 +3034,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     bk:{t:"💾 バックアップ",d:"点呼と売上をまとめたバックアップを作る・戻すところです。機種変更のときもここから。",ids:["bkBox"]},
     pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]},
     teigaku:{t:"💴 定額運賃",d:"羽田空港・成田空港・東京ディズニーリゾートの定額運賃です。行き先と区を選ぶと、4つの料金が出ます。有料道路の料金は別です。",ids:["teigakuCard"]},
-    place:{t:"🏥 施設名をまとめて確かめる",d:"乗せた場所の施設名を、一覧でまとめて確かめます（管理者とグループ1の人だけ）。",ids:["placeCard"]}};
+    place:{t:"🏥 乗せた場所の名前をまとめて確かめる",d:"乗せた場所の施設名を、一覧でまとめて確かめます（管理者とグループ1の人だけ）。",ids:["placeCard"]}};
   const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
   MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
@@ -3472,7 +3501,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const o={op:op.t,code,id:op.id,at:op.at};
     if(op.t==="add") Object.assign(o,{n:op.n,chain:h?h[4]:"",rooms:h&&h[5]?h[5]:"",lat:op.lat,lng:op.lng,memo:op.m||""});
     if(op.t==="memo") o.memo=op.m||"";
-    let q=[]; try{ q=JSON.parse(localStorage.getItem(GOQ)||"[]")||[]; }catch(e){} q.push(o); try{ localStorage.setItem(GOQ,JSON.stringify(q.slice(-500))); }catch(e){}
+    let q=[]; try{ q=JSON.parse(localStorage.getItem(GOQ)||"[]")||[]; }catch(e){} q.push(o); lsSave(GOQ,JSON.stringify(q.slice(-500)),"「GOで呼ばれた」の送り待ち");
     goFlush(); }
   let goBusy=false;
   async function goFlush(){ if(goBusy||!cfg.url) return; goBusy=true;
@@ -5081,6 +5110,26 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   document.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>loadInfo(b.dataset.reload,true));
   // キャッシュを飛ばして新しい版を読み込み直す（ホーム画面に保存したアイコンは特に前の内容を覚えやすいため）。保存データは消えない
   $("appReload").onclick=()=>{ location.href=location.pathname+"?r="+Date.now(); };
+  // ===== 新しい版のお知らせ（2026-11-14 見直しの提案4） =====
+  // 開いたとき・画面に戻ってきたとき（1時間に1回まで）に version.json を読み、自分の版より新しければ上に帯を出す。押すと読み直す（データは消えない）。
+  // 読み直しても版が変わらなかったとき（スマホの控えが残っていたときなど）は、同じ版の帯はもう出さない。「あとで」は3時間出さない
+  { const myVer=(()=>{ const el=document.querySelector(".verpill"); return el?el.textContent.replace("版","").trim():""; })();
+    let updAt=0;
+    const updLS=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k)||""; localStorage.setItem(k,v); }catch(e){ return ""; } };
+    async function updCheck(){
+      if(!PROD||!/^\d{4}-\d\d-\d\d \d\d:\d\d$/.test(myVer)||document.hidden||Date.now()-updAt<60*60*1000) return; updAt=Date.now();
+      let v=""; try{ const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return; v=String((await r.json()).ver||""); }catch(e){ return; }
+      if(!/^\d{4}-\d\d-\d\d \d\d:\d\d$/.test(v)||v<=myVer) return;
+      if(updLS("tenko.updTried")===v) return;   // この版へ読み直したのに、まだ古いまま
+      if(+updLS("tenko.updLater:"+v)>Date.now()) return;
+      const el=$("updBar");
+      el.innerHTML=`<b>新しい版（${esc(v)}）があります。</b>「読み直す」を押すと新しくなります（入れた記録は消えません）。<div class="btnrow"><button class="btn primary" id="updGo">読み直す</button><button class="btn" id="updLater">あとで</button></div>`;
+      el.hidden=false;
+      $("updGo").onclick=()=>{ updLS("tenko.updTried",v); location.href=location.pathname+"?r="+Date.now(); };
+      $("updLater").onclick=()=>{ updLS("tenko.updLater:"+v,String(Date.now()+3*60*60*1000)); el.hidden=true; }; }
+    setTimeout(updCheck,5000);
+    document.addEventListener("visibilitychange",()=>{ if(!document.hidden) updCheck(); });
+    setInterval(updCheck,10*60*1000); }
   // メニューの「このアプリを紹介する」：URLのコピー・LINEで送る・スマホの共有
   { const url="https://kmt176.github.io/tenko-note/";
     const text=`タクシー乗務員向けの無料のスマホ用ツール「点呼ノート」です（有志が作った非公式のツールで、会社のものではありません）。点呼時間のチェックや売上の記録ができます。アプリストアからのインストールは不要です。\n${url}`;
@@ -6329,7 +6378,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let flashQ={}; try{ flashQ=JSON.parse(localStorage.getItem("tenko.flashq")||"{}")||{}; }catch(e){}
   let flashSig={}; try{ flashSig=JSON.parse(localStorage.getItem("tenko.flashsig")||"{}")||{}; }catch(e){}
   let fullSig={}; try{ fullSig=JSON.parse(localStorage.getItem("tenko.fullsig")||"{}")||{}; }catch(e){}
-  const saveFlashState=()=>{ try{ localStorage.setItem("tenko.flashq",JSON.stringify(flashQ)); localStorage.setItem("tenko.flashsig",JSON.stringify(flashSig)); localStorage.setItem("tenko.fullsig",JSON.stringify(fullSig)); }catch(e){} };
+  const saveFlashState=()=>{ lsSave("tenko.flashq",JSON.stringify(flashQ),"仲間の速報の送り待ち"); try{ localStorage.setItem("tenko.flashsig",JSON.stringify(flashSig)); localStorage.setItem("tenko.fullsig",JSON.stringify(fullSig)); }catch(e){} };
   // 1勤務の、速報に出す乗車（1万円以上・B空転以外）
   const srcOf=p=>!p?"":p.from==="addr"?"住所":p.from==="route"?"ルート":p.from==="tl"?"タイムライン推定":"GPS";
   function flashRides(k){
