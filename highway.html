@@ -112,7 +112,7 @@ body.full .panel{display:none}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-14 11:15</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-14 23:05</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -274,6 +274,8 @@ function jcRouteDraw(res){ (res.jcs||[]).forEach(o=>{ const g=HW.jc[o.gi], p=fla
   L.marker(e.ll,{interactive:false,zIndexOffset:1350,icon:L.divIcon({className:"",iconSize:[0,0],iconAnchor:[0,-20],html:`<div class="jcl ok rt">🔀 ${esc(name)}</div>`})}).addTo(rtLayer); }); }
 
 // ---- 現在地（アプリの中で取れないときは、アプリ本体に代わりに調べてもらう） ----
+// 現在地を取る（飲み屋街マップ・高速マップで共通。src/map_geo_part.js から build.py が差しこむ。2026-11-14 見直しの提案7）
+// まずこのページで調べ、取れない・返事がないときはアプリ本体に代わりに調べてもらう（2026-11-10 アプリの中だと現在地ボタンが動かないスマホがあった）
 const inApp=window.parent!==window;
 let meTipT=null;
 const meTip=(t,ms)=>{ const el=$("meTip"); el.textContent=t; el.hidden=false; clearTimeout(meTipT); if(ms) meTipT=setTimeout(()=>el.hidden=true,ms); };
@@ -282,7 +284,7 @@ const getPos=(ok,ng)=>{ let done=false, tm=null; const fin=(f,x)=>{ if(done) ret
   const onMsg=e=>{ if(e.origin!==location.origin||!e.data||e.data.izGeoRes!==id) return; if(e.data.err) fin(ng,e.data.err); else fin(ok,[e.data.lat,e.data.lng]); };
   const ask=()=>{ if(asked||done) return; if(!inApp){ fin(ng,"取れませんでした"); return; } asked=true; window.addEventListener("message",onMsg); try{ window.parent.postMessage({izGeo:id},location.origin); }catch(_){ fin(ng,"取れませんでした"); } tm=setTimeout(()=>fin(ng,"取れませんでした"),20000); };
   if(!navigator.geolocation){ ask(); return; }
-  if(inApp) tm=setTimeout(ask,6000);
+  if(inApp) tm=setTimeout(ask,6000);   // 6秒たっても返事がなければアプリ本体に頼む
   try{ navigator.geolocation.getCurrentPosition(p=>fin(ok,[p.coords.latitude,p.coords.longitude]),()=>ask(),{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); }catch(_){ ask(); } };
 let meLL=null, meMk=null;
 const setMe=ll=>{ meLL=ll; if(meMk) map.removeLayer(meMk);

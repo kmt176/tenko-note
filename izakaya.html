@@ -86,7 +86,7 @@ body.full .panel{display:none}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-14 23:01</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-14 23:05</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="fsrow">文字の大きさ <button id="fsDn" aria-label="文字を小さく">小さく</button><button id="fsUp" aria-label="文字を大きく">大きく</button><span id="fsNow"></span></div>
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
@@ -277,10 +277,11 @@ $("kml").onclick=async()=>{ if(!clusters.length) return; await allTowns();
 $("reload").onclick=async()=>{ if(await fetchShops()) compute(); };
 let changed=false;   // チェック・半径・軒数を変えたときは、変えたことが分かるように知らせる
 ["cIza","cPub","cBar","cNight","cFz","rad","num","cDots"].forEach(id=>$(id).addEventListener("change",()=>{ changed=true; compute(); }));
-// 現在地を取る：まずこのページで調べ、取れない・返事がないときはアプリ本体に代わりに調べてもらう（2026-11-10 アプリの中だと現在地ボタンが動かないスマホがあった）
+// 現在地を取る（飲み屋街マップ・高速マップで共通。src/map_geo_part.js から build.py が差しこむ。2026-11-14 見直しの提案7）
+// まずこのページで調べ、取れない・返事がないときはアプリ本体に代わりに調べてもらう（2026-11-10 アプリの中だと現在地ボタンが動かないスマホがあった）
+const inApp=window.parent!==window;
 let meTipT=null;
 const meTip=(t,ms)=>{ const el=$("meTip"); el.textContent=t; el.hidden=false; clearTimeout(meTipT); if(ms) meTipT=setTimeout(()=>el.hidden=true,ms); };
-const inApp=window.parent!==window;
 const getPos=(ok,ng)=>{ let done=false, tm=null; const fin=(f,x)=>{ if(done) return; done=true; clearTimeout(tm); window.removeEventListener("message",onMsg); f(x); };
   const id=Math.random().toString(36).slice(2); let asked=false;
   const onMsg=e=>{ if(e.origin!==location.origin||!e.data||e.data.izGeoRes!==id) return; if(e.data.err) fin(ng,e.data.err); else fin(ok,[e.data.lat,e.data.lng]); };
