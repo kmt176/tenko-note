@@ -69,7 +69,7 @@ body.full .panel{display:none}
 .gbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
 .gbar b{font-size:16px}
 #gMap{flex:1 1 auto;min-height:220px}
-#gInfo{padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);font-size:14.5px;line-height:1.6;max-height:45%;overflow:auto}
+#gInfo{padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);font-size:14.5px;line-height:1.6;max-height:55%;overflow:auto}
 .srow{display:flex;gap:6px;align-items:center;width:100%}
 .srow input{flex:1 1 auto;min-width:0;font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .srow .btn{min-height:40px;padding:6px 10px;flex:0 0 auto}
@@ -112,7 +112,7 @@ body.full .panel{display:none}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-13 02:22</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-14 11:15</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -651,35 +651,69 @@ function gLoad(key){ if(gLoaded) return gLoaded;
 function gVia(res){ if(!res.runs.length) return null; const r=res.runs[res.runs.length-1]; let acc=0;
   for(let i=r.i1;i>r.i0;i--){ const s=res.segs[i]; acc+=distM(s.a,s.b); if(acc>=400) return {lat:s.a[0],lng:s.a[1],h:bearing(s.a,s.b)}; }
   const s=res.segs[r.i0]; return {lat:s.a[0],lng:s.a[1],h:bearing(s.a,s.b)}; }
-async function gRoute(key,res){
+// Googleのルートを1本調べる。useVia＝高速マップのルートの出口の手前を経由地にする（同じ道をGoogleの渋滞込みで走った時間）。
+// 料金（通行料）は取れるときだけ（TOLLS）。料金つきで断られたら、料金なしで調べ直す
+async function gRoute(key,res,useVia){
   const P=p=>({location:{latLng:{latitude:p[0],longitude:p[1]}}});
-  const body={origin:P(res.S),destination:P(res.D),travelMode:"DRIVE",routingPreference:"TRAFFIC_AWARE",computeAlternativeRoutes:false,routeModifiers:{avoidTolls:false,avoidHighways:false},languageCode:"ja",units:"METRIC"};
-  const v=gVia(res); if(v) body.intermediates=[{via:true,location:{latLng:{latitude:v.lat,longitude:v.lng},heading:v.h}}];
-  let r; try{ r=await fetch("https://routes.googleapis.com/directions/v2:computeRoutes",{method:"POST",headers:{"Content-Type":"application/json","X-Goog-Api-Key":key,"X-Goog-FieldMask":"routes.duration,routes.staticDuration,routes.distanceMeters,routes.polyline.encodedPolyline"},body:JSON.stringify(body)}); }
+  const mk=toll=>{ const body={origin:P(res.S),destination:P(res.D),travelMode:"DRIVE",routingPreference:"TRAFFIC_AWARE",computeAlternativeRoutes:false,routeModifiers:{avoidTolls:false,avoidHighways:false},languageCode:"ja",units:"METRIC"};
+    if(toll){ body.extraComputations=["TOLLS"]; body.routeModifiers.vehicleInfo={emissionType:"GASOLINE"}; body.routeModifiers.tollPasses=["JP_ETC"]; }
+    const v=useVia?gVia(res):null; if(v) body.intermediates=[{via:true,location:{latLng:{latitude:v.lat,longitude:v.lng},heading:v.h}}];
+    return fetch("https://routes.googleapis.com/directions/v2:computeRoutes",{method:"POST",headers:{"Content-Type":"application/json","X-Goog-Api-Key":key,
+      "X-Goog-FieldMask":"routes.duration,routes.staticDuration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.description"+(toll?",routes.travelAdvisory.tollInfo":"")},body:JSON.stringify(body)}); };
+  let r; try{ r=await mk(true); if(r.status===400) r=await mk(false); }
   catch(e){ throw Object.assign(new Error("net"),{net:true}); }
   const j=await r.json().catch(()=>({}));
   if(!r.ok) throw Object.assign(new Error(j.error&&j.error.message||String(r.status)),{status:r.status,gs:j.error&&j.error.status});
   return (j.routes||[])[0]||null; }
+// Googleが返した通行料（円）。取れなければ null（不明）
+const gToll=rt=>{ const ps=rt&&rt.travelAdvisory&&rt.travelAdvisory.tollInfo&&rt.travelAdvisory.tollInfo.estimatedPrice; if(!ps||!ps.length) return null;
+  const y=ps.filter(x=>x.currencyCode==="JPY"); if(!y.length) return null; return y.reduce((a,x)=>a+(+x.units||0),0); };
+// 高速マップのルートの料金の目安：首都高は実績か計算式、首都高以外は実績があればその金額、なければ不明
+function hwFee(res){ const A=actuals(); let yenSum=0, unknown=false, any=false;
+  res.runs.forEach(r=>r.parts.forEach((p,i)=>{ any=true; const a=i===0?r.inName:p.chg, b=i===r.parts.length-1?r.outName:r.parts[i+1].chg, act=actOf(A,a,b);
+    if(act) yenSum+=act[0].amt; else if(p.sh) yenSum+=shFare(p.m/1000); else unknown=true; }));
+  return {any,yen:any&&!unknown?yenSum:null,part:yenSum,unknown}; }
 async function gOpen(){
   const res=lastRes; if(!res) return; const key=gKey(); if(!key){ gNoKey(); return; }
   $("gMsg").innerHTML=""; $("gPanel").hidden=false; $("gInfo").innerHTML=`<div class="warn">Googleで調べています…</div>`;
   gRtWhy=""; gErrCode="";
-  const rtP=gRoute(key,res).then(r=>{ gRtWhy=r?"使えます（地図の側だけの問題です）":"ルートが見つかりませんでした"; return r; },e=>{ gRtWhy=gJa(e); return Promise.reject(e); });
+  // ① Googleの一番早いルート（経由地なし）　② 高速マップのルートと同じ道（出口の手前を経由地）
+  const rtP=gRoute(key,res,false).then(r=>{ gRtWhy=r?"使えます（地図の側だけの問題です）":"ルートが見つかりませんでした"; return r; },e=>{ gRtWhy=gJa(e); return Promise.reject(e); });
   rtP.catch(()=>{});
+  const viaP=res.runs.length?gRoute(key,res,true).catch(()=>null):Promise.resolve(null);
   try{ await gLoad(key); }catch(e){ gErr(gJa(e)); return; }
   if(!gMapObj) gMapObj=new google.maps.Map($("gMap"),{center:{lat:res.S[0],lng:res.S[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,gestureHandling:"greedy"});
   gObjs.forEach(o=>o.setMap(null)); gObjs=[];
   let rt; try{ rt=await rtP; }catch(e){ gErr(gJa(e)); return; }
   if(!rt){ gErr("Googleでルートが見つかりませんでした"); return; }
-  const path=google.maps.geometry.encoding.decodePath(rt.polyline.encodedPolyline);
-  gObjs.push(new google.maps.Polyline({map:gMapObj,path,strokeColor:"#1A73E8",strokeWeight:6,strokeOpacity:.9}));
+  const via=await viaP;
+  const dec=x=>google.maps.geometry.encoding.decodePath(x.polyline.encodedPolyline), b=new google.maps.LatLngBounds();
+  if(via){ const pv=dec(via); gObjs.push(new google.maps.Polyline({map:gMapObj,path:pv,strokeColor:"#2B8A3E",strokeWeight:7,strokeOpacity:.85,zIndex:1})); pv.forEach(p=>b.extend(p)); }
+  const path=dec(rt); gObjs.push(new google.maps.Polyline({map:gMapObj,path,strokeColor:"#1A73E8",strokeWeight:5,strokeOpacity:.95,zIndex:2})); path.forEach(p=>b.extend(p));
   gObjs.push(new google.maps.Marker({map:gMapObj,position:{lat:res.S[0],lng:res.S[1]},label:"出"}),new google.maps.Marker({map:gMapObj,position:{lat:res.D[0],lng:res.D[1]},label:"着"}));
-  const b=new google.maps.LatLngBounds(); path.forEach(p=>b.extend(p)); gMapObj.fitBounds(b,40);
-  const sec=s=>Math.round(parseInt(String(s||"0").replace("s",""),10)/60);
-  const t1=sec(rt.duration), t0=sec(rt.staticDuration), d=t1-t0;
-  $("gInfo").innerHTML=`<div class="big" style="font-size:17px;font-weight:800">渋滞込み 約${t1}分　<small style="font-weight:700">（約${(rt.distanceMeters/1000).toFixed(1)}km）</small></div>`
-    +`<div>渋滞がないとき 約${t0}分${d>0?`（今は渋滞で 約${d}分 多くかかる）`:"（今は渋滞の影響はほとんどありません）"}</div>`
-    +`<div class="warn">Googleの経路と時間です（${res.runs.length?"高速を使うルートで出しています。":""}今の時刻の混み具合を入れた目安）。Googleの結果はこの画面の中だけに出し、保存していません。</div>`; }
+  gMapObj.fitBounds(b,40);
+  const mn=x=>Math.round(parseInt(String(x||"0").replace("s",""),10)/60), kmG=x=>(x.distanceMeters/1000).toFixed(1);
+  const f=hwFee(res), tG=gToll(rt), tV=via?gToll(via):null;
+  const feeHw=!f.any?"高速なし":f.yen!=null?`${yen(f.yen)}円<small>（目安）</small>`:f.part?`${yen(f.part)}円＋不明`:"不明";
+  const io=res.runs.length?res.runs.map(r=>`${esc(r.inName)}→${esc(r.outName)}`).join("、"):"高速を使いません";
+  const jc=(res.jcs||[]).map(x=>esc(HW.jc[x.gi].n)).join("・");
+  const tGoog=mn(rt.duration), tOurs=via?mn(via.duration):null, tFree=Math.round(res.time/60);
+  // 比べる：できれば、どちらもGoogleの渋滞込みの時間で
+  let cmp;
+  if(tOurs!=null){ const d=tOurs-tGoog; cmp=d>0?`Googleのルートのほうが 約${d}分 早い`:d<0?`高速マップのルートのほうが 約${-d}分 早い`:"時間はほとんど同じ"; cmp+="（どちらも渋滞込み）"; }
+  else { const d=tFree-tGoog; cmp=(d>0?`Googleのルートのほうが 約${d}分 早い`:d<0?`高速マップのルートのほうが 約${-d}分 早い`:"時間はほとんど同じ")+"（高速マップは渋滞なしの目安なので、そのまま比べられません）"; }
+  // 料金の差：高速マップの目安が全部分かればそれで。分からないところがあっても、Googleが両方の道の料金を返していればGoogleの値どうしで比べる。どちらもだめなら不明
+  const dTxt=(d,tail)=>(d>0?`料金は Googleのルートのほうが ${yen(d)}円 安い`:d<0?`料金は 高速マップのルートのほうが ${yen(-d)}円 安い`:"料金は同じ")+tail;
+  const feeCmp=tG==null?"料金の差：不明（Googleの料金が取れませんでした）":!f.any?dTxt(-tG,""):f.yen!=null?dTxt(f.yen-tG,"（高速マップは目安）"):tV!=null?dTxt(tV-tG,"（Googleの値どうし）"):"料金の差：不明（首都高以外の高速の料金が分かりません）";
+  const td=`style="text-align:right;white-space:nowrap;padding:3px 0 3px 6px"`;
+  $("gInfo").innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.45">
+    <tr style="border-bottom:1px solid var(--line)"><th style="text-align:left">ルート</th><th ${td}>時間</th><th ${td}>距離</th><th ${td}>高速料金</th></tr>
+    <tr style="border-bottom:1px solid var(--line)"><td style="padding:4px 0"><b style="color:#2B8A3E">■ 高速マップ</b><br><small>${io}${jc?`<br>JCT：${jc}`:""}</small></td>
+      <td ${td}>${tOurs!=null?`<b>約${tOurs}分</b><br><small>渋滞込み</small><br>`:""}約${tFree}分<br><small>渋滞なしの目安</small></td><td ${td}>約${km(res.total)}km</td><td ${td}>${feeHw}${tV!=null?`<br><small>Google：${yen(tV)}円</small>`:""}</td></tr>
+    <tr><td style="padding:4px 0"><b style="color:#1A73E8">■ Googleの一番早い道</b>${rt.description?`<br><small>${esc(rt.description)}</small>`:""}</td>
+      <td ${td}><b>約${tGoog}分</b><br><small>渋滞込み</small></td><td ${td}>約${kmG(rt)}km</td><td ${td}>${tG!=null?`${yen(tG)}円<br><small>Googleの値</small>`:"不明"}</td></tr></table>`
+    +`<div style="font-weight:800;margin-top:6px">${cmp}</div><div style="font-weight:700">${feeCmp}</div>`
+    +`<div class="warn">${via?"緑＝高速マップのルートと同じ道、":""}青＝Googleの一番早い道。Googleの時間は今の時刻の混み具合を入れた目安です。${res.runs.length&&!via?"高速マップのルートと同じ道は、Googleで調べられませんでした。":""}Googleのルートと時間はこの画面の中だけに出し、保存していません。</div>`; }
 document.addEventListener("click",e=>{ const id=e.target&&e.target.id;
   if(id==="gBtn") gOpen();
   else if(id==="gGoKey"){ try{ window.parent.postMessage({goGKey:1},location.origin); }catch(_){} }
