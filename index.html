@@ -117,7 +117,7 @@ textarea{width:100%;min-height:90px;font:14px/1.4 var(--num);background:var(--su
 .tkpad button.tkok{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .tkpad .tkshow{grid-column:1/-1;text-align:right;font-size:26px;font-weight:800;padding:2px 6px;font-variant-numeric:tabular-nums}
 .field{display:grid;gap:4px}
-.field label{font-size:14.5px;color:var(--muted)}
+.field label{font-size:15px;color:var(--muted)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #rAmtPair:has(>[hidden]){grid-template-columns:1fr}
 #rTimeBox{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
@@ -449,7 +449,7 @@ table.heat{border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-
 table.heat th{font-weight:400;color:var(--muted);padding:2px 3px;text-align:center}
 table.heat td{min-width:26px;height:26px;text-align:center;border:1px solid var(--surface);border-radius:3px}
 #sView{grid-auto-columns:auto;overflow-x:auto;scrollbar-width:none}   /* 管理者はタブが5つになり、iPhoneの幅からはみ出していたので横に送れるように（2026-11-04） */
-#sView button{padding:10px 6px;font-size:14px}
+#sView button{padding:10px 6px;font-size:15.5px}   /* 14pxは運転中に読みにくい（2026-11-15 見直しの提案11） */
 .titlepick select{position:absolute;inset:0;width:100%;height:100%;min-height:0;opacity:0;cursor:pointer;font-size:16px}
 .titlepick .dd{font-size:15px;color:var(--muted);margin-left:4px}
 #sFix .btnrow{margin-top:8px}
@@ -616,7 +616,12 @@ body.rtfull{overflow:hidden}
    トイレなどの枠以外の部品の上だけ少しあけ、空の知らせの欄は隠す */
 #subToilet .card:has(> .wcgrp){row-gap:1px}
 #subToilet .card:has(> .wcgrp) > :not(.wcgrp){margin-top:4px}
-#subToilet .card:has(> .wcgrp) > .src:empty{display:none}   /* 行間が広すぎたので縮めた（2026-11-14 本人の指示。字の大きさはそのまま） */
+#subToilet .card:has(> .wcgrp) > .src:empty{display:none}
+/* 乗車・降車の入力とロング判定（2026-11-15 見直しの提案11の残り）：ボタン・テンキーは高さ44px、「時刻・押し忘れを直す」などの開く所も押しやすく */
+#rSheet .btn,#rSheet .tkpad button,#rSheet .wxsel button{min-height:44px}
+#tgBtn{min-height:44px!important}
+#rSheet details summary{padding:9px 0}#rSheet details{padding-top:3px;padding-bottom:3px}
+   /* 行間が広すぎたので縮めた（2026-11-14 本人の指示。字の大きさはそのまま） */
 #subToilet input[type=checkbox],#subToilet input[type=radio]{width:22px;height:22px;flex:none;margin:1px 2px 1px 0}
 #subToilet .wcnear .btn{min-height:56px}#subToilet .wcnear .btn small{font-size:15px}
 #subToilet .leaflet-control-zoom a{width:44px;height:44px;line-height:44px;font-size:24px}
@@ -1636,7 +1641,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 00:20</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 00:29</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>

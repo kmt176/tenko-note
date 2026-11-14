@@ -17,7 +17,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 .leaflet-tile-pane{opacity:.45}   /* 背景の地図はうすく */
 .panel{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:1000;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-width:520px;margin:0 auto;max-height:calc(100% - 190px);overflow:auto}
 .ph{display:flex;align-items:center;gap:8px;padding:10px 12px}
-.ph b{font-size:17px;flex:1}
+.pht{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}   /* 見出しは1行、版はその下（2026-11-15 本人の指示） */
+.ph b{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ph .ver{font-size:12px;color:var(--muted);white-space:nowrap}
 .ph button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 12px;font-size:15px;font-weight:700}
 .pb{padding:0 12px 12px;display:grid;gap:10px}
@@ -101,6 +102,14 @@ body.full .panel{display:none}
 .jcl{white-space:normal;max-width:10.5em}
 .jcl.rt{transform:translate(-50%,0);text-align:center}
 .jca{cursor:pointer}
+/* 運転中でも押せる・読める（2026-11-15 見直しの提案11）：押す所は高さ44px、字は15px以上、チェックの四角は22px（行はなるべく詰める） */
+.ph button,.btn,.fsrow button,.srow .btn,.jch .btn,.jcchips button,.qd button,.seg button{min-height:44px!important}
+.jcchips button,.qd button{font-size:15px}
+input[type=text],input[type=search],input[type=number],input[type=url],input:not([type]),select{min-height:44px;box-sizing:border-box}
+input[type=checkbox],input[type=radio]{width:22px;height:22px;flex:none;margin:1px 2px 1px 0}
+details summary{padding:11px 0;font-size:15px}
+.leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:24px!important}
+.jcb{font-size:15px}
 </style>
 </head>
 <body>
@@ -112,7 +121,7 @@ body.full .panel{display:none}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-14 23:05</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 00:29</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>

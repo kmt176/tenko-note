@@ -15,7 +15,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 #map{position:fixed;inset:0}
 .panel{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:1000;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-width:520px;margin:0 auto;max-height:calc(100% - 190px);overflow:auto}   /* 下の「現在地」と「＋−」のボタンに重ならない高さまで（2026-11-10 枠の下に隠れて押せなかった） */
 .ph{display:flex;align-items:center;gap:8px;padding:10px 12px}
-.ph b{font-size:17px;flex:1}
+.pht{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}   /* 見出しは1行、版はその下（2026-11-15 本人の指示） */
+.ph b{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ph .ver{font-size:12px;color:var(--muted);white-space:nowrap}
 .ph button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 12px;font-size:15px;font-weight:700}
 .pb{padding:0 12px 12px;display:grid;gap:10px}
@@ -71,6 +72,13 @@ body.full .panel{display:none}
 /* 文字の大きさ（2026-11-14 ユーザー指定：アプリの中の枠で開くので、指で広げる拡大ができないため） */
 .fsrow{display:flex;white-space:nowrap;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .fsrow button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 10px;font-size:15px;font-weight:700;min-height:36px}
+/* 運転中でも押せる・読める（2026-11-15 見直しの提案11）：押す所は高さ44px、字は15px以上、チェックの四角は22px（行はなるべく詰める） */
+.ph button,.btn,.fsrow button,.srow .btn,.jch .btn,.jcchips button,.qd button{min-height:44px!important}
+.jcchips button,.qd button{font-size:15px}
+input[type=text],input[type=search],input[type=number],input[type=url],input:not([type]),select{min-height:44px;box-sizing:border-box}
+input[type=checkbox],input[type=radio]{width:22px;height:22px;flex:none;margin:1px 2px 1px 0}
+details summary{padding:11px 0;font-size:15px}
+.leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:24px!important}
 </style>
 </head>
 <body>
@@ -86,7 +94,7 @@ body.full .panel{display:none}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-14 23:05</span><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-15 00:29</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="fsrow">文字の大きさ <button id="fsDn" aria-label="文字を小さく">小さく</button><button id="fsUp" aria-label="文字を大きく">大きく</button><span id="fsNow"></span></div>
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
