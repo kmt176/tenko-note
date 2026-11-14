@@ -131,7 +131,7 @@ details summary{padding:6px 0}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 00:33</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 01:00</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -305,6 +305,11 @@ const getPos=(ok,ng)=>{ let done=false, tm=null; const fin=(f,x)=>{ if(done) ret
   if(!navigator.geolocation){ ask(); return; }
   if(inApp) tm=setTimeout(ask,6000);   // 6秒たっても返事がなければアプリ本体に頼む
   try{ navigator.geolocation.getCurrentPosition(p=>fin(ok,[p.coords.latitude,p.coords.longitude]),()=>ask(),{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); }catch(_){ ask(); } };
+// 声の入力は、ほかの画面へ移ったとき・アプリを閉じたとき（裏に回したとき）に必ず止める（2026-11-15 見直しの提案13・ユーザー指定）
+const SR_LIVE=new Set(), srTrack=rc=>{ SR_LIVE.add(rc); rc.addEventListener("end",()=>SR_LIVE.delete(rc)); return rc; };
+const srStopAll=()=>{ SR_LIVE.forEach(r=>{ try{ r.abort(); }catch(e){} }); SR_LIVE.clear(); };
+addEventListener("pagehide",srStopAll);
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) srStopAll(); });
 let meLL=null, meMk=null;
 const setMe=ll=>{ meLL=ll; if(meMk) map.removeLayer(meMk);
   meMk=L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1}).bindTooltip("今ここ",{permanent:true,direction:"top",offset:[0,-8]}).addTo(map); };
@@ -371,7 +376,7 @@ function mkSearch(id,onPick){
   $(id+"Go").onclick=run;
   q.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); run(); } });
   res.addEventListener("click",e=>{ const b=e.target.closest("[data-h]"); if(!b) return; const h=hits[+b.dataset.h]; if(!h) return; res.innerHTML=""; onPick(h); });
-  if(SRC){ $(id+"Mic").hidden=false; $(id+"Mic").onclick=()=>{ let rc; try{ rc=new SRC(); }catch(_){ return; } rc.lang="ja-JP"; rc.interimResults=false; res.innerHTML=`<div class="warn">話してください…</div>`;
+  if(SRC){ $(id+"Mic").hidden=false; $(id+"Mic").onclick=()=>{ let rc; try{ rc=srTrack(new SRC()); }catch(_){ return; } rc.lang="ja-JP"; rc.interimResults=false; res.innerHTML=`<div class="warn">話してください…</div>`;
     rc.onresult=e=>{ q.value=e.results[0][0].transcript.replace(/[。、\s]/g,""); run(); };
     rc.onerror=()=>{ res.innerHTML=`<div class="warn">声を聞き取れませんでした。キーボードのマイクでも入れられます</div>`; }; try{ rc.start(); }catch(_){ res.innerHTML=`<div class="warn">声の入力を始められませんでした。キーボードのマイクを使ってください</div>`; } }; } }
 mkSearch("from",h=>{ fromMode="search"; fromLL=h.ll; fromName=h.n; fromShow(); mkDraw(); map.setView(h.ll,Math.max(map.getZoom(),14)); });

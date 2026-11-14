@@ -104,7 +104,7 @@ details summary{padding:6px 0}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-15 00:33</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-15 01:00</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="fsrow">文字の大きさ <button id="fsDn" aria-label="文字を小さく">小さく</button><button id="fsUp" aria-label="文字を大きく">大きく</button><span id="fsNow"></span></div>
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
@@ -307,6 +307,11 @@ const getPos=(ok,ng)=>{ let done=false, tm=null; const fin=(f,x)=>{ if(done) ret
   if(!navigator.geolocation){ ask(); return; }
   if(inApp) tm=setTimeout(ask,6000);   // 6秒たっても返事がなければアプリ本体に頼む
   try{ navigator.geolocation.getCurrentPosition(p=>fin(ok,[p.coords.latitude,p.coords.longitude]),()=>ask(),{enableHighAccuracy:true,timeout:15000,maximumAge:30000}); }catch(_){ ask(); } };
+// 声の入力は、ほかの画面へ移ったとき・アプリを閉じたとき（裏に回したとき）に必ず止める（2026-11-15 見直しの提案13・ユーザー指定）
+const SR_LIVE=new Set(), srTrack=rc=>{ SR_LIVE.add(rc); rc.addEventListener("end",()=>SR_LIVE.delete(rc)); return rc; };
+const srStopAll=()=>{ SR_LIVE.forEach(r=>{ try{ r.abort(); }catch(e){} }); SR_LIVE.clear(); };
+addEventListener("pagehide",srStopAll);
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) srStopAll(); });
 // 現在地：地図を今いる場所に移して「今ここ」を出し、一番近い飲み屋街までの距離を出す
 let meMk=null;
 // 十字の場所から一番近い飲み屋街の文（十字は画面の真ん中に固定。地図をずらすと十字の場所が変わる。2026-11-11 ユーザー指定）
@@ -386,7 +391,7 @@ $("favOk").onclick=()=>{ if(!favMk) return; const n=$("favName").value.trim().sl
   $("rOut").textContent=`「${n}」を登録し、行き先にしました`; rSave(); };
 // 声で入れる（ブラウザが対応しているときだけボタンを出す）
 (()=>{ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return; $("favMic").hidden=false;
-  $("favMic").onclick=()=>{ const rc=new SR(); rc.lang="ja-JP"; rc.interimResults=false; $("favMsg").textContent="話してください…";
+  $("favMic").onclick=()=>{ const rc=srTrack(new SR()); rc.lang="ja-JP"; rc.interimResults=false; $("favMsg").textContent="話してください…";
     rc.onresult=e=>{ $("favQ").value=e.results[0][0].transcript.replace(/[。、\s]/g,""); $("favSearch").click(); };
     rc.onerror=()=>{ $("favMsg").textContent="声を聞き取れませんでした。キーボードのマイクも使えます"; }; rc.start(); }; })();
 $("rDest").addEventListener("input",()=>{ rDestLL=null; rDestName="地図で選んだ場所"; });

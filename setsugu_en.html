@@ -259,6 +259,9 @@ function listen(){
 }
 function begin(p){ stop(); if(window.speechSynthesis) speechSynthesis.cancel(); phase=p; on=true; heard=""; errCount=0; diag=""; $("pStop").disabled=false; render(); listen(); }
 function stop(){ on=false; try{ rec&&rec.stop(); }catch(e){} rec=null; $("pStop").disabled=true; render(); }
+// アプリを閉じたとき（裏に回したとき）・この画面を離れたときは、聞き取りを止める（2026-11-15 見直しの提案13）
+addEventListener("pagehide",()=>{ if(on) stop(); });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden&&on) stop(); });
 $("pOn").onclick=()=>begin("on");
 $("pOff").onclick=()=>begin("off");
 $("pStop").onclick=stop;
