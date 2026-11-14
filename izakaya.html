@@ -87,7 +87,7 @@ details summary{padding:11px 0;font-size:15px}
 .btns{gap:4px}
 .favbox{padding:4px;gap:3px}
 details summary{padding:6px 0}
-#msg{padding:2px 6px}
+#msg{padding:2px 6px;margin:0}   /* 左右に外へ広げると、文字を大きくしたときに横にはみ出した（2026-11-15 画面の試験で見つけた） */
 .fsrow{gap:6px}
 </style>
 </head>
@@ -104,7 +104,7 @@ details summary{padding:6px 0}
   <div class="btns"><button class="btn primary" id="favOk">この場所で登録</button><button class="btn" id="favBack">検索に戻る</button><button class="btn" id="favNo">やめる</button></div>
 </div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-15 01:00</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🍶 飲み屋街マップ</b><span class="ver">版 2026-11-15 01:39</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="fsrow">文字の大きさ <button id="fsDn" aria-label="文字を小さく">小さく</button><button id="fsUp" aria-label="文字を大きく">大きく</button><span id="fsNow"></span></div>
     <div class="route"><b>🧭 飲み屋街を通って戻る</b>
