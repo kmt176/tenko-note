@@ -587,7 +587,7 @@ body.rtfull{overflow:hidden}
 .xpin.sq{border-radius:6px}
 .htc{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:rgba(24,100,171,.88);color:#fff;font:800 14px/1 sans-serif;border:3px solid rgba(255,255,255,.9);box-shadow:0 1px 5px rgba(0,0,0,.4);box-sizing:border-box}
 .htc small{font-size:9px;opacity:.9;margin-bottom:1px}
-.htc.mnc{background:rgba(11,114,133,.88)}
+.htc.mnc{background:rgba(52,58,64,.88)}
 .xleg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12.5px;color:#5F6368}
 .xleg .xpin{width:20px;height:20px;font-size:11px;margin-left:4px}
 .xpop{font-size:14.5px;line-height:1.55;min-width:180px}.xpop .xh{display:block;font-size:16px;margin-bottom:2px}
@@ -596,6 +596,8 @@ body.rtfull{overflow:hidden}
 .golist{max-height:160px;overflow:auto;font-size:13px;line-height:1.5}
 .golist>div{padding:4px 0;border-top:1px dashed var(--line)}
 .golist .gm{font-weight:700}
+.golist .gotm{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px}
+.golist .gotm input{font-size:16px;min-height:36px;padding:2px 4px;border:1px solid var(--line);border-radius:8px}
 .golist button{font-size:12.5px;margin:2px 6px 0 0;padding:3px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card,#fff);color:inherit}
 .hlist{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 6px}
 .hrow{display:flex;flex-wrap:wrap;gap:2px 8px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;padding:7px 2px;font-size:14px}
@@ -1057,7 +1059,7 @@ body.rtfull{overflow:hidden}
       <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowHt">🏨 ホテル（GOで呼ばれた記録）</label>
         <div id="wcHtBox" hidden><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="wcLux">高級ホテルも出す（灰色）</label>
           <div class="xleg"><span class="xpin" style="background:#1864AB">H</span>まだ <span class="xpin" style="background:#F08C00">1</span>GOで1〜2回 <span class="xpin" style="background:#E03131">3</span>3回以上 <span class="xpin" style="background:#ADB5BD;color:#343A40">H</span>高級 <span class="htc" style="width:24px;height:24px;font-size:10px;margin-left:4px"><small style="font-size:7px">H</small>12</span>まとめた数（拡大すると1軒ずつ）</div>
-          <div style="font-size:13px;color:#5F6368">ホテルの印を押して「🚕 GOで呼ばれた」を押すと、日付と時間を記録します（ひとことメモも）。記録は売上のデータと一緒に保存し、バックアップにも入ります</div>
+          <div style="font-size:13px;color:#5F6368">ホテルの印を押して「🚕 GOで呼ばれた」を押すと、日付と時間を記録します（ひとことメモも）。あとから記録したときは、記録の「時間を直す」で日時を直せます。記録は売上のデータと一緒に保存し、バックアップにも入ります</div>
           <div class="btnrow"><button class="btn" id="hBtn">ホテルの一覧</button></div>
           <div id="hListBox" hidden><div style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:15px;margin:6px 0"><label>並べ方 <select id="hSort"><option value="rooms">客室数の多い順</option><option value="chain">チェーンごと</option><option value="go">GOで呼ばれた回数の多い順</option></select></label>
             <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hVis" checked>地図に見えている範囲だけ</label></div><div style="display:flex;gap:6px;align-items:center;margin:0 0 6px"><input type="search" id="hQ" placeholder="ホテル名で絞りこむ（例：アパ 新宿）" autocomplete="off" enterkeyhint="search" style="flex:1;min-width:0;font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)"><button type="button" class="btn" id="hMic" hidden aria-label="声で入れる" style="margin:0">🎤</button></div><div id="hListOut" class="hlist"></div></div></div></div>
@@ -1066,7 +1068,7 @@ body.rtfull{overflow:hidden}
       <div class="wcgrp"><label class="wcmain"><input type="checkbox" id="wcShowMn">🏢 マンション（中規模以上）</label>
         <div id="wcMnBox" hidden>
           <div style="display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:15px"><input type="number" id="mnLv" inputmode="numeric" style="width:4.2em;font-size:16px;padding:4px 6px"> 階以上　または　<input type="number" id="mnFl" inputmode="numeric" style="width:4.6em;font-size:16px;padding:4px 6px"> 戸以上</div>
-          <div class="xleg"><span class="xpin" style="background:#F76707">M</span>部屋数が分かる <span class="xpin" style="background:#0B7285">M</span>部屋数が分からない <span class="htc mnc" style="width:24px;height:24px;font-size:10px;margin-left:4px"><small style="font-size:7px">M</small>12</span>まとめた数</div>
+          <div class="xleg"><span class="xpin" style="background:#F76707">M</span>部屋数が分かる <span class="xpin" style="background:#0B7285">M</span>部屋数が分からない <span class="htc mnc" style="width:30px;height:30px;font-size:10px;margin-left:4px"><small style="font-size:7px">M</small><span>12<small style="font-size:6px;margin:0">棟</small></span></span>まとめた棟数</div>
           <div class="btnrow"><button class="btn" id="mnBtn">区ごとのリスト</button></div>
           <div id="mnListBox" hidden><div style="margin:6px 0;font-size:15px"><label>区 <select id="mnWard"></select></label></div><div id="mnListOut" class="hlist"></div>
             <div style="font-size:13px;color:#5F6368">部屋数の多い順です。部屋数が分からないものは、そのあとに階数の多い順で並べています。行を押すと、地図でその場所を出します。分からない項目は空欄です</div></div>
@@ -1650,7 +1652,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 02:07</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 09:25</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3581,7 +3583,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       +(h[6]?`<br><small>高級ホテル（名前・ブランドで分けました。ドアマンの有無は確かめていません）</small>`:"")
       +`<div class="gobox"><div>GOで呼ばれた回数：<b>${r.length}回</b>${r.length?`<br>よく呼ばれる時間帯：<b>${goTop(r)}</b>`:""}</div>`
       +`<button class="btn primary" data-goadd="${esc(h[0])}">🚕 GOで呼ばれた（今の時間で記録）</button>`
-      +(r.length?`<div class="golist">${r.slice().reverse().slice(0,30).map(x=>`<div>${recTxt(x.t)} ${x.m?`<span class="gm">${esc(x.m)}</span>`:""}<br><button data-gomemo="${esc(h[0])}|${x.t}">${x.m?"メモを直す":"メモを書く"}</button><button data-godel="${esc(h[0])}|${x.t}">消す</button></div>`).join("")}${r.length>30?`<small>ほか${r.length-30}件</small>`:""}</div>`:"")
+      +(r.length?`<div class="golist">${r.slice().reverse().slice(0,30).map(x=>`<div>${recTxt(x.t)} ${x.m?`<span class="gm">${esc(x.m)}</span>`:""}<br><button data-gotime="${esc(h[0])}|${x.t}">時間を直す</button><button data-gomemo="${esc(h[0])}|${x.t}">${x.m?"メモを直す":"メモを書く"}</button><button data-godel="${esc(h[0])}|${x.t}">消す</button></div>`).join("")}${r.length>30?`<small>ほか${r.length-30}件</small>`:""}</div>`:"")
       +`<div class="src">${/^\d{3,10}$/.test(goCode())?"記録はスプレッドシートにも送ります（社員コードつき）":"設定で社員コードを入れると、スプレッドシートにも記録します"}</div>`
       +`<div id="goMsg" class="src"></div></div></div>`; }
   const taxiPop=x=>`<div class="xpop"><b class="xh">🚕 ${x[2]?esc(x[2]):"タクシー乗り場"}</b>種類：<b>${x[4]==="その他"?"その他":x[4]+"の乗り場"}</b>${x[5]?`<br><small>${esc(x[5])}から決めました</small>`:x[4]==="その他"?`<br><small>名前と近く（150m以内）の駅・ホテル・病院から決められませんでした</small>`:""}${x[3]?`<br>並べる台数：<b>${esc(x[3])}台</b>`:""}${x[2]?"":`<br><small>名前は地図のデータに入っていません</small>`}</div>`;
@@ -3626,18 +3628,18 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const mnLv=()=>Math.max(MN?MN.floor[0]:6,+wcOpt.mnLv||10), mnFl=()=>Math.max(MN?MN.floor[1]:30,+wcOpt.mnFl||50);
   const mnOk=r=>(r[5]||0)>=mnLv()||(r[6]||0)>=mnFl();
   const mnPop=r=>`<div class="xpop"><b class="xh">🏢 ${r[2]?esc(r[2]):"マンション"}</b>${r[2]?"":`<small>名前は地図のデータに入っていません</small><br>`}階数：${r[5]?r[5]+"階":""}<br>部屋数：${r[6]?`<b>${r[6]}戸</b>`:""}${r[4]?`<br>住所：${esc(r[4])}`:""}<br><small>${esc(MN.wards[r[3]])}</small></div>`;
-  const mnClusterIcon=c=>{ const n=c.getChildCount(), sz=n<10?32:n<100?38:44; return L.divIcon({className:"",iconSize:[sz,sz],html:`<div class="htc mnc" style="width:${sz}px;height:${sz}px"><small>M</small>${n}</div>`}); };
-  // 部屋数が分かるマンション＝橙（まとめずにいつも出す）、分からないもの＝青緑（広く見ているときはまとめて数字）
+  const mnClusterIcon=c=>{ const n=c.getChildCount(), sz=n<10?34:n<100?40:n<1000?46:54; return L.divIcon({className:"",iconSize:[sz,sz],html:`<div class="htc mnc" style="width:${sz}px;height:${sz}px"><small>M</small><span>${n}<small style="font-size:8px;margin:0">棟</small></span></div>`}); };
+  // 2026-11-15 本人の希望（B）：部屋数が分かる・分からないを区別せず、広く見ているときは全部いっしょにまとめて棟数を出す（灰色の丸）。ばらけた1棟ずつは、部屋数が分かる＝橙、分からない＝青緑
   function mnBuild(){ if(!wcMapObj) return;
     if(mnLy){ mnLy.remove(); mnLy=null; } if(mnFlLy){ mnFlLy.remove(); mnFlLy=null; } mnMk.clear(); mnCnt=0;
     if(!MN||!wcOpt.mn){ $("mnMsg").textContent=""; return; }
     mnLy=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:60,disableClusteringAtZoom:17,chunkedLoading:true,iconCreateFunction:mnClusterIcon});
-    mnFlLy=L.layerGroup(); let nf=0;
+    let nf=0;
     const icA=xPin("M","#F76707","#fff",26), icB=xPin("M","#0B7285","#fff",20);
     MN.rows.forEach((r,i)=>{ if(!mnOk(r)) return; mnCnt++; if(r[6]) nf++;
-      const m=L.marker([r[0],r[1]],{icon:r[6]?icA:icB,zIndexOffset:r[6]?120:50}).bindPopup(()=>mnPop(r),Object.assign({maxWidth:220,minWidth:180},WC_POP)); m.addTo(r[6]?mnFlLy:mnLy); mnMk.set(i,m); });
-    mnLy.addTo(wcMapObj); mnFlLy.addTo(wcMapObj);
-    $("mnMsg").textContent=`マンション ${mnCnt}棟（${mnLv()}階以上か${mnFl()}戸以上。部屋数が分かる ${nf}棟は橙でいつも出します。ほかは、広く見ているときにまとめて数字で出します）`; }
+      const m=L.marker([r[0],r[1]],{icon:r[6]?icA:icB,zIndexOffset:r[6]?120:50}).bindPopup(()=>mnPop(r),Object.assign({maxWidth:220,minWidth:180},WC_POP)); m.addTo(mnLy); mnMk.set(i,m); });
+    mnLy.addTo(wcMapObj);
+    $("mnMsg").textContent=`マンション ${mnCnt}棟（${mnLv()}階以上か${mnFl()}戸以上。うち部屋数が分かる ${nf}棟は橙。広く見ているときは、全部まとめて棟数を灰色の丸で出します）`; }
   async function mnOn(){ $("wcShowMn").checked=!!wcOpt.mn; $("wcMnBox").hidden=!wcOpt.mn; if(!wcMapObj) return;
     if(wcOpt.mn&&!MN){ $("mnMsg").textContent="読み込んでいます…"; try{ await mnLoad(); }catch(e){ $("mnMsg").textContent="データを読み込めませんでした。電波を確認して、もう一度チェックを入れてください"; return; }
       $("mnLv").min=MN.floor[0]; $("mnFl").min=MN.floor[1]; $("mnLv").value=mnLv(); $("mnFl").value=mnFl();
@@ -3661,8 +3663,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("mnWard").onchange=mnList;
   $("mnListOut").addEventListener("click",e=>{ const b=e.target.closest("[data-mni]"); if(!b||!MN||!wcMapObj) return; const i=+b.dataset.mni, r=MN.rows[i], m=mnMk.get(i); if(!m) return;
     $("wcMapWrap").scrollIntoView({block:"start",behavior:"smooth"});
-    setTimeout(()=>{ if(r[6]){ wcMapObj.setView([r[0],r[1]],Math.max(wcMapObj.getZoom(),17)); setTimeout(()=>m.openPopup(),400); }
-      else mnLy.zoomToShowLayer(m,()=>setTimeout(()=>m.openPopup(),350)); },350); });
+    setTimeout(()=>mnLy.zoomToShowLayer(m,()=>setTimeout(()=>m.openPopup(),350)),350); });
   // 「GOで呼ばれた」・メモ・消す（ホテルの説明の中のボタン）
   // まとめる・まとめないが変わるとき（はじめてGOで呼ばれたときなど）は、説明を閉じてから描き直す
   function goAfter(id,msg){ const o=hMk.get(id); if(o){ o.m.setIcon(hotelIcon(o.h)); o.m.setPopupContent(hotelPop(o.h)); if(o.go!==(goN(id)>0)) htDirty=true; } const el=$("goMsg"); if(el) el.textContent=msg; if(!$("hListBox").hidden) hList(); }
@@ -3674,6 +3675,19 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(m){ goDo({t:"memo",id,at,m}); goAfter(id,`${recTxt(at)} を記録しました（メモつき）`); } }
     else if(t.dataset.gomemo){ const [id,at]=t.dataset.gomemo.split("|"), cur=((goAll()[id]&&goAll()[id].r)||[]).find(x=>x.t===at); if(!cur) return;
       const m=prompt("ひとことメモ（空にすると消えます）",cur.m||""); if(m==null) return; goAfter(id,goDo({t:"memo",id,at,m:m.trim()})?"メモを直しました":"直せませんでした。もう一度押してください"); }
+    // 時間を直す（2026-11-15 本人の希望。あとから記録する人もいるため）：その行に日時の入力を出し、「決める」で新しい日時の記録を足してから前の記録を消す（メモはそのまま）
+    else if(t.dataset.gotime){ const row=t.parentElement; if(!row||row.querySelector(".gotm")) return; const [id,at]=t.dataset.gotime.split("|");
+      row.insertAdjacentHTML("beforeend",`<div class="gotm"><input type="datetime-local" value="${at}" max="${nowKey()}"><button data-gotimeok="${esc(id)}|${at}">決める</button><button data-gotimeno="1">やめる</button></div>`); }
+    else if(t.dataset.gotimeno){ const b=t.closest(".gotm"); if(b) b.remove(); }
+    else if(t.dataset.gotimeok){ const [id,at]=t.dataset.gotimeok.split("|"), inp=t.closest(".gotm")&&t.closest(".gotm").querySelector("input"), h=goAll()[id];
+      const nv=String(inp&&inp.value||"").slice(0,16), cur=h&&(h.r||[]).find(x=>x.t===at);
+      if(!cur) return goAfter(id,"直せませんでした。もう一度押してください");
+      if(!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(nv)) { const el=$("goMsg"); if(el) el.textContent="日付と時間を入れてください"; return; }
+      if(nv===at){ t.closest(".gotm").remove(); return; }
+      if(nv>nowKey()){ const el=$("goMsg"); if(el) el.textContent="これから先の時間にはできません"; return; }
+      if(h.r.some(x=>x.t===nv)){ const el=$("goMsg"); if(el) el.textContent=`${recTxt(nv)} の記録はもうあります`; return; }
+      const ok=goDo({t:"add",id,n:h.n,lat:h.lat,lng:h.lng,at:nv,m:cur.m||""})&&goDo({t:"del",id,at});
+      goAfter(id,ok?`${recTxt(at)} → ${recTxt(nv)} に直しました`:"直せませんでした。もう一度押してください"); }
     else if(t.dataset.godel){ const [id,at]=t.dataset.godel.split("|"); if(!confirm(`${recTxt(at)} の記録を消しますか？`)) return;
       goAfter(id,goDo({t:"del",id,at})?"消しました":"消せませんでした。もう一度押してください"); } });
   // ホテルの一覧：客室数の多い順・チェーンごと・GOで呼ばれた回数の多い順。押すと地図でそのホテルを開く
