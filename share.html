@@ -152,7 +152,7 @@ function render(d,j){
 function drawMap(d){
   const c=document.createElement("link"); c.rel="stylesheet"; c.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(c);
   const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
-  s.onload=()=>{ const m=L.map("map",{zoomControl:true,preferCanvas:true});
+  s.onload=()=>{ const m=L.map("map",{zoomControl:true,preferCanvas:true}); /* 北の矢印（2026-11-15 ユーザー指定：どの地図も上が北） */ (function(m,pos){ const C=L.Control.extend({onAdd(){ const d=L.DomUtil.create("div","northmk"); d.title="上が北"; d.style.cssText="background:rgba(255,255,255,.92);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.35);padding:2px 4px;line-height:0;pointer-events:none"; d.innerHTML='<svg viewBox="0 0 26 34" width="26" height="34" aria-label="上が北"><text x="13" y="11" text-anchor="middle" font-size="12" font-weight="900" fill="#222" font-family="sans-serif">N</text><path d="M13 13 L20 32 L13 27 L6 32 Z" fill="#D32F2F" stroke="#fff" stroke-width="1"/></svg>'; return d; }}); new C({position:pos}).addTo(m); })(m,"topleft");
     L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
     d.cells.forEach(([la,ln,f,k,t,l])=>L.circleMarker([la,ln],{radius:l?8:6,color:l?"#5B2C82":"#14505F",weight:1,fillColor:l?"#7B3FA0":"#1D6A80",fillOpacity:l?.75:.5}).addTo(m)
       .bindPopup(`<b>${esc(t||"（町名なし）")}</b><br>${yen(f)}円・${esc(k)}`));

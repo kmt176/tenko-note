@@ -544,6 +544,9 @@ body.rtfull{overflow:hidden}
 .patrolbanner .pbbtns .pbbr{order:0;flex-basis:100%;height:0}   /* 取締りの帯：1段目は高速利用中、2段目に地図とOK */
 .banmapov{position:fixed;inset:0;z-index:4100;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.banmapov[hidden]{display:none}
 .banmapbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}.banmapbar b{font-size:17px;min-width:0;overflow-wrap:anywhere}.banmapbar .btn{flex:none;font-size:17px}
+.northmk{background:rgba(255,255,255,.92);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.35);padding:2px 4px;line-height:0;pointer-events:none}
+#taxiBanner .banmap{order:2;margin-left:auto;touch-action:manipulation;font-size:18px;font-weight:900;padding:4px 12px;border:2px solid #fff;border-radius:8px;background:#fff;color:var(--accent);line-height:1.2}
+#taxiBanner .banok{margin-left:0}
 #banMapEl{flex:1;min-height:0}.banmapft{padding:8px 12px;font-size:15px;line-height:1.5;background:var(--surface)}.banmapft a{margin-left:6px}
 .taxibanner,.trainbanner{flex-wrap:wrap}
 #taxiBannerText,#airBannerText,#trainBannerText{flex:1 1 calc(100% - 60px)!important;min-width:0}   /* 1段目は文と×、OKは2段目の右に */
@@ -708,6 +711,7 @@ body.rtfull{overflow:hidden}
 <div id="taxiBanner" class="taxibanner" hidden role="status">
   <span id="taxiBannerText"></span>
   <button type="button" id="taxiBannerClose" aria-label="閉じる">×</button>
+  <button type="button" class="banmap" data-banmap="taxiBanner">🗺 地図</button>
   <button type="button" class="banok" data-banok>OK</button>
 </div>
 <div id="airBanner" class="taxibanner airbanner" hidden role="status">
@@ -1669,7 +1673,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 16:53</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 19:25</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -7562,7 +7566,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // mkMap(場所, 地図の種類)：国土地理院の地図（pale＝白っぽい地図。std＝色つきの地図）。＋−と出典の表示つき
   function mkMap(el,tile){ const m=L.map(el,{zoomControl:true,attributionControl:true});
     L.tileLayer(`https://cyberjapandata.gsi.go.jp/xyz/${tile||"pale"}/{z}/{x}/{y}.png`,{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'}).addTo(m);
-    return m; }
+    addNorth(m); return m; }
+  // 北の矢印（2026-11-15 ユーザー指定）：どの地図も上が北なので、＋−の下に「N↑」を出す（押せない飾り）
+  function addNorth(m,pos){ const C=L.Control.extend({onAdd(){ const d=L.DomUtil.create("div","northmk"); d.title="上が北";
+      d.innerHTML='<svg viewBox="0 0 26 34" width="26" height="34" aria-label="上が北"><text x="13" y="11" text-anchor="middle" font-size="12" font-weight="900" fill="#222" font-family="sans-serif">N</text><path d="M13 13 L20 32 L13 27 L6 32 Z" fill="#D32F2F" stroke="#fff" stroke-width="1"/></svg>'; return d; }});
+    new C({position:pos||"topleft"}).addTo(m); }
   // navUrl(緯度, 経度)：Googleマップで、その場所までの車のナビを開くリンク
   function navUrl(lat,lng){ return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`; }
   function loadLeaflet(){
@@ -8212,6 +8220,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     {id:"toranomon_st",name:"虎ノ門ヒルズステーションタワー1F",lat:35.66733,lng:139.74731},
     {id:"azabudai_morijp",name:"麻布台ヒルズ森JPタワーB1",lat:35.66122,lng:139.74062}
   ];
+  let taxiCur=null;   // 今、帯に出している森ビルの乗り場（帯の「🗺 地図」用）
   $("taxiBannerClose").onclick=()=>{ $("taxiBanner").hidden=true; };
   async function taxiCheck(){
     if(!PROD||!cfg.url||offCfg.taxi) return;
@@ -8232,7 +8241,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       if(Date.now()-last<30*60*1000) continue;   // 同じ場所は30分あけてから
       try{ localStorage.setItem(key,String(Date.now())); }catch(e){}
       $("taxiBannerText").textContent=`${x.name}の空車が0台です${x.person?`（待っている人 ${x.person}人）`:""}`;
-      $("taxiBanner").hidden=false;
+      $("taxiBanner").hidden=false; taxiCur=s;
       break;   // 一度に1件だけ
     }
   }
@@ -8444,16 +8453,17 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     k=k||"stand"; const S=GS[k], L0=SD_LOOK[k], ban=GEO[k].ban, nm=L0.nm(x), avail=Math.max(200,window.innerWidth-100);
     const fs=Math.max(26,Math.min(42,Math.floor(avail*2/Math.max(1,nm.length))));   // 名前は2行に収まる大きさ（42pxまで）
     sdCurs[ban]={x,d,test}; if(k==="stand") sdCur=sdCurs[ban];
-    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span><span class="pbbtns">${k==="rest2"?`<button type="button" class="pbmap" data-banmap="${ban}">🗺 地図</button>`:""}<button type="button" class="pbok" data-banok>OK</button></span>`;
+    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span><span class="pbbtns">${k==="rest2"||k==="stand"||k==="yuryo"?`<button type="button" class="pbmap" data-banmap="${ban}">🗺 地図</button>`:""}<button type="button" class="pbok" data-banok>OK</button></span>`;
     $(ban).hidden=false; sdUpdate();
   }
   // ===== 帯の「🗺 地図」：取締り・速度取締り・駐車禁止の場所を、その場で地図に出す（2026-11-15 ユーザー指定）。帯はそのまま、閉じると元の画面に戻る =====
   let banMapM=null, banMapLy=null;
   async function banMapOpen(ban){
-    const cur=ban==="speedBanner"?(ptLineX?{x:ptLineX}:null):sdCurs[ban]; if(!cur||!cur.x||!cur.x[2]||!cur.x[2].length) return;
-    const x=cur.x, k=ban==="restBanner"?"rest2":"patrol", mz=x[5]&&x[5].mz?x[5]:null;
-    const col=k==="patrol"?"#C62828":mz?(mz.star?"#D32F2F":"#F08C00"):"#7A3B00";
-    const nm=k==="patrol"?(ban==="speedBanner"?`速度取締り ${String(x[0]||"").trim()}`:(()=>{ const gp=geoPlace(k,x); return [gp.kind,gp.place].filter(Boolean).join("　"); })()):(mz?`No.${mz.no} ${mz.nm}`:String(x[0]||""));
+    // 日交乗り場・優良乗り場・森ビル乗り場も（2026-11-15 ユーザー指定）
+    const cur=ban==="speedBanner"?(ptLineX?{x:ptLineX}:null):ban==="taxiBanner"?(taxiCur?{x:[taxiCur.name,0,[[taxiCur.lat,taxiCur.lng]],"","P"]}:null):sdCurs[ban]; if(!cur||!cur.x||!cur.x[2]||!cur.x[2].length) return;
+    const x=cur.x, k={restBanner:"rest2",standBanner:"stand",yuryoBanner:"yuryo",taxiBanner:"taxi"}[ban]||"patrol", mz=x[5]&&x[5].mz?x[5]:null;
+    const col=k==="patrol"?"#C62828":k==="stand"||k==="yuryo"?"#1E5A36":k==="taxi"?"#2F6FD6":mz?(mz.star?"#D32F2F":"#F08C00"):"#7A3B00";
+    const nm=k==="stand"?`🚕 ${SD_LOOK.stand.nm(x)}`:k==="yuryo"?`【優】${SD_LOOK.yuryo.nm(x)}`:k==="taxi"?`🏢 森ビル乗り場 ${x[0]}`:k==="patrol"?(ban==="speedBanner"?`速度取締り ${String(x[0]||"").trim()}`:(()=>{ const gp=geoPlace(k,x); return [gp.kind,gp.place].filter(Boolean).join("　"); })()):(mz?`No.${mz.no} ${mz.nm}`:String(x[0]||""));
     let ov=$("banMapOv");
     if(!ov){ ov=document.createElement("div"); ov.id="banMapOv"; ov.className="banmapov";
       ov.innerHTML=`<div class="banmapbar"><b id="banMapTitle"></b><button type="button" class="btn primary" id="banMapClose">閉じる</button></div><div id="banMapEl"></div><div class="banmapft" id="banMapFt"></div>`;
@@ -8783,7 +8793,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     let j; try{ j=await post({action:"taxiStatus"}); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return; }
     if(!j||!j.ok){ m.textContent=(j&&j.error)||"取得できませんでした"; return; }
     const show=j.items.find(x=>x.count===0&&x.person>=1)||j.items.find(x=>typeof x.count==="number");
-    if(show){ $("taxiBannerText").textContent=show.count===0&&show.person>=1?`${show.name}の空車が0台です${show.person?`（待っている人 ${show.person}人）`:""}`:`（試し）${show.name}の空車は${show.count}台です`; $("taxiBanner").hidden=false; }
+    if(show){ $("taxiBannerText").textContent=show.count===0&&show.person>=1?`${show.name}の空車が0台です${show.person?`（待っている人 ${show.person}人）`:""}`:`（試し）${show.name}の空車は${show.count}台です`; $("taxiBanner").hidden=false; taxiCur=TAXI_SPOTS.find(s=>s.id===show.id)||null; }
     m.innerHTML="今の状況：<br>"+j.items.map(x=>typeof x.count==="number"?`${esc(x.name)} ${x.count===0?"🔴空車0台":"🔵空車"+x.count+"台"}${x.person!=null?`（待っている人 ${x.person}人）`:""}`:`${esc(x.name)} 取得できず`).join("<br>");
   };
 

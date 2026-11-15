@@ -57,6 +57,7 @@ body.full .panel{display:none}
 .metip{position:fixed;left:10px;right:56px;top:calc(100% - env(safe-area-inset-bottom,0px) - 90px);z-index:1001;max-width:330px;margin-left:auto;background:#FFF1A8;color:#3A2E00;border:1px solid #E0C75A;border-radius:10px;padding:6px 9px;font-size:13px;font-weight:700;line-height:1.45;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .metip[hidden]{display:none}
 .legend{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:900;background:rgba(255,255,255,.92);border:1px solid #CCD6D4;border-radius:10px;padding:5px 8px;font-size:12px;font-weight:700;color:#17201E;line-height:1.6;pointer-events:none}
+.leaflet-bottom.leaflet-right .northmk{margin-right:128px!important}   /* 北の矢印は「現在地」ボタンの左に（2026-11-15） */
 .legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:3px;margin-right:4px}
 /* 地図の上の名前（大きく・白いふち） */
 .hwl{font:800 13px/1.15 -apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;white-space:nowrap;color:#17201E;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translate(-50%,-130%);pointer-events:none}
@@ -131,7 +132,7 @@ details summary{padding:6px 0}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 01:00</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 19:21</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -195,7 +196,7 @@ $("lim").onchange=()=>{ const v=Math.round(+$("lim").value/10)*10; if(v>=300&&v<
 
 // ---- 地図 ----
 const map=L.map("map",{zoomControl:false,preferCanvas:true}).setView([35.68,139.75],12);
-L.control.zoom({position:"bottomright"}).addTo(map);
+L.control.zoom({position:"bottomright"}).addTo(map); /* 北の矢印（2026-11-15 ユーザー指定：どの地図も上が北） */ (function(m,pos){ const C=L.Control.extend({onAdd(){ const d=L.DomUtil.create("div","northmk"); d.title="上が北"; d.style.cssText="background:rgba(255,255,255,.92);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.35);padding:2px 4px;line-height:0;pointer-events:none"; d.innerHTML='<svg viewBox="0 0 26 34" width="26" height="34" aria-label="上が北"><text x="13" y="11" text-anchor="middle" font-size="12" font-weight="900" fill="#222" font-family="sans-serif">N</text><path d="M13 13 L20 32 L13 27 L6 32 Z" fill="#D32F2F" stroke="#fff" stroke-width="1"/></svg>'; return d; }}); new C({position:pos}).addTo(m); })(map,"bottomright");
 L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a> | 高速：© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
 const ren=L.canvas({padding:.3});
 const hwLayer=L.layerGroup().addTo(map), lblLayer=L.layerGroup().addTo(map), rtLayer=L.layerGroup().addTo(map), r5Layer=L.layerGroup().addTo(map), mkLayer=L.layerGroup().addTo(map);
