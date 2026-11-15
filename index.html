@@ -538,6 +538,13 @@ body.rtfull{overflow:hidden}
 .patrolbanner .pbbtns{display:flex;flex-wrap:wrap;align-items:stretch;justify-content:flex-end;gap:8px;margin-top:2px;margin-right:-44px}
 .patrolbanner .pbbtns .pbhw{margin-right:auto}
 .patrolbanner .pbbtns .pbok{order:2}
+/* 帯の「🗺 地図」（2026-11-15）：OKの左に。押すと場所の地図を全画面で出す */
+.patrolbanner .pbmap{order:1;touch-action:manipulation;font-size:18px;font-weight:900;padding:5px 12px;border:2px solid #5A4300;border-radius:8px;background:#fff;color:#5A4300;line-height:1.2}
+.patrolbanner .pbbtns .pbhw{order:0}
+.patrolbanner .pbbtns .pbbr{order:0;flex-basis:100%;height:0}   /* 取締りの帯：1段目は高速利用中、2段目に地図とOK */
+.banmapov{position:fixed;inset:0;z-index:4100;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.banmapov[hidden]{display:none}
+.banmapbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}.banmapbar b{font-size:17px;min-width:0;overflow-wrap:anywhere}.banmapbar .btn{flex:none;font-size:17px}
+#banMapEl{flex:1;min-height:0}.banmapft{padding:8px 12px;font-size:15px;line-height:1.5;background:var(--surface)}.banmapft a{margin-left:6px}
 .taxibanner,.trainbanner{flex-wrap:wrap}
 #taxiBannerText,#airBannerText,#trainBannerText{flex:1 1 calc(100% - 60px)!important;min-width:0}   /* 1段目は文と×、OKは2段目の右に */
 .banok{order:3;margin-left:auto;font-size:18px!important;font-weight:900;padding:4px 22px!important;border:2px solid #fff!important;border-radius:8px;background:#2E7D4F!important;color:#fff!important;line-height:1.2}
@@ -1662,7 +1669,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 13:13</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 16:53</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -8396,7 +8403,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       // 名前が長いときは、3行に収まるまで小さくする（短い名前は68px。最小でも36px）
       // 「○○交差点」は「交差点」だけ小さくして、名前の部分をなるべく1行で大きく（2026-10-25 ユーザー指定）
       // 違反名を赤字で先に大きく、その下に交差点名（2026-10-27 ユーザー指定）。違反名がない場所は、今までどおり場所を大きく
-      const okBtn=`<span class="pbbtns"><button type="button" class="pbok" data-ptok>OK</button><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button></span>`;
+      const okBtn=`<span class="pbbtns"><button type="button" class="pbok" data-ptok>OK</button><button type="button" class="pbmap" data-banmap="patrolBanner">🗺 地図</button><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button><i class="pbbr"></i></span>`;
       const gp=geoPlace(k,x), nm=gp.place, ks=gp.kinds, avail=Math.max(200,window.innerWidth-110), km=/^(.+?)\s*(交差点)(.*)$/.exec(nm);
       const cap=ks.length?26:45, low=ks.length?18:24;   // 2026-11-08 帯を約3分の2に（元は 38/68・24/36）
       let nameHtml, fs;
@@ -8437,9 +8444,37 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     k=k||"stand"; const S=GS[k], L0=SD_LOOK[k], ban=GEO[k].ban, nm=L0.nm(x), avail=Math.max(200,window.innerWidth-100);
     const fs=Math.max(26,Math.min(42,Math.floor(avail*2/Math.max(1,nm.length))));   // 名前は2行に収まる大きさ（42pxまで）
     sdCurs[ban]={x,d,test}; if(k==="stand") sdCur=sdCurs[ban];
-    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span><span class="pbbtns"><button type="button" class="pbok" data-banok>OK</button></span>`;
+    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span><span class="pbbtns">${k==="rest2"?`<button type="button" class="pbmap" data-banmap="${ban}">🗺 地図</button>`:""}<button type="button" class="pbok" data-banok>OK</button></span>`;
     $(ban).hidden=false; sdUpdate();
   }
+  // ===== 帯の「🗺 地図」：取締り・速度取締り・駐車禁止の場所を、その場で地図に出す（2026-11-15 ユーザー指定）。帯はそのまま、閉じると元の画面に戻る =====
+  let banMapM=null, banMapLy=null;
+  async function banMapOpen(ban){
+    const cur=ban==="speedBanner"?(ptLineX?{x:ptLineX}:null):sdCurs[ban]; if(!cur||!cur.x||!cur.x[2]||!cur.x[2].length) return;
+    const x=cur.x, k=ban==="restBanner"?"rest2":"patrol", mz=x[5]&&x[5].mz?x[5]:null;
+    const col=k==="patrol"?"#C62828":mz?(mz.star?"#D32F2F":"#F08C00"):"#7A3B00";
+    const nm=k==="patrol"?(ban==="speedBanner"?`速度取締り ${String(x[0]||"").trim()}`:(()=>{ const gp=geoPlace(k,x); return [gp.kind,gp.place].filter(Boolean).join("　"); })()):(mz?`No.${mz.no} ${mz.nm}`:String(x[0]||""));
+    let ov=$("banMapOv");
+    if(!ov){ ov=document.createElement("div"); ov.id="banMapOv"; ov.className="banmapov";
+      ov.innerHTML=`<div class="banmapbar"><b id="banMapTitle"></b><button type="button" class="btn primary" id="banMapClose">閉じる</button></div><div id="banMapEl"></div><div class="banmapft" id="banMapFt"></div>`;
+      document.body.appendChild(ov); $("banMapClose").onclick=()=>{ ov.hidden=true; }; }
+    $("banMapTitle").textContent=nm; $("banMapFt").textContent="地図を読み込んでいます…"; ov.hidden=false;
+    try{ await loadLeaflet(); }catch(e){ $("banMapFt").textContent="地図を読み込めませんでした。電波を確認してください"; return; }
+    if(!banMapM){ banMapM=mkMap("banMapEl","pale"); banMapLy=L.layerGroup().addTo(banMapM); }
+    banMapLy.clearLayers();
+    const c=x[2], b=L.latLngBounds(c);
+    if((x[4]||"P")==="A") L.polygon(c,{color:col,weight:3,fillColor:col,fillOpacity:.25}).addTo(banMapLy);
+    else if(c.length>1) L.polyline(c,{color:col,weight:7,opacity:.9}).addTo(banMapLy);
+    else L.circleMarker(c[0],{radius:11,color:"#fff",weight:3,fillColor:col,fillOpacity:1}).addTo(banMapLy);
+    const p=sdPos&&Date.now()-sdPos.t<120e3?sdPos:(lastPos&&Date.now()-lastPos.t<120e3?lastPos:null);
+    if(p){ L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(banMapLy); b.extend([p.lat,p.lng]); }
+    banMapM.invalidateSize();
+    if(b.getNorthEast().equals(b.getSouthWest())) banMapM.setView(c[0],17,{animate:false}); else banMapM.fitBounds(b,{padding:[40,40],maxZoom:17,animate:false});
+    setTimeout(()=>{ if(!ov.hidden&&banMapM){ try{ banMapM.invalidateSize(); }catch(e){} } },80);
+    const t=sdTarget(x,p||{lat:c[0][0],lng:c[0][1]});
+    $("banMapFt").innerHTML=`${p?`青い丸が今いる所です。`:"今の場所が分からないので、場所だけ出しています。"}<a href="https://www.google.com/maps/search/?api=1&query=${t[0]},${t[1]}" target="_blank" rel="noopener">Googleマップで見る</a>`;
+  }
+  document.addEventListener("click",e=>{ const b=e.target.closest("[data-banmap]"); if(!b) return; e.stopPropagation(); banMapOpen(b.dataset.banmap); },true);
   // 矢印の先：点はその点、線・エリアは一番近い角
   const sdTarget=(x,p)=>x[2].length<2?x[2][0]:x[2].reduce((b,c)=>distM([p.lat,p.lng],c)<distM([p.lat,p.lng],b)?c:b,x[2][0]);
   function sdUpdate(){
@@ -8507,10 +8542,11 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // 線の上を走っている間は帯を出したまま。線から（通知を始める距離＋離れたら消す距離）より離れたら消し、同じ線は10分間は鳴らさない
   const ptIsLine=x=>(x[4]||"P")!=="P"&&x[4]!=="A"&&x[2].length>1;
   const ptLineArea=x=>{ const m=/実施場所[:：]\s*(?:東京都)?([^<\s]+?)(?:付近|$)/.exec(String(x[3]||"")); return m?m[1]:""; };
+  let ptLineX=null;
   function ptLineShow(x,d,test){
-    const a=ptLineArea(x), dd=d<=30?"この道です":`あと約${Math.max(10,Math.round(d/10)*10)}m`, nm=String(x[0]||"").trim();
+    ptLineX=x; const a=ptLineArea(x), dd=d<=30?"この道です":`あと約${Math.max(10,Math.round(d/10)*10)}m`, nm=String(x[0]||"").trim();
     // 2026-11-08：取締りの帯と同じくらいの大きさで3段に（ユーザー指定）
-    $("speedBannerText").innerHTML=`<span class="sp1">⚠ 速度取締り<b>${dd}</b></span>${nm?`<span class="sp2">${esc(nm)}</span>`:""}<span class="sp3">${a?`${esc(a)}付近`:""}${test?"　※テスト表示":""}</span><span class="pbbtns"><button type="button" class="pbok" data-ptok>OK</button></span>`;
+    $("speedBannerText").innerHTML=`<span class="sp1">⚠ 速度取締り<b>${dd}</b></span>${nm?`<span class="sp2">${esc(nm)}</span>`:""}<span class="sp3">${a?`${esc(a)}付近`:""}${test?"　※テスト表示":""}</span><span class="pbbtns"><button type="button" class="pbmap" data-banmap="speedBanner">🗺 地図</button><button type="button" class="pbok" data-ptok>OK</button></span>`;
     $("speedBanner").hidden=false;
   }
   $("speedBannerClose").addEventListener("click",()=>{ const S=GS.patrol; $("speedBanner").hidden=true; if(S.lnCur!=null) S.lnDis=S.lnCur; });
