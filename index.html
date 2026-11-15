@@ -599,7 +599,11 @@ body.rtfull{overflow:hidden}
 .rtf{display:flex;flex-wrap:wrap;gap:6px 12px;margin:8px 0;font-size:15px}
 .rtf select,#rtCard2 select,.rtnow select{font-size:16px;min-height:44px}
 .rth{margin:12px 0 4px;font-size:15px}
-#rtCard2 .cmpt td:first-child,#rtCard2 .cmpt td.num{white-space:nowrap}
+#rtCard2 .cmpt td.num{white-space:nowrap}
+#rtCard2 .cmpt td:first-child{min-width:5.5em;max-width:8em}
+#rtCard2 .rtt th{min-width:5.2em;vertical-align:bottom;line-height:1.3}
+#rtCard2 .rtt th small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+#rtCard2,#rtCard2>*{min-width:0;max-width:100%}
 .rttip{background:rgba(255,255,255,.85);border:0;box-shadow:none;font-size:11px;font-weight:700;color:#5F3DC4;padding:0 2px}
 .rtnow{margin-top:8px}
 .golist .gotm{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px}
@@ -1658,7 +1662,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 10:18</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 13:13</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6047,11 +6051,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // ===== 営業分析の追加（管理者だけ・試験。2026-11-04 指示書「営業分析・今どうする」の1段目） =====
   // 数字はすべて本人の実績（このスマホの売上の記録）から計算する。データが少ない条件は「データ不足」と出し、推測で埋めない
   // 曜日は出庫した曜日（隔日勤務の夜中も、出庫した日の曜日に入れる）。時給＝メーター料金の税抜÷営業時間（出庫〜入庫から休憩・回送を除く）
-  const AN_DEF={minShift:3,minHours:3,longAmt:10000,longX:1.5,payDay:25,payDays:3,renkyu:3,rainMm:0.5,ahead:3,nowWin:90,nowN:10,nowS:3,speed:18,rtWin:2,rtGap:15,rtRec:4};   // 2026-11-08 見込みの条件を5回→10回・3勤務以上に（少ない回数で長距離1回に引っぱられたため）
+  const AN_DEF={minShift:3,minHours:3,longAmt:10000,longX:1.5,payDay:25,payDays:3,renkyu:3,rainMm:0.5,ahead:3,nowWin:90,nowN:10,nowS:3,speed:18,rtWin:2,rtGap:15,rtRec:4,rtAmt:3000};   // 2026-11-08 見込みの条件を5回→10回・3勤務以上に（少ない回数で長距離1回に引っぱられたため）
   const AN_LBL=[["minShift","データ不足とみなす勤務の数（これより少ないと出さない）","回"],["minHours","データ不足とみなす営業時間（マス目・時間帯ごと）","時間"],["longAmt","長距離とみなす金額","円"],["longX","「長距離が出やすい」と知らせる、ふだんとの倍率","倍"],
     ["payDay","給料日（土日祝なら前の平日）","日"],["payDays","給料日から何日間を「給料日のあと」にするか","日"],["renkyu","何連休以上の前の日を「連休前」にするか","連休"],["rainMm","雨とみなす1時間の雨量","mm"],["ahead","「この先」の時間","時間"],
     ["nowWin","「今どうする」で比べる時間の幅（今の時刻の前後）","分"],["nowN","「今どうする」で見込み時給を出すのに要る乗車の数","回"],["nowS","「今どうする」で見込み時給を出すのに要る勤務の数","回"],["speed","移動の速さ（道のりで見た平均）","km/h"],
-    ["rtWin","ルートを分けるのに見る、出庫からの時間（最初のお客さんを乗せたらそこまで）","時間"],["rtGap","通り道の記録がこれより長く途切れたら「不明」にする","分"],["rtRec","出庫から通り道を記録する時間（このスマホのGPS）","時間"]];
+    ["rtWin","ルートを分けるのに見る、出庫からの時間（最初のお客さんを乗せたらそこまで）","時間"],["rtGap","通り道の記録がこれより長く途切れたら「不明」にする","分"],["rtRec","出庫から通り道を記録する時間（このスマホのGPS）","時間"],["rtAmt","ルート別の比較で、距離のあるお客さんとみなすメーターの金額（これ以上）","円"]];
   let anCfg={}; try{ anCfg=JSON.parse(localStorage.getItem("tenko.anCfg")||"{}")||{}; }catch(e){}
   const anC=k=>anCfg[k]!=null&&anCfg[k]!==""&&isFinite(+anCfg[k])?+anCfg[k]:AN_DEF[k];
   const anAdd=(d,n)=>{ const x=new Date(d+"T12:00:00"); x.setDate(x.getDate()+n); return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"); };
@@ -6234,7 +6238,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function anMapsDraw(A){
     rtMapDraw();
     const mk=(id,fit)=>{ const el=$(id); if(!el||typeof L==="undefined") return null; const m=mkMap(el);
-      anMaps.push(m); if(fit&&fit.length) m.fitBounds(L.latLngBounds(fit).pad(0.15),{maxZoom:15}); else m.setView([35.69,139.70],12); setTimeout(()=>m.invalidateSize(),50); return m; };
+      anMaps.push(m); if(fit&&fit.length) m.fitBounds(L.latLngBounds(fit).pad(0.15),{maxZoom:15}); else m.setView([35.69,139.70],12); setTimeout(()=>{ if(!anMaps.includes(m)) return; try{ m.invalidateSize(); }catch(e){} },50); return m; };   // 出し直しで消した地図には触らない（2026-11-15）
     // この先の地図：1勤務あたりの売上で色の濃さを変える
     if(A.ahead&&A.ahead.cells.length&&$("anAheadMap")){ const cs=A.ahead.cells, mx=Math.max(...cs.map(c=>c.f)), m=mk("anAheadMap",cs.map(c=>[c.lat,c.lng]));
       if(m) cs.forEach(c=>L.circleMarker([c.lat,c.lng],{radius:7+Math.round(c.f/mx*10),color:"#B35C00",weight:1,fillColor:"#E8890C",fillOpacity:.2+.65*c.f/mx}).addTo(m)
@@ -6260,10 +6264,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 今は自分の記録だけ。ほかの乗務員の分を合わせるときは、rtDay と同じ形の行を足せば、集計（rtAgg）・表・地図はそのまま使える
   const RT_KEY="tenko.rtMarks", RT_UNK="不明", RT_EARLY="目印の前に乗せた", RT_NONE="目印を通らなかった", RT_KINDS=["連続配車","配車","手上げ","乗り場"];
   // 初めの目印（会社から都心へ向かう道の、入口になりそうな所。実際の通り道を見て、設定で変える）[名前, 緯度, 経度, 半径m]
-  const RT_MARK0=[["池袋",35.7295,139.7109,650],["巣鴨",35.7334,139.7393,600],["目白",35.7212,139.7066,350],["護国寺",35.7192,139.7273,450],["新宿",35.6905,139.7004,900]];
+  // 初めの目印：会社（赤塚新町）近くの分かれ道＋池袋（2026-11-15 本人のタイムラインで、出庫後10〜40分で乗せる日が多いため）
+  const RT_MARK0=[["東（川越街道を池袋方面）",35.7671,139.6530,400],["西（成増方面）",35.7712,139.6325,400],["南（高松・練馬方面）",35.7640,139.6355,350],["池袋",35.7295,139.7109,650]];
   const rtMarks=()=>{ try{ const a=JSON.parse(localStorage.getItem(RT_KEY)||"null"); if(Array.isArray(a)) return a.filter(x=>Array.isArray(x)&&x[0]&&isFinite(+x[1])&&isFinite(+x[2])&&+x[3]>0); }catch(e){} return RT_MARK0.map(x=>x.slice()); };
   const rtSaveMarks=a=>{ try{ localStorage.setItem(RT_KEY,JSON.stringify(a)); }catch(e){} };
-  const rtPts=d=>[...((d.route&&d.route.pts)||[]),...(d.trk||[])].filter(p=>Array.isArray(p)&&isFinite(p[0])&&isFinite(p[1])&&isFinite(p[2])).sort((x,y)=>x[2]-y[2]);
+  // 止まっていた所（タイムラインの visit）は、その間5分ごとに同じ場所の点として入れる（その間も居場所は分かっているので「途切れ」にしない）
+  const rtVisPts=d=>((d.route&&d.route.vis)||[]).flatMap(v=>{ const o=[]; if(!(v[3]>=v[2])) return o; for(let m=v[2];m<v[3];m+=5) o.push([v[0],v[1],m]); o.push([v[0],v[1],v[3]]); return o; });
+  const rtPts=d=>[...((d.route&&d.route.pts)||[]),...rtVisPts(d),...(d.trk||[])].filter(p=>Array.isArray(p)&&isFinite(p[0])&&isFinite(p[1])&&isFinite(p[2])).sort((x,y)=>x[2]-y[2]);
   // 1勤務分：ルートと、出庫からの数字（a＝手上げ・配車・乗り場も全部、r＝連続配車だけ）
   function rtDay(k,marks){
     const d=getDay(k); if(!d||d.mode==="simple"||!d.rides) return null;
@@ -6279,24 +6286,29 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     let route=RT_UNK, src="", why="", path=pts;
     if(d.rtSel){ route=d.rtSel; src="手で選んだ"; }
     else if(!pts.length) why="通り道の記録がない";
-    else { let prev=st, hit=-1, cut=false;
-      for(let i=0;i<pts.length;i++){ const p=pts[i]; if(p[2]-prev>gap){ cut=true; break; } prev=Math.max(prev,p[2]);
+    else { let prev=st, hit=-1, cut=null;
+      for(let i=0;i<pts.length;i++){ const p=pts[i]; if(p[2]-prev>gap){ cut=[prev,p[2]]; break; } prev=Math.max(prev,p[2]);
         const mk=marks.find(m=>distM([p[0],p[1]],[+m[1],+m[2]])<=+m[3]); if(mk){ route=mk[0]; hit=i; break; } }
+      if(!cut&&hit<0&&end-prev>gap) cut=[prev,end];
       if(hit>=0){ src="GPS"; path=pts.slice(0,hit+1); }
-      else if(cut||end-prev>gap) why="記録が途切れている";
+      else if(cut) why=`記録が途切れている（${tm(cut[0])}〜${tm(cut[1])}）`;
       else { route=rides[0].on<=st+W?RT_EARLY:RT_NONE; src="GPS"; } }
-    const mode=f=>{ const rs=rides.filter(f), f1=rs[0];
-      return {tOut:f1?f1.on-st:null, tRz:f1&&rz&&f1.on>=rz.on?f1.on-rz.on:null, n2:rs.filter(r=>r.on<st+120).length, f4:rs.filter(r=>r.on<st+240).reduce((a,r)=>a+fare(r),0)}; };
+    // 距離のあるお客さん（メーター rtAmt 円以上。2026-11-15 本人の希望：近くの駅まででなく、都心などへ行くお客さん）
+    const GA=anC("rtAmt"), pos=p=>p&&isFinite(+p.lat)&&isFinite(+p.lng)?[+p.lat,+p.lng]:null;
+    const mode=f=>{ const rs=rides.filter(f), f1=rs[0], g1=rs.find(r=>(+r.amt||0)>=GA);
+      return {tOut:f1?f1.on-st:null, tRz:f1&&rz&&f1.on>=rz.on?f1.on-rz.on:null, n2:rs.filter(r=>r.on<st+120).length, f4:rs.filter(r=>r.on<st+240).reduce((a,r)=>a+fare(r),0),
+        tG:g1?g1.on-st:null, nG:rs.filter(r=>r.on<st+240&&(+r.amt||0)>=GA).length}; };
+    const good=rides.filter(r=>r.on<st+240&&(+r.amt||0)>=GA).map(r=>({p:pos(r.onPos),amt:+r.amt,kind:r.kind,on:r.on,to:normTown(r.offAddr||r.nOffAddr)})).filter(x=>x.p);
     const mix={}; rides.filter(r=>r.on<st+240).forEach(r=>mix[r.kind]=(mix[r.kind]||0)+1);
     let wxK=false, rain=false; for(let b=Math.floor(st/60);b<Math.ceil((st+240)/60);b++){ const x=anRainAt(k,b); if(x!=null) wxK=true; if(x) rain=true; }
-    return {k,w:dow(k),st,h:Math.floor(st/60)%24,route,src,why,path,w4,a:mode(()=>true),r:mode(r=>r.kind==="連続配車"),mix,rain:wxK?rain:null};
+    return {k,w:dow(k),st,h:Math.floor(st/60)%24,route,src,why,path,w4,a:mode(()=>true),r:mode(r=>r.kind==="連続配車"),mix,good,rain:wxK?rain:null};
   }
   // ルートごとにまとめる（md＝"a" か "r"）
   function rtAgg(D,md){
     const by={}; D.forEach(x=>(by[x.route]=by[x.route]||[]).push(x));
     return Object.entries(by).map(([name,xs])=>{ const avg=f=>{ const v=xs.map(f).filter(v=>v!=null); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; };
       const F=xs.reduce((a,x)=>a+x[md].f4,0), M=xs.reduce((a,x)=>a+x.w4,0);
-      return {name,n:xs.length,tOut:avg(x=>x[md].tOut),tRz:avg(x=>x[md].tRz),n2:avg(x=>x[md].n2),f4:F/xs.length,rate:anRate(F,M),xs}; });
+      return {name,n:xs.length,tOut:avg(x=>x[md].tOut),tRz:avg(x=>x[md].tRz),tG:avg(x=>x[md].tG),nG:avg(x=>x[md].nG),n2:avg(x=>x[md].n2),f4:F/xs.length,rate:anRate(F,M),xs}; });
   }
   const rtSpecial=n=>n===RT_UNK||n===RT_EARLY||n===RT_NONE;
   let rtSt={S:[],D:[],sort:{a:["rate",-1],r:["rate",-1]},map:null};
@@ -6308,7 +6320,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         <label>出庫の時間帯 <select id="rtFh"><option value="">すべて</option></select></label>
         <label>天気 <select id="rtFx"><option value="">すべて</option><option value="1">雨の日</option><option value="0">雨でない日</option></select></label></div>
       <div id="rtBody"><div class="geo">計算しています…</div></div>
-      <div id="rtMapWrap" hidden><h3 class="rth">地図</h3><div class="src">線は、出庫から目印までに通った道です。全部含めた場合の1時間あたりが高いルートほど、太く目立つ色にしています（データ不足のルートは灰色の点線）。丸は目印です。</div>
+      <div id="rtMapWrap" hidden><h3 class="rth">地図</h3><div class="src">線は、出庫から目印までに通った道です。全部含めた場合の1時間あたりが高いルートほど、太く目立つ色にしています（データ不足のルートは灰色の点線）。紫の大きな丸は目印です。白いふちの点は、出庫から4時間に${yen(anC("rtAmt"))}円以上のお客さんを乗せた場所です（ルートの色。押すと金額・時刻・降りた所）。</div>
         <div id="rtMapAn" style="height:320px;border-radius:10px;border:1px solid var(--line)"></div><div id="rtLeg" class="src"></div></div>
       <div id="rtFoot"></div></section>`;
   }
@@ -6339,13 +6351,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 表（並べ替えのときは、ここだけ描き直す）
   function rtTables(){
     const el=$("rtBody"), D=rtFiltered(), minS=anC("minShift"), mn=v=>v==null?"—":Math.round(v)+"分";
-    const C=[["name","ルート"],["n","日数"],["tOut","最初のお客さんまで（出庫から）"],["tRz","最初のお客さんまで（連続配車を始めてから）"],["n2","2時間で乗せた回数"],["f4","4時間の売上（税抜）"],["rate","1時間あたり"]];
+    const GA=yen(anC("rtAmt"));
+    const C=[["name","ルート"],["n","日数"],["tOut","最初の乗車まで<small>出庫から</small>"],["tRz","最初の乗車まで<small>連続配車の開始から</small>"],["n2","2時間の乗車<small>回数</small>"],["tG",`最初の${GA}円以上まで<small>出庫から</small>`],["nG",`4時間の${GA}円以上<small>回数</small>`],["f4","4時間の売上<small>税抜</small>"],["rate","1時間あたり"]];
     const tbl=md=>{ const [sc,sd]=rtSt.sort[md], rows=rtAgg(D,md).sort((a,b)=>{ const ok=x=>x.n>=minS&&!rtSpecial(x.name)?0:1; if(ok(a)!==ok(b)) return ok(a)-ok(b);
-        const va=a[sc], vb=b[sc]; if(sc==="name") return String(va).localeCompare(String(vb),"ja")*sd; return ((va==null?-1e12:va)-(vb==null?-1e12:vb))*sd; });
+        const va=a[sc], vb=b[sc]; if(sc==="name") return String(va).localeCompare(String(vb),"ja")*sd; if(va==null||vb==null) return va==null?(vb==null?0:1):-1; return (va-vb)*sd; });   // 値のない（—）ものは、いつも下
       return `<div style="overflow-x:auto"><table class="cmpt rtt"><thead><tr>${C.map(([c,t])=>`<th data-rtsort="${md}|${c}" style="cursor:pointer">${t}${sc===c?(sd<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${rows.map(o=>{
         const nm=`<td>${rtSpecial(o.name)?`<span style="color:var(--muted)">${esc(o.name)}</span>`:`<b>${esc(o.name)}</b>`}</td><td class="num">${o.n}日</td>`;
-        if(o.n<minS) return `<tr>${nm}<td colspan="5">${AN_NG(`${minS}日より少ない`)}</td></tr>`;
-        return `<tr>${nm}<td class="num">${mn(o.tOut)}</td><td class="num">${mn(o.tRz)}</td><td class="num">${Math.round(o.n2*10)/10}回</td><td class="num">${yen(o.f4)}</td><td class="num">${yen(o.rate)}</td></tr>`; }).join("")}</tbody></table></div>`; };
+        if(o.n<minS) return `<tr>${nm}<td colspan="${C.length-2}">${AN_NG(`${minS}日より少ない`)}</td></tr>`;
+        return `<tr>${nm}<td class="num">${mn(o.tOut)}</td><td class="num">${mn(o.tRz)}</td><td class="num">${Math.round(o.n2*10)/10}回</td><td class="num">${mn(o.tG)}</td><td class="num">${Math.round(o.nG*10)/10}回</td><td class="num">${yen(o.f4)}</td><td class="num">${yen(o.rate)}</td></tr>`; }).join("")}</tbody></table></div>`; };
     // 乗せ方の内訳（出庫から4時間）
     const ag=rtAgg(D,"a").sort((a,b)=>b.n-a.n);
     const mixT=`<div style="overflow-x:auto"><table class="cmpt"><thead><tr><th>ルート</th><th>乗車</th>${RT_KINDS.map(k=>`<th>${k}</th>`).join("")}</tr></thead><tbody>${ag.map(o=>{ const m={}; o.xs.forEach(x=>Object.entries(x.mix).forEach(([k,v])=>m[k]=(m[k]||0)+v)); const t=Object.values(m).reduce((a,b)=>a+b,0);
@@ -6354,7 +6367,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       <h3 class="rth">連続配車だけで数えた場合</h3>${tbl("r")}<div class="src">連続配車で乗せたお客さんだけを数えます。1時間あたり＝連続配車の売上÷出庫から4時間のうち営業した時間（休憩・回送を除く）。「連続配車を始めてから」は、連続配車の開始を押した日だけで平均しています。</div>
       <h3 class="rth">手上げ・配車・乗り場も全部含めた場合</h3>${tbl("a")}
       <h3 class="rth">乗せ方の内訳（出庫から4時間）</h3>${mixT}`;
-    el.querySelectorAll("[data-rtsort]").forEach(th=>th.onclick=()=>{ const [md,c]=th.dataset.rtsort.split("|"), cur=rtSt.sort[md]; rtSt.sort[md]=[c,cur[0]===c?-cur[1]:(c==="name"||c==="tOut"||c==="tRz"?1:-1)]; rtTables(); });
+    el.querySelectorAll("[data-rtsort]").forEach(th=>th.onclick=()=>{ const [md,c]=th.dataset.rtsort.split("|"), cur=rtSt.sort[md]; rtSt.sort[md]=[c,cur[0]===c?-cur[1]:(c==="name"||c==="tOut"||c==="tRz"||c==="tG"?1:-1)]; rtTables(); });
   }
   // 地図：日ごとの通り道（目印まで）を、ルートの順位で色分け
   function rtMapDraw(){
@@ -6368,6 +6381,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const ll=[];
     D.forEach(x=>{ if(x.path.length<2||x.route===RT_UNK) return; const p=x.path.map(q=>[q[0],q[1]]); ll.push(...p);
       L.polyline(p,sty(x.route)).addTo(ly).bindPopup(`<b>${esc(x.route)}</b><br>${md(x.k)}（${x.w}） 出庫 ${tm(x.st)}<br>最初のお客さんまで ${x.a.tOut!=null?x.a.tOut+"分":"—"}・4時間 ${yen(x.a.f4)}円`); });
+    // 距離のあるお客さん（rtAmt 円以上）を乗せた場所：ルートの色の丸（不明の日も、灰色で出す）
+    D.forEach(x=>(x.good||[]).forEach(g=>{ ll.push(g.p); const s=sty(x.route);
+      L.circleMarker(g.p,{radius:7,color:"#fff",weight:2,fillColor:x.route===RT_UNK?"#868E96":s.color,fillOpacity:.9}).addTo(ly)
+        .bindPopup(`<b>${yen(g.amt)}円</b>（${esc(g.kind)}）<br>${md(x.k)}（${x.w}） ${tm(g.on)}・出庫から${g.on-x.st}分<br>ルート：${esc(x.route)}${g.to?`<br>降りた所：${esc(g.to)}`:""}`); }));
     rtMarks().forEach(k=>{ L.circle([+k[1],+k[2]],{radius:+k[3],color:"#7048E8",weight:2,fillOpacity:.08}).addTo(ly).bindTooltip(esc(k[0]),{permanent:true,direction:"center",className:"rttip"}); ll.push([+k[1],+k[2]]); });
     try{ m.invalidateSize(); }catch(e){} if(ll.length) m.fitBounds(L.latLngBounds(ll).pad(0.1),{maxZoom:14,animate:false}); else m.setView([35.73,139.70],12,{animate:false});
     setTimeout(()=>{ if(rtSt.map!==m||!document.body.contains(el)) return; try{ m.invalidateSize(); }catch(e){} },50);   // 天気の読み込みで出し直したあとの古い地図には触らない
@@ -7459,13 +7476,16 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 形式：[{startTime, endTime, timelinePath:[{point:"geo:緯度,経度", durationMinutesOffsetFromStartTime}]}, {activity:{start,end}}, {visit:…}]
   const geo=t=>{ const m=/geo:\s*(-?[\d.]+),\s*(-?[\d.]+)/.exec(t||""); return m?[+m[1],+m[2]]:null; };
   function timelinePoints(arr){
-    const pts=[];
+    const pts=[], vis=[];
     (Array.isArray(arr)?arr:(arr&&arr.semanticSegments)||[]).forEach(sg=>{
       const st=Date.parse(sg.startTime); if(isNaN(st)) return;
       // 走った道は timelinePath（ほぼ1分ごとの位置）だけを使う。activity の始点・終点を混ぜると距離が大きくずれるため
       (sg.timelinePath||[]).forEach(x=>{ const g=geo(x.point), m=+x.durationMinutesOffsetFromStartTime||0; if(g) pts.push([st+m*60000,g[0],g[1]]); });
+      // 止まっていた所（visit：〇時〇分から〇時〇分まで、この場所にいた）。距離には使わず、ルート別の比較で「その間はここにいた」と分かるようにする（2026-11-15）
+      const en=Date.parse(sg.endTime), vg=sg.visit&&sg.visit.topCandidate&&geo(sg.visit.topCandidate.placeLocation);
+      if(vg&&!isNaN(en)&&en>st) vis.push([st,en,vg[0],vg[1]]);
     });
-    return pts.sort((a,b)=>a[0]-b[0]);
+    pts.sort((a,b)=>a[0]-b[0]); pts.vis=vis; return pts;
   }
   const distM=(a,b)=>{ const R=6371e3, r=Math.PI/180, dl=(b[0]-a[0])*r, dn=(b[1]-a[1])*r, x=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(x)); };
   // ===== 出庫からの通り道の記録（管理者だけ・試験。2026-11-15 ルート別の比較のため。本人の了解：スマホの中と、いつものバックアップに入れる） =====
@@ -7517,6 +7537,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         const s0=dayStart(r.date).getTime(), dd=ensureDay(r.date);
         let km=0; for(let i=1;i<sel.length;i++) km+=distM([sel[i-1][1],sel[i-1][2]],[sel[i][1],sel[i][2]]);
         dd.route={pts:sel.map(p=>[+p[1].toFixed(5),+p[2].toFixed(5),Math.round((p[0]-s0)/60000)]),km:r1(km/1000),at:new Date().toISOString()};
+        const vis=(pts.vis||[]).filter(v=>v[1]>=w[0]&&v[0]<=w[1]).map(v=>[+v[2].toFixed(5),+v[3].toFixed(5),Math.round((Math.max(v[0],w[0])-s0)/60000),Math.round((Math.min(v[1],w[1])-s0)/60000)]);
+        if(vis.length) dd.route.vis=vis;   // 止まっていた所 [緯度,経度,から(分),まで(分)]
         got.push(r.date); tlFillDay(r.date,dd);
       });
       saveSales(); rtKey=""; renderSales();
