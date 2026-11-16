@@ -1659,7 +1659,7 @@ body.rtfull{overflow:hidden}
 
   <section class="card" id="nkCard" hidden>
     <h2>みんなが休みの日・出番の日</h2>
-    <div class="src">社員コードを入れて「追加」を押すか、名簿から選んで、何人か入れたら「休みの日を調べる」か「出番の日を調べる」を押します。<br>休みの日：入れた人<b>全員が休みの日</b>。休み＝出番でない日（有給・特休・欠勤も休み）。明け番は休みに入れません（隔日の人の「出」「公」の次の日）。<br>出番の日：入れた人<b>全員が出番の日</b>。出番＝出・昼・夜・公・研修（明け番は出番に入れません）。<br>予定表が取り込まれていない日は出しません。</div>
+    <div class="src">社員コードを入れて「追加」を押すか、名簿から選んで、何人か入れたら「休みの日を調べる」か「出番の日を調べる」を押します。<br>休みの日：入れた人<b>全員が休みの日</b>。休み＝出番でない日（有給・特休・欠勤も休み）。明け番は休みに入れません（隔日の人の「出」「公」の次の日）。<br>出番の日：入れた人<b>全員が出番の日</b>。出番＝出・昼・夜・公・研修（明け番は出番に入れません）。<br>この日の勤務：入れた人の、選んだ日（初めは今日）の勤務を一覧で出します。<br>予定表が取り込まれていない日は出しません。</div>
     <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="aNkCode" inputmode="numeric" autocomplete="off" placeholder="社員コード" style="width:8em" aria-label="社員コード"><button class="btn" id="aNkAdd">追加</button></div>
     <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px"><select id="aNkPick" aria-label="名簿から選ぶ" style="max-width:100%"><option value="">名簿から選ぶ</option></select></div>
     <div id="aNkList" class="nkchips"></div>
@@ -1668,6 +1668,7 @@ body.rtfull{overflow:hidden}
       <div class="field"><label for="aNkTo">終わりの年月</label><input type="month" id="aNkTo"></div>
     </div>
     <div class="btnrow"><button class="btn primary" id="aNkGo">休みの日を調べる</button><button class="btn primary" id="aNkGoW">出番の日を調べる</button></div>
+    <div class="row" style="align-items:flex-end;gap:8px;flex-wrap:wrap;margin-top:8px"><div class="field" style="margin:0"><label for="aNkDay">この日の勤務</label><input type="date" id="aNkDay"></div><button class="btn" id="aNkToday">今日</button><button class="btn primary" id="aNkDayGo">この日の勤務を見る</button></div>
     <div class="msg" id="aNkMsg" role="status"></div>
     <div id="aNkOut"></div>
     <h3 style="margin-top:14px">社員コードの名簿（管理者だけ）</h3>
@@ -1706,7 +1707,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 21:07</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 21:39</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2832,6 +2833,30 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       out[k]="出昼夜公研".includes(ch)?"work":(!daily&&(prev==="出"||prev==="公"))?"ake":"off"; prev=ch; }); });
     return out;
   }
+  // この日の勤務（2026-11-16 ユーザー指定）：入れた人の、選んだ日（初めは今日）の勤務を一覧で出す
+  const nkYmd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  $("aNkDay").value=nkYmd(new Date());
+  function nkMarkAt(marks,k){ for(const st of Object.keys(marks||{})){ const d0=new Date(st+"T00:00:00"), i=Math.round((new Date(k+"T00:00:00")-d0)/864e5); if(i>=0&&i<String(marks[st]).length) return String(marks[st])[i]; } return null; }
+  const NK_LAB={出:"出番（隔日）",昼:"日勤",夜:"夜勤",公:"公出",研:"研修",有:"有給",特:"特休",欠:"欠勤"};
+  async function nkDayRun(){ const m=$("aNkMsg"), o=$("aNkOut"); o.innerHTML="";
+    if($("aNkCode").value.trim()) $("aNkAdd").click();
+    if(!nkCodes.length){ m.textContent="社員コードを1人以上入れてください（名簿から選べます）"; return; }
+    const k=$("aNkDay").value; if(!k){ m.textContent="日にちを選んでください"; return; }
+    m.textContent="調べています…";
+    let j; try{ j=await post({action:"admin",op:"schedMarks",adminPass:cfg.apass,codes:nkCodes}); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return; }
+    if(!j||!j.ok||!j.marks){ m.textContent=(j&&j.error)||"サーバーが古いままです（Code.gs を反映すると使えます）"; return; }
+    m.textContent="";
+    const rows=nkCodes.map(c=>{ const mk=j.marks[c], ch=nkMarkAt(mk,k); let lab, cls="";
+      if(ch==null){ lab="予定表なし"; cls="src"; }
+      else if(NK_LAB[ch]){ lab=NK_LAB[ch]; if(!"出昼夜公研".includes(ch)) cls="off"; }
+      else { lab=nkDays(mk)[k]==="ake"?"明け番":"休み"; cls="off"; }
+      return {c,lab,cls,work:ch!=null&&"出昼夜公研".includes(ch)}; });
+    const d=new Date(k+"T00:00:00"), W="日月火水木金土", nw=rows.filter(r=>r.work).length;
+    o.innerHTML=`<div style="font-weight:800;margin:6px 0">${d.getMonth()+1}/${d.getDate()}（${W[d.getDay()]}）${k===nkYmd(new Date())?"・今日":""}の勤務：出番 ${nw}人・出番でない ${rows.length-nw}人</div>`
+      +`<div style="overflow-x:auto"><table class="cmpt"><thead><tr><th>社員コード</th><th>氏名</th><th>勤務</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="num">${esc(r.c)}</td><td>${esc(empNm[r.c]||"")}</td><td${r.cls==="src"?' class="src"':r.cls==="off"?' style="color:var(--muted,#888)"':' style="font-weight:800"'}>${esc(r.lab)}</td></tr>`).join("")}</tbody></table></div>`;
+  }
+  $("aNkDayGo").onclick=nkDayRun;
+  $("aNkToday").onclick=()=>{ $("aNkDay").value=nkYmd(new Date()); nkDayRun(); };
   // want="off"：全員が休みの日／want="work"：全員が出番の日（2026-11-16 ユーザー指定で追加）
   $("aNkGo").onclick=()=>nkRun("off");
   $("aNkGoW").onclick=()=>nkRun("work");
