@@ -544,6 +544,9 @@ body.rtfull{overflow:hidden}
 .patrolbanner .pbbtns .pbbr{order:0;flex-basis:100%;height:0}   /* 取締りの帯：1段目は高速利用中、2段目に地図とOK */
 .banmapov{position:fixed;inset:0;z-index:4100;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.banmapov[hidden]{display:none}
 .banmapbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}.banmapbar b{font-size:17px;min-width:0;overflow-wrap:anywhere}.banmapbar .btn{flex:none;font-size:17px}
+.nkchips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.nkchip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);border-radius:999px;padding:3px 4px 3px 10px;font-weight:700;font-variant-numeric:tabular-nums}.nkchip button{border:0;background:transparent;font-size:18px;line-height:1;padding:2px 6px;cursor:pointer;color:inherit}
+.enm{display:block;font-size:12px;font-weight:600;color:var(--muted,#5F6368)}
+.nkdays{display:flex;flex-wrap:wrap;gap:6px}.nkday{border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--surface)}.nkday.we{color:#C62828}
 .northmk{background:rgba(255,255,255,.92);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.35);padding:2px 4px;line-height:0;pointer-events:none}
 #taxiBanner .banmap{order:2;margin-left:auto;touch-action:manipulation;font-size:18px;font-weight:900;padding:4px 12px;border:2px solid #fff;border-radius:8px;background:#fff;color:var(--accent);line-height:1.2}
 #taxiBanner .banok{margin-left:0}
@@ -1654,6 +1657,26 @@ body.rtfull{overflow:hidden}
     <div class="btnrow"><button type="button" class="btn" id="pbMoreBtn" hidden>次の20か所を出す</button></div>
   </section>
 
+  <section class="card" id="nkCard" hidden>
+    <h2>みんなが休みの日</h2>
+    <div class="src">社員コードを入れて「追加」を押し、何人か入れたら「完了（調べる）」を押すと、入れた人<b>全員が休みの日</b>を出します。休み＝出番（出・昼・夜・公・研修）でない日（有給・特休・欠勤も休み）。明け番は休みに入れません（隔日の人の「出」「公」の次の日）。予定表が取り込まれていない日は出しません。</div>
+    <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="aNkCode" inputmode="numeric" autocomplete="off" placeholder="社員コード" style="width:8em" aria-label="社員コード"><button class="btn" id="aNkAdd">追加</button></div>
+    <div id="aNkList" class="nkchips"></div>
+    <div class="pair">
+      <div class="field"><label for="aNkFrom">始まりの年月</label><input type="month" id="aNkFrom"></div>
+      <div class="field"><label for="aNkTo">終わりの年月</label><input type="month" id="aNkTo"></div>
+    </div>
+    <div class="btnrow"><button class="btn primary" id="aNkGo">完了（調べる）</button></div>
+    <div class="msg" id="aNkMsg" role="status"></div>
+    <div id="aNkOut"></div>
+    <h3 style="margin-top:14px">社員コードの名簿（管理者だけ）</h3>
+    <div class="src">社員コードの横に氏名を入れて覚えておけます。サーバーに入れ、管理者の合言葉を知っている人だけが読めます。氏名は、この仲間チェックと管理者の画面の「連勤のチェック」だけに出し、お知らせや乗務員のアプリには出しません。</div>
+    <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="aEnCode" inputmode="numeric" autocomplete="off" placeholder="社員コード" style="width:7em" aria-label="社員コード"><input type="text" id="aEnName" autocomplete="off" maxlength="30" placeholder="氏名" style="width:9em" aria-label="氏名"><button class="btn primary" id="aEnSave">登録</button></div>
+    <details style="margin-top:6px"><summary>まとめて入れる</summary><div class="field"><label for="aEnBulk">1行に1人「社員コード 氏名」（氏名を空にすると消します）</label><textarea id="aEnBulk" rows="4" placeholder="2778 小松
+2605 山田"></textarea></div><div class="btnrow"><button class="btn" id="aEnBulkSave">まとめて登録</button></div></details>
+    <div class="msg" id="aEnMsg" role="status"></div>
+    <div id="aEnList"></div>
+  </section>
   <section class="card" id="payDiffCard" hidden>
     <h2>月次 売上差額チェック（管理者のみ）</h2>
     <div class="src">給与明細の「実営業収入」と、アプリの総営収の差を月度ごとに見ます。給与明細と同じ条件にそろえるため、日報の総営収を税抜（÷1.1）にし、公休出勤（公出）の勤務は除いています（公出営収は会社が平均の売上から別に出すため）。公出の勤務は、点呼時間の勤務の画面で「公休出勤（公出）」に印を付けてください。給与明細の実営業収入はこのスマホの中だけに保存されます（バックアップには入ります）。障害者割引は、補填されるはずの額として参考に出します（日報の公的割引×10円）。</div>
@@ -1682,7 +1705,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 18:22</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 19:15</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2743,13 +2766,37 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度押してください"; }
   };
   // ===== 連勤のチェックと、点呼データの登録の記録（管理者だけ。2026-11-16 ユーザー指定）。名前は出さず社員コードだけ =====
+  // 社員コードの名簿（管理者の画面の中だけで使う。このスマホには残さない）
+  let empNm={};
+  const enName=c=>empNm[c]?`<small class="enm">${esc(empNm[c])}</small>`:"";
+  function drawEmpNames(){
+    const ks=Object.keys(empNm).sort((a,b)=>(+a)-(+b));
+    $("aEnList").innerHTML=ks.length?`<div class="src">登録：${ks.length}人</div><div style="overflow-x:auto;max-height:320px;overflow-y:auto"><table class="cmpt"><tbody>${ks.map(c=>`<tr><td class="num">${esc(c)}</td><td>${esc(empNm[c])}</td><td style="text-align:right;white-space:nowrap"><button class="btn" data-enedit="${esc(c)}">直す</button> <button class="btn" data-endel="${esc(c)}">消す</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="src">まだ登録はありません。</div>`;
+    $("aEnList").querySelectorAll("[data-enedit]").forEach(b=>b.onclick=()=>{ $("aEnCode").value=b.dataset.enedit; $("aEnName").value=empNm[b.dataset.enedit]||""; $("aEnName").focus(); });
+    $("aEnList").querySelectorAll("[data-endel]").forEach(b=>b.onclick=()=>{ if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="もう一度押すと消します"; return; } enSave(b.dataset.endel+" ",`${b.dataset.endel} を名簿から消しました`); });
+  }
+  async function enSave(lines,okMsg){ const m=$("aEnMsg"); m.textContent="登録しています…";
+    try{ const j=await post({action:"admin",op:"saveEmpNames",adminPass:cfg.apass,lines}); if(!j.ok){ m.textContent=j.error||"登録できませんでした"; return false; }
+      if(!j.empNames){ m.textContent="サーバーが古いままです（Code.gs を反映すると使えます）"; return false; }
+      empNm=j.empNames; drawEmpNames(); nkDraw(); m.textContent=okMsg; return true; }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return false; } }
+  // メニューの「仲間チェック」を開いたとき：名簿を読み込む（このスマホには残さない）
+  async function enLoad(){ if(!isAdmin()) return; drawEmpNames(); nkDraw();
+    try{ const j=await post({action:"admin",op:"empNames",adminPass:cfg.apass}); if(j&&j.ok&&j.empNames){ empNm=j.empNames; drawEmpNames(); nkDraw(); }
+      else if(j&&!j.ok) $("aEnMsg").textContent=j.error||"名簿を読めませんでした"; }catch(e){ $("aEnMsg").textContent="名簿を読めませんでした（電波を確認してください）"; } }
+  $("aEnSave").onclick=async()=>{ const c=$("aEnCode").value.trim().replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-65248)), n=$("aEnName").value.trim();
+    if(!/^\d{3,6}$/.test(c)){ $("aEnMsg").textContent="社員コードは数字3〜6けたで入れてください"; return; }
+    if(!n){ $("aEnMsg").textContent="氏名を入れてください（消すときは一覧の「消す」）"; return; }
+    if(await enSave(`${c} ${n}`,`${c} ${n} を登録しました`)){ $("aEnCode").value=""; $("aEnName").value=""; $("aEnCode").focus(); } };
+  $("aEnBulkSave").onclick=async()=>{ const t=$("aEnBulk").value; if(!t.trim()){ $("aEnMsg").textContent="入れてください"; return; }
+    if(await enSave(t,`${t.split("\n").filter(l=>l.trim()).length}行を登録しました`)) $("aEnBulk").value=""; };
   function drawRenkin(j){
+    if(j.empNames){ empNm=j.empNames; drawEmpNames(); nkDraw(); }
     if(j.renkinTh==null){ $("aRkList").innerHTML=`<div class="src">サーバーが古いままです（Code.gs を反映すると出ます）</div>`; return; }
     $("aRkTh").value=j.renkinTh;
     const md=s=>`${+s.slice(5,7)}/${+s.slice(8,10)}`, KN={出:"出",昼:"昼",夜:"夜",公:"公出",研:"研修"};
     const mine=String(cfg.empCode||"").trim(), rk=(j.renkin||[]).slice().sort((a,b)=>a.s<b.s?-1:a.s>b.s?1:(+a.code)-(+b.code));   // 始まりの日の順（2026-11-16 ユーザー指定：自分を一番上にはしない）
     $("aRkList").innerHTML=j.renkinErr?`<div class="err">数えられませんでした（${esc(j.renkinErr)}）</div>`:!rk.length?`<div class="src">${j.renkinTh}連勤以上の人はいません。</div>`
-      :`<div class="src">${j.renkinTh}連勤以上：${rk.length}件（${new Set(rk.map(x=>x.code)).size}人）</div><div style="overflow-x:auto"><table class="cmpt"><thead><tr><th>社員コード</th><th>期間</th><th>連勤</th><th>内訳</th></tr></thead><tbody>${rk.map(x=>`<tr${x.code===mine?' style="font-weight:800"':""}><td class="num">${esc(x.code)}</td><td class="num" style="white-space:nowrap">${md(x.s)}〜${md(x.e)}</td><td class="num" style="white-space:nowrap">${x.n}連勤</td><td>${Object.keys(x.k).map(c=>`${KN[c]||c}${x.k[c]}`).join("・")}${x.headCut?"<br><small>始まりより前のデータなし（もっと続いているかも）</small>":""}${x.tailCut?"<br><small>データの最後まで続いています</small>":""}</td></tr>`).join("")}</tbody></table></div>`;
+      :`<div class="src">${j.renkinTh}連勤以上：${rk.length}件（${new Set(rk.map(x=>x.code)).size}人）</div><div style="overflow-x:auto"><table class="cmpt"><thead><tr><th>社員コード</th><th>期間</th><th>連勤</th><th>内訳</th></tr></thead><tbody>${rk.map(x=>`<tr${x.code===mine?' style="font-weight:800"':""}><td class="num">${esc(x.code)}${enName(x.code)}</td><td class="num" style="white-space:nowrap">${md(x.s)}〜${md(x.e)}</td><td class="num" style="white-space:nowrap">${x.n}連勤</td><td>${Object.keys(x.k).map(c=>`${KN[c]||c}${x.k[c]}`).join("・")}${x.headCut?"<br><small>始まりより前のデータなし（もっと続いているかも）</small>":""}${x.tailCut?"<br><small>データの最後まで続いています</small>":""}</td></tr>`).join("")}</tbody></table></div>`;
     $("aTdLinks").innerHTML=(j.tdFolderUrl?`<a class="btn" href="${esc(j.tdFolderUrl)}" target="_blank" rel="noopener">📁 点呼データ_保管</a> `:"")+(j.tdLogUrl?`<a class="btn" href="${esc(j.tdLogUrl)}" target="_blank" rel="noopener">📊 点呼データ_記録</a>`:"");
     const L=j.tdLog||[];
     $("aTdLog").innerHTML=j.tdErr?`<div class="err">記録を読めませんでした（${esc(j.tdErr)}）</div>`:!L.length?`<div class="src">まだ記録はありません（次に予定表を取り込んだときから残ります）。</div>`
@@ -2760,6 +2807,49 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     m.textContent="保存しています…";
     try{ const j=await post({action:"admin",op:"saveRenkinTh",adminPass:cfg.apass,th}); if(!j.ok){ m.textContent=j.error||"保存できませんでした"; return; } drawAdmin(j); m.textContent=`${th}連勤以上で知らせるようにしました`; loadAdminNotes(); }
     catch(e){ m.textContent="通信できませんでした。電波を確認してください"; } };
+  // ===== 仲間チェック（管理者だけ。2026-11-16 ユーザー指定）：入れた社員コード全員が休み（明け番を除く）の日を出す =====
+  // 休み＝出・昼・夜・公・研 でない日（空き・有・特・欠）。明け番＝隔日の人（出が昼＋夜より多い人）の「出」「公」の次の日。日勤・夜勤の人は明け番なし
+  const nkCodes=[];
+  (()=>{ const d=new Date(), ym=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0"); $("aNkFrom").value=ym(d); $("aNkTo").value=ym(new Date(d.getFullYear(),d.getMonth()+1,1)); })();
+  function nkDraw(){ $("aNkList").innerHTML=nkCodes.length?nkCodes.map(c=>`<span class="nkchip">${esc(c)}${empNm[c]?` ${esc(empNm[c])}`:""}<button type="button" data-nkdel="${esc(c)}" aria-label="${esc(c)}を外す">×</button></span>`).join(""):`<span class="src">まだ入れていません</span>`;
+    $("aNkList").querySelectorAll("[data-nkdel]").forEach(b=>b.onclick=()=>{ nkCodes.splice(nkCodes.indexOf(b.dataset.nkdel),1); nkDraw(); }); }
+  nkDraw();
+  $("aNkAdd").onclick=()=>{ const m=$("aNkMsg"), v=$("aNkCode").value.split(/[\s,、・]+/).map(s=>s.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).trim()).filter(Boolean);
+    if(!v.length){ m.textContent="社員コードを入れてください"; return; }
+    const bad=v.filter(c=>!/^\d{3,6}$/.test(c)); if(bad.length){ m.textContent=`社員コードは数字3〜6けたで入れてください（${bad.join("・")}）`; return; }
+    v.forEach(c=>{ if(!nkCodes.includes(c)&&nkCodes.length<30) nkCodes.push(c); }); $("aNkCode").value=""; m.textContent=""; nkDraw(); $("aNkCode").focus(); };
+  $("aNkCode").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("aNkAdd").click(); } });
+  function nkDays(marks){   // {日付: "work"|"ake"|"off"}
+    const sts=Object.keys(marks||{}).sort(), out={}; if(!sts.length) return out;
+    const all=sts.map(s=>marks[s]).join(""), n=c=>all.split(c).length-1, daily=n("昼")+n("夜")>n("出");
+    let prev="";
+    sts.forEach(st=>{ const d0=new Date(st+"T00:00:00"); String(marks[st]).split("").forEach((ch,i)=>{ const d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+i), k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+      out[k]="出昼夜公研".includes(ch)?"work":(!daily&&(prev==="出"||prev==="公"))?"ake":"off"; prev=ch; }); });
+    return out;
+  }
+  $("aNkGo").onclick=async()=>{ const m=$("aNkMsg"), o=$("aNkOut"); o.innerHTML="";
+    if($("aNkCode").value.trim()) $("aNkAdd").click();
+    if(!nkCodes.length){ m.textContent="社員コードを1人以上入れてください"; return; }
+    const f=$("aNkFrom").value, t=$("aNkTo").value; if(!f||!t){ m.textContent="始まりと終わりの年月を選んでください"; return; }
+    if(f>t){ m.textContent="始まりの年月が、終わりの年月より後になっています"; return; }
+    m.textContent="調べています…";
+    let j; try{ j=await post({action:"admin",op:"schedMarks",adminPass:cfg.apass,codes:nkCodes}); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return; }
+    if(!j||!j.ok||!j.marks){ m.textContent=(j&&j.error)||"サーバーが古いままです（Code.gs を反映すると使えます）"; return; }
+    const st=new Date(+f.slice(0,4),+f.slice(5,7)-1,1), en=new Date(+t.slice(0,4),+t.slice(5,7),0);
+    const per={}; nkCodes.forEach(c=>per[c]=nkDays(j.marks[c]));
+    const none=nkCodes.filter(c=>!Object.keys(per[c]).length);
+    const hit=[], miss=[]; const W="日月火水木金土";
+    for(let d=new Date(st);d<=en;d.setDate(d.getDate()+1)){
+      const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"), lab=`${d.getMonth()+1}/${d.getDate()}（${W[d.getDay()]}）`;
+      const st2=nkCodes.map(c=>per[c][k]); if(st2.some(x=>x==null)){ miss.push(lab); continue; }
+      if(st2.every(x=>x==="off")) hit.push({lab,we:d.getDay()===0||d.getDay()===6}); }
+    m.textContent="";
+    const rng=`${st.getMonth()+1}/${st.getDate()}〜${en.getMonth()+1}/${en.getDate()}`;
+    o.innerHTML=(none.length?`<div class="err">予定表が登録されていない社員コード：${none.map(esc).join("・")}（この人がいると、みんなが休みの日は出せません）</div>`:"")
+      +`<div class="src">${esc(nkCodes.map(c=>c+(empNm[c]?" "+empNm[c]:"")).join("・"))}（${nkCodes.length}人）・${rng}</div>`
+      +(hit.length?`<div style="font-weight:800;margin:6px 0">全員が休みの日：${hit.length}日</div><div class="nkdays">${hit.map(h=>`<span class="nkday${h.we?" we":""}">${h.lab}</span>`).join("")}</div>`:`<div style="font-weight:800;margin:6px 0">全員が休みの日はありません</div>`)
+      +(miss.length&&!none.length?`<div class="src" style="margin-top:6px">予定表が取り込まれていない日（調べていない）：${miss.length}日（${miss[0]}〜${miss[miss.length-1]}）</div>`:"");
+  };
   async function schReset(b){   // 2回押すと、その運行管理者のパスワードを初期に戻す（忘れたとき）。ほかの人のパスワードはそのまま
     const m=$("aSchMsg"), slot=+b.dataset.schreset;
     const stop=b.dataset.op==="schedStop";
@@ -3135,7 +3225,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     ["📳 知らせてもらう","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["コミュニケーション","th-green",[["othello","⚫","オセロ","みんなのオセロ"],["mahjong","🀄","麻雀","みんなの三人麻雀"],["akabus","🚏","帰りのバス","帰りのバス（試験）"]],"仲間と遊ぶゲームです。別の画面で開きます。名前と合言葉を入れると、同じ合言葉の人と同じ部屋に入れます"],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","乗せた場所","乗せた場所の名前をまとめて確かめる"],["help","📖","使い方","使い方"],["setup","🔰","最初の設定","最初の設定（社員コード・車種・キー）"],["nippoprep","📷","日報の準備","日報の読み取りの準備（Claude）"]]],
-    ["管理者だけ（試験）","th-gray",[["sheet","🗂️","記録の表","記録のスプレッドシート（速報・全データ・点呼時間・ログ）"],["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]]];
+    ["管理者だけ（試験）","th-gray",[["sheet","🗂️","記録の表","記録のスプレッドシート（速報・全データ・点呼時間・ログ）"],["nk","🤝","仲間チェック","仲間チェック（みんなが休みの日・名簿）"],["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]]];
   // ゲーム（2026-10-28 ユーザー指定：全員に見せる。画面はGoogle Apps Scriptのまま、別の画面で開く）
   const GAME_URL={othello:"https://script.google.com/macros/s/AKfycbxYp1KUeMFi78Bosu62ENpUEGMhDmKF5i6ZGtnW1Lb-fcr72h1xVTeOb4QKe9tXvuLboQ/exec",mahjong:"https://script.google.com/macros/s/AKfycbzXOEdFxs6r-ftUzyWLZbU7qdX2DX3tshv5Vn2KOlE7BXjVQgNnYPqjNjvpBFuyOQ_2/exec"};
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
@@ -3144,6 +3234,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const PAGES={
     set:{t:"⚙️ 設定",d:"合言葉・車種・画面に出す機能・メニューの表示・計算の設定と、管理者からのお知らせです。",ids:["obNeedCard","noticeCard","cfgBox","calcBox"]},
     bk:{t:"💾 バックアップ",d:"点呼と売上をまとめたバックアップを作る・戻すところです。機種変更のときもここから。",ids:["bkBox"]},
+    nk:{t:"🤝 仲間チェック",d:"社員コードを何人か入れると、全員が休み（明け番を除く）の日を出します。社員コードの名簿（氏名）もここで入れます（管理者のみ）。",ids:["nkCard"]},
     pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]},
     teigaku:{t:"💴 定額運賃",d:"羽田空港・成田空港・東京ディズニーリゾートの定額運賃です。行き先と区を選ぶと、4つの料金が出ます。有料道路の料金は別です。",ids:["teigakuCard"]},
     place:{t:"🏥 乗せた場所の名前をまとめて確かめる",d:"乗せた場所の施設名を、一覧でまとめて確かめます（管理者とグループ1の人だけ）。",ids:["placeCard"]}};
@@ -3152,7 +3243,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   MOVE_IDS.forEach(id=>{ const el=$(id); if(!el) return; const ph=document.createComment("ph-"+id); el.parentNode.insertBefore(ph,el); setPh[id]=ph; });
   const isGroup1=()=>isNakama()&&!!cfg.group&&cfg.group.id==="g1";
   const G1ONLY=new Set(["place","akabus"]);   // グループ1の人に限って見せるボタン（左上に「①」の印）
-  const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help"||k==="setup"||k==="nippoprep"||k==="othello"||k==="mahjong") return true; if(k==="pay"||k==="sheet") return isAdmin();
+  const menuVisible=k=>{ if(k==="set"||k==="bk"||k==="help"||k==="setup"||k==="nippoprep"||k==="othello"||k==="mahjong") return true; if(k==="pay"||k==="sheet"||k==="nk") return isAdmin();
     if(k==="izakaya") return true;   // 飲み屋街マップは全員（2026-10-28 ユーザー指定）
     if(k==="teigaku") return true;   // 定額運賃は全員（2026-11-12）
     if(k==="highway") return true;   // 高速マップは全員（2026-11-12）
@@ -3257,6 +3348,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(k==="pay"&&typeof renderPayDiff==="function") renderPayDiff();
     if(k==="place") pbOpen();
     if(k==="teigaku"){ $("teigakuCard").hidden=false; tgvRender(); }
+    if(k==="nk"){ $("nkCard").hidden=false; enLoad(); }
   }
   const showSet=()=>showPage("set");
   function showHelp(){ showTab(0); $("helpBack").hidden=menuStyle!=="tile"; }
