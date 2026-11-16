@@ -121,22 +121,34 @@ function qCol(q){ if(q==null||q<30) return ["var(--surface)","var(--ink)"]; if(q
 const sty=c=>`background:${c[0]};color:${c[1]}`;
 
 // 予報を取る。Open-Meteo の雨量・確率は「その時刻までの1時間」の値なので、1つ後ろの時刻を「その時の1時間」として使う
+// 2026-11-17：Open-Meteo の日本向けの窓口（api）が返事をしない故障が続いた（11/13〜、向こうも認めている）。
+// 同じ会社の別の入口（previous-runs-api・historical-forecast-api）も同じ予報を同じ形で返すので、api が8秒で答えなければそちらへ切り替える。
+// うまくいった入口を覚えて、次からはそこを先に使う（スマホの中だけ）
+const OM_HOSTS=["api","previous-runs-api","historical-forecast-api"], OM_KEY="ame.omHost";
 async function om(pts){
-  const u="https://api.open-meteo.com/v1/forecast?latitude="+pts.map(p=>p[0].toFixed(4)).join(",")+"&longitude="+pts.map(p=>p[1].toFixed(4)).join(",")
+  const q="/v1/forecast?latitude="+pts.map(p=>p[0].toFixed(4)).join(",")+"&longitude="+pts.map(p=>p[1].toFixed(4)).join(",")
     +"&hourly=precipitation,precipitation_probability&timezone=Asia%2FTokyo&forecast_days=2";
-  const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),20000);
-  try{
-    const r=await fetch(u,{signal:ac.signal}); if(!r.ok) throw new Error("予報を取れませんでした（"+r.status+"）");
-    let j=await r.json(); if(!Array.isArray(j)) j=[j];
-    const h0=jstHour();
-    return {h0,rows:j.map(x=>{ const i=x.hourly.time.indexOf(h0); if(i<0) throw new Error("予報の時刻が合いません");
-      const s=k=>x.hourly[k].slice(i+1,i+25); return {p:s("precipitation"),q:s("precipitation_probability")}; })};
-  }catch(e){
-    // 2026-11-14：Open-Meteo の予報の窓口が日本から返事をしなくなったことがあった（スマホの電波は正常）。電波のせいか、向こうのせいかが分かるように書く
-    if(e.name==="AbortError") throw new Error("予報の会社（Open-Meteo）から20秒たっても返事がありませんでした。電波が正常なら、向こうの一時的な故障です。少したってからもう一度押してください");
-    if(e instanceof TypeError) throw new Error("予報の会社（Open-Meteo）につながりませんでした。電波が正常なら、向こうの一時的な故障です。少したってからもう一度押してください");
-    throw e; }
-  finally{ clearTimeout(tm); }
+  let first=""; try{ first=localStorage.getItem(OM_KEY)||""; }catch(e){}
+  const hosts=OM_HOSTS.includes(first)?[first,...OM_HOSTS.filter(h=>h!==first)]:OM_HOSTS;
+  let slow=0, down=0, last=null;
+  for(let n=0;n<hosts.length;n++){
+    const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),n===0?8000:15000);
+    if(n>0) $("msg").textContent=`予報の会社の窓口が混んでいるので、別の窓口（${n+1}つ目）から取っています…`;
+    try{
+      const r=await fetch(`https://${hosts[n]}.open-meteo.com${q}`,{signal:ac.signal}); if(!r.ok) throw new Error("予報を取れませんでした（"+r.status+"）");
+      let j=await r.json(); if(!Array.isArray(j)) j=[j];
+      const h0=jstHour();
+      const res={h0,rows:j.map(x=>{ const i=x.hourly.time.indexOf(h0); if(i<0) throw new Error("予報の時刻が合いません");
+        const s=k=>x.hourly[k].slice(i+1,i+25); return {p:s("precipitation"),q:s("precipitation_probability")}; })};
+      try{ localStorage.setItem(OM_KEY,hosts[n]); }catch(e){}
+      return res;
+    }catch(e){ if(e.name==="AbortError") slow++; else if(e instanceof TypeError) down++; else last=e; }
+    finally{ clearTimeout(tm); }
+  }
+  // どの窓口からも取れなかった。電波のせいか、向こうのせいかが分かるように書く
+  if(last&&!slow&&!down) throw last;
+  throw new Error(slow?"予報の会社（Open-Meteo）のどの窓口からも返事がありませんでした。電波が正常なら、向こうの一時的な故障です。少したってからもう一度押してください"
+    :"予報の会社（Open-Meteo）につながりませんでした。電波が正常なら、向こうの一時的な故障です。少したってからもう一度押してください");
 }
 async function load(){
   $("get").disabled=true; $("msg").className=""; $("msg").textContent="予報を取っています…";
