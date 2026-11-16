@@ -1664,7 +1664,7 @@ body.rtfull{overflow:hidden}
     <input type="search" id="aNkFind" autocomplete="off" placeholder="探す（コード・氏名・ニックネーム）" aria-label="名簿から探す" style="width:100%;font:19.5px var(--sans);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px;box-sizing:border-box">
     <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px"><select id="aNkPick" aria-label="名簿から選ぶ" style="max-width:100%"><option value="">名簿から選ぶ</option></select></div>
     <div id="aNkList" class="nkchips"></div>
-    <details id="aNkGBox" style="margin-top:4px"><summary>グループ（野球部など）を作る・直す</summary>
+    <details id="aNkGBox" style="margin-top:4px"><summary>グループを作る・直す</summary>
       <div class="src">上に並べた人を、名前を付けてグループとして保存します。次からは「グループから選ぶ」で全員を一度に入れられます。同じ名前で保存すると、メンバーを入れ替えます。グループもこのスマホの中だけに残します。</div>
       <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="aNkGName" autocomplete="off" maxlength="20" placeholder="グループの名前" style="width:10em" aria-label="グループの名前"><button class="btn primary" id="aNkGSave">今の人をグループとして保存</button></div>
       <div class="btnrow"><button class="btn" id="aNkGDel" hidden>このグループを消す</button><button class="btn" id="aNkClear">並べた人を全部外す</button></div>
@@ -1681,8 +1681,8 @@ body.rtfull{overflow:hidden}
     <h3 style="margin-top:14px">社員コードの名簿（このスマホの中だけ）</h3>
     <div class="src">社員コードの横に氏名・ニックネームを入れて覚えておけます。<b>このスマホの中だけ</b>に残し、サーバーには送りません。バックアップにも入らないので、機種を変えたときは入れ直してください。氏名は、この仲間チェックと（管理者は）「連勤のチェック」に出します。</div>
     <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="aEnCode" inputmode="numeric" autocomplete="off" placeholder="社員コード" style="width:7em" aria-label="社員コード"><input type="text" id="aEnName" autocomplete="off" maxlength="30" placeholder="氏名" style="width:9em" aria-label="氏名"><input type="text" id="aEnNick" autocomplete="off" maxlength="20" placeholder="ニックネーム" style="width:9em" aria-label="ニックネーム"><button class="btn primary" id="aEnSave">登録</button></div>
-    <details style="margin-top:6px"><summary>まとめて入れる</summary><div class="field"><label for="aEnBulk">1行に1人「社員コード 氏名」。ニックネームは「,」のあとに。Excelの「コード・氏名・ニックネーム」の列をそのまま貼り付けてもかまいません（氏名もニックネームも空にすると消します）</label><textarea id="aEnBulk" rows="4" placeholder="2778 小松　丈晴,こまっちゃん
-2605 蒲生　恭平"></textarea></div><div class="btnrow"><button class="btn" id="aEnBulkSave">まとめて登録</button></div></details>
+    <details style="margin-top:6px"><summary>まとめて入れる</summary><div class="field"><label for="aEnBulk">1行に1人「社員コード 氏名」。ニックネームは「,」のあとに。Excelの「コード・氏名・ニックネーム」の列をそのまま貼り付けてもかまいません（氏名もニックネームも空にすると消します）</label><textarea id="aEnBulk" rows="4" placeholder="1234 山田　太郎,タロウ
+5678 鈴木　花子"></textarea></div><div class="btnrow"><button class="btn" id="aEnBulkSave">まとめて登録</button></div></details>
     <div class="msg" id="aEnMsg" role="status"></div>
     <div id="aEnList"></div>
   </section>
@@ -1714,7 +1714,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 22:37</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 23:14</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
