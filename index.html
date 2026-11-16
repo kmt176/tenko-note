@@ -557,7 +557,8 @@ body.rtfull{overflow:hidden}
 .trainbanner .banok{border-color:#1E5A36!important}
 .patrolbanner .pbok,.banok{touch-action:manipulation}
 .patrolbanner .pbok{font-size:22px!important;font-weight:900;padding:5px 26px!important;border:2px solid #1E5A36!important;border-radius:8px;background:#2E7D4F!important;color:#fff!important;line-height:1.2}
-#patrolBannerText .pbhw{align-self:flex-start;margin-top:0;font-size:15px;font-weight:900;padding:5px 10px;border:2px solid #5A4300;border-radius:8px;background:#fff;color:#5A4300;line-height:1.2}
+.banhw{order:1;margin-right:auto;touch-action:manipulation;font-size:15px!important;font-weight:900;padding:5px 10px!important;border:2px solid currentColor!important;border-radius:8px;background:#fff!important;color:#5A4300!important;line-height:1.2}   /* 森ビル・電車・飛行機の帯の「高速利用中」（2026-11-16） */
+.patrolbanner .pbhw{align-self:flex-start;margin-top:0;font-size:15px;font-weight:900;padding:5px 10px;border:2px solid #5A4300;border-radius:8px;background:#fff;color:#5A4300;line-height:1.2}
 #patrolBannerText .pbtest{font-style:normal;font-size:13px;margin-left:8px;padding:1px 6px;border:2px solid #5A4300;border-radius:999px}
 #patrolBanner .sb3{font-size:22px;gap:8px}#patrolBanner .sb3 small{font-size:15px}#patrolBanner .sbarrow{width:40px;height:40px}
 #patrolBannerClose{font-size:30px!important;padding:0 4px!important}
@@ -708,18 +709,21 @@ body.rtfull{overflow:hidden}
 <div id="trainBanner" class="trainbanner" hidden role="status">
   <button type="button" id="trainBannerText"></button>
   <button type="button" id="trainBannerClose" aria-label="閉じる">×</button>
+  <button type="button" class="banhw" data-pthw>🛣 高速利用中</button>
   <button type="button" class="banok" data-banok>OK</button>
 </div>
 <div id="banMore" hidden></div>
 <div id="taxiBanner" class="taxibanner" hidden role="status">
   <span id="taxiBannerText"></span>
   <button type="button" id="taxiBannerClose" aria-label="閉じる">×</button>
+  <button type="button" class="banhw" data-pthw>🛣 高速利用中</button>
   <button type="button" class="banmap" data-banmap="taxiBanner">🗺 地図</button>
   <button type="button" class="banok" data-banok>OK</button>
 </div>
 <div id="airBanner" class="taxibanner airbanner" hidden role="status">
   <button type="button" id="airBannerText"></button>
   <button type="button" id="airBannerClose" aria-label="閉じる">×</button>
+  <button type="button" class="banhw" data-pthw>🛣 高速利用中</button>
   <button type="button" class="banok" data-banok>OK</button>
 </div>
 <div class="wrap" id="tabTenko">
@@ -1339,7 +1343,7 @@ body.rtfull{overflow:hidden}
       <h2>取締りの場所</h2>
       <div class="src">マイマップ「東京都内_公開・重点取締り」の場所を地図と一覧に出します。色は、<b style="color:#D23C2F">●重点取締場所</b>・<b style="color:#E8890C">●速度取締り</b>・<b style="color:#7B3FA0">●8月重点取締り</b>です。近づいたときの音と黄色の帯は「設定」→「画面に出す機能」でオン・オフ、距離もそこで選べます。</div>
       <div class="btnrow"><button class="btn" id="ptTestBan">🔔 帯と音をテスト表示</button><button class="btn" id="ptTestSnd">🔊 音だけテスト</button><button class="btn" id="ptTestCd">📏 近づく様子をテスト</button></div>
-      <div class="btnrow"><button class="btn" id="ptHwBtn">🛣 高速利用中（取締りの通知を止める）</button></div>
+      <div class="btnrow"><button class="btn" id="ptHwBtn">🛣 高速利用中（すべての通知を止める）</button></div>
       <div class="msg" id="ptHwMsg" role="status"></div>
       <div class="src">300m・200m・100mを切ったときに1回ずつ音で知らせ、帯の残りの距離は約10mごとに変わります。一番近づいたところから離れると（通り過ぎた・曲がった）帯は消えます。高速道路では下の一般道の取締りで鳴らないよう、速く走っている間は自動で止めます。渋滞などで遅いときは「高速利用中」ボタンで止めてください（決めた時間がたつと自動で戻ります）。</div>
       <div id="ptGroups" class="btnrow" style="flex-wrap:wrap"></div>
@@ -1714,7 +1718,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 23:14</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 23:58</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -8430,7 +8434,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   let taxiCur=null;   // 今、帯に出している森ビルの乗り場（帯の「🗺 地図」用）
   $("taxiBannerClose").onclick=()=>{ $("taxiBanner").hidden=true; };
   async function taxiCheck(){
-    if(!PROD||!cfg.url||offCfg.taxi) return;
+    if(!PROD||!cfg.url||offCfg.taxi||Date.now()<hwUntil) return;   // 高速利用中は出さない
     // 3分以内に取れた位置が、どの乗り場からも3km以上離れていれば、位置を調べ直さずに休む（1分おきでも電池を減らしすぎないため）
     if(lastPos&&Date.now()-lastPos.t<3*60e3&&TAXI_SPOTS.every(s=>distM([lastPos.lat,lastPos.lng],[s.lat,s.lng])>3000)) return;
     const near=TAXI_SPOTS.filter(s=>pos&&distM([pos.lat,pos.lng],[s.lat,s.lng])<=1000);
@@ -8460,7 +8464,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("airBannerClose").onclick=()=>{ $("airBanner").hidden=true; };
   $("airBannerText").onclick=()=>{ $("airBanner").hidden=true; showTab(2); showSub("air"); };
   async function airAlertCheck(){
-    if(!PROD||!cfg.url||!isAdmin()) return;
+    if(!PROD||!cfg.url||!isAdmin()||Date.now()<hwUntil) return;   // 高速利用中は出さない（終わってから知らせる）
     const h=new Date().getHours(); if(h>=2&&h<15) return;
     if(!airData.arr||Date.now()-(airAt.arr||0)>3*60e3){
       let j; try{ j=await post({action:"flightInfo",kind:"arr"}); }catch(e){ return; }
@@ -8497,7 +8501,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("trainBannerText").onclick=()=>{ $("trainBanner").hidden=true; showTab(2); showSub("train");
     if(trainBanLine&&[...$("trainSel").options].some(o=>o.value===trainBanLine)){ $("trainSel").value=trainBanLine; try{ localStorage.setItem("tenko.trainLine",trainBanLine); }catch(e){} renderTrainTab(false); } };
   async function trainCheck(){
-    if(!PROD||!cfg.url||offCfg.trainban) return;
+    if(!PROD||!cfg.url||offCfg.trainban||Date.now()<hwUntil) return;   // 高速利用中は出さない（終わってから知らせる）
     let j; try{ j=await post({action:"trainInfo"}); }catch(e){ return; }
     if(!j||!j.ok) return;
     const rows=(j.items||[]).map(x=>{ const id=x.railway.replace(/^odpt\.Railway:/,""); return Object.assign({},x,{l:ODPT_LINE[id]||id.replace(/^[^.]*\./,""),sev:trSev(x)}); }), stop=rows.filter(x=>x.sev===2);
@@ -8660,7 +8664,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     k=k||"stand"; const S=GS[k], L0=SD_LOOK[k], ban=GEO[k].ban, nm=L0.nm(x), avail=Math.max(200,window.innerWidth-100);
     const fs=Math.max(26,Math.min(42,Math.floor(avail*2/Math.max(1,nm.length))));   // 名前は2行に収まる大きさ（42pxまで）
     sdCurs[ban]={x,d,test}; if(k==="stand") sdCur=sdCurs[ban];
-    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span><span class="pbbtns">${k==="rest2"||k==="stand"||k==="yuryo"?`<button type="button" class="pbmap" data-banmap="${ban}">🗺 地図</button>`:""}<button type="button" class="pbok" data-banok>OK</button></span>`;
+    $(ban+"Text").innerHTML=`<span class="sb1">${esc(L0.t(x,S.groups[x[1]]||"",d))}${test?`<i class="pbtest">テスト</i>`:""}</span><span class="sb2" style="font-size:${fs}px">${esc(nm)}</span><span class="sb3">${sdArrowSvg(L0.col)}<span><span class="sdDist"></span><br><small class="sdHow"></small></span></span><span class="pbbtns">${k==="rest2"||k==="stand"||k==="yuryo"?`<button type="button" class="pbmap" data-banmap="${ban}">🗺 地図</button>`:""}<button type="button" class="pbok" data-banok>OK</button><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button><i class="pbbr"></i></span>`;
     $(ban).hidden=false; sdUpdate();
   }
   // ===== 帯の「🗺 地図」：取締り・速度取締り・駐車禁止の場所を、その場で地図に出す（2026-11-15 ユーザー指定）。帯はそのまま、閉じると元の画面に戻る =====
@@ -8763,7 +8767,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   function ptLineShow(x,d,test){
     ptLineX=x; const a=ptLineArea(x), dd=d<=30?"この道です":`あと約${Math.max(10,Math.round(d/10)*10)}m`, nm=String(x[0]||"").trim();
     // 2026-11-08：取締りの帯と同じくらいの大きさで3段に（ユーザー指定）
-    $("speedBannerText").innerHTML=`<span class="sp1">⚠ 速度取締り<b>${dd}</b></span>${nm?`<span class="sp2">${esc(nm)}</span>`:""}<span class="sp3">${a?`${esc(a)}付近`:""}${test?"　※テスト表示":""}</span><span class="pbbtns"><button type="button" class="pbmap" data-banmap="speedBanner">🗺 地図</button><button type="button" class="pbok" data-ptok>OK</button></span>`;
+    $("speedBannerText").innerHTML=`<span class="sp1">⚠ 速度取締り<b>${dd}</b></span>${nm?`<span class="sp2">${esc(nm)}</span>`:""}<span class="sp3">${a?`${esc(a)}付近`:""}${test?"　※テスト表示":""}</span><span class="pbbtns"><button type="button" class="pbmap" data-banmap="speedBanner">🗺 地図</button><button type="button" class="pbok" data-ptok>OK</button><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button><i class="pbbr"></i></span>`;
     $("speedBanner").hidden=false;
   }
   $("speedBannerClose").addEventListener("click",()=>{ const S=GS.patrol; $("speedBanner").hidden=true; if(S.lnCur!=null) S.lnDis=S.lnCur; });
@@ -8826,15 +8830,18 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       if(e<best&&L2){ best=e; brg=(Math.atan2(dx,dy)*180/Math.PI+360)%360; } }
     return brg;
   }
-  function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) ptHide(); ptHwRender(); }
+  function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) hwHideAll(); ptHwRender(); }
+  // 高速利用中：取締りだけでなく、駐車禁止・日交乗り場・優良乗り場・森ビル乗り場・電車・飛行機の帯もすべて消して、終わるまで出さない（2026-11-16 ユーザー指定）
+  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
-    b.textContent=man?"🛣 高速利用中を終える（取締りの通知を戻す）":"🛣 高速利用中（取締りの通知を止める）"; b.classList.toggle("primary",man);
-    m.textContent=man?`取締りの通知を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
+    b.textContent=man?"🛣 高速利用中を終える（すべての通知を戻す）":"🛣 高速利用中（すべての通知を止める）"; b.classList.toggle("primary",man);
+    m.textContent=man?`すべての通知（取締り・駐車禁止・乗り場・電車・飛行機）を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
       :spMute?`速く走っているので（高速道路とみなして）、取締りの通知を止めています（速度取締りの線は知らせます）。時速${ptSet("patrolSpd")}km未満が1分続くと戻ります`:"取締りの通知はオンです"; }
   Object.keys(PT_SET).forEach(k=>{ try{ const v=localStorage.getItem("tenko."+k); if(v) $(k).value=v; }catch(e){}
     $(k).addEventListener("change",()=>{ try{ localStorage.setItem("tenko."+k,$(k).value); }catch(e){} ptHwRender(); }); });
   $("ptHwBtn").onclick=()=>ptHwSet(!(Date.now()<hwUntil));
-  $("patrolBanner").addEventListener("click",e=>{ if(e.target.closest("[data-pthw]")) ptHwSet(true); });
+  // どの帯の「高速利用中」ボタンでも、すべての帯の知らせを止める（2026-11-16 ユーザー指定）
+  document.addEventListener("click",e=>{ const b=e.target.closest("[data-pthw]"); if(!b) return; e.stopPropagation(); ptHwSet(true); },true);
   $("patrolBannerClose").addEventListener("click",()=>{ GS.patrol.dis=GS.patrol.cur; });   // ×で閉じた場所は、次の100mまで出し直さない
   setInterval(()=>{ if(hwUntil&&Date.now()>=hwUntil){ hwUntil=0; try{ localStorage.removeItem("tenko.patrolHwUntil"); }catch(e){} } ptHwRender(); },30e3);
   ptHwRender();
@@ -8874,6 +8881,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
     sdPos={lat:p.lat,lng:p.lng,spd:p.spd,hd:p.hd,t:Date.now()}; sdHdFeed(p); sdUpdate();
     Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k]; if(!S.pts||offCfg[k]) return;
       if(k==="patrol"){ ptCheck(p,now,dLat,dLng); return; }
+      if(Date.now()<hwUntil) return;   // 高速利用中は、駐車禁止・乗り場の知らせも出さない
       const th=+$(G.dist).value||100;
       S.pts.forEach((x,i)=>{
         if(G.alertG&&!G.alertG(S.groups[x[1]]||"")) return;
