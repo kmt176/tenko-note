@@ -1658,15 +1658,16 @@ body.rtfull{overflow:hidden}
   </section>
 
   <section class="card" id="nkCard" hidden>
-    <h2>みんなが休みの日</h2>
-    <div class="src">社員コードを入れて「追加」を押し、何人か入れたら「完了（調べる）」を押すと、入れた人<b>全員が休みの日</b>を出します。休み＝出番（出・昼・夜・公・研修）でない日（有給・特休・欠勤も休み）。明け番は休みに入れません（隔日の人の「出」「公」の次の日）。予定表が取り込まれていない日は出しません。</div>
+    <h2>みんなが休みの日・出番の日</h2>
+    <div class="src">社員コードを入れて「追加」を押すか、名簿から選んで、何人か入れたら「休みの日を調べる」か「出番の日を調べる」を押します。<br>休みの日：入れた人<b>全員が休みの日</b>。休み＝出番でない日（有給・特休・欠勤も休み）。明け番は休みに入れません（隔日の人の「出」「公」の次の日）。<br>出番の日：入れた人<b>全員が出番の日</b>。出番＝出・昼・夜・公・研修（明け番は出番に入れません）。<br>予定表が取り込まれていない日は出しません。</div>
     <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="aNkCode" inputmode="numeric" autocomplete="off" placeholder="社員コード" style="width:8em" aria-label="社員コード"><button class="btn" id="aNkAdd">追加</button></div>
+    <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px"><select id="aNkPick" aria-label="名簿から選ぶ" style="max-width:100%"><option value="">名簿から選ぶ</option></select></div>
     <div id="aNkList" class="nkchips"></div>
     <div class="pair">
       <div class="field"><label for="aNkFrom">始まりの年月</label><input type="month" id="aNkFrom"></div>
       <div class="field"><label for="aNkTo">終わりの年月</label><input type="month" id="aNkTo"></div>
     </div>
-    <div class="btnrow"><button class="btn primary" id="aNkGo">完了（調べる）</button></div>
+    <div class="btnrow"><button class="btn primary" id="aNkGo">休みの日を調べる</button><button class="btn primary" id="aNkGoW">出番の日を調べる</button></div>
     <div class="msg" id="aNkMsg" role="status"></div>
     <div id="aNkOut"></div>
     <h3 style="margin-top:14px">社員コードの名簿（管理者だけ）</h3>
@@ -1705,7 +1706,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 19:15</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 21:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2812,7 +2813,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const nkCodes=[];
   (()=>{ const d=new Date(), ym=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0"); $("aNkFrom").value=ym(d); $("aNkTo").value=ym(new Date(d.getFullYear(),d.getMonth()+1,1)); })();
   function nkDraw(){ $("aNkList").innerHTML=nkCodes.length?nkCodes.map(c=>`<span class="nkchip">${esc(c)}${empNm[c]?` ${esc(empNm[c])}`:""}<button type="button" data-nkdel="${esc(c)}" aria-label="${esc(c)}を外す">×</button></span>`).join(""):`<span class="src">まだ入れていません</span>`;
-    $("aNkList").querySelectorAll("[data-nkdel]").forEach(b=>b.onclick=()=>{ nkCodes.splice(nkCodes.indexOf(b.dataset.nkdel),1); nkDraw(); }); }
+    $("aNkList").querySelectorAll("[data-nkdel]").forEach(b=>b.onclick=()=>{ nkCodes.splice(nkCodes.indexOf(b.dataset.nkdel),1); nkDraw(); });
+    // 名簿から選ぶ（2026-11-16 ユーザー指定）：まだ入れていない人だけ並べる
+    const ks=Object.keys(empNm).filter(c=>!nkCodes.includes(c)).sort((a,b)=>(+a)-(+b));
+    $("aNkPick").innerHTML=`<option value="">${Object.keys(empNm).length?(ks.length?`名簿から選ぶ（${ks.length}人）`:"名簿の人はみんな入れました"):"名簿から選ぶ（まだ登録なし）"}</option>`+ks.map(c=>`<option value="${esc(c)}">${esc(c)} ${esc(empNm[c])}</option>`).join(""); }
+  $("aNkPick").onchange=()=>{ const c=$("aNkPick").value; if(c&&!nkCodes.includes(c)&&nkCodes.length<30){ nkCodes.push(c); $("aNkMsg").textContent=""; } nkDraw(); };
   nkDraw();
   $("aNkAdd").onclick=()=>{ const m=$("aNkMsg"), v=$("aNkCode").value.split(/[\s,、・]+/).map(s=>s.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).trim()).filter(Boolean);
     if(!v.length){ m.textContent="社員コードを入れてください"; return; }
@@ -2827,7 +2832,10 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       out[k]="出昼夜公研".includes(ch)?"work":(!daily&&(prev==="出"||prev==="公"))?"ake":"off"; prev=ch; }); });
     return out;
   }
-  $("aNkGo").onclick=async()=>{ const m=$("aNkMsg"), o=$("aNkOut"); o.innerHTML="";
+  // want="off"：全員が休みの日／want="work"：全員が出番の日（2026-11-16 ユーザー指定で追加）
+  $("aNkGo").onclick=()=>nkRun("off");
+  $("aNkGoW").onclick=()=>nkRun("work");
+  async function nkRun(want){ const m=$("aNkMsg"), o=$("aNkOut"); o.innerHTML=""; const WL=want==="work"?"出番":"休み";
     if($("aNkCode").value.trim()) $("aNkAdd").click();
     if(!nkCodes.length){ m.textContent="社員コードを1人以上入れてください"; return; }
     const f=$("aNkFrom").value, t=$("aNkTo").value; if(!f||!t){ m.textContent="始まりと終わりの年月を選んでください"; return; }
@@ -2842,14 +2850,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     for(let d=new Date(st);d<=en;d.setDate(d.getDate()+1)){
       const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"), lab=`${d.getMonth()+1}/${d.getDate()}（${W[d.getDay()]}）`;
       const st2=nkCodes.map(c=>per[c][k]); if(st2.some(x=>x==null)){ miss.push(lab); continue; }
-      if(st2.every(x=>x==="off")) hit.push({lab,we:d.getDay()===0||d.getDay()===6}); }
+      if(st2.every(x=>x===want)) hit.push({lab,we:d.getDay()===0||d.getDay()===6}); }
     m.textContent="";
     const rng=`${st.getMonth()+1}/${st.getDate()}〜${en.getMonth()+1}/${en.getDate()}`;
-    o.innerHTML=(none.length?`<div class="err">予定表が登録されていない社員コード：${none.map(esc).join("・")}（この人がいると、みんなが休みの日は出せません）</div>`:"")
+    o.innerHTML=(none.length?`<div class="err">予定表が登録されていない社員コード：${none.map(esc).join("・")}（この人がいると、みんなが${WL}の日は出せません）</div>`:"")
       +`<div class="src">${esc(nkCodes.map(c=>c+(empNm[c]?" "+empNm[c]:"")).join("・"))}（${nkCodes.length}人）・${rng}</div>`
-      +(hit.length?`<div style="font-weight:800;margin:6px 0">全員が休みの日：${hit.length}日</div><div class="nkdays">${hit.map(h=>`<span class="nkday${h.we?" we":""}">${h.lab}</span>`).join("")}</div>`:`<div style="font-weight:800;margin:6px 0">全員が休みの日はありません</div>`)
+      +(hit.length?`<div style="font-weight:800;margin:6px 0">全員が${WL}の日：${hit.length}日</div><div class="nkdays">${hit.map(h=>`<span class="nkday${h.we?" we":""}">${h.lab}</span>`).join("")}</div>`:`<div style="font-weight:800;margin:6px 0">全員が${WL}の日はありません</div>`)
       +(miss.length&&!none.length?`<div class="src" style="margin-top:6px">予定表が取り込まれていない日（調べていない）：${miss.length}日（${miss[0]}〜${miss[miss.length-1]}）</div>`:"");
-  };
+  }
   async function schReset(b){   // 2回押すと、その運行管理者のパスワードを初期に戻す（忘れたとき）。ほかの人のパスワードはそのまま
     const m=$("aSchMsg"), slot=+b.dataset.schreset;
     const stop=b.dataset.op==="schedStop";
