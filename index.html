@@ -1610,6 +1610,15 @@ body.rtfull{overflow:hidden}
           <div class="msg" id="aSchMsg" role="status"></div>
           <div class="src">運行管理者の方は、専用のページ <a href="yotei.html" target="_blank" rel="noopener">yotei.html</a> で、会社の予定表のPDFを選ぶだけで取り込めます（運行管理者1〜3の3人分。初期のパスワードで初めて開いたときに、本人が自分のパスワードを決めます。初期のパスワードのまま2週間たつと、その番号は自動で使えなくなります）。<span id="aSchLast"></span></div>
           <div id="aSchSlots"></div>
+          <h3 style="margin-top:14px">連勤のチェック（点呼データから・月をまたいで数える）</h3>
+          <div class="src">取り込まれた予定表から数えます。出・昼・夜・公＝出番。研修は連勤を切らず、数には入れずに別に数えます。有・欠・特＝休み。空き：日勤・夜勤の人は1日でも休み、隔日の人は1日だけなら明け番・2日続けば公休。予定表が登録・更新されたとき、この日数以上の連勤（まだ終わっていないもの）があれば、管理者のアプリにお知らせを出します。</div>
+          <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><label for="aRkTh">知らせる連勤の日数</label><input type="number" id="aRkTh" min="2" max="30" inputmode="numeric" style="width:5em"><span>日以上</span><button class="btn" id="aRkSave">保存</button></div>
+          <div class="msg" id="aRkMsg" role="status"></div>
+          <div id="aRkList"></div>
+          <h3 style="margin-top:14px">点呼データの登録の記録</h3>
+          <div class="src">予定表を取り込むたびに、Googleドライブの「点呼データ_保管」フォルダーにある「点呼データ_記録」のシートへ、いつ・だれが・どう取り込んだか・何件登録したか・できたか失敗したかを1行ずつ残します（ここには新しい順に30件）。PDFは保管しません。</div>
+          <div id="aTdLinks"></div>
+          <div id="aTdLog"></div>
           <h3 style="margin-top:14px">全員のデータ（管理者のみ・社員コード登録済みの人だけが対象）</h3>
           <div class="src">仲間の速報と同じく、社員コードと仲間の合言葉を入れている人だけが対象です。金額のしきい値や3日の期限はなく、すべての乗車をCSVで書き出せます。</div>
           <div class="pair">
@@ -1673,7 +1682,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-15 19:25</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 18:22</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2572,17 +2581,25 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   let notices=[], carsAt=0; try{ notices=JSON.parse(localStorage.getItem("tenko.notices")||"[]")||[]; }catch(e){}
   const noticeRead=()=>{ try{ return JSON.parse(localStorage.getItem("tenko.noticeRead")||"[]")||[]; }catch(e){ return []; } };
   const ntDate=iso=>{ const d=new Date(iso); return isNaN(d)?"":`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  // 管理者だけのお知らせ（点呼データの登録・失敗・連勤。2026-11-16）：管理者のアプリが開いたときにサーバーから受け取り、同じ枠で出す
+  let admNotes=[]; try{ admNotes=JSON.parse(localStorage.getItem("tenko.admNotes")||"[]")||[]; }catch(e){}
+  const allNotices=()=>notices.concat(isAdmin()?admNotes:[]);
+  async function loadAdminNotes(){
+    if(!cfg.url||!isAdmin()) return;
+    try{ const j=await post({action:"admin",op:"notes",adminPass:cfg.apass}); if(!j||!j.ok||!Array.isArray(j.notes)) return;
+      admNotes=j.notes.map(n=>Object.assign({},n,{adm:1})); try{ localStorage.setItem("tenko.admNotes",JSON.stringify(admNotes)); }catch(e){} showNotice(); renderNoticeCard(); }catch(e){}
+  }
   function showNotice(){
-    const rd=noticeRead(), now=Date.now(), x=notices.filter(n=>!rd.includes(n.id)&&new Date(n.until).getTime()>now).slice(-1)[0];   // 古いものから順に1つずつ
+    const rd=noticeRead(), now=Date.now(), x=allNotices().filter(n=>!rd.includes(n.id)&&new Date(n.until).getTime()>now).slice(-1)[0];   // 古いものから順に1つずつ
     const box=$("noticePop"); if(!box) return;
     if(!x){ box.hidden=true; return; }
-    $("noticeText").textContent=x.text; $("noticeDate").textContent=`${ntDate(x.at)} 管理者から`;
+    $("noticeText").textContent=x.text; $("noticeDate").textContent=`${ntDate(x.at)} ${x.adm?"点呼データ（管理者だけ）":"管理者から"}`;
     box.hidden=false;
     $("noticeOk").onclick=()=>{ const r=noticeRead(); if(!r.includes(x.id)) r.push(x.id); try{ localStorage.setItem("tenko.noticeRead",JSON.stringify(r.slice(-50))); }catch(e){} box.hidden=true; renderNoticeCard(); setTimeout(showNotice,300); };
   }
   function renderNoticeCard(){
     const el=$("noticeList"); if(!el) return; const rd=noticeRead();
-    el.innerHTML=notices.length?notices.map(n=>`<div class="ntrow"><small>${ntDate(n.at)}${rd.includes(n.id)?"":"・<b style=\"color:var(--accent)\">未読</b>"}</small><div>${esc(n.text).replace(/\n/g,"<br>")}</div></div>`).join(""):`<div class="src">今、お知らせはありません。</div>`;
+    const ns=allNotices(); el.innerHTML=ns.length?ns.map(n=>`<div class="ntrow"><small>${ntDate(n.at)}${rd.includes(n.id)?"":"・<b style=\"color:var(--accent)\">未読</b>"}</small><div>${esc(n.text).replace(/\n/g,"<br>")}</div></div>`).join(""):`<div class="src">今、お知らせはありません。</div>`;
   }
   setInterval(()=>{ if(!document.hidden) loadCars(); },15*60*1000);
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&Date.now()-carsAt>5*60*1000) loadCars(); });
@@ -2597,6 +2614,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(j.longOpen!=null&&!!j.longOpen!==longOpen){ longOpen=!!j.longOpen; try{ localStorage.setItem("tenko.longOpen",longOpen?"1":""); }catch(e){} applyRole(); }
       if(j.office&&cfg.office!==j.office){ cfg.office=j.office; saveCfg(); }
       if(Array.isArray(j.notices)){ notices=j.notices; try{ localStorage.setItem("tenko.notices",JSON.stringify(notices)); }catch(e){} showNotice(); renderNoticeCard(); }
+      if(isAdmin()) loadAdminNotes();
       try{ localStorage.setItem("tenko.cars",JSON.stringify(carsCfg)); }catch(e){}
       if(j.flashMin>0){ flashMin=j.flashMin; try{ localStorage.setItem("tenko.flashMin",String(flashMin)); }catch(e){} updateFlashNote(); }
       // 接遇チェックの見出し・説明文（全員に出すので、ここで受け取る。古いサーバーでは項目がないので変えない）
@@ -2695,6 +2713,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       return `<b>使えません</b>（使うときは「初期に戻す」）`; };
     $("aSchSlots").innerHTML=(j.schedSlots||[null,null,null]).map((x,i)=>`<div class="row" style="align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap"><span>運行管理者${i+1}：${slotTxt(x)}</span><button class="btn" data-schreset="${i+1}" data-op="schedReset">初期に戻す</button>${x&&(x.st==="closed"||x.st==="locked")?"":`<button class="btn" data-schreset="${i+1}" data-op="schedStop">止める</button>`}</div>`).join("");
     $("aSchSlots").querySelectorAll("[data-schreset]").forEach(b=>b.onclick=()=>schReset(b));
+    drawRenkin(j);
     if(j.flashUrl&&cfg.flashUrl!==j.flashUrl){ cfg.flashUrl=j.flashUrl; saveCfg(); }   // メニューの「🗂️ 記録の表」で使う（2026-11-15）
     $("aSheetLink").innerHTML=j.flashUrl?`<a class="btn" href="${esc(j.flashUrl)}" target="_blank" rel="noopener" style="display:block;text-align:center;margin-bottom:8px">📊 記録のスプレッドシートを開く（点呼時間・全データ・ログ）</a>`:"";
     $("adminBox").hidden=false; $("aForget").hidden=false;
@@ -2723,6 +2742,24 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       drawAdmin(j); $("aSchText").value=""; m.textContent="取り込みました";
     }catch(e){ m.textContent="通信できませんでした。電波を確認して、もう一度押してください"; }
   };
+  // ===== 連勤のチェックと、点呼データの登録の記録（管理者だけ。2026-11-16 ユーザー指定）。名前は出さず社員コードだけ =====
+  function drawRenkin(j){
+    if(j.renkinTh==null){ $("aRkList").innerHTML=`<div class="src">サーバーが古いままです（Code.gs を反映すると出ます）</div>`; return; }
+    $("aRkTh").value=j.renkinTh;
+    const md=s=>`${+s.slice(5,7)}/${+s.slice(8,10)}`, KN={出:"出",昼:"昼",夜:"夜",公:"公出",研:"研修"};
+    const mine=String(cfg.empCode||"").trim(), rk=(j.renkin||[]).slice().sort((a,b)=>a.s<b.s?-1:a.s>b.s?1:(+a.code)-(+b.code));   // 始まりの日の順（2026-11-16 ユーザー指定：自分を一番上にはしない）
+    $("aRkList").innerHTML=j.renkinErr?`<div class="err">数えられませんでした（${esc(j.renkinErr)}）</div>`:!rk.length?`<div class="src">${j.renkinTh}連勤以上の人はいません。</div>`
+      :`<div class="src">${j.renkinTh}連勤以上：${rk.length}件（${new Set(rk.map(x=>x.code)).size}人）</div><div style="overflow-x:auto"><table class="cmpt"><thead><tr><th>社員コード</th><th>期間</th><th>連勤</th><th>内訳</th></tr></thead><tbody>${rk.map(x=>`<tr${x.code===mine?' style="font-weight:800"':""}><td class="num">${esc(x.code)}</td><td class="num" style="white-space:nowrap">${md(x.s)}〜${md(x.e)}</td><td class="num" style="white-space:nowrap">${x.n}連勤</td><td>${Object.keys(x.k).map(c=>`${KN[c]||c}${x.k[c]}`).join("・")}${x.headCut?"<br><small>始まりより前のデータなし（もっと続いているかも）</small>":""}${x.tailCut?"<br><small>データの最後まで続いています</small>":""}</td></tr>`).join("")}</tbody></table></div>`;
+    $("aTdLinks").innerHTML=(j.tdFolderUrl?`<a class="btn" href="${esc(j.tdFolderUrl)}" target="_blank" rel="noopener">📁 点呼データ_保管</a> `:"")+(j.tdLogUrl?`<a class="btn" href="${esc(j.tdLogUrl)}" target="_blank" rel="noopener">📊 点呼データ_記録</a>`:"");
+    const L=j.tdLog||[];
+    $("aTdLog").innerHTML=j.tdErr?`<div class="err">記録を読めませんでした（${esc(j.tdErr)}）</div>`:!L.length?`<div class="src">まだ記録はありません（次に予定表を取り込んだときから残ります）。</div>`
+      :`<div style="overflow-x:auto"><table class="cmpt"><thead><tr><th>いつ</th><th>だれが</th><th>取り込み方・月度</th><th>件数</th><th>結果</th></tr></thead><tbody>${L.map(r=>`<tr><td class="num" style="white-space:nowrap">${esc(String(r[0]).slice(5,16))}</td><td>${esc(r[1])}</td><td>${esc(r[2])}${r[3]?`<br><small>${esc(r[3])}始まり</small>`:""}</td><td class="num">${esc(r[4])}件</td><td${/失敗/.test(r[5])?' class="err"':""}>${esc(r[5])}${r[6]?`<br><small>${esc(r[6])}</small>`:""}</td></tr>`).join("")}</tbody></table></div>`;
+  }
+  $("aRkSave").onclick=async()=>{ const m=$("aRkMsg"), th=+$("aRkTh").value;
+    if(!(th>=2&&th<=30)){ m.textContent="2〜30で入れてください"; return; }
+    m.textContent="保存しています…";
+    try{ const j=await post({action:"admin",op:"saveRenkinTh",adminPass:cfg.apass,th}); if(!j.ok){ m.textContent=j.error||"保存できませんでした"; return; } drawAdmin(j); m.textContent=`${th}連勤以上で知らせるようにしました`; loadAdminNotes(); }
+    catch(e){ m.textContent="通信できませんでした。電波を確認してください"; } };
   async function schReset(b){   // 2回押すと、その運行管理者のパスワードを初期に戻す（忘れたとき）。ほかの人のパスワードはそのまま
     const m=$("aSchMsg"), slot=+b.dataset.schreset;
     const stop=b.dataset.op==="schedStop";
