@@ -1659,8 +1659,8 @@ body.rtfull{overflow:hidden}
 
   <section class="card" id="nkCard" hidden>
     <h2>みんなが休みの日・出番の日</h2>
-    <div class="src">社員コードを入れて「追加」を押すか、名簿から選んで、何人か入れたら「休みの日を調べる」か「出番の日を調べる」を押します。<br>休みの日：入れた人<b>全員が休みの日</b>。休み＝出番でない日（有給・特休・欠勤も休み）。明け番は休みに入れません（隔日の人の「出」「公」の次の日）。<br>出番の日：入れた人<b>全員が出番の日</b>。出番＝出・昼・夜・公・研修（明け番は出番に入れません）。<br>この日の勤務：入れた人の、選んだ日（初めは今日）の勤務を一覧で出します。<br>予定表が取り込まれていない日は出しません。</div>
-    <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="aNkCode" inputmode="numeric" autocomplete="off" placeholder="社員コード" style="width:8em" aria-label="社員コード"><button class="btn" id="aNkAdd">追加</button></div>
+    <div class="src">下の名簿に入れた人を「名簿から選ぶ」で選んで（探す欄にコード・氏名・ニックネームの一部を入れると絞れます）、何人か入れたら「休みの日を調べる」か「出番の日を調べる」を押します。<br>休みの日：入れた人<b>全員が休みの日</b>。休み＝出番でない日（有給・特休・欠勤も休み）。明け番は休みに入れません（隔日の人の「出」「公」の次の日）。<br>出番の日：入れた人<b>全員が出番の日</b>。出番＝出・昼・夜・公・研修（明け番は出番に入れません）。<br>この日の勤務：入れた人の、選んだ日（初めは今日）の勤務を一覧で出します。<br>予定表が取り込まれていない日は出しません。</div>
+    <input type="search" id="aNkFind" autocomplete="off" placeholder="探す（コード・氏名・ニックネーム）" aria-label="名簿から探す" style="width:100%;font:19.5px var(--sans);padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);min-height:48px;box-sizing:border-box">
     <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px"><select id="aNkPick" aria-label="名簿から選ぶ" style="max-width:100%"><option value="">名簿から選ぶ</option></select></div>
     <div id="aNkList" class="nkchips"></div>
     <div class="pair">
@@ -1708,7 +1708,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 21:54</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-16 22:26</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2833,16 +2833,17 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   (()=>{ const d=new Date(), ym=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0"); $("aNkFrom").value=ym(d); $("aNkTo").value=ym(new Date(d.getFullYear(),d.getMonth()+1,1)); })();
   function nkDraw(){ $("aNkList").innerHTML=nkCodes.length?nkCodes.map(c=>`<span class="nkchip">${esc(c)}${empNm[c]?` ${esc(empNm[c])}`:""}<button type="button" data-nkdel="${esc(c)}" aria-label="${esc(c)}を外す">×</button></span>`).join(""):`<span class="src">まだ入れていません</span>`;
     $("aNkList").querySelectorAll("[data-nkdel]").forEach(b=>b.onclick=()=>{ nkCodes.splice(nkCodes.indexOf(b.dataset.nkdel),1); nkDraw(); });
-    // 名簿から選ぶ（2026-11-16 ユーザー指定）：まだ入れていない人だけ並べる
-    const ks=Object.keys(empNm).filter(c=>!nkCodes.includes(c)).sort((a,b)=>(+a)-(+b));
-    $("aNkPick").innerHTML=`<option value="">${Object.keys(empNm).length?(ks.length?`名簿から選ぶ（${ks.length}人）`:"名簿の人はみんな入れました"):"名簿から選ぶ（まだ登録なし）"}</option>`+ks.map(c=>`<option value="${esc(c)}">${esc(c)} ${esc(empNm[c])}</option>`).join(""); }
-  $("aNkPick").onchange=()=>{ const c=$("aNkPick").value; if(c&&!nkCodes.includes(c)&&nkCodes.length<30){ nkCodes.push(c); $("aNkMsg").textContent=""; } nkDraw(); };
-  nkDraw();
-  $("aNkAdd").onclick=()=>{ const m=$("aNkMsg"), v=$("aNkCode").value.split(/[\s,、・]+/).map(s=>s.replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).trim()).filter(Boolean);
-    if(!v.length){ m.textContent="社員コードを入れてください"; return; }
-    const bad=v.filter(c=>!/^\d{3,6}$/.test(c)); if(bad.length){ m.textContent=`社員コードは数字3〜6けたで入れてください（${bad.join("・")}）`; return; }
-    v.forEach(c=>{ if(!nkCodes.includes(c)&&nkCodes.length<30) nkCodes.push(c); }); $("aNkCode").value=""; m.textContent=""; nkDraw(); $("aNkCode").focus(); };
-  $("aNkCode").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("aNkAdd").click(); } });
+    // 名簿から選ぶ（2026-11-16 ユーザー指定）：まだ入れていない人だけ並べる。探す欄に入れた文字（コード・氏名・ニックネームの一部）で絞る
+    const all=Object.keys(empNm).filter(c=>!nkCodes.includes(c)).sort((a,b)=>(+a)-(+b));
+    const nz=s=>z2h(String(s||"")).replace(/[\s　]/g,"").toLowerCase(), q=nz($("aNkFind").value);
+    const ks=q?all.filter(c=>nz(c+empNm[c]).includes(q)):all;
+    $("aNkPick").innerHTML=`<option value="">${!Object.keys(empNm).length?"名簿から選ぶ（まだ登録なし。下の名簿に入れてください）":!all.length?"名簿の人はみんな入れました":q?(ks.length?`名簿から選ぶ（合う人 ${ks.length}人）`:"合う人がいません"):`名簿から選ぶ（${ks.length}人）`}</option>`+ks.map(c=>`<option value="${esc(c)}">${esc(c)} ${esc(empNm[c])}</option>`).join(""); }
+  const nkAdd=c=>{ if(c&&!nkCodes.includes(c)&&nkCodes.length<30){ nkCodes.push(c); $("aNkMsg").textContent=""; } };
+  $("aNkPick").onchange=()=>{ nkAdd($("aNkPick").value); $("aNkFind").value=""; nkDraw(); };
+  $("aNkFind").addEventListener("input",nkDraw);
+  // 探す欄で Enter：合う人が1人だけなら、そのまま入れて探す欄を空にする
+  $("aNkFind").addEventListener("keydown",e=>{ if(e.key!=="Enter") return; e.preventDefault(); const os=[...$("aNkPick").options].filter(o=>o.value); if(os.length===1){ nkAdd(os[0].value); $("aNkFind").value=""; nkDraw(); } });
+  // 最初の描画は、メニューで仲間チェックを開いたとき（enLoad）にする。ここで描くと、名簿に人がいるとき esc がまだ用意されておらず、アプリ全体が止まる（2026-11-16 の不具合）
   function nkDays(marks){   // {日付: "work"|"ake"|"off"}
     const sts=Object.keys(marks||{}).sort(), out={}; if(!sts.length) return out;
     const all=sts.map(s=>marks[s]).join(""), n=c=>all.split(c).length-1, daily=n("昼")+n("夜")>n("出");
@@ -2857,8 +2858,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function nkMarkAt(marks,k){ for(const st of Object.keys(marks||{})){ const d0=new Date(st+"T00:00:00"), i=Math.round((new Date(k+"T00:00:00")-d0)/864e5); if(i>=0&&i<String(marks[st]).length) return String(marks[st])[i]; } return null; }
   const NK_LAB={出:"出番（隔日）",昼:"日勤",夜:"夜勤",公:"公出",研:"研修",有:"有給",特:"特休",欠:"欠勤"};
   async function nkDayRun(){ const m=$("aNkMsg"), o=$("aNkOut"); o.innerHTML="";
-    if($("aNkCode").value.trim()) $("aNkAdd").click();
-    if(!nkCodes.length){ m.textContent="社員コードを1人以上入れてください（名簿から選べます）"; return; }
+    if(!nkCodes.length){ m.textContent="名簿から1人以上選んでください"; return; }
     const k=$("aNkDay").value; if(!k){ m.textContent="日にちを選んでください"; return; }
     m.textContent="調べています…";
     let j; try{ j=await nkPost(nkCodes); }catch(e){ m.textContent="通信できませんでした。電波を確認してください"; return; }
@@ -2879,8 +2879,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("aNkGo").onclick=()=>nkRun("off");
   $("aNkGoW").onclick=()=>nkRun("work");
   async function nkRun(want){ const m=$("aNkMsg"), o=$("aNkOut"); o.innerHTML=""; const incAke=want==="off"&&$("aNkAke").checked, WL=want==="work"?"出番":incAke?"休み（明け番も含む）":"休み";
-    if($("aNkCode").value.trim()) $("aNkAdd").click();
-    if(!nkCodes.length){ m.textContent="社員コードを1人以上入れてください"; return; }
+    if(!nkCodes.length){ m.textContent="名簿から1人以上選んでください"; return; }
     const f=$("aNkFrom").value, t=$("aNkTo").value; if(!f||!t){ m.textContent="始まりと終わりの年月を選んでください"; return; }
     if(f>t){ m.textContent="始まりの年月が、終わりの年月より後になっています"; return; }
     m.textContent="調べています…";
