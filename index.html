@@ -569,7 +569,9 @@ body.rtfull{overflow:hidden}
 #speedBannerText .sp1 b{color:#B3261E;font-weight:900}
 #speedBannerText .sp2{font-size:34px;font-weight:900;line-height:1.1;word-break:break-all}
 #speedBannerText .sp3{font-size:18px;font-weight:800}
-#speedBannerClose{font-size:30px!important;padding:0 4px!important}.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
+#speedBannerClose{font-size:30px!important;padding:0 4px!important}.acbanner{background:#FDE2E4;color:#7A0019;border-bottom-color:#E8949C}.acbanner button{color:#7A0019!important}#acBannerText{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}#acBannerText .ac1{font-size:24px;font-weight:900}#acBannerText .ac2{font-size:16px;font-weight:700}
+.acleg{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;color:var(--muted);margin-top:6px}.acleg i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:3px;border:1px solid #fff}
+.restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
 /* 日交乗り場の帯は、元の帯と取締りの帯のちょうど中間の大きさ（2026-11-01 ユーザー指定）。文字 17px と 44px→30px、17px と 68px→42px、17px と 22px→20px、余白 12/14px と 14/12/16px→13/13/14px、× 24px と 44px→34px */
 #standBanner,#yuryoBanner,#restBanner{align-items:flex-start;padding:13px 13px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 13px)}
@@ -703,6 +705,7 @@ body.rtfull{overflow:hidden}
 <div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
 <div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
 <div id="speedBanner" class="patrolbanner" hidden role="alert"><span id="speedBannerText"></span><button type="button" id="speedBannerClose" aria-label="閉じる">×</button></div>
+<div id="acBanner" class="patrolbanner acbanner" hidden role="status"><span id="acBannerText"></span><button type="button" id="acBannerClose" aria-label="閉じる">×</button></div>
 <div id="restBanner" class="patrolbanner restbanner" hidden role="alert"><span id="restBannerText"></span><button type="button" id="restBannerClose" aria-label="閉じる">×</button></div>
 <div id="standBanner" class="patrolbanner standbanner" hidden role="status"><span id="standBannerText"></span><button type="button" id="standBannerClose" aria-label="閉じる">×</button></div>
 <div id="yuryoBanner" class="patrolbanner standbanner" hidden role="status"><span id="yuryoBannerText"></span><button type="button" id="yuryoBannerClose" aria-label="閉じる">×</button></div>
@@ -1347,6 +1350,19 @@ body.rtfull{overflow:hidden}
       <div class="msg" id="ptHwMsg" role="status"></div>
       <div class="src">300m・200m・100mを切ったときに1回ずつ音で知らせ、帯の残りの距離は約10mごとに変わります。一番近づいたところから離れると（通り過ぎた・曲がった）帯は消えます。高速道路では下の一般道の取締りで鳴らないよう、速く走っている間は自動で止めます。渋滞などで遅いときは「高速利用中」ボタンで止めてください（決めた時間がたつと自動で戻ります）。</div>
       <div id="ptGroups" class="btnrow" style="flex-wrap:wrap"></div>
+      <!-- 交通事故の多い場所（2026-11-17 本人指定：取締りとは別に、実際に事故が起きた場所を地図に重ねる） -->
+      <details id="acBox" style="margin:6px 0 10px"><summary><b>🚑 交通事故の多い場所</b>（地図に重ねる）</summary>
+        <label class="check" style="margin-top:8px"><input type="checkbox" id="acOn"> 地図に出す</label>
+        <div id="acKinds" class="btnrow" style="flex-wrap:wrap;margin-top:4px"></div>
+        <div class="field" style="margin-top:6px"><label for="acTime">時間帯</label><select id="acTime"><option value="all">昼も夜も</option><option value="day">昼だけ</option><option value="night">夜だけ</option></select></div>
+        <div class="acleg" id="acLeg"></div>
+        <div class="msg" id="acMsg" role="status"></div>
+        <label class="check" style="margin-top:8px"><input type="checkbox" id="acNear"> 事故の多い場所に近づいたら知らせる</label>
+        <div class="src" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">3年で<input type="number" id="acMin" min="2" max="50" inputmode="numeric" style="width:4.5em">件以上の場所に、<input type="number" id="acDist" min="30" max="300" step="10" inputmode="numeric" style="width:4.5em">m まで近づいたら</div>
+        <div class="btnrow"><button type="button" class="btn" id="acTestBan">🔔 帯をテスト表示</button></div>
+        <div class="src">知らせは初めはオフです。取締り・速度取締りの帯が出ている間と、高速利用中は出しません。同じ場所は10分あけます。数えるのは、上で選んだ種類・時間帯の事故です。</div>
+        <div class="src" id="acSrc">出典：警察庁「交通事故統計情報のオープンデータ」（本票）を加工して作成。人身事故（死亡・負傷）だけで、物損事故は入っていません。約110m四方ごとに数え、3年で2件以上の場所だけを出しています。</div>
+      </details>
       <div id="ptMapWrap" class="mapwrap">
         <div id="ptMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="ptMeBtn">現在地</button><button class="btn" id="ptFullBtn">全画面</button></div>
@@ -1718,7 +1734,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-17 08:37</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-17 10:16</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -8838,7 +8854,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) hwHideAll(); ptHwRender(); }
   // 高速利用中：取締りだけでなく、駐車禁止・日交乗り場・優良乗り場・森ビル乗り場・電車・飛行機の帯もすべて消して、終わるまで出さない（2026-11-16 ユーザー指定）
-  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
+  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner","acBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
     b.textContent=man?"🛣 高速利用中を終える（すべての通知を戻す）":"🛣 高速利用中（すべての通知を止める）"; b.classList.toggle("primary",man);
     m.textContent=man?`すべての通知（取締り・駐車禁止・乗り場・電車・飛行機）を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
@@ -8884,6 +8900,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   function geoCheck(p){
     const now=Date.now(), dLat=0.004, dLng=0.005;   // 約400m四方だけ細かく測る
     if(!offCfg.patrol&&GS.patrol.pts) ptSpeedCheck(p);
+    acCheck(p);
     sdPos={lat:p.lat,lng:p.lng,spd:p.spd,hd:p.hd,t:Date.now()}; sdHdFeed(p); sdUpdate();
     Object.keys(GEO).forEach(k=>{ const G=GEO[k], S=GS[k]; if(!S.pts||offCfg[k]) return;
       if(k==="patrol"){ ptCheck(p,now,dLat,dLng); return; }
@@ -8907,6 +8924,62 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   document.addEventListener("visibilitychange",geoWatch);
   if(PROD){ setTimeout(()=>Object.keys(GEO).forEach(k=>geoLoad(k)),3000); setInterval(()=>Object.keys(GEO).forEach(k=>geoLoad(k)),60*60*1000); } geoWatch();
+  // ===== 交通事故の多い場所（2026-11-17 本人指定）。取締りの画面の地図に重ねる。データは警察庁オープンデータを加工した accidents.json =====
+  // ます目（約110m四方）ごとに、種類5つ×昼夜の件数。多いほど濃い色。近づいたときの知らせは設定でオン（初めはオフ）
+  const AC_KEY="tenko.acCfg", AC_KINDS=["歩行者","自転車","バイク","車どうし","単独など"];
+  let acCfg={on:false,k:[1,1,1,1,1],t:"all",near:false,min:10,dist:80}; try{ Object.assign(acCfg,JSON.parse(localStorage.getItem(AC_KEY)||"{}")); }catch(e){}
+  let acData=null, acLy=null, acLoading=null; const acLast={};
+  const acSave=()=>{ try{ localStorage.setItem(AC_KEY,JSON.stringify(acCfg)); }catch(e){} };
+  function acLoad(){ if(acData) return Promise.resolve(acData);
+    if(!acLoading) acLoading=fetch("accidents.json").then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>(acData=j)).catch(()=>{ acLoading=null; return null; });
+    return acLoading; }
+  const acN=c=>{ let n=0; for(let k=0;k<5;k++){ if(!acCfg.k[k]) continue; if(acCfg.t!=="night") n+=c[2+k*2]; if(acCfg.t!=="day") n+=c[3+k*2]; } return n; };
+  const acCol=n=>n>=15?"#7A0019":n>=8?"#D32F2F":n>=4?"#F08C00":"#E6B800";
+  const acTimeTxt=()=>acCfg.t==="day"?"昼":acCfg.t==="night"?"夜":"昼も夜も";
+  function acPop(c){ const rows=AC_KINDS.map((nm,k)=>{ const d=c[2+k*2], n=c[3+k*2]; return d+n?`<tr><td>${nm}</td><td style="text-align:right">${d}</td><td style="text-align:right">${n}</td></tr>`:""; }).join("");
+    const yrs=acData&&acData.years?`${acData.years[0]}〜${acData.years[acData.years.length-1]}年`:"";
+    return `<div style="font-size:14px;line-height:1.5;min-width:180px"><b style="font-size:16px">交通事故 ${yrs}で${AC_KINDS.reduce((a,_,k)=>a+c[2+k*2]+c[3+k*2],0)}件</b>${c[12]?`<div style="color:#B71C1C;font-weight:800">うち死亡事故 ${c[12]}件</div>`:""}<table style="border-collapse:collapse;margin-top:4px"><tr><td></td><td>昼</td><td>夜</td></tr>${rows}</table><div style="font-size:12px;color:#666;margin-top:4px">約110m四方の中の人身事故の件数（警察庁オープンデータを加工）</div></div>`; }
+  function acUi(){
+    $("acOn").checked=!!acCfg.on; $("acNear").checked=!!acCfg.near; $("acTime").value=acCfg.t; $("acMin").value=acCfg.min; $("acDist").value=acCfg.dist;
+    $("acKinds").innerHTML=AC_KINDS.map((nm,k)=>`<label class="check" style="margin:0 10px 0 0"><input type="checkbox" data-ack="${k}" ${acCfg.k[k]?"checked":""}>${nm}</label>`).join("");
+    $("acKinds").querySelectorAll("[data-ack]").forEach(b=>b.onchange=()=>{ acCfg.k[+b.dataset.ack]=b.checked?1:0; acSave(); acDraw(); });
+    $("acLeg").innerHTML=[["#E6B800","2〜3件"],["#F08C00","4〜7件"],["#D32F2F","8〜14件"],["#7A0019","15件以上"]].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join("")+`<span>（3年・${acTimeTxt()}・選んだ種類）</span>`; }
+  async function acDraw(){
+    const S=GS.patrol; acUi();
+    if(acLy){ acLy.remove(); acLy=null; }
+    if(!acCfg.on||!S.map){ $("acMsg").textContent=""; return; }
+    if(!acData) $("acMsg").textContent="事故のデータを読み込んでいます…";
+    const d=await acLoad(); if(!d){ $("acMsg").textContent="事故のデータを読み込めませんでした。電波を確認してください"; return; }
+    if(!acCfg.on) return; if(acLy){ acLy.remove(); acLy=null; }
+    if(!S.map.getPane("acPane")){ const pn=S.map.createPane("acPane"); pn.style.zIndex=390; }   // 取締りの印（overlayPane＝400）より下に描く
+    const r=L.canvas({padding:0.3,pane:"acPane"}), z=S.map.getZoom(), b=S.map.getBounds().pad(0.3), minN=z<13?8:z<14?4:2; let shown=0, hid=0;
+    acLy=L.layerGroup().addTo(S.map);
+    d.c.forEach(c=>{ const n=acN(c); if(n<2) return; if(!b.contains([c[0],c[1]])) return; if(n<minN){ hid++; return; } shown++;
+      L.circleMarker([c[0],c[1]],{renderer:r,radius:z<=12?5:z===13?6:z===14?8:z===15?10:13,color:"#fff",weight:1.5,fillColor:acCol(n),fillOpacity:.85,bubblingMouseEvents:false}).bindPopup(()=>acPop(c)).addTo(acLy); });
+    $("acMsg").textContent=`この範囲の事故の多い場所 ${shown}か所${hid?`（地図を広く見ているので、${minN}件未満の${hid}か所は省いています。近づけると出ます）`:""}`; }
+  $("acOn").onchange=()=>{ acCfg.on=$("acOn").checked; acSave(); acDraw(); };
+  $("acTime").onchange=()=>{ acCfg.t=$("acTime").value; acSave(); acDraw(); };
+  $("acNear").onchange=()=>{ acCfg.near=$("acNear").checked; acSave(); if(acCfg.near) acLoad(); };
+  ["acMin","acDist"].forEach(id=>$(id).onchange=()=>{ const v=+$(id).value; if(id==="acMin") acCfg.min=Math.max(2,Math.min(50,Math.round(v)||10)); else acCfg.dist=Math.max(30,Math.min(300,Math.round(v)||80)); acSave(); acUi(); });
+  $("acBox").addEventListener("toggle",()=>{ if($("acBox").open) acUi(); });
+  $("acBannerClose").onclick=()=>{ $("acBanner").hidden=true; };
+  function acShow(c,n,d,test){
+    const parts=AC_KINDS.map((nm,k)=>{ const v=(acCfg.t!=="night"?c[2+k*2]:0)+(acCfg.t!=="day"?c[3+k*2]:0); return acCfg.k[k]&&v?`${nm}${v}`:""; }).filter(Boolean).join("・");
+    $("acBannerText").innerHTML=`<span class="ac1">🚑 事故の多い場所 あと約${Math.max(10,Math.round(d/10)*10)}m${test?`<i class="pbtest">テスト</i>`:""}</span><span class="ac2">3年で${n}件（${esc(parts)}）${c[12]?`・死亡事故${c[12]}件`:""}</span><span class="pbbtns"><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button><i class="pbbr"></i></span>`;
+    $("acBanner").hidden=false; clearTimeout(acShow.t); acShow.t=setTimeout(()=>{ $("acBanner").hidden=true; },15000); }
+  function acCheck(p){
+    if(!acCfg.near||Date.now()<hwUntil) return;
+    if(!acData){ acLoad(); return; }
+    if(!$("patrolBanner").hidden||!$("speedBanner").hidden) return;   // 取締りの知らせと重ねない（取締りが先）
+    const now=Date.now(), th=+acCfg.dist||80, mn=+acCfg.min||10; let best=null;
+    for(const c of acData.c){ if(Math.abs(c[0]-p.lat)>0.004||Math.abs(c[1]-p.lng)>0.005) continue;
+      const n=acN(c); if(n<mn) continue; const d=distM([p.lat,p.lng],[c[0],c[1]]); if(d>th) continue;
+      const key=c[0]+","+c[1]; if(acLast[key]&&now-acLast[key]<10*60e3) continue; if(!best||d<best.d) best={c,n,d,key}; }
+    if(!best) return; acLast[best.key]=now;
+    if(now-geoChimeAt>5000) geoChime("air"); acShow(best.c,best.n,best.d,false); }
+  $("acTestBan").onclick=async()=>{ const d=await acLoad(); if(!d){ $("acMsg").textContent="事故のデータを読み込めませんでした"; return; }
+    const c=d.c.slice().sort((a,b)=>acN(b)-acN(a))[0]; acShow(c,acN(c),80,true); window.scrollTo(0,0); };
+  if(acCfg.near) setTimeout(acLoad,5000);
   // 地図と近い順の一覧（取締り・乗り場で共通）
   async function renderGeoTab(k,first){
     const G=GEO[k], S=GS[k], P=G.pre, m=$(P+"Msg");
@@ -8934,6 +9007,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       else if(x[2].length>1) L.polyline(x[2],{color:cl,weight:6,opacity:.85}).bindPopup(pop).addTo(S.layer);
       else L.circleMarker(c,{radius:mzx&&mzx.star?10:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
     if(k==="rest2") mzListDraw();
+    if(k==="patrol"){ if(!S.acBound){ S.acBound=true; S.map.on("moveend",()=>{ if(acCfg.on) acDraw(); }); } acDraw(); }
     const setMe=p=>{ if(S.me) S.map.removeLayer(S.me); S.me=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(S.map); };
     if(first){ const p=await getPos(); if(p){ setMe(p); S.map.setView([p.lat,p.lng],15); } else if(xs.length) S.map.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
     if(S.me){ const me=S.me.getLatLng(), near=xs.map(x=>({x,d:geoD({lat:me.lat,lng:me.lng},x)})).sort((a,b)=>a.d-b.d).slice(0,15);
