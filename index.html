@@ -274,6 +274,9 @@ a.flink:active{background:var(--sunk)}
 .trlate{border-left-color:#E8742A;background:rgba(232,116,42,.14)}
 .busrow{border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px}.busrow.stop{border-left-color:#D23C2F;background:rgba(210,60,47,.08)}.busrow small{display:block;color:var(--muted);font-size:13px;margin-top:2px}.bustag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--warn);color:#fff;font-size:13px;font-weight:700}.busrow.stop .bustag{background:#D23C2F}.busguess{display:inline-block;margin-left:4px;padding:0 6px;border:1px dashed var(--muted);border-radius:6px;font-size:11px;color:var(--muted)}
 .shipnext{border:2px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}.shipnext .big{font-size:30px;font-weight:800}.shipnext .big span{font-size:16px;margin-left:10px;color:var(--accent)}.shipnext.s-late{border-color:#E8890C}.shipnext.s-cond{border-color:#E8890C}
+.crrow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px;display:grid;gap:2px}.crrow.big{border-left:5px solid #D23C2F;padding-left:8px;background:rgba(210,60,47,.07)}.crrow.past{opacity:.5}.crrow .crh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}.crrow .crn{font-size:17px;font-weight:800}.crrow .crb{display:flex;gap:8px;margin-top:4px}.crbig{color:#D23C2F;font-weight:800}
+.crform{display:grid;gap:8px;margin-top:8px}.crform .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crform input,.crform select{width:100%;font-size:16px}
+.patrolbanner.acbanner2{background:#E3F0FB;color:#123E66;border-bottom-color:#8DB8E0}.acbanner2 button{color:#123E66!important}
 .shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-wait .shipst{color:var(--accent)}.shipnext.s-wait{border-color:var(--accent)}
 .shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
 .noticepop{position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}.noticepop[hidden]{display:none}.noticebox{background:var(--surface);color:var(--ink);border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}.noticebox b{font-size:18px}.noticebox small{color:var(--muted)}#noticeText{font-size:16px;line-height:1.6;white-space:pre-wrap}.noticebox .btn{align-self:flex-end;min-width:120px}
@@ -705,6 +708,7 @@ body.rtfull{overflow:hidden}
 <div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
 <div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
 <div id="speedBanner" class="patrolbanner" hidden role="alert"><span id="speedBannerText"></span><button type="button" id="speedBannerClose" aria-label="閉じる">×</button></div>
+<div id="crBanner" class="patrolbanner acbanner2" hidden role="status"><span id="crBannerText" style="flex:1;min-width:0;font-size:17px;font-weight:700;line-height:1.5"></span><button type="button" id="crBannerClose" aria-label="閉じる">×</button></div>
 <div id="acBanner" class="patrolbanner acbanner" hidden role="status"><span id="acBannerText"></span><button type="button" id="acBannerClose" aria-label="閉じる">×</button></div>
 <div id="restBanner" class="patrolbanner restbanner" hidden role="alert"><span id="restBannerText"></span><button type="button" id="restBannerClose" aria-label="閉じる">×</button></div>
 <div id="standBanner" class="patrolbanner standbanner" hidden role="status"><span id="standBannerText"></span><button type="button" id="standBannerClose" aria-label="閉じる">×</button></div>
@@ -1045,7 +1049,7 @@ body.rtfull{overflow:hidden}
     <button role="tab" data-sub="yuryo" aria-selected="false" id="segYuryo">優良乗り場</button>
     <button role="tab" data-sub="rest2" aria-selected="false" id="segRest2">駐車禁止</button>
     <button role="tab" data-sub="bus" aria-selected="false" id="segBus">都営バス</button>
-    <button role="tab" data-sub="ship" aria-selected="false" id="segShip">竹芝の船</button>
+    <button role="tab" data-sub="ship" aria-selected="false" id="segShip">船</button>
   </div>
 
   <div class="wrap" id="subSv" hidden></div>
@@ -1243,7 +1247,34 @@ body.rtfull{overflow:hidden}
     </section>
   </div>
   <div class="wrap" id="subShip" hidden>
+    <!-- 2026-11-17 本人指定：「竹芝」を「船」に。竹芝の定期船とクルーズ船を選べる（両方いっしょにも） -->
     <section class="card">
+      <h2 style="margin:0 0 8px">船（試験）</h2>
+      <div class="seg" role="tablist" aria-label="出す船" id="shipModeSeg"><button role="tab" data-shipmode="tk">竹芝の定期船</button><button role="tab" data-shipmode="cr">クルーズ船</button><button role="tab" data-shipmode="both">両方</button></div>
+    </section>
+    <section class="card" id="crCard">
+      <div class="infohead"><h2>クルーズ船の入港予定</h2><button class="btn" id="crAddBtn">＋ 予定を足す</button></div>
+      <div class="src">東京国際クルーズターミナル（お台場・青海）と晴海客船ターミナルなどに入るクルーズ船の予定です。東京都港湾局の「客船入港予定」は、そのままアプリに取り込めない形（Power BI の画面）で公開されているので、見て手で入れてください。入れた予定は、このスマホの中だけに覚えます。</div>
+      <div class="btnrow"><a class="btn" style="text-decoration:none" href="https://www.kouwan.metro.tokyo.lg.jp/kanko/cruise" target="_blank" rel="noopener">港湾局の入港予定を開く</a></div>
+      <div id="crForm" class="crform" hidden>
+        <div class="row2"><div class="field"><label for="crDate">入港の日</label><input type="date" id="crDate"></div><div class="field"><label for="crTerm">ターミナル</label><select id="crTerm"><option>東京国際クルーズターミナル</option><option>晴海客船ターミナル</option><option>その他</option></select></div></div>
+        <div class="row2"><div class="field"><label for="crIn">入港の時刻</label><input type="time" id="crIn"></div><div class="field"><label for="crOut">出港の時刻</label><input type="time" id="crOut"></div></div>
+        <div class="field"><label for="crName">船の名前</label><input type="text" id="crName" autocomplete="off" placeholder="例：ダイヤモンド・プリンセス"></div>
+        <div class="row2"><div class="field"><label for="crPax">乗客の数（定員でも可）</label><input type="number" id="crPax" inputmode="numeric" min="0" placeholder="分からなければ空欄"></div><div class="field"><label for="crKind">発着の種類</label><select id="crKind"><option value="">不明</option><option>寄港（いったん降りて、また乗る）</option><option>発着（ここで乗り降りが入れ替わる）</option></select></div></div>
+        <div class="field"><label for="crMemo">メモ</label><input type="text" id="crMemo" autocomplete="off"></div>
+        <div class="btnrow"><button type="button" class="btn primary" id="crSave">保存</button><button type="button" class="btn" id="crCancel">やめる</button><button type="button" class="btn danger" id="crDel" hidden>この予定を消す</button></div>
+        <div class="msg" id="crFormMsg" role="status"></div>
+      </div>
+      <div id="crList"></div>
+      <details style="margin-top:10px"><summary><b>クルーズ船の設定</b></summary>
+        <div class="src" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px">乗客<input type="number" id="crBigN" min="100" step="100" inputmode="numeric" style="width:6em">人以上の船を目立たせる</div>
+        <div class="src" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">入港の<input type="number" id="crDays" min="0" max="14" inputmode="numeric" style="width:4em">日前から、アプリを開いたときに知らせる（0＝当日だけ）</div>
+        <label class="check"><input type="checkbox" id="crNotify"> 入港が近いことを知らせる</label>
+        <div class="btnrow"><button type="button" class="btn" id="crTestBan">🔔 知らせをテスト表示</button></div>
+      </details>
+      <div class="msg" id="crMsg" role="status"></div>
+    </section>
+    <section class="card" id="tkCard">
       <div class="infohead"><h2>竹芝桟橋に着く船（試験）</h2><div class="btnrow" style="margin:0"><button class="btn" id="shipCalBtn">カレンダー</button><button class="btn" id="shipReload">更新</button></div></div>
       <div class="src">伊豆諸島から竹芝桟橋に着く東海汽船の到着便です（今日から1か月分。日付やカレンダーで切り替え）。予定の時刻と、運行情報から分かる見込みの時刻を並べて出します。先の日は時刻表の予定だけです（欠航が前もって決まって運行情報に出ていれば入ります）。大型客船のほうが乗客・荷物が多いので目印を付けています。欠航は赤、遅れはオレンジです。</div>
       <div id="shipCal" hidden></div>
@@ -1734,7 +1765,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-17 10:16</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-17 10:30</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3303,7 +3334,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(s==="demand"&&!$("tabLong").hidden&&typeof dmOpen==="function") dmOpen();
     if(s==="bus"&&!$("tabLong").hidden&&typeof loadBus==="function") loadBus(false);
     if((s==="patrol"||s==="stand"||s==="yuryo"||s==="rest2")&&!$("tabLong").hidden&&typeof renderGeoTab==="function") renderGeoTab(s,true);
-    if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function") loadShip(false);
+    if(s==="ship"&&!$("tabLong").hidden&&typeof loadShip==="function"){ shipModeDraw(); if(shipMode!=="cr") loadShip(false); }
     if(s==="air"&&$("hcamBox")) $("hcamBox").open=false;   // カメラは画面を開くたびに閉じた状態から（押すと開く。2026-11-08 ユーザー指定）
     if(s==="air"&&!$("tabLong").hidden&&typeof loadAir==="function"){ loadAir(false); loadAir(false,airKind==="arr"?"dep":"arr"); }   // 到着・出発の両方を先に読む
   }
@@ -3320,7 +3351,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     ["📳 知らせてもらう","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["コミュニケーション","th-green",[["othello","⚫","オセロ","みんなのオセロ"],["mahjong","🀄","麻雀","みんなの三人麻雀"],["akabus","🚏","帰りのバス","帰りのバス（試験）"]],"仲間と遊ぶゲームです。別の画面で開きます。名前と合言葉を入れると、同じ合言葉の人と同じ部屋に入れます"],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","乗せた場所","乗せた場所の名前をまとめて確かめる"],["nk","🤝","仲間チェック","仲間チェック（休みの日・出番の日・この日の勤務・名簿）"],["help","📖","使い方","使い方"],["setup","🔰","最初の設定","最初の設定（社員コード・車種・キー）"],["nippoprep","📷","日報の準備","日報の読み取りの準備（Claude）"]]],
-    ["管理者だけ（試験）","th-gray",[["sheet","🗂️","記録の表","記録のスプレッドシート（速報・全データ・点呼時間・ログ）"],["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","竹芝の船","竹芝の船（試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]]];
+    ["管理者だけ（試験）","th-gray",[["sheet","🗂️","記録の表","記録のスプレッドシート（速報・全データ・点呼時間・ログ）"],["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","船","船（竹芝の定期船・クルーズ船。試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]]];
   // ゲーム（2026-10-28 ユーザー指定：全員に見せる。画面はGoogle Apps Scriptのまま、別の画面で開く）
   const GAME_URL={othello:"https://script.google.com/macros/s/AKfycbxYp1KUeMFi78Bosu62ENpUEGMhDmKF5i6ZGtnW1Lb-fcr72h1xVTeOb4QKe9tXvuLboQ/exec",mahjong:"https://script.google.com/macros/s/AKfycbzXOEdFxs6r-ftUzyWLZbU7qdX2DX3tshv5Vn2KOlE7BXjVQgNnYPqjNjvpBFuyOQ_2/exec"};
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
@@ -5136,6 +5167,63 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   setInterval(()=>{ if(curSub==="bus"&&!$("tabLong").hidden&&!document.hidden) loadBus(false); },180000);
 
+  // ===== 船の画面（2026-11-17 本人指定）：竹芝の定期船・クルーズ船・両方を切り替える =====
+  var shipMode="tk"; try{ shipMode=localStorage.getItem("tenko.shipMode")||"tk"; }catch(e){}
+  function shipModeDraw(){ if(!["tk","cr","both"].includes(shipMode)) shipMode="tk";
+    $("shipModeSeg").querySelectorAll("[data-shipmode]").forEach(b=>b.setAttribute("aria-selected",b.dataset.shipmode===shipMode));
+    $("tkCard").hidden=shipMode==="cr"; $("crCard").hidden=shipMode==="tk"; if(shipMode!=="tk") crDraw(); }
+  $("shipModeSeg").querySelectorAll("[data-shipmode]").forEach(b=>b.onclick=()=>{ shipMode=b.dataset.shipmode; try{ localStorage.setItem("tenko.shipMode",shipMode); }catch(e){} shipModeDraw(); if(shipMode!=="cr") loadShip(false); });
+  // ----- クルーズ船（手で入れる。このスマホの中だけ tenko.cruise。設定は tenko.cruiseCfg） -----
+  var crList=[], crCfg={bigN:2000,days:1,notify:true}, crEditId=null;   // 起動時に showSub から先に呼ばれても困らないよう var
+  try{ crList=JSON.parse(localStorage.getItem("tenko.cruise")||"[]")||[]; }catch(e){ crList=[]; }
+  try{ Object.assign(crCfg,JSON.parse(localStorage.getItem("tenko.cruiseCfg")||"{}")); }catch(e){}
+  const crSaveAll=()=>{ try{ localStorage.setItem("tenko.cruise",JSON.stringify(crList)); localStorage.setItem("tenko.cruiseCfg",JSON.stringify(crCfg)); return true; }catch(e){ return false; } };
+  const crToday=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  const crDaysTo=dt=>Math.round((new Date(dt+"T00:00:00")-new Date(crToday()+"T00:00:00"))/864e5);
+  const crBig=x=>x.pax!=null&&x.pax!==""&&+x.pax>=(+crCfg.bigN||2000);
+  function crDateTxt(dt){ const d=new Date(dt+"T00:00:00"), n=crDaysTo(dt); return `${d.getMonth()+1}/${d.getDate()}（${"日月火水木金土"[d.getDay()]}）${n===0?" 今日":n===1?" あした":n>1?` ${n}日後`:""}`; }
+  function crDraw(){
+    $("crBigN").value=crCfg.bigN; $("crDays").value=crCfg.days; $("crNotify").checked=!!crCfg.notify;
+    const t=crToday(), xs=crList.slice().sort((a,b)=>(a.date+(a.in||"")).localeCompare(b.date+(b.in||""))), up=xs.filter(x=>x.date>=t), past=xs.filter(x=>x.date<t).slice(-5);
+    const row=x=>`<div class="crrow${crBig(x)?" big":""}${x.date<t?" past":""}"><div class="crh"><span class="crn">🛳 ${esc(x.name||"（名前なし）")}</span><b>${crDateTxt(x.date)}</b></div>
+      <div>${esc(x.term||"")}・入港 ${x.in?esc(x.in):"不明"}・出港 ${x.out?esc(x.out):"不明"}</div>
+      <div>乗客 ${x.pax!=null&&x.pax!==""?`<span class="${crBig(x)?"crbig":""}">${Number(x.pax).toLocaleString()}人${crBig(x)?"（多い）":""}</span>`:"不明"}${x.kind?`・${esc(x.kind)}`:""}${x.memo?`・${esc(x.memo)}`:""}</div>
+      <div class="crb"><button type="button" class="btn" data-credit="${esc(x.id)}">直す</button>${x.date>=t?`<a class="btn" style="text-decoration:none" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.term&&x.term!=="その他"?x.term:"東京国際クルーズターミナル")}&travelmode=driving" target="_blank" rel="noopener">ルート案内</a>`:""}</div></div>`;
+    $("crList").innerHTML=(up.length?`<h3 style="margin:12px 0 6px">これからの入港（${up.length}件）</h3>`+up.map(row).join(""):`<div class="geo" style="margin-top:10px">これからの入港予定は入っていません。「＋ 予定を足す」から入れてください</div>`)
+      +(past.length?`<details style="margin-top:8px"><summary>過ぎた予定（最近の${past.length}件）</summary>${past.map(row).join("")}</details>`:"");
+    $("crList").querySelectorAll("[data-credit]").forEach(b=>b.onclick=()=>crOpen(b.dataset.credit)); }
+  function crOpen(id){ const x=id?crList.find(y=>y.id===id):null; crEditId=x?x.id:null;
+    $("crDate").value=x?x.date:crToday(); $("crTerm").value=x&&x.term?x.term:"東京国際クルーズターミナル"; $("crIn").value=x?x.in||"":""; $("crOut").value=x?x.out||"":"";
+    $("crName").value=x?x.name||"":""; $("crPax").value=x&&x.pax!=null?x.pax:""; $("crKind").value=x?x.kind||"":""; $("crMemo").value=x?x.memo||"":"";
+    $("crDel").hidden=!x; $("crDel").dataset.arm=""; $("crDel").textContent="この予定を消す"; $("crFormMsg").textContent=""; $("crForm").hidden=false; $("crName").focus(); }
+  $("crAddBtn").onclick=()=>crOpen(null);
+  $("crCancel").onclick=()=>{ $("crForm").hidden=true; crEditId=null; };
+  $("crSave").onclick=()=>{ const date=$("crDate").value, name=$("crName").value.trim();
+    if(!date||!name){ $("crFormMsg").textContent="入港の日と船の名前は入れてください"; return; }
+    const pv=$("crPax").value.trim(), x={id:crEditId||("c"+Date.now().toString(36)),date,term:$("crTerm").value,in:$("crIn").value,out:$("crOut").value,name,pax:pv===""?null:Math.max(0,Math.round(+pv)),kind:$("crKind").value,memo:$("crMemo").value.trim()};
+    const i=crList.findIndex(y=>y.id===x.id); if(i>=0) crList[i]=x; else crList.push(x);
+    if(!crSaveAll()){ $("crFormMsg").textContent="保存できませんでした（スマホの空きを確かめてください）"; return; }
+    $("crForm").hidden=true; crEditId=null; $("crMsg").textContent=`「${name}」を保存しました`; crDraw(); };
+  $("crDel").onclick=()=>{ const b=$("crDel"); if(!b.dataset.arm){ b.dataset.arm="1"; b.textContent="もう一度押すと消します"; return; }
+    crList=crList.filter(y=>y.id!==crEditId); crSaveAll(); $("crForm").hidden=true; crEditId=null; $("crMsg").textContent="予定を消しました"; crDraw(); };
+  $("crBigN").onchange=()=>{ crCfg.bigN=Math.max(100,Math.round(+$("crBigN").value)||2000); crSaveAll(); crDraw(); };
+  $("crDays").onchange=()=>{ crCfg.days=Math.max(0,Math.min(14,Math.round(+$("crDays").value)||0)); crSaveAll(); crDraw(); };
+  $("crNotify").onchange=()=>{ crCfg.notify=$("crNotify").checked; crSaveAll(); };
+  $("crBannerClose").onclick=()=>{ $("crBanner").hidden=true; };
+  // 入港が近い船を、アプリを開いたときに1日1回知らせる（何日前からかは設定。2026-11-17 本人指定）
+  function crShowBan(xs,test){
+    $("crBannerText").innerHTML=`🛳 クルーズ船の入港が近いです${test?`<i class="pbtest">テスト</i>`:""}<br>`+xs.slice(0,3).map(x=>`<b>${crDateTxt(x.date)}</b> ${esc(x.name)}（${esc(x.term||"")}・入港 ${x.in?esc(x.in):"不明"}${x.pax!=null&&x.pax!==""?`・乗客${Number(x.pax).toLocaleString()}人`:""}${crBig(x)?"・多い":""}）`).join("<br>")+(xs.length>3?`<br>ほか${xs.length-3}件`:"")
+      +`<span class="pbbtns" style="display:flex"><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button><i class="pbbr"></i></span>`;
+    $("crBanner").hidden=false; clearTimeout(crShowBan.t); crShowBan.t=setTimeout(()=>{ $("crBanner").hidden=true; },30000); }
+  function crCheck(){
+    if(!crCfg.notify||Date.now()<hwUntil) return;
+    const xs=crList.filter(x=>{ const n=crDaysTo(x.date); return n>=0&&n<=(+crCfg.days||0); }).sort((a,b)=>a.date.localeCompare(b.date)); if(!xs.length) return;
+    const key=crToday()+"|"+xs.map(x=>x.id).join(","); let last=""; try{ last=localStorage.getItem("tenko.cruiseNotified")||""; }catch(e){}
+    if(last===key) return; try{ localStorage.setItem("tenko.cruiseNotified",key); }catch(e){}
+    crShowBan(xs,false); }
+  $("crTestBan").onclick=()=>{ const t=crToday(), xs=crList.filter(x=>x.date>=t).sort((a,b)=>a.date.localeCompare(b.date));
+    crShowBan(xs.length?xs:[{id:"t",date:t,name:"（試し）ダイヤモンド・プリンセス",term:"東京国際クルーズターミナル",in:"07:00",pax:2700}],true); window.scrollTo(0,0); };
+  setTimeout(crCheck,6000);
   // ===== 試験（管理者のみ）：竹芝桟橋に着く船（東海汽船） =====
   let shipData=null, shipAt=0, shipBusy=false, shipDay=null;
   $("shipCalBtn").onclick=()=>{ $("shipCal").hidden=!$("shipCal").hidden; };
@@ -8854,7 +8942,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) hwHideAll(); ptHwRender(); }
   // 高速利用中：取締りだけでなく、駐車禁止・日交乗り場・優良乗り場・森ビル乗り場・電車・飛行機の帯もすべて消して、終わるまで出さない（2026-11-16 ユーザー指定）
-  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner","acBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
+  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner","acBanner","crBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
     b.textContent=man?"🛣 高速利用中を終える（すべての通知を戻す）":"🛣 高速利用中（すべての通知を止める）"; b.classList.toggle("primary",man);
     m.textContent=man?`すべての通知（取締り・駐車禁止・乗り場・電車・飛行機）を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
