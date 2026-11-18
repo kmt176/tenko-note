@@ -707,6 +707,24 @@ body.rtfull{overflow:hidden}
 .tpb{border:2px solid #D23C2F;border-radius:10px;padding:8px 10px;margin:6px 0;font-size:15px;line-height:1.5}.tpb b{color:#D23C2F}
 .patrolbanner.wbbanner{background:#C62828;color:#fff;border-color:#8E1B1B}
 .crauto{display:inline-block;margin-left:6px;padding:0 6px;border-radius:6px;background:#1D6A80;color:#fff;font-size:12px;font-weight:700;vertical-align:2px}
+/* 売上の画面だけ、行間とすき間を詰める（文字の大きさはそのまま。押すものは高さ44pxより小さくしない。2026-11-18 本人指定） */
+#tabSales{line-height:1.4}
+#tabSales.wrap,#tabSales .wrap{gap:8px}
+#tabSales .card{padding:10px 12px;gap:8px}
+#tabSales .meter{padding:10px 12px;gap:6px}
+#tabSales details{padding:8px 12px}
+#tabSales .list{gap:6px}
+#tabSales .ride{padding:8px 12px;gap:2px}
+#tabSales .ride .chip{padding:1px 8px}
+#tabSales .sumgrid{gap:6px}
+#tabSales .sumgrid div{padding:5px 8px}
+#tabSales .src{line-height:1.4}
+#tabSales .nkt th,#tabSales .nkt td{height:36px;padding:2px 6px}
+#tabSales input[type=text],#tabSales input[type=number],#tabSales input[type=date],#tabSales input[type=time]{min-height:44px;padding:7px 10px}
+#tabSales .nkt td input{min-height:32px;padding:2px 4px}
+#tabSales .add{padding:10px}
+#tabSales .grp{padding:8px 10px;gap:6px}
+#tabSales .ridebtns{gap:8px}
 </style>
 
 <div id="obView" class="obview" hidden role="dialog" aria-modal="true" aria-labelledby="obTitle"><div class="obin2"><div class="obtop"><h2 id="obTitle"></h2><span class="obcount" id="obCount"></span></div><div id="obBody"></div><div class="obmsg" id="obMsg" role="alert"></div><div class="obnav"><button type="button" class="obbig" id="obBack">◀ 戻る</button><button type="button" class="obbig primary" id="obNext">次へ ▶</button></div><button type="button" class="obsub" id="obSkip" hidden></button><button type="button" class="obsub" id="obLater">あとで（閉じる）</button></div></div>
@@ -1824,7 +1842,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 21:45</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 22:00</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
