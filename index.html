@@ -245,6 +245,8 @@ a.flink:active{background:var(--sunk)}
 .ridebtn .check .vtext{writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px}
 /* 売上画面の「連続配車 開始」は「乗車」ボタンと同じ横幅に（右の「押し忘れ」の幅50px＋すき間8pxをあける。2026-11-01 ユーザー指定） */
 .ridebtns>.rzbtn{margin-right:58px}
+/* コアタイム以外の「連続配車 開始」は、白い地に黒い字のふつうのボタン（色が付くのはコアタイム中に下に出るボタンだけ。2026-11-18 本人指定） */
+.ridebtns>.rzbtn:not(.on){border-color:var(--line);color:var(--ink);background:var(--surface)}
 .bigbtn{border:0;border-radius:14px;padding:18px 16px;font-size:26px;font-weight:700;background:var(--accent);color:var(--accent-ink);display:grid;gap:2px;text-align:center}
 .bigbtn small{font-size:15px;font-weight:400;opacity:.9}
 .bigbtn.off{background:var(--ok);color:#fff}
@@ -397,7 +399,7 @@ a.flink:active{background:var(--sunk)}
 .rzbtn{display:grid;gap:2px;text-align:center;padding:12px 10px;font-size:19px;font-weight:700;border:2px solid var(--accent);color:var(--accent);background:var(--surface)}
 .rzbtn small{font-size:13.5px;font-weight:400;color:var(--muted)}
 .rzbtn.on{background:var(--accent-soft);border-color:var(--accent)}
-.rzfloat{position:fixed;left:10px;right:10px;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:4}
+.rzfloat{position:fixed;left:10px;right:68px;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:4}
 .rzfloat .rzbtn{width:100%;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .rzfloat .rzbtn.rzneed{background:var(--pink-soft);border-color:var(--pink-line);color:var(--bad)}
 .pbrow{border-top:1px solid var(--line);padding:8px 0}.pbrow.pbdone{opacity:.75}
@@ -506,6 +508,7 @@ body.rtfull{overflow:hidden}
 .paytbl td{padding:5px 2px;border-bottom:1px solid var(--line)}
 .paytbl td.n{text-align:right;font-family:var(--num)}
 .paytbl tr.tot td{font-weight:700;border-bottom:0}
+.svsum{font-size:17px;font-weight:700;cursor:pointer;padding:2px 0}
 .paydet{margin-top:10px}.paydet>summary{font-size:15px;font-weight:700;cursor:pointer;padding:6px 0}.paytop{margin-top:4px}.paytop tr.tot td{border-top:2px solid var(--line)}.paytop tr.ex td{color:var(--muted);font-size:14px;border-bottom:0;padding-top:2px;padding-bottom:2px}
 .nokin{display:flex;justify-content:space-between;align-items:baseline;background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin-top:4px}
 .nokin .v{font-size:26px}
@@ -866,7 +869,8 @@ body.rtfull{overflow:hidden}
   <div class="wrap" id="sDetail">
     <div id="sNow"></div>
     <section class="card" id="svCard" hidden>
-      <div class="btnrow"><button class="btn primary" id="svStart">乗車接遇</button><button class="btn primary" id="svOff">降車接遇</button><button class="btn danger" id="svStop" disabled>止める</button></div>
+      <details id="svDet"><summary class="svsum" id="svSumText">接遇チェック（試験）</summary>   <!-- 2026-11-18 本人指定：プルダウンに。開いた・閉じたは tenko.svOpen -->
+      <div class="btnrow" style="margin-top:8px"><button class="btn primary" id="svStart">乗車接遇</button><button class="btn primary" id="svOff">降車接遇</button><button class="btn danger" id="svStop" disabled>止める</button></div>
       <div class="btnrow" style="margin-top:8px"><button type="button" class="btn" id="svEn">🌐 英語の接遇（文例集・練習）</button></div>
       <div id="svStat" class="geo">止まっています</div>
       <div id="svList" class="svlist"></div>
@@ -877,8 +881,9 @@ body.rtfull{overflow:hidden}
         <div class="src">今の音の大きさが棒で出ます。降車接遇を押したあと、縦線（赤）を超える音が1回鳴ると「バン」と数えて終わります。</div>
       </details>
       <details><summary>聞き取った文字（確認用・保存しません）</summary><div id="svText" class="src" style="white-space:pre-wrap"></div></details>
-      <div class="infohead"><h2 id="svTitleText">接遇チェック（試験）</h2></div>
+      <div class="infohead" hidden><h2 id="svTitleText">接遇チェック（試験）</h2></div>
       <div class="src" id="svDescText">乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。</div>
+    </details>
     </section>
     <div class="geo" id="sStatus" role="status"></div>
     <div class="list" id="sList"></div>
@@ -1819,7 +1824,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 21:19</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 21:45</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2038,6 +2043,12 @@ body.rtfull{overflow:hidden}
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="in">
     <h2 id="sheetTitle">勤務の入力</h2>
+    <!-- 保存・閉じる・削除は、売上の乗車の入力と同じく上の右に（2026-11-18 本人指定） -->
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn primary" id="saveBtn">保存</button>
+      <button class="btn" id="cancelBtn">閉じる</button>
+      <button class="btn danger" id="delBtn">削除</button>
+    </div>
     <div class="field"><label for="fDate">出社日</label><input type="date" id="fDate"></div>
     <div class="field"><label for="fSh">勤務の種類</label><select id="fSh"><option value="">隔日勤務</option><option value="昼">日勤（昼）</option><option value="夜">夜勤（夜）</option></select></div>
     <div class="grp">
@@ -2057,11 +2068,6 @@ body.rtfull{overflow:hidden}
     </div>
     <label class="check"><input type="checkbox" id="fKode">公休出勤（公出）<br><small>公休日に出勤した勤務に付けます。勤務の一覧に「公出」と出ます</small></label>
     <div class="live" id="live"></div>
-    <div class="btnrow">
-      <button class="btn primary" id="saveBtn">保存</button>
-      <button class="btn" id="cancelBtn">閉じる</button>
-      <button class="btn danger" id="delBtn">削除</button>
-    </div>
   </div>
 </div>
 
@@ -3100,8 +3106,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 一般の人には、ロング判定のボタンと使い方を出さない
   const SV_DESC_DEFAULT=`乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。`;
   // 接遇チェックの見出し・説明文（管理者が変えられる）。アプリを開いたときに「cars」で全員が受け取る
+  // 接遇チェックのプルダウンの開いた・閉じたを覚える（初めは閉じる）。動いている間は閉じても止めない
+  (()=>{ const d=$("svDet"); try{ d.open=localStorage.getItem("tenko.svOpen")==="1"; }catch(e){}
+    d.addEventListener("toggle",()=>{ try{ localStorage.setItem("tenko.svOpen",d.open?"1":""); }catch(e){} }); })();
   function applySvText(){
-    $("svTitleText").textContent=cfg.svTitle||"接遇チェック（試験）";
+    $("svTitleText").textContent=cfg.svTitle||"接遇チェック（試験）"; $("svSumText").textContent=cfg.svTitle||"接遇チェック（試験）";
     $("svDescText").innerHTML=cfg.svDesc?esc(cfg.svDesc).replace(/\n/g,"<br>"):SV_DESC_DEFAULT;
   }
   function applyRole(){
