@@ -735,6 +735,15 @@ body.rtfull{overflow:hidden}
 #menuHome .mgrp{margin:10px 0 6px}
 #menuHome .mgrp:first-child{margin-top:0}
 #menuHome .mdesc{margin:-2px 0 6px;line-height:1.4}
+.tkres{border-radius:14px;padding:16px 14px;color:#fff;display:grid;gap:6px}
+.tkres .tkh{font-size:34px;font-weight:900;line-height:1.2;text-align:center}
+.tkres .tkr{font-size:18px;line-height:1.45}
+.tkres .tkv{font-size:16px;background:rgba(255,255,255,.18);border-radius:10px;padding:8px 10px;line-height:1.5}
+.tkres .tkn{font-size:16px;background:rgba(0,0,0,.18);border-radius:10px;padding:8px 10px;line-height:1.5}
+.tkres.ok{background:#1E8E3E}.tkres.ng{background:#C62828}.tkres.warn{background:#F2B705;color:#2A2000}.tkres.warn .tkv,.tkres.warn .tkn{background:rgba(255,255,255,.45)}
+.tkbig{width:100%;font-size:20px;padding:16px}
+.tkrow{border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:4px 0;font-size:14px;line-height:1.45}
+.tkrow.chk{background:#FFF3C4;color:#3A2E00;border-color:#E0A800}
 </style>
 
 <div id="obView" class="obview" hidden role="dialog" aria-modal="true" aria-labelledby="obTitle"><div class="obin2"><div class="obtop"><h2 id="obTitle"></h2><span class="obcount" id="obCount"></span></div><div id="obBody"></div><div class="obmsg" id="obMsg" role="alert"></div><div class="obnav"><button type="button" class="obbig" id="obBack">◀ 戻る</button><button type="button" class="obbig primary" id="obNext">次へ ▶</button></div><button type="button" class="obsub" id="obSkip" hidden></button><button type="button" class="obsub" id="obLater">あとで（閉じる）</button></div></div>
@@ -1778,6 +1787,38 @@ body.rtfull{overflow:hidden}
     </div>
   </details>
 
+  <!-- タクシーチケットの受け取り確認（2026-11-18 本人指定）。一覧はサーバーから（社員コードを入れた人だけ）。写真は保存しない -->
+  <section class="card" id="ticketCard" hidden>
+    <div id="tkResult" class="tkres" hidden role="status" aria-live="polite"></div>
+    <div class="btnrow"><button type="button" class="btn primary tkbig" id="tkShot">📷 写真を撮って確かめる</button></div>
+    <input type="file" id="tkFile" accept="image/*" capture="environment" hidden>
+    <div class="msg" id="tkMsg" role="status"></div>
+    <details id="tkFormBox"><summary id="tkFormSum">⌨ 手で入れて確かめる（読み取った値を直すときも）</summary>
+      <div class="field" style="margin-top:6px"><label for="tkType">チケットの種類</label><select id="tkType">
+        <option value="">分からない・その他</option><option>日本交通グループ共通</option><option>東京四社</option><option>伊藤忠グループ共通</option><option>JTB</option><option>JCB</option><option>自社券</option><option>品川区商品券</option><option>みなトクPay（港区商品券）</option></select></div>
+      <div class="pair"><div class="field"><label for="tkCode">会社コード</label><input type="text" id="tkCode" autocomplete="off" inputmode="text"></div>
+        <div class="field"><label for="tkNo">チケット番号</label><input type="text" id="tkNo" autocomplete="off" inputmode="numeric"></div></div>
+      <div class="field" id="tkDeptF"><label for="tkDept">部（社）名のコード（伊藤忠グループ共通のとき）</label><input type="text" id="tkDept" autocomplete="off"></div>
+      <div class="field"><label for="tkName">会社名</label><input type="text" id="tkName" autocomplete="off"></div>
+      <div class="field"><label for="tkDate">チケットの日付（JTBのとき）</label><input type="date" id="tkDate"></div>
+      <div class="btnrow"><button type="button" class="btn primary" id="tkCheck">この内容で確かめる</button><button type="button" class="btn" id="tkClear">消す</button></div>
+    </details>
+    <details id="tkKeyBox"><summary>Geminiのキー（写真の読み取りに使う。このスマホの中だけ）</summary>
+      <div class="src" style="margin-top:6px">羽田プールのカメラと同じキーです。キーがなくても、上の「手で入れて確かめる」で確かめられます。</div>
+      <div class="field"><input type="password" id="tkKey" autocomplete="off" aria-label="Geminiのキー"></div>
+      <div class="btnrow"><button type="button" class="btn" id="tkKeySave">保存</button></div>
+    </details>
+    <label class="check"><input type="checkbox" id="tkSave"> 確かめた写真をこのスマホに保存する（初めはしない）</label>
+    <div class="src" id="tkListMsg"></div>
+    <div id="tkAdm" hidden>
+      <h3 style="margin:8px 0 4px;font-size:16px">受け取れないチケットの一覧（管理者）</h3>
+      <div class="src">足す・直す・消すは、記録の表のシート「受け取れないチケット」で行います（反映まで最大5分）。<b style="color:#B26A00">要確認</b>の行は黄色です。</div>
+      <div class="btnrow"><button type="button" class="btn" id="tkOpenSheet">記録の表を開く</button><button type="button" class="btn" id="tkReload">一覧を読み直す</button></div>
+      <div id="tkAdmList"></div>
+    </div>
+    <div class="src">写真はその場の照らし合わせだけに使い、保存しません（上のチェックを入れたときだけ、このスマホに保存します）。AIの読み取りはまちがえることがあるので、最後は読み取った会社コード・番号を目で確かめてください。一覧は会社の通達から作っています。</div>
+  </section>
+
   <section class="card" id="teigakuCard" hidden>
     <div class="btnrow"><button type="button" class="btn primary" id="tgvHere">📍 現在地から調べる</button></div>
     <div id="tgvHereOut" role="status" style="margin-bottom:10px"></div>
@@ -1852,7 +1893,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 22:24</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 22:53</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3438,7 +3479,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 並び（2026-11-14 見直しの提案5・ユーザー指定）：営業中に見る → お客様の対応 → 知らせてもらう → コミュニケーション → 設定・その他 → 管理者だけ
   const MENU_GROUPS=[
     ["営業中に見る","th-blue",[["toilet","🗺️","地図","地図（トイレ・駐車場・ホテルなど）"],["izakaya","🍶","飲み屋街","飲み屋街マップ"],["highway","🛣️","高速マップ","高速マップ"],["rest","☕","休憩場","休憩場"],["flash","👥","仲間の速報","仲間の速報"],["event","🎫","イベント","イベント"],["hosp","🏥","病院外来","病院の外来終了時間（試験）"],["ame","☔","雨予報","エリア別 雨予報"],["air","✈️","飛行機","羽田・成田の飛行機（到着・出発）"]]],
-    ["お客様の対応","th-green",[["long","📏","ロング判定","ロング判定（間に合うか）"],["teigaku","💴","定額運賃","定額運賃（羽田・成田・ディズニー）"]]],
+    ["お客様の対応","th-green",[["long","📏","ロング判定","ロング判定（間に合うか）"],["ticket","🎫","チケット確認","チケットの受け取り確認"],["teigaku","💴","定額運賃","定額運賃（羽田・成田・ディズニー）"]]],
     ["📳 知らせてもらう","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["コミュニケーション","th-green",[["othello","⚫","オセロ","みんなのオセロ"],["mahjong","🀄","麻雀","みんなの三人麻雀"],["akabus","🚏","帰りのバス","帰りのバス（試験）"]],"仲間と遊ぶゲームです。別の画面で開きます。名前と合言葉を入れると、同じ合言葉の人と同じ部屋に入れます"],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","乗せた場所","乗せた場所の名前をまとめて確かめる"],["nk","🤝","仲間チェック","仲間チェック（休みの日・出番の日・この日の勤務・名簿）"],["help","📖","使い方","使い方"],["setup","🔰","最初の設定","最初の設定（社員コード・車種・キー）"],["nippoprep","📷","日報の準備","日報の読み取りの準備（Claude）"]]],
@@ -3453,6 +3494,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     bk:{t:"💾 バックアップ",d:"点呼と売上をまとめたバックアップを作る・戻すところです。機種変更のときもここから。",ids:["bkBox"]},
     nk:{t:"🤝 仲間チェック",d:"社員コードを何人か入れると、全員が休みの日・出番の日や、その日の勤務を出します（管理者とグループ1の人だけ）。氏名・ニックネームの名簿は、このスマホの中だけに残します。",ids:["nkCard"]},
     pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]},
+    ticket:{t:"🎫 チケット確認",d:"お客様からタクシーチケットを受け取るときに、写真を撮って（または手で入れて）、受け取れないチケットの一覧と照らし合わせます。",ids:["ticketCard"]},
     teigaku:{t:"💴 定額運賃",d:"羽田空港・成田空港・東京ディズニーリゾートの定額運賃です。行き先と区を選ぶと、4つの料金が出ます。有料道路の料金は別です。",ids:["teigakuCard"]},
     place:{t:"🏥 乗せた場所の名前をまとめて確かめる",d:"乗せた場所の施設名を、一覧でまとめて確かめます（管理者とグループ1の人だけ）。",ids:["placeCard"]}};
   const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
@@ -3466,6 +3508,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(k==="nk") return isAdmin()||nkOk();
     if(k==="izakaya") return true;   // 飲み屋街マップは全員（2026-10-28 ユーザー指定）
     if(k==="teigaku") return true;   // 定額運賃は全員（2026-11-12）
+    if(k==="ticket") return /^\d{3,10}$/.test(String(cfg.empCode||"").trim());   // チケット確認は社員コードを入れた人全員（2026-11-18 本人指定。一覧が会社の通達なので）
     if(k==="highway") return true;   // 高速マップは全員（2026-11-12）
     if(k==="ame"||k==="hosp") return true;   // 雨予報・病院外来は全員（2026-10-29 ユーザー指定）
     if(k==="shin") return isAdmin();   // 新幹線は管理者だけ（2026-11-01 ユーザー指定）
@@ -3570,6 +3613,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(k==="pay"&&typeof renderPayDiff==="function") renderPayDiff();
     if(k==="place") pbOpen();
     if(k==="teigaku"){ $("teigakuCard").hidden=false; tgvRender(); }
+    if(k==="ticket"){ $("ticketCard").hidden=false; tkOpen(); }
     if(k==="nk"){ $("nkCard").hidden=false; enLoad(); }
   }
   const showSet=()=>showPage("set");
@@ -5251,6 +5295,133 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("hcamAiAuto").checked=!!hcamLS("tenko.hcamAuto",false);
   $("hcamAiAuto").onchange=()=>{ hcamLSet("tenko.hcamAuto",$("hcamAiAuto").checked); if($("hcamAiAuto").checked&&!gemStopped()) hcamAi(true); };
   $("hcamKey").value=hcamLS("tenko.gemkey","");
+  // ===== タクシーチケットの受け取り確認（2026-11-18 本人指定）=====
+  // 一覧はサーバーの ticketList（社員コードを入れた人だけ。記録の表のシート「受け取れないチケット」）。このスマホには tenko.tkList に控える（電波がないとき用）。
+  // 写真は Gemini（各自のキー tenko.gemkey）で読むだけで保存しない。推測で「使えます」は出さない：読めない所があれば黄色
+  var tkRows=null, tkAt=0, tkLast=null;
+  try{ const c=JSON.parse(localStorage.getItem("tenko.tkList")||"null"); if(c&&Array.isArray(c.rows)){ tkRows=c.rows; tkAt=c.at||0; } }catch(e){}
+  const TK_TODAY=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  const tkNC=v=>String(v||"").normalize("NFKC").toUpperCase().replace(/^\s*TC\.?/,"").replace(/[^0-9A-Z]/g,"").replace(/^0+(?=.)/,"");   // 会社コード：記号・「Tc.」・頭の0を外して比べる
+  const tkNN=v=>{ const d=String(v||"").normalize("NFKC").replace(/[^0-9]/g,""); return d?+d:null; };   // 番号：数字だけ
+  const tkNName=v=>String(v||"").normalize("NFKC").replace(/株式会社|\(株\)|（株）|\(有\)|有限会社|合同会社|[\s・･\-ー]/g,"");
+  // 一覧の「番号」：「1つ」「下〜上」「A・B」の書き方 → [[下,上],...]。範囲が逆なら入れ替えて、逆だったことを返す（一覧の中身はアプリに書かない）
+  function tkParseNo(t){ const out=[]; let rev=false;
+    String(t||"").normalize("NFKC").replace(/のみ|いずれか/g,"").split(/[・、,，\/]/).forEach(x=>{ const m=x.split(/[〜~～\-－]/).map(y=>y.replace(/[^0-9]/g,"")).filter(Boolean);
+      if(m.length>=2){ let a=+m[0], b=+m[1]; if(a>b){ rev=true; [a,b]=[b,a]; } out.push([a,b]); } else if(m.length===1) out.push([+m[0],+m[0]]); });
+    return {r:out,rev}; }
+  const TK_I={date:0,kind:1,name:2,code:3,type:4,no:5,why:6,memo:7,chk:8};
+  async function tkLoad(force){
+    if(!cfg.url){ tkShowList(); return; }
+    if(!force&&tkRows&&Date.now()-tkAt<60*60e3){ tkShowList(); return; }
+    try{ const j=await post({action:"ticketList",code:String(cfg.empCode||"")});
+      if(j&&j.ok&&Array.isArray(j.rows)){ tkRows=j.rows; tkAt=Date.now(); try{ localStorage.setItem("tenko.tkList",JSON.stringify({at:tkAt,rows:tkRows})); }catch(e){} }
+      else if(!tkRows) $("tkListMsg").textContent=(j&&j.error)||"一覧を読めませんでした"; }
+    catch(e){ if(!tkRows) $("tkListMsg").textContent="一覧を読めませんでした（電波）"; }
+    tkShowList(); }
+  function tkShowList(){
+    const d=tkAt?new Date(tkAt):null;
+    $("tkListMsg").textContent=tkRows?`受け取れないチケットの一覧：${tkRows.length}件（${d?`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}に読んだ分`:""}）`:($("tkListMsg").textContent||"一覧をまだ読んでいません");
+    const adm=isAdmin(); $("tkAdm").hidden=!adm; if(!adm||!tkRows) return;
+    const I=TK_I, chk=tkRows.filter(r=>r[I.chk]);
+    $("tkAdmList").innerHTML=(chk.length?`<div class="src" style="color:#B26A00;font-weight:700">要確認 ${chk.length}件</div>`:"")+tkRows.slice().sort((a,b)=>(!!b[I.chk])-(!!a[I.chk])).map(r=>`<div class="tkrow${r[I.chk]?" chk":""}"><b>${esc(r[I.name])}</b>（${esc(r[I.kind])}${r[I.code]?`・コード ${esc(r[I.code])}`:""}${r[I.type]?`・${esc(r[I.type])}`:""}）${r[I.no]?`<br>番号 ${esc(r[I.no])}`:""}<br><span style="opacity:.8">${esc(r[I.date])}・${esc(r[I.why])}${r[I.memo]?`・${esc(r[I.memo])}`:""}</span>${r[I.chk]?`<br><b>⚠ 要確認：${esc(r[I.chk])}</b>`:""}</div>`).join(""); }
+  // 照らし合わせ。x={type,code,dept,name,no,date,conf(AIが自信ありか),ai}
+  function tkJudge(x){
+    const I=TK_I, ng=[], warn=[], notes=[], info=[]; let camera=false;
+    const type=x.type||"", code=tkNC(x.code), dept=tkNC(x.dept), no=tkNN(x.no), nm=tkNName(x.name);
+    const isShoken=/商品券|みなトク/.test(type);
+    if(!tkRows) warn.push("受け取れないチケットの一覧を読めていないので、照らし合わせられません（電波を確かめて、もう一度開いてください）");
+    (tkRows||[]).forEach(r=>{
+      const rc=tkNC(r[I.code]), rn=tkNName(r[I.name]), kind=r[I.kind]||"", label=`${r[I.name]}${r[I.code]?`（コード ${r[I.code]}）`:""}`, why=r[I.why]||"受け取れません";
+      const itochu=/伊藤忠/.test(r[I.type]||"");
+      // 伊藤忠グループ共通は、部（社）名のコードで見る（07G だけ受け取れない）
+      const codeHit=!!rc&&(itochu?(dept===rc||(!dept&&code===rc&&/伊藤忠/.test(type))):(code===rc));
+      const nameHit=!!rn&&!!nm&&rn.length>=2&&(nm.includes(rn)||rn.includes(nm));
+      const chk=r[I.chk]?`（一覧の登録は要確認：${r[I.chk]}）`:"";
+      if(kind==="紛失"){
+        if(codeHit){ const {r:rg,rev}=tkParseNo(r[I.no]);
+          if(no==null) warn.push(`${label}は紛失届が出ている番号があります（${r[I.no]}）。チケット番号を確かめてください`);
+          else if(rg.some(([a,b])=>no>=a&&no<=b)){ ng.push(`${why}：${label} No.${r[I.no]}${chk}`); camera=true; if(rev||r[I.chk]) warn.push("この紛失届の番号は、一覧の書き方に確かめが要るものです。原本の通達も確かめてください"); }
+          else info.push(`${label}には紛失届がありますが、この番号（${x.no}）は入っていません`); }
+        else if(nameHit) warn.push(`会社名が、紛失届のある「${r[I.name]}」に似ています。会社コードと番号を確かめてください`);
+      } else {
+        if(codeHit) ng.push(`${why}：${label}${kind==="特定顧客のみ"?"（特定顧客名のみ受領拒否）":""}${chk}`);
+        else if(nameHit&&!rc) ng.push(`${why}：${label}${chk}`);   // 会社コードのない登録は会社名で
+        else if(nameHit) warn.push(`会社名が、受け取れない「${label}」に似ています。会社コードを確かめてください`);
+      }
+    });
+    // 種類ごとの注意（照らし合わせとは別）
+    if(/JTB/.test(type)){ if(!x.date) warn.push("JTBタクシーチケットは、チケットの日付が今日でないと請求できません。日付を確かめてください");
+      else if(x.date!==TK_TODAY()) ng.push(`JTBタクシーチケットの日付（${x.date.replace(/-/g,"/")}）が今日と違います。日付が違うと請求できません（前日用と当日用の2枚を持っていることが多いです）`); }
+    if(/JCB/.test(type)) notes.push("✍ 必ずお客様のサインをもらってください");
+    if(isShoken) notes.push("📝 裏面には何も書かないでください");
+    if(/伊藤忠/.test(type)&&!dept&&(tkRows||[]).some(r=>/伊藤忠/.test(r[TK_I.type]||""))) warn.push("伊藤忠グループ共通チケットは、部（社）名のコードで受け取れるかが決まります。部（社）名のコードを入れて確かめてください");   // どのコードかは一覧（サーバー）にだけ書く
+    if(camera) notes.push("🎥 紛失届のチケットを受け取ってしまったときは、車載カメラの画像を保管してください");
+    // 推測で「使えます」は出さない：会社コード（商品券はいらない）と番号が読めていて、AIが自信ありのときだけ緑
+    if(!ng.length){ if(!isShoken&&!code&&!(/伊藤忠/.test(type)&&dept)) warn.push("会社コードが読めていません。チケットの会社コードを入れて確かめてください");
+      if(!isShoken&&no==null) warn.push("チケット番号が読めていません。番号を入れて確かめてください");
+      if(x.ai&&x.conf===false) warn.push("AIの読み取りに自信がありません。読み取った値を目で確かめてください"); }
+    const lv=ng.length?"ng":warn.length?"warn":"ok";
+    return {lv,ng,warn,notes,info}; }
+  function tkShow(x,j){
+    const el=$("tkResult"), h=j.lv==="ok"?"⭕ 使えます":j.lv==="ng"?"✖ 受け取れません":"⚠ 確認してください";
+    const vals=[x.type&&`種類：${x.type}`,`会社コード：${x.code||(x.ai?"（読めず）":"（入れていない）")}`,x.dept&&`部（社）名コード：${x.dept}`,`番号：${x.no||(x.ai?"（読めず）":"（入れていない）")}`,x.name&&`会社名：${x.name}`,x.date&&`日付：${x.date.replace(/-/g,"/")}`].filter(Boolean);
+    el.className="tkres "+j.lv; el.hidden=false;
+    el.innerHTML=`<div class="tkh">${h}</div>${j.ng.map(t=>`<div class="tkr">${esc(t)}</div>`).join("")}${j.warn.map(t=>`<div class="tkr">⚠ ${esc(t)}</div>`).join("")}${j.info.map(t=>`<div class="tkr">${esc(t)}</div>`).join("")}
+      ${j.notes.length?`<div class="tkn">${j.notes.map(esc).join("<br>")}</div>`:""}<div class="tkv">${x.ai?"AIが読み取った値（まちがえることがあります。目で確かめてください）":"入れた値"}<br>${vals.map(esc).join("<br>")}</div>`;
+    el.scrollIntoView({block:"start",behavior:"smooth"}); }
+  function tkForm(){ return {type:$("tkType").value,code:$("tkCode").value.trim(),dept:$("tkDept").value.trim(),no:$("tkNo").value.trim(),name:$("tkName").value.trim(),date:$("tkDate").value}; }
+  function tkFill(x){ $("tkType").value=[...$("tkType").options].some(o=>o.value===x.type)?x.type:""; $("tkCode").value=x.code||""; $("tkDept").value=x.dept||""; $("tkNo").value=x.no||""; $("tkName").value=x.name||""; $("tkDate").value=x.date||""; }
+  $("tkCheck").onclick=()=>{ const x=tkForm(); tkLast=x; tkShow(x,tkJudge(x)); };
+  $("tkClear").onclick=()=>{ tkFill({}); $("tkResult").hidden=true; };
+  $("tkKey").value=hcamLS("tenko.gemkey","");
+  $("tkKeySave").onclick=()=>{ hcamLSet("tenko.gemkey",$("tkKey").value.trim()); $("tkMsg").textContent=$("tkKey").value.trim()?"キーを保存しました":"キーを消しました"; };
+  try{ $("tkSave").checked=localStorage.getItem("tenko.tkSave")==="1"; }catch(e){}
+  $("tkSave").onchange=()=>{ try{ localStorage.setItem("tenko.tkSave",$("tkSave").checked?"1":""); }catch(e){} };
+  $("tkOpenSheet").onclick=()=>{ if(cfg.flashUrl) window.open(cfg.flashUrl,"_blank","noopener"); else alert("記録の表の場所を、まだ受け取っていません"); };
+  $("tkReload").onclick=()=>tkLoad(true);
+  $("tkShot").onclick=()=>{ $("tkFile").value=""; $("tkFile").click(); };
+  // 写真を小さくして（長い辺1600px）JPEG に。保存しない
+  function tkImg(file){ return new Promise((ok,ng)=>{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>{ const k=Math.min(1,1600/Math.max(im.width,im.height)), c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(u); ok(c.toDataURL("image/jpeg",0.85)); }; im.onerror=()=>{ URL.revokeObjectURL(u); ng(new Error("写真を読めませんでした")); }; im.src=u; }); }
+  $("tkFile").onchange=async()=>{ const f=$("tkFile").files&&$("tkFile").files[0]; if(!f) return;
+    const key=hcamLS("tenko.gemkey","");
+    let url=""; try{ url=await tkImg(f); }catch(e){ $("tkMsg").textContent=e.message; return; }
+    if($("tkSave").checked){ const a=document.createElement("a"); a.href=url; a.download="チケット_"+TK_TODAY()+"_"+Date.now()+".jpg"; a.click(); }
+    if(!key){ $("tkMsg").textContent="Geminiのキーがないので、写真は読み取れません。下の「手で入れて確かめる」で入れてください"; $("tkFormBox").open=true; return; }
+    $("tkMsg").textContent="AIがチケットを読んでいます…（10秒ほど）"; $("tkShot").disabled=true;
+    try{ const x=await tkAi(key,url.split(",")[1]); tkFill(x); $("tkFormBox").open=true; tkLast=x; $("tkMsg").textContent="読み取りました。読み取った値がまちがっていたら、下で直して「この内容で確かめる」を押してください"; tkShow(x,tkJudge(x)); }
+    catch(e){ $("tkMsg").textContent="読み取れませんでした（"+(e.message||e)+"）。下の「手で入れて確かめる」で入れてください"; $("tkFormBox").open=true; }
+    finally{ $("tkShot").disabled=false; url=""; } };
+  // Gemini で読む（使える型を選ぶ・回数オーバーのときは別の型へ。羽田プールのカメラと同じやり方）
+  async function tkAi(key,b64){
+    const ask=`これは日本のタクシーで使うタクシーチケット（または商品券）の写真です。書いてある文字をそのまま読んでください。読めない・見えない項目は空の文字（""）にして、推測で埋めないでください。
+次の形のJSONだけで答えてください：{"type":"日本交通グループ共通・東京四社・伊藤忠グループ共通・JTB・JCB・自社券・品川区商品券・みなトクPay（港区商品券）のどれか。分からなければ空","code":"会社コード（契約先のコード。Tc. や No. の付く番号とは別）","dept":"部（社）名のコード（伊藤忠グループ共通のときだけ。英数字）","name":"会社名（契約先）","no":"チケット番号（No. の番号）","date":"チケットに書いてある日付（YYYY-MM-DD）","confident":会社コードと番号をはっきり読めたら true、少しでもあやしければ false}`;
+    const body={contents:[{parts:[{text:ask},{inline_data:{mime_type:"image/jpeg",data:b64}}]}],generationConfig:{responseMimeType:"application/json",temperature:0}};
+    const GEM="https://generativelanguage.googleapis.com/v1beta/", hdr={"Content-Type":"application/json","x-goog-api-key":key};
+    const out=gemOutNow(); let r=null, err="";
+    const tryM=async m=>{ const res=await fetch(`${GEM}models/${m}:generateContent`,{method:"POST",headers:hdr,body:JSON.stringify(body)});
+      if(res.ok){ r=await res.json(); hcamLSet("tenko.gemModel",m); return true; }
+      let d=""; try{ d=((await res.json()).error||{}).message||""; }catch(e){}
+      if(res.status===429){ out[m]=gemReset(); hcamLSet("tenko.gemOut",out); }
+      err=res.status===400&&/API key|api_key/i.test(d)||res.status===401||res.status===403?"キーが正しくないようです":res.status===429?"無料で使える回数を超えました（毎日17時ごろにリセット）":("AIの返事がありませんでした "+res.status);
+      return res.status===404||res.status===429||res.status===503?false:null; };
+    let ok=false; const saved=hcamLS("tenko.gemModel","");
+    if(saved&&!out[saved]) ok=await tryM(saved);
+    if(!r&&ok!==null){ let names=[];
+      try{ const lr=await fetch(`${GEM}models?pageSize=200`,{headers:{"x-goog-api-key":key}}); const lj=await lr.json(); if(!lr.ok) throw new Error(((lj.error||{}).message)||String(lr.status));
+        names=(lj.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes("generateContent")).map(m=>m.name.replace(/^models\//,"")).filter(n=>/flash/.test(n)&&!/image|tts|audio|live|thinking|exp|embed/.test(n)); }
+      catch(e){ err="使えるAIを調べられませんでした"; }
+      const ver=n=>parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/)||[])[1]||0);
+      names.sort((a,b)=>ver(b)-ver(a)||(/lite/.test(a)-/lite/.test(b))||(/preview/.test(a)-/preview/.test(b))||a.length-b.length);
+      for(const m of names.filter(n=>n!==saved&&!out[n]).slice(0,4)){ ok=await tryM(m); if(r||ok===null) break; } }
+    if(!r) throw new Error(err||"AIの返事がありませんでした");
+    { const c=gemCnt(); c.n++; hcamLSet("tenko.gemCnt",c); }
+    const txt=(((r.candidates||[])[0]||{}).content||{}).parts?.map(p=>p.text||"").join("")||"";
+    let j={}; try{ j=JSON.parse(txt.replace(/^```(json)?|```$/g,"").trim()); }catch(e){ throw new Error("AIの答えを読めませんでした"); }
+    const t=String(j.type||""), dt=/^\d{4}-\d{2}-\d{2}$/.test(String(j.date||""))?String(j.date):"";
+    return {type:t,code:String(j.code||"").trim(),dept:String(j.dept||"").trim(),name:String(j.name||"").trim(),no:String(j.no||"").trim(),date:dt,conf:j.confident===true,ai:true}; }
+  function tkOpen(){ $("tkMsg").textContent=""; tkShowList(); tkLoad(false); }
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) window.__tk={judge:tkJudge,parseNo:tkParseNo,set:r=>{ tkRows=r; }};
+
   $("hcamKeySave").onclick=()=>{ const v=$("hcamKey").value.trim(); hcamLSet("tenko.gemkey",v); $("hcamAiOut").textContent=v?"キーを保存しました。「今の写真を読む」を押してください":"キーを消しました"; if(v) $("hcamKeyBox").open=false; };
   $("hcamAiBox").hidden=!HCAM_PROXY;
   hcamPoolDraw(); hcamCntShow(); var hcamReady=true;
@@ -7532,7 +7703,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
               :`<button class="bigbtn" id="bOn">乗車<small>押した時刻・場所・天気を記録します</small></button>`}
         <label class="check"><input type="checkbox" id="bUnsure"><span class="vtext">押し忘れ</span></label>
         </div>
-        ${car().rz?`<button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>`:""}
+        ${car().rz&&(hasOut||evOpen(RZ))?`<button class="btn rzbtn${evOpen(RZ)?" on":""}" id="bRz">${evOpen(RZ)?`連続配車 終了<small>${tm(evOpen(RZ).on)} から ${hm(n-evOpen(RZ).on)}</small>`:"連続配車 開始<small>手上げを取らず迎車だけを受ける時間を記録します</small>"}</button>`:""}
         <div class="evbtns">
           <button class="btn${evOpen("回送")?" on":""}" data-ev="回送">${evOpen("回送")?"回送終了":"回送"}</button>
           <button class="btn${evOpen("休憩")?" on":""}" data-ev="休憩">${evOpen("休憩")?"休憩終了":"休憩"}</button>
@@ -7757,6 +7928,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const wkMode=!offCfg.rzweek;   // 週の目標（60%など）を使うときは、コアタイムではなく週の目標で出す（2026-10-23 ユーザー指定：60%をやるときはコアタイムは必ず満たすので管理不要）
     // 週の目標（60%など）を使うときも、ピンクのボタンはコアタイム中だけ出す（2026-10-28 ユーザー指定。それ以外の時間は、もともとのボタン）
     if(!car().rz||offCfg.buttons||!k||getDay(k).mode==="simple"||(!inCoreTime()&&!rzFloatTest)){ el.hidden=true; return; }
+    if(!rzFloatTest&&!getDay(k).rides.some(r=>r.kind==="出庫"&&r.on!=null)){ el.hidden=true; return; }   // 出庫を押すまでは出さない（2026-11-18 本人指定）
     if(wkMode){
       const d0=getDay(k), open0=d0.rides.find(r=>r.kind===RZ&&r.on!=null&&r.off==null), n0=nowMin(k);
       const w=weekOf(nowAbsMin()), W=rzWeekCalc(w), PC=rzPlanCalc(w), ra=rate(W.act), goal=W.rule.pct/100, diff=PC.toNow.d?W.act.n-PC.toNow.n:null;
