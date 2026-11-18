@@ -575,6 +575,8 @@ body.rtfull{overflow:hidden}
 #speedBannerText .sp2{font-size:34px;font-weight:900;line-height:1.1;word-break:break-all}
 #speedBannerText .sp3{font-size:18px;font-weight:800}
 #speedBannerClose{font-size:30px!important;padding:0 4px!important}.acbanner{background:#FDE2E4;color:#7A0019;border-bottom-color:#E8949C}.acbanner button{color:#7A0019!important}#acBannerText{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}#acBannerText .ac1{font-size:24px;font-weight:900}#acBannerText .ac2{font-size:16px;font-weight:700}
+ .ksitem{border-left:5px solid #C62828;padding:6px 8px;margin:6px 0;background:rgba(198,40,40,.06);border-radius:6px}.ksitem b{font-size:16px}.ksitem .ksw{font-size:14px}.ksitem.now{background:rgba(198,40,40,.14)}
+.ksdraw{outline:4px solid #C62828;outline-offset:-4px}.patrolbanner.ksbanner{background:#FFE4E1;color:#7F0000;border-bottom-color:#E57373}.ksbanner button{color:#7F0000!important}
 .acleg{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;color:var(--muted);margin-top:6px}.acleg i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:3px;border:1px solid #fff}
 .restbanner{background:#FFE2C7;color:#7A3B00;border-bottom-color:#F0A35E}.restbanner button{color:#7A3B00!important}
 .standbanner{background:#DDF3E4;color:#1E5A36;border-bottom-color:#8FCDA6}.standbanner button{color:#1E5A36!important}.patrolbanner button{background:transparent;border:0;color:#5A4300;font-size:24px;line-height:1;padding:0 4px;flex:none}
@@ -710,6 +712,7 @@ body.rtfull{overflow:hidden}
 <div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
 <div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
 <div id="speedBanner" class="patrolbanner" hidden role="alert"><span id="speedBannerText"></span><button type="button" id="speedBannerClose" aria-label="閉じる">×</button></div>
+<div id="ksBanner" class="patrolbanner ksbanner" hidden role="status"><span id="ksBannerText" style="flex:1;min-width:0;font-size:17px;font-weight:700;line-height:1.5"></span><button type="button" id="ksBannerClose" aria-label="閉じる">×</button></div>
 <div id="crBanner" class="patrolbanner acbanner2" hidden role="status"><span id="crBannerText" style="flex:1;min-width:0;font-size:17px;font-weight:700;line-height:1.5"></span><button type="button" id="crBannerClose" aria-label="閉じる">×</button></div>
 <div id="acBanner" class="patrolbanner acbanner" hidden role="status"><span id="acBannerText"></span><button type="button" id="acBannerClose" aria-label="閉じる">×</button></div>
 <div id="restBanner" class="patrolbanner restbanner" hidden role="alert"><span id="restBannerText"></span><button type="button" id="restBannerClose" aria-label="閉じる">×</button></div>
@@ -1406,6 +1409,29 @@ body.rtfull{overflow:hidden}
         <div class="src">知らせは初めはオフです。取締り・速度取締りの帯が出ている間と、高速利用中は出しません。同じ場所は10分あけます。数えるのは、上で選んだ種類・時間帯の事故です。</div>
         <div class="src" id="acSrc">出典：警察庁「交通事故統計情報のオープンデータ」（本票）を加工して作成。人身事故（死亡・負傷）だけで、物損事故は入っていません。約110m四方ごとに数え、3年で2件以上の場所だけを出しています。</div>
       </details>
+      <!-- 大規模な交通規制（2026-11-18 本人指定：マラソン・駅伝・花火・お祭り・要人の来日など。細かい道路工事は入れない） -->
+      <details id="ksBox" style="margin:0 0 10px"><summary><b>🚧 大規模な交通規制</b>（マラソン・駅伝・花火大会・お祭り・要人の来日など）</summary>
+        <label class="check" style="margin-top:8px"><input type="checkbox" id="ksOn" checked> 通行止めの道を地図に赤い線で出す</label>
+        <div class="seg" role="tablist" aria-label="いつの規制" id="ksWhen" style="margin-top:6px"><button role="tab" data-ksw="today">今日</button><button role="tab" data-ksw="tomorrow">明日</button><button role="tab" data-ksw="week">今週</button><button role="tab" data-ksw="all">すべて</button></div>
+        <div class="msg" id="ksMsg" role="status"></div>
+        <div id="ksList"></div>
+        <div id="ksAdm" hidden style="margin-top:8px">
+          <div class="btnrow"><button type="button" class="btn" id="ksAdd">＋ 規制を登録する（管理者）</button></div>
+          <div id="ksForm" class="crform" hidden>
+            <div class="field"><label for="ksName">名前</label><input type="text" id="ksName" autocomplete="off" placeholder="例：東京マラソン2027"></div>
+            <div class="field"><label for="ksKind">種類</label><select id="ksKind"><option>マラソン・駅伝</option><option>花火大会</option><option>お祭り</option><option>要人の来日</option><option>その他</option></select></div>
+            <div class="row2"><div class="field"><label for="ksStart">始まり</label><input type="datetime-local" id="ksStart"></div><div class="field"><label for="ksEnd">終わり</label><input type="datetime-local" id="ksEnd"></div></div>
+            <div class="field"><label for="ksNote">内容（通行止めの区間・迂回など）</label><textarea id="ksNote" rows="3"></textarea></div>
+            <div class="src">通行止めの道は、下の「地図で線を引く」を押してから、上の地図の道の上を順に押していきます。1本終わったら「この線を終える」。何本でも引けます。</div>
+            <div class="btnrow"><button type="button" class="btn" id="ksDraw">地図で線を引く</button><button type="button" class="btn" id="ksLineEnd">この線を終える</button><button type="button" class="btn" id="ksUndo">最後の点を消す</button><button type="button" class="btn" id="ksClearL">線を全部消す</button></div>
+            <div class="msg" id="ksDrawMsg" role="status"></div>
+            <div class="btnrow"><button type="button" class="btn primary" id="ksSave">保存（全員に出ます）</button><button type="button" class="btn" id="ksCancel">やめる</button><button type="button" class="btn danger" id="ksDel" hidden>この規制を消す</button></div>
+            <div class="msg" id="ksFormMsg" role="status"></div>
+          </div>
+        </div>
+        <div class="btnrow"><button type="button" class="btn" id="ksTestBan">🔔 出庫の知らせをテスト表示</button></div>
+        <div class="src">警視庁などが公開している予定を見て、管理者が手で登録しています（自動では取り込めません）。日時・区間は変わることがあるので、当日の発表も確かめてください。出庫のとき、その日に規制があれば一度だけ知らせます。</div>
+      </details>
       <div id="ptMapWrap" class="mapwrap">
         <div id="ptMap" class="bigmap" style="height:420px;border-radius:10px;border:1px solid var(--line)"></div>
         <div class="evmapbtns"><button class="btn" id="ptMeBtn">現在地</button><button class="btn" id="ptFullBtn">全画面</button></div>
@@ -1777,7 +1803,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-17 11:08</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 13:32</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3363,7 +3389,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     ["📳 知らせてもらう","th-blue",[["patrol","🚨","取締り","取締りの場所"],["stand","🚕","日交乗り場","日交乗り場"],["taxi","🏢","森ビル乗り場","森ビルの専用乗り場（日交）"],["yuryo","優","優良乗り場","優良乗り場"],["rest2","🚫","駐車禁止","駐車禁止ポイント"],["train","🚃","電車の乱れ","電車が止まったら"]],"アプリを開いて画面がついている間だけ、近づいたら・止まったら音と帯で知らせます（「画面を消さない」設定と一緒に使ってください）。右上の点：緑＝知らせがオン、灰色＝オフ（設定の「画面に出す機能」で切り替え）"],
     ["コミュニケーション","th-green",[["othello","⚫","オセロ","みんなのオセロ"],["mahjong","🀄","麻雀","みんなの三人麻雀"],["akabus","🚏","帰りのバス","帰りのバス（試験）"]],"仲間と遊ぶゲームです。別の画面で開きます。名前と合言葉を入れると、同じ合言葉の人と同じ部屋に入れます"],
     ["設定・その他","th-gray",[["set","⚙️","設定","設定"],["bk","💾","バックアップ","バックアップ"],["place","🏥","乗せた場所","乗せた場所の名前をまとめて確かめる"],["nk","🤝","仲間チェック","仲間チェック（休みの日・出番の日・この日の勤務・名簿）"],["help","📖","使い方","使い方"],["setup","🔰","最初の設定","最初の設定（社員コード・車種・キー）"],["nippoprep","📷","日報の準備","日報の読み取りの準備（Claude）"]]],
-    ["管理者だけ（試験）","th-gray",[["sheet","🗂️","記録の表","記録のスプレッドシート（速報・全データ・点呼時間・ログ）"],["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","船","船（竹芝の定期船・クルーズ船。試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"]]]];
+    ["管理者だけ（試験）","th-gray",[["sheet","🗂️","記録の表","記録のスプレッドシート（速報・全データ・点呼時間・ログ）"],["cmp","📊","乗務員比較","乗務員比較（試験）"],["demand","📍","需要予想","運転見合わせ時の需要予想（試験）"],["pay","📈","売上差額","売上差額チェック"],["bus","🚌","都営バス","都営バス（試験）"],["ship","🚢","船","船（竹芝の定期船・クルーズ船。試験）"],["shin","🚄","新幹線","新幹線 最終便・始発（試験）"],["plateau","🏢","建物","建物（PLATEAU・試験）"]]]];
   // ゲーム（2026-10-28 ユーザー指定：全員に見せる。画面はGoogle Apps Scriptのまま、別の画面で開く）
   const GAME_URL={othello:"https://script.google.com/macros/s/AKfycbxYp1KUeMFi78Bosu62ENpUEGMhDmKF5i6ZGtnW1Lb-fcr72h1xVTeOb4QKe9tXvuLboQ/exec",mahjong:"https://script.google.com/macros/s/AKfycbzXOEdFxs6r-ftUzyWLZbU7qdX2DX3tshv5Vn2KOlE7BXjVQgNnYPqjNjvpBFuyOQ_2/exec"};
   const MENU_ALL={}; MENU_GROUPS.forEach(([,,xs])=>xs.forEach(x=>MENU_ALL[x[0]]=x));
@@ -3390,6 +3416,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     if(k==="highway") return true;   // 高速マップは全員（2026-11-12）
     if(k==="ame"||k==="hosp") return true;   // 雨予報・病院外来は全員（2026-10-29 ユーザー指定）
     if(k==="shin") return isAdmin();   // 新幹線は管理者だけ（2026-11-01 ユーザー指定）
+    if(k==="plateau") return isAdmin();   // 建物（PLATEAU）は管理者だけの試験（2026-11-18 本人指定）
     if(k==="toilet") return true;   // マップ（トイレ・パーキングメーター）は全員（2026-10-31 ユーザー指定）
     if(k==="akabus") return isAdmin()||isGroup1();   // 帰りのバスは試験中なので、管理者とグループ1の人だけ（2026-10-29 ユーザー指定）
     if(k==="place") return isAdmin()||isGroup1();   // 施設名をまとめて確かめるのは、管理者とグループ1の人だけ
@@ -3405,6 +3432,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     else if(k==="izakaya"){ $("docView").classList.remove("docfull"); $("docTitle").textContent="🍶 飲み屋街マップ"; $("docFrame").src="izakaya.html?v="+Date.now();   /* 毎回読み直す（スマホが古いファイルを覚えたままにならないように） */ $("docView").hidden=false; document.body.style.overflow="hidden"; }
     else if(k==="highway"){ $("docView").classList.remove("docfull"); $("docTitle").textContent="🛣️ 高速マップ"; $("docFrame").src="highway.html?v="+Date.now(); $("docView").hidden=false; document.body.style.overflow="hidden"; }
     else if(k==="shin"){ $("docView").classList.remove("docfull"); $("docTitle").textContent="🚄 新幹線 最終便・始発（試験）"; $("docFrame").src="shinkansen.html?v="+Date.now(); $("docView").hidden=false; document.body.style.overflow="hidden"; }
+    else if(k==="plateau"){ $("docView").classList.remove("docfull"); $("docTitle").textContent="🏢 建物（PLATEAU・試験）"; $("docFrame").src="plateau.html?v="+Date.now(); $("docView").hidden=false; document.body.style.overflow="hidden"; }
     else if(k==="ame"){ $("docView").classList.remove("docfull"); $("docTitle").textContent="☔ エリア別 雨予報"; $("docFrame").src="ame.html?v="+Date.now(); $("docView").hidden=false; document.body.style.overflow="hidden"; }
     else if(k==="akabus"){ $("docView").classList.remove("docfull"); $("docTitle").textContent="🚏 帰りのバス（試験）"; $("docFrame").src="bus.html?v="+Date.now(); $("docView").hidden=false; document.body.style.overflow="hidden"; }
     else if(k==="flash"){ showTab(3); setView("flash"); }
@@ -7559,6 +7587,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(rzOpen) rzOpen.off=Math.max(rzOpen.on,now-1);
     }
     if(kind===RZ) syncRz(d);
+    if(kind==="出庫"&&!open&&typeof ksDepart==="function") setTimeout(()=>ksDepart(false),800);   // 大規模な交通規制があれば一度だけ知らせる
     saveSales(); renderSales(); renderRzFloat();
     // 入庫を押したら、自動バックアップもサーバーに預ける（照合する前の記録もその日のうちに残すため。2026-11-10 ユーザー指定）
     if(kind==="入庫"&&!open&&cfg.abkOn!==false&&cfg.abkId&&window.tenkoAbkPut) setTimeout(()=>window.tenkoAbkPut(true),1500);
@@ -9011,7 +9040,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) hwHideAll(); ptHwRender(); }
   // 高速利用中：取締りだけでなく、駐車禁止・日交乗り場・優良乗り場・森ビル乗り場・電車・飛行機の帯もすべて消して、終わるまで出さない（2026-11-16 ユーザー指定）
-  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner","acBanner","crBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
+  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner","acBanner","crBanner","ksBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
     b.textContent=man?"🛣 高速利用中を終える（すべての通知を戻す）":"🛣 高速利用中（すべての通知を止める）"; b.classList.toggle("primary",man);
     m.textContent=man?`すべての通知（取締り・駐車禁止・乗り場・電車・飛行機）を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
@@ -9137,6 +9166,85 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("acTestBan").onclick=async()=>{ const d=await acLoad(); if(!d){ $("acMsg").textContent="事故のデータを読み込めませんでした"; return; }
     const c=d.c.slice().sort((a,b)=>acN(b)-acN(a))[0]; acShow(c,acN(c),80,true); window.scrollTo(0,0); };
   if(acCfg.near) setTimeout(acLoad,5000);
+  // ===== 大規模な交通規制（2026-11-18 本人指定）。サーバーの kiseiGet。登録・直すのは管理者（op kiseiSave）。取締りの地図に赤い線 =====
+  var ksItems=null, ksAt=0, ksWhen="today", ksLy=null, ksEdit=null, ksDrawOn=false, ksCur=[], ksPrev=null;
+  try{ ksWhen=localStorage.getItem("tenko.ksWhen")||"today"; }catch(e){}
+  let ksOnMap=true; try{ ksOnMap=localStorage.getItem("tenko.ksOn")!=="0"; }catch(e){}
+  const ksYmd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const ksT=s=>new Date(s+":00");
+  function ksRange(w){ const d=new Date(); d.setHours(0,0,0,0); const a=new Date(d), b=new Date(d);
+    if(w==="today") b.setDate(b.getDate()+1); else if(w==="tomorrow"){ a.setDate(a.getDate()+1); b.setDate(b.getDate()+2); } else if(w==="week") b.setDate(b.getDate()+7); else { a.setDate(a.getDate()-1); b.setFullYear(b.getFullYear()+2); }
+    return [a,b]; }
+  const ksIn=(x,w)=>{ const [a,b]=ksRange(w); return ksT(x.start)<b&&ksT(x.end)>a&&(w!=="all"||ksT(x.end)>new Date()); };
+  const ksWhenTxt=x=>{ const s=ksT(x.start), e=ksT(x.end), W="日月火水木金土", f=d=>`${d.getMonth()+1}/${d.getDate()}（${W[d.getDay()]}）`, hm=d=>`${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
+    return ksYmd(s)===ksYmd(e)?`${f(s)} ${hm(s)}〜${hm(e)}`:`${f(s)} ${hm(s)}〜${f(e)} ${hm(e)}`; };
+  async function ksLoad(force){
+    $("ksAdm").hidden=!isAdmin(); ksUi();
+    if(ksItems&&!force&&Date.now()-ksAt<5*60e3){ ksDrawAll(); return ksItems; }
+    try{ const j=await post({action:"kiseiGet"}); if(j&&j.ok){ ksItems=j.items||[]; ksAt=Date.now(); } else if(!ksItems) $("ksMsg").textContent=(j&&j.error)||"交通規制を読めませんでした"; }
+    catch(e){ if(!ksItems) $("ksMsg").textContent="交通規制を読めませんでした。電波を確認してください"; }
+    ksDrawAll(); return ksItems; }
+  function ksUi(){ $("ksOn").checked=ksOnMap; $("ksWhen").querySelectorAll("[data-ksw]").forEach(b=>b.setAttribute("aria-selected",b.dataset.ksw===ksWhen)); }
+  function ksPop(x){ return `<div style="font-size:14px;line-height:1.5;min-width:180px;max-width:260px"><b style="font-size:16px;color:#B71C1C">🚧 ${esc(x.name)}</b><div>${esc(x.kind||"")}</div><div><b>${esc(ksWhenTxt(x))}</b></div>${x.note?`<div style="white-space:pre-wrap">${esc(x.note)}</div>`:""}</div>`; }
+  function ksDrawAll(){
+    const S=GS.patrol, xs=(ksItems||[]).filter(x=>ksIn(x,ksWhen)).sort((a,b)=>a.start.localeCompare(b.start)), now=new Date();
+    $("ksList").innerHTML=xs.length?xs.map(x=>`<div class="ksitem${ksT(x.start)<=now&&ksT(x.end)>now?" now":""}"><b>🚧 ${esc(x.name)}</b>${ksT(x.start)<=now&&ksT(x.end)>now?` <span style="color:#B71C1C;font-weight:800">規制中</span>`:""}<div class="ksw">${esc(x.kind||"")}・${esc(ksWhenTxt(x))}</div>${x.note?`<div class="ksw" style="white-space:pre-wrap">${esc(x.note)}</div>`:""}<div class="btnrow" style="margin-top:4px">${x.lines&&x.lines.length?`<button type="button" class="btn" data-ksmap="${esc(x.id)}">地図で見る</button>`:""}${isAdmin()?`<button type="button" class="btn" data-ksedit="${esc(x.id)}">直す</button>`:""}</div></div>`).join("")
+      :`<div class="geo">${{today:"今日",tomorrow:"明日",week:"この1週間",all:"これから"}[ksWhen]}の大規模な交通規制は登録されていません</div>`;
+    $("ksList").querySelectorAll("[data-ksmap]").forEach(b=>b.onclick=()=>{ const x=ksItems.find(y=>y.id===b.dataset.ksmap); if(!x||!S.map) return; S.map.fitBounds(L.latLngBounds(x.lines.flat()),{padding:[20,20]}); $("ptMap").scrollIntoView({behavior:"smooth",block:"center"}); });
+    $("ksList").querySelectorAll("[data-ksedit]").forEach(b=>b.onclick=()=>ksOpen(b.dataset.ksedit));
+    $("ksMsg").textContent=ksItems?`${xs.length}件`:"";
+    if(!S.map||typeof L==="undefined") return;
+    if(ksLy){ ksLy.remove(); ksLy=null; }
+    ksLy=L.layerGroup().addTo(S.map);
+    if(ksOnMap) xs.forEach(x=>(x.lines||[]).forEach(l=>L.polyline(l,{color:"#C62828",weight:7,opacity:.85,bubblingMouseEvents:false}).bindPopup(ksPop(x)).addTo(ksLy)));
+    ksPreview(); }
+  function ksPreview(){ const S=GS.patrol; if(!ksLy||!ksEdit) return;
+    if(ksPrev){ ksPrev.remove(); } ksPrev=L.layerGroup().addTo(S.map);
+    ksEdit.lines.forEach(l=>L.polyline(l,{color:"#C62828",weight:6,opacity:.9,dashArray:"8 6",interactive:false}).addTo(ksPrev));
+    if(ksCur.length) { L.polyline(ksCur,{color:"#7F0000",weight:5,dashArray:"4 4",interactive:false}).addTo(ksPrev); ksCur.forEach(q=>L.circleMarker(q,{radius:5,color:"#7F0000",fillColor:"#fff",fillOpacity:1,weight:2,interactive:false}).addTo(ksPrev)); }
+    $("ksDrawMsg").textContent=`線 ${ksEdit.lines.length}本${ksCur.length?`・引いている線の点 ${ksCur.length}`:""}${ksDrawOn?"（地図を押すと点を足します）":""}`; }
+  function ksSetDraw(on){ ksDrawOn=on; $("ksDraw").textContent=on?"線を引くのをやめる":"地図で線を引く"; $("ptMap").classList.toggle("ksdraw",on); if(on) $("ptMap").scrollIntoView({behavior:"smooth",block:"center"}); ksPreview(); }
+  function ksLineEnd(){ if(ksCur.length>=2) ksEdit.lines.push(ksCur); ksCur=[]; ksPreview(); }
+  function ksOpen(id){ const x=id?(ksItems||[]).find(y=>y.id===id):null; ksEdit=x?JSON.parse(JSON.stringify(x)):{id:"k"+Date.now().toString(36),name:"",kind:"マラソン・駅伝",start:"",end:"",note:"",lines:[]}; ksCur=[];
+    $("ksName").value=ksEdit.name; $("ksKind").value=ksEdit.kind||"その他"; $("ksStart").value=ksEdit.start; $("ksEnd").value=ksEdit.end; $("ksNote").value=ksEdit.note;
+    $("ksDel").hidden=!x; $("ksDel").dataset.arm=""; $("ksDel").textContent="この規制を消す"; $("ksFormMsg").textContent=""; $("ksForm").hidden=false;
+    const S=GS.patrol; if(S.map&&!S.ksBound){ S.ksBound=true; S.map.on("click",e=>{ if(!ksDrawOn||!ksEdit) return; ksCur.push([+e.latlng.lat.toFixed(6),+e.latlng.lng.toFixed(6)]); ksPreview(); }); }
+    if(x&&x.lines.length&&S.map) S.map.fitBounds(L.latLngBounds(x.lines.flat()),{padding:[20,20]});
+    ksPreview(); }
+  function ksClose(){ ksSetDraw(false); ksEdit=null; ksCur=[]; if(ksPrev){ ksPrev.remove(); ksPrev=null; } $("ksForm").hidden=true; }
+  async function ksSaveAll(list,msg){ $("ksFormMsg").textContent="保存しています…";
+    try{ const j=await post({action:"admin",op:"kiseiSave",adminPass:cfg.apass,items:list}); if(!j||!j.ok){ $("ksFormMsg").textContent=(j&&j.error)||"保存できませんでした"; return false; }
+      ksItems=j.items; ksAt=Date.now(); ksClose(); $("ksMsg").textContent=msg; ksDrawAll(); return true; }
+    catch(e){ $("ksFormMsg").textContent="保存できませんでした。電波を確認してください"; return false; } }
+  $("ksAdd").onclick=()=>ksOpen(null);
+  $("ksDraw").onclick=()=>{ if(!ksEdit) return; if(ksDrawOn) ksLineEnd(); ksSetDraw(!ksDrawOn); };
+  $("ksLineEnd").onclick=ksLineEnd;
+  $("ksUndo").onclick=()=>{ if(ksCur.length) ksCur.pop(); else if(ksEdit&&ksEdit.lines.length) ksCur=ksEdit.lines.pop(); ksPreview(); };
+  $("ksClearL").onclick=()=>{ if(!ksEdit) return; ksEdit.lines=[]; ksCur=[]; ksPreview(); };
+  $("ksCancel").onclick=ksClose;
+  $("ksSave").onclick=()=>{ if(!ksEdit) return; ksLineEnd();
+    Object.assign(ksEdit,{name:$("ksName").value.trim(),kind:$("ksKind").value,start:$("ksStart").value.slice(0,16),end:$("ksEnd").value.slice(0,16),note:$("ksNote").value.trim()});
+    if(!ksEdit.name||!ksEdit.start||!ksEdit.end){ $("ksFormMsg").textContent="名前と、始まり・終わりの日時を入れてください"; return; }
+    if(ksEdit.end<=ksEdit.start){ $("ksFormMsg").textContent="終わりは始まりより後にしてください"; return; }
+    const list=(ksItems||[]).filter(y=>y.id!==ksEdit.id).concat([ksEdit]);
+    ksSaveAll(list,`「${ksEdit.name}」を保存しました`); };
+  $("ksDel").onclick=()=>{ const b=$("ksDel"); if(!b.dataset.arm){ b.dataset.arm="1"; b.textContent="もう一度押すと消します"; return; }
+    ksSaveAll((ksItems||[]).filter(y=>y.id!==ksEdit.id),"規制を消しました"); };
+  $("ksOn").onchange=()=>{ ksOnMap=$("ksOn").checked; try{ localStorage.setItem("tenko.ksOn",ksOnMap?"1":"0"); }catch(e){} ksDrawAll(); };
+  $("ksWhen").querySelectorAll("[data-ksw]").forEach(b=>b.onclick=()=>{ ksWhen=b.dataset.ksw; try{ localStorage.setItem("tenko.ksWhen",ksWhen); }catch(e){} ksUi(); ksDrawAll(); });
+  $("ksBox").addEventListener("toggle",()=>{ if($("ksBox").open) ksLoad(false); });
+  $("ksBannerClose").onclick=()=>{ $("ksBanner").hidden=true; };
+  $("ksTestBan").onclick=()=>{ ksDepart(true); window.scrollTo(0,0); };
+  // 出庫のとき（会社を出た時間を押したとき）、その日に大規模な交通規制があれば一度だけ知らせる（2026-11-18 本人指定）
+  async function ksDepart(test){
+    if(!test&&!PROD) return;
+    const xs=await ksLoad(true); const today=(xs||[]).filter(x=>ksIn(x,"today")).sort((a,b)=>a.start.localeCompare(b.start));
+    if(!today.length&&!test) return;
+    const key=ksYmd(new Date()); let last=""; try{ last=localStorage.getItem("tenko.ksNotified")||""; }catch(e){}
+    if(!test&&last===key) return; if(!test) try{ localStorage.setItem("tenko.ksNotified",key); }catch(e){}
+    const show=today.length?today:[{name:"（試し）東京マラソン",kind:"マラソン・駅伝",start:key+"T08:00",end:key+"T16:00",note:""}];
+    $("ksBannerText").innerHTML=`🚧 今日は大規模な交通規制があります${test?`<i class="pbtest">テスト</i>`:""}<br>`+show.slice(0,3).map(x=>`<b>${esc(x.name)}</b>（${esc(ksWhenTxt(x))}）`).join("<br>")+(show.length>3?`<br>ほか${show.length-3}件`:"")+`<br><small>メニューの「🚨 取締り」→「🚧 大規模な交通規制」で地図を見られます</small>`;
+    $("ksBanner").hidden=false; clearTimeout(ksDepart.t); ksDepart.t=setTimeout(()=>{ $("ksBanner").hidden=true; },60000); }
   // 地図と近い順の一覧（取締り・乗り場で共通）
   async function renderGeoTab(k,first){
     const G=GEO[k], S=GS[k], P=G.pre, m=$(P+"Msg");
@@ -9164,7 +9272,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       else if(x[2].length>1) L.polyline(x[2],{color:cl,weight:6,opacity:.85}).bindPopup(pop).addTo(S.layer);
       else L.circleMarker(c,{radius:mzx&&mzx.star?10:8,color:"#fff",weight:2,fillColor:cl,fillOpacity:1,bubblingMouseEvents:false}).bindPopup(pop).addTo(S.layer); });
     if(k==="rest2") mzListDraw();
-    if(k==="patrol"){ if(!S.acBound){ S.acBound=true; S.map.on("moveend",()=>{ if(acCfg.on) acDraw(); }); } acDraw(); }
+    if(k==="patrol"){ ksLoad(false); if(!S.acBound){ S.acBound=true; S.map.on("moveend",()=>{ if(acCfg.on) acDraw(); }); } acDraw(); }
     const setMe=p=>{ if(S.me) S.map.removeLayer(S.me); S.me=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(S.map); };
     if(first){ const p=await getPos(); if(p){ setMe(p); S.map.setView([p.lat,p.lng],15); } else if(xs.length) S.map.fitBounds(L.latLngBounds(xs.map(x=>x[2][0])),{padding:[20,20]}); }
     if(S.me){ const me=S.me.getLatLng(), near=xs.map(x=>({x,d:geoD({lat:me.lat,lng:me.lng},x)})).sort((a,b)=>a.d-b.d).slice(0,15);

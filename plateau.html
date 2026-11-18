@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>建物（試験）</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--bg:#F4F6F5;--surface:#fff;--ink:#17201E;--muted:#5B6866;--line:#CCD6D4;--acc-bg:#E3F0F4;--acc-line:#A9CCD7;--acc-ink:#1D4F5E;--warn:#9A5B00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--warn:#F0B35A}}
+:root[data-theme="dark"]{--bg:#111716;--surface:#1A2321;--ink:#E5ECEA;--muted:#9AABA8;--line:#2E3B38;--acc-bg:#1E3540;--acc-line:#3D6372;--acc-ink:#BFE3EE;--warn:#F0B35A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:720px;margin:0 auto;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 32px);display:grid;gap:14px}
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+h2{margin:0 0 8px;font-size:17px}
+.btn{border:1px solid var(--acc-line);background:var(--acc-bg);color:var(--acc-ink);border-radius:10px;padding:10px 14px;font-size:16px;font-weight:800}
+.btn.big{width:100%;font-size:18px;padding:14px}
+.row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:15px}
+.row label{display:flex;align-items:center;gap:6px}
+.row input[type=checkbox]{width:22px;height:22px}
+.row input[type=number]{width:5em;font-size:16px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.3)}
+#map{height:min(64vh,480px);border-radius:10px;border:1px solid var(--line)}
+#msg{font-size:14px;color:var(--muted);line-height:1.5;margin-top:6px}
+#msg.warn{color:var(--warn);font-weight:700}
+.near{border-bottom:1px solid var(--line);padding:8px 2px;font-size:15px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.near b{font-size:16px}.near small{color:var(--muted)}
+.src{font-size:13px;color:var(--muted);line-height:1.6}
+.pop{font-size:14px;line-height:1.55;min-width:190px;max-width:260px}.pop b.t{font-size:16px}.pop .u{display:inline-block;padding:0 6px;border-radius:6px;color:#fff;font-weight:700;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <h2>建物（PLATEAU・試験・港区）</h2>
+    <button class="btn big" id="whatBtn">📍 この建物は？（現在地のまわりの建物を出す）</button>
+    <div id="msg"></div>
+  </section>
+  <section class="card">
+    <div class="row" id="useRow"></div>
+    <div class="row" style="margin-top:6px"><label>地上<input type="number" id="minFl" min="1" max="80" inputmode="numeric">階以上</label><label>高さ<input type="number" id="minH" min="0" max="400" step="5" inputmode="numeric">m以上</label></div>
+    <div id="map" style="margin-top:8px"></div>
+    <div id="cnt" class="src" style="margin-top:4px"></div>
+  </section>
+  <section class="card" id="nearCard" hidden>
+    <h2>まわりの建物（前の方を先に）</h2>
+    <div class="src">GPSは数メートルずれるので、1つに決めつけず、近い順に出しています。押すと地図でその建物を出します。</div>
+    <div id="nearList"></div>
+  </section>
+  <details class="card"><summary><b>この画面について</b></summary>
+    <div class="src" style="margin-top:6px">
+      ・国土交通省の PLATEAU（3D都市モデル）の港区の建物（2025年度）のうち、地上5階以上または高さ15m以上の建物を出しています。入っている会社の情報はありません。<br>
+      ・使い道で色を分けています（事務所・住宅・お店・ホテル・その他）。建物を押すと、高さ・階数・使い道・住所・屋根の面積を出します。建てられた年はこのデータに入っていないので「不明」です。<br>
+      ・建物の形は、オープンストリートマップ（OSM）の建物の形のうち PLATEAU の建物の中心が入るものを使っています。見つからない建物は、屋根の面積から四角（点線）で描いています。名前・中のお店はOSMにあるときだけ出します。<br>
+      ・地図で今見ている範囲の建物だけを描きます。広く見ているときは、高い建物だけにしぼります。
+    </div>
+    <div class="src" id="srcNote" style="margin-top:6px"></div>
+  </details>
+</main>
+<script>
+(function(){
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const USE=[["事務所","#2F6FD6"],["住宅","#3E9B4F"],["お店","#E8890C"],["ホテル","#B0399C"],["その他","#7A8582"]];
+const KEY="plateau.cfg";
+let C={on:[1,1,1,1,1],fl:20,h:0}; try{ Object.assign(C,JSON.parse(localStorage.getItem(KEY)||"{}")); }catch(e){}
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(C)); }catch(e){} };
+let D=null, map=null, ly=null, hl=null, meMk=null;
+// 列：0緯度 1経度 2高さ 3地上階 4地下階 5色分け 6使い道 7住所 8PLATEAUの名前 9OSMの名前 10中のお店など 11屋根の面積 12輪郭
+const nm=b=>b[9]||b[8]||"";
+function shape(b){ if(b[12]&&b[12].length>=3) return {ll:b[12],est:false};
+  const a=Math.max(100,b[11]||400), half=Math.sqrt(a)/2, dy=half/111320, dx=half/(111320*Math.cos(b[0]*Math.PI/180));
+  return {ll:[[b[0]-dy,b[1]-dx],[b[0]-dy,b[1]+dx],[b[0]+dy,b[1]+dx],[b[0]+dy,b[1]-dx]],est:true}; }
+function pop(b){ const u=USE[b[5]]||USE[4];
+  return `<div class="pop"><b class="t">${esc(nm(b)||"（名前なし）")}</b><div><span class="u" style="background:${u[1]}">${esc(b[6]||"不明")}</span></div>
+    <div>高さ ${b[2]!=null?b[2]+"m":"不明"}・地上${b[3]!=null?b[3]+"階":"不明"}${b[4]?`・地下${b[4]}階`:""}</div>
+    <div>${esc(b[7]||"住所不明")}</div>${b[11]?`<div>屋根の面積 約${Number(b[11]).toLocaleString()}㎡</div>`:""}<div>建てられた年：不明（このデータにはありません）</div>
+    ${b[10]&&b[10].length?`<div style="margin-top:4px"><b>中のお店・会社など（OSM）</b><br>${b[10].map(esc).join("、")}</div>`:""}
+    ${b[12]?"":`<div style="color:#9A5B00;font-size:12px">形は屋根の面積からの目安です</div>`}</div>`; }
+function pass(b,z){ if(!C.on[b[5]]) return false; const fl=b[3]||0, h=b[2]||0;
+  if(C.fl&&fl<C.fl) return false; if(C.h&&h<C.h) return false;
+  if(z<14&&fl<Math.max(C.fl,30)&&h<120) return false;   // 広く見ているときは高い建物だけ
+  return true; }
+function draw(){
+  if(!D||!map) return; ly.clearLayers(); const z=map.getZoom(), bd=map.getBounds().pad(0.2); let n=0, cut=0;
+  D.b.forEach(b=>{ if(!bd.contains([b[0],b[1]])) return; if(!pass(b,z)){ if(z<14&&C.on[b[5]]&&(b[3]||0)>=C.fl) cut++; return; } const s=shape(b), u=USE[b[5]]||USE[4];
+    L.polygon(s.ll,{color:u[1],weight:s.est?1.5:2,dashArray:s.est?"4 3":null,fillColor:u[1],fillOpacity:.45,bubblingMouseEvents:false}).bindPopup(()=>pop(b)).addTo(ly); n++; });
+  $("cnt").textContent=`この範囲の建物 ${n}棟${cut?`（広く見ているので、地上30階未満の${cut}棟は省いています。近づけると出ます）`:""}`; }
+function ui(){
+  $("useRow").innerHTML=USE.map(([t,c],i)=>`<label><input type="checkbox" data-u="${i}" ${C.on[i]?"checked":""}><i class="dot" style="background:${c}"></i>${t}</label>`).join("");
+  $("useRow").querySelectorAll("[data-u]").forEach(x=>x.onchange=()=>{ C.on[+x.dataset.u]=x.checked?1:0; save(); draw(); });
+  $("minFl").value=C.fl||""; $("minH").value=C.h||""; }
+$("minFl").onchange=()=>{ C.fl=Math.max(0,Math.min(80,Math.round(+$("minFl").value)||0)); save(); draw(); };
+$("minH").onchange=()=>{ C.h=Math.max(0,Math.min(400,Math.round(+$("minH").value)||0)); save(); draw(); };
+function dist(a,b){ const R=6371e3,r=Math.PI/180,x=Math.sin((b[0]-a[0])*r/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin((b[1]-a[1])*r/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
+function bear(a,b){ const r=Math.PI/180, y=Math.sin((b[1]-a[1])*r)*Math.cos(b[0]*r), x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos((b[1]-a[1])*r); return (Math.atan2(y,x)/r+360)%360; }
+// 「この建物は？」：現在地を取り直して、まわり（150m）の建物を近い順に。車の向きが分かれば前の方（左右60度）を先に（2026-11-17 本人指定）
+function what(p){
+  const me=[p.lat,p.lng], hd=p.hd;
+  const xs=D.b.map(b=>{ const d=dist(me,[b[0],b[1]]); let front=null; if(hd!=null){ let df=Math.abs(((bear(me,[b[0],b[1]])-hd)+540)%360-180); front=df<=60; } return {b,d,front}; }).filter(x=>x.d<=150)
+    .sort((a,b)=>((b.front===true)-(a.front===true))||(a.d-b.d)).slice(0,12);
+  if(meMk) meMk.remove(); meMk=L.circleMarker(me,{radius:9,color:"#fff",weight:3,fillColor:"#D23C2F",fillOpacity:1,interactive:false}).addTo(map);
+  if(hl) hl.remove(); hl=L.layerGroup().addTo(map);
+  xs.forEach((x,i)=>{ const s=shape(x.b); L.polygon(s.ll,{color:"#D23C2F",weight:i<3?4:2,fill:false,interactive:false}).addTo(hl); });
+  map.setView(me,18); draw();
+  $("nearCard").hidden=false;
+  $("nearList").innerHTML=xs.length?xs.map((x,i)=>`<div class="near"><span><b>${esc(nm(x.b)||"（名前なし）")}</b><br><small>${esc(x.b[6]||"使い道 不明")}・${x.b[3]!=null?"地上"+x.b[3]+"階":"階数 不明"}・${x.b[2]!=null?"高さ"+x.b[2]+"m":"高さ 不明"}・${Math.round(x.d)}m${x.front===true?"・前の方":x.front===false?"":""}</small></span><button class="btn" data-n="${i}">地図</button></div>`).join("")
+    :`<div class="src">150m以内に、出している建物（地上5階以上など）はありませんでした。</div>`;
+  $("nearList").querySelectorAll("[data-n]").forEach(btn=>btn.onclick=()=>{ const x=xs[+btn.dataset.n]; map.setView([x.b[0],x.b[1]],18); L.popup().setLatLng([x.b[0],x.b[1]]).setContent(pop(x.b)).openOn(map); $("map").scrollIntoView({behavior:"smooth",block:"center"}); });
+  $("msg").className=""; $("msg").textContent=`現在地のまわり150mの建物 ${xs.length}棟（GPSの誤差 約${Math.round(p.acc||0)}m）${hd==null?"。車の向きは分からなかったので、近い順です":""}`; }
+$("whatBtn").onclick=()=>{
+  if(!navigator.geolocation){ $("msg").className="warn"; $("msg").textContent="このスマホでは現在地が使えません"; return; }
+  $("msg").className=""; $("msg").textContent="現在地を調べています…";
+  navigator.geolocation.getCurrentPosition(q=>{ const c=q.coords; what({lat:c.latitude,lng:c.longitude,acc:c.accuracy,hd:(c.heading!=null&&isFinite(c.heading)&&c.speed>1)?c.heading:null}); },
+    ()=>{ $("msg").className="warn"; $("msg").textContent="現在地が分かりませんでした（位置情報の許可を確かめてください）"; },{enableHighAccuracy:true,timeout:15000,maximumAge:0}); };
+ui();
+map=L.map("map",{zoomControl:true}); map.setView([35.6585,139.7454],15);
+L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",{maxZoom:19,maxNativeZoom:18,attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>｜建物 PLATEAU（国土交通省）・© OpenStreetMap'}).addTo(map);
+ly=L.layerGroup().addTo(map); map.on("moveend",draw);
+$("msg").textContent="建物のデータを読んでいます…";
+fetch("plateau_13103.json").then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(j=>{ D=j; $("msg").textContent=`港区の建物 ${j.n.toLocaleString()}棟（${j.min}）`;
+  $("srcNote").textContent=`出典：${j.src}。データを作った日 ${j.made}。輪郭がOSMから取れた建物 ${j.withShape.toLocaleString()}棟。`; draw(); })
+  .catch(()=>{ $("msg").className="warn"; $("msg").textContent="建物のデータを読み込めませんでした。電波を確認してください"; });
+// 試験用（手元の localhost で開いたときだけ）
+if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) window.__what=p=>what(p);
+})();
+</script>
+</body>
+</html>

@@ -121,6 +121,7 @@ details summary{padding:11px 0;font-size:15px}
 details summary{padding:6px 0}
 #msg{padding:2px 6px}
 .fsrow{gap:6px}
+.kswarn{background:#FFE4E1;color:#7F0000;border-left:5px solid #C62828;padding:8px 10px;border-radius:8px;margin:6px 0;font-size:15px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -132,7 +133,7 @@ details summary{padding:6px 0}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-15 19:21</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-18 12:01</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -146,6 +147,7 @@ details summary{padding:6px 0}
       <div id="dTxt" class="warn"></div>
       <div class="row"><div class="seg" role="group" aria-label="実車か帰りか"><button type="button" id="mJ" aria-pressed="false">実車</button><button type="button" id="mK" aria-pressed="true">帰り（空車・回送）</button></div></div>
       <div class="btns"><button type="button" class="btn primary" id="go">ルートを出す</button><button type="button" class="btn" id="clr">消す</button></div>
+      <div id="ksWarn" role="alert"></div>
       <div id="out" role="status"></div>
     </div>
     <div class="box">
@@ -171,6 +173,30 @@ details summary{padding:6px 0}
 <script>
 (function(){
 const $=id=>document.getElementById(id);
+// 大規模な交通規制（2026-11-18 本人指定）。アプリ本体と同じサーバーの kiseiGet を読む。build.py が KS_URL にサーバーの住所を入れる
+const KS_URL="https://script.google.com/macros/s/AKfycbzaCheINzPr7VXonUOs9CnwTCXCbRy0XqeMmaNw1vlNagiPqg_LyUDEQvrZA5axfnHPQQ/exec";
+let ksList=null, ksAt=0;
+async function ksGet(){ if(!KS_URL) return []; if(ksList&&Date.now()-ksAt<5*60e3) return ksList;
+  try{ const r=await fetch(KS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"kiseiGet"})}); const j=await r.json(); if(j&&j.ok){ ksList=j.items||[]; ksAt=Date.now(); } }catch(e){}
+  return ksList||[]; }
+// 点と線分の距離（m。近い所だけなので平面で計算）
+function ksSegD(p,a,b){ const ky=111320, kx=111320*Math.cos(p[0]*Math.PI/180), ax=(a[1]-p[1])*kx, ay=(a[0]-p[0])*ky, bx=(b[1]-p[1])*kx, by=(b[0]-p[0])*ky, dx=bx-ax, dy=by-ay, L2=dx*dx+dy*dy;
+  const t=L2?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/L2)):0; return Math.hypot(ax+t*dx,ay+t*dy); }
+// ルートが、走る時間（今から着くまで＋1時間）に規制中の線の近く（60m）を通るか
+async function ksRoute(res){
+  const box=$("ksWarn"); if(!box) return; box.innerHTML="";
+  const xs=await ksGet(); if(!xs.length||lastRes!==res) return;
+  const now=new Date(), until=new Date(now.getTime()+((res.time||0)+3600)*1000), T=s=>new Date(s+":00");
+  const pts=[]; res.segs.forEach(sg=>{ pts.push(sg.a); }); pts.push(res.D);
+  const hit=xs.filter(x=>T(x.start)<until&&T(x.end)>now).filter(x=>(x.lines||[]).some(l=>{ for(let i=0;i<l.length-1;i++){ const a=l[i], b=l[i+1], la0=Math.min(a[0],b[0])-0.001, la1=Math.max(a[0],b[0])+0.001, lo0=Math.min(a[1],b[1])-0.0012, lo1=Math.max(a[1],b[1])+0.0012;
+    if(pts.some(p=>p[0]>=la0&&p[0]<=la1&&p[1]>=lo0&&p[1]<=lo1&&ksSegD(p,a,b)<=60)) return true; } return false; }));
+  if(!hit.length||lastRes!==res) return;
+  const W="日月火水木金土", f=d=>`${d.getMonth()+1}/${d.getDate()}（${W[d.getDay()]}）${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
+  box.innerHTML=hit.map(x=>{ const s=T(x.start), e=T(x.end), on=s<=now; return `<div class="kswarn">🚧 <b>${on?"いま":f(s)+"から"}${esc(x.name)}で通行止め</b>（${on?"":"〜"}${on?f(e)+"まで":f(e).replace(/^.*?）/,"")+"まで"}）。このルートは規制の場所を通ります${x.note?`<br><small>${esc(x.note)}</small>`:""}</div>`; }).join("");
+  hit.forEach(x=>(x.lines||[]).forEach(l=>L.polyline(l,{color:"#C62828",weight:7,opacity:.85,interactive:false}).addTo(rtLayer)));
+}
+// 試験用（手元の localhost で開いたときだけ）：ルートの形を渡して、規制の知らせを確かめる
+if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) window.__ksRoute=r=>{ lastRes=r; return ksRoute(r); };
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const LS={get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }};
 const distM=(a,b)=>{ const ky=111320, kx=ky*Math.cos((a[0]+b[0])/2*Math.PI/180); return Math.hypot((a[0]-b[0])*ky,(a[1]-b[1])*kx); };
@@ -525,7 +551,7 @@ async function route(){
     if(got.length){ T=Object.assign(got[0].t,{src:"Valhalla（入口と出口を指定）"}); A=got[0].A; forced=true; }
   }
   const res={S,D,dn:destName,total:T.km*1000,time:T.sec,runs:A.runs,sect:A.sect,segs:T.segs,src:T.src,forced,surf};
-  lastRes=res; drawRoute(res); showRes(res); drawLbl();
+  lastRes=res; drawRoute(res); showRes(res); drawLbl(); ksRoute(res);
 }
 let lastRes=null;
 function drawRoute(res){
