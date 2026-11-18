@@ -701,6 +701,7 @@ body.rtfull{overflow:hidden}
 .tpleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--sub);margin:4px 0}.tpleg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:2px solid #fff;box-shadow:0 0 0 1px #888}
 .tpm{width:24px;height:24px;box-sizing:border-box;border:2px solid #111;border-radius:6px;font-size:13px;line-height:20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .tpb{border:2px solid #D23C2F;border-radius:10px;padding:8px 10px;margin:6px 0;font-size:15px;line-height:1.5}.tpb b{color:#D23C2F}
+.patrolbanner.wbbanner{background:#C62828;color:#fff;border-color:#8E1B1B}
 </style>
 
 <div id="obView" class="obview" hidden role="dialog" aria-modal="true" aria-labelledby="obTitle"><div class="obin2"><div class="obtop"><h2 id="obTitle"></h2><span class="obcount" id="obCount"></span></div><div id="obBody"></div><div class="obmsg" id="obMsg" role="alert"></div><div class="obnav"><button type="button" class="obbig" id="obBack">◀ 戻る</button><button type="button" class="obbig primary" id="obNext">次へ ▶</button></div><button type="button" class="obsub" id="obSkip" hidden></button><button type="button" class="obsub" id="obLater">あとで（閉じる）</button></div></div>
@@ -716,6 +717,7 @@ body.rtfull{overflow:hidden}
 <div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
 <div id="speedBanner" class="patrolbanner" hidden role="alert"><span id="speedBannerText"></span><button type="button" id="speedBannerClose" aria-label="閉じる">×</button></div>
 <div id="ksBanner" class="patrolbanner ksbanner" hidden role="status"><span id="ksBannerText" style="flex:1;min-width:0;font-size:17px;font-weight:700;line-height:1.5"></span><button type="button" id="ksBannerClose" aria-label="閉じる">×</button></div>
+<div id="wbBanner" class="patrolbanner wbbanner" hidden role="status"><span id="wbBannerText" style="flex:1;min-width:0;font-size:17px;font-weight:700;line-height:1.5"></span><button type="button" id="wbBannerClose" aria-label="閉じる">×</button></div>
 <div id="crBanner" class="patrolbanner acbanner2" hidden role="status"><span id="crBannerText" style="flex:1;min-width:0;font-size:17px;font-weight:700;line-height:1.5"></span><button type="button" id="crBannerClose" aria-label="閉じる">×</button></div>
 <div id="acBanner" class="patrolbanner acbanner" hidden role="status"><span id="acBannerText"></span><button type="button" id="acBannerClose" aria-label="閉じる">×</button></div>
 <div id="restBanner" class="patrolbanner restbanner" hidden role="alert"><span id="restBannerText"></span><button type="button" id="restBannerClose" aria-label="閉じる">×</button></div>
@@ -1815,7 +1817,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 16:26</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 18:33</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5383,6 +5385,24 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("crTestBan").onclick=()=>{ const t=crToday(), xs=crList.filter(x=>x.date>=t).sort((a,b)=>a.date.localeCompare(b.date));
     crShowBan(xs.length?xs:[{id:"t",date:t,name:"（試し）ダイヤモンド・プリンセス",term:"東京国際クルーズターミナル",in:"07:00",pax:2700}],true); window.scrollTo(0,0); };
   setTimeout(crCheck,6000);
+  // ===== 暑さ指数が「危険」（31以上）の予報の日は、開いたときに1日1回知らせる（2026-11-18 本人指定。設定は雨予報の画面 ame.wbcfg）=====
+  // 環境省の配信は4月下旬〜10月下旬だけなので、ほかの月はサーバーに問い合わせない
+  $("wbBannerClose").onclick=()=>{ $("wbBanner").hidden=true; };
+  function wbShowBan(mx,test){
+    $("wbBannerText").innerHTML=`🥵 今日は暑さ指数が「危険」の予報です${test?`<i class="pbtest">テスト</i>`:""}<br>最高 ${mx.v.toFixed(0)}（${mx.h}時ごろ・東京）。水分と休憩をこまめに、車内の温度に気をつけてください<br><small>出典：環境省熱中症予防情報サイト</small>`
+      +`<span class="pbbtns" style="display:flex"><button type="button" class="pbhw" data-pthw>🛣 高速利用中（通知を止める）</button><i class="pbbr"></i></span>`;
+    $("wbBanner").hidden=false; clearTimeout(wbShowBan.t); wbShowBan.t=setTimeout(()=>{ $("wbBanner").hidden=true; },60000); }
+  async function wbCheck(){
+    const m=new Date().getMonth()+1; if(m<4||m>10||!cfg.url||Date.now()<hwUntil) return;
+    let cf={notify:true}; try{ Object.assign(cf,JSON.parse(localStorage.getItem("ame.wbcfg")||"{}")); }catch(e){} if(cf.notify===false) return;
+    const today=todayStr(); let last=""; try{ last=localStorage.getItem("tenko.wbNotified")||""; }catch(e){} if(last===today) return;
+    let j=null; try{ j=await post({action:"wbgt"}); }catch(e){ return; } if(!j||!j.ok) return;
+    const d0=new Date(); d0.setHours(0,0,0,0);
+    const xs=(j.fc||[]).map(([t,v])=>({d:new Date(+t.slice(0,4),+t.slice(4,6)-1,+t.slice(6,8),+t.slice(8,10)),v})).filter(x=>{ const d=new Date(x.d.getTime()-1); return isFinite(x.v)&&d>=d0&&d<new Date(d0.getTime()+864e5); });
+    if(!xs.length) return; const mx=xs.reduce((a,b)=>b.v>a.v?b:a); if(mx.v<31) return;
+    try{ localStorage.setItem("tenko.wbNotified",today); }catch(e){}
+    wbShowBan({v:mx.v,h:mx.d.getHours()||24},false); }
+  setTimeout(wbCheck,7000);
   // ===== 試験（管理者のみ）：竹芝桟橋に着く船（東海汽船） =====
   let shipData=null, shipAt=0, shipBusy=false, shipDay=null;
   $("shipCalBtn").onclick=()=>{ $("shipCal").hidden=!$("shipCal").hidden; };
@@ -7032,7 +7052,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const sh=$("nowSheet"), B=$("nowBody"); sh.hidden=false; document.body.style.overflow="hidden";
     B.innerHTML=`<div class="geo">現在地・天気・電車・羽田の到着便・病院・イベントを確かめています…</div>`;
     const notes=[], now=new Date(), cMin=now.getHours()*60+now.getMinutes(), cur=shiftNow(), w=cur?dow(cur):DOW[now.getDay()];
-    const [p]=await Promise.all([getPos(true),anWxLoad([todayStr()]).catch(()=>{})]);
+    const [p]=await Promise.all([getPos(true),Promise.race([anWxLoad([todayStr()]).catch(()=>{}),new Promise(r=>setTimeout(r,10000))])]);   // 天気は10秒で待つのをやめる（Open-Meteo の窓口が返事をしないと、ずっと「確かめています」のままになった。2026-11-18）
     if(!p) notes.push("現在地が取れなかったので、移動の時間は入れていません");
     const all=Object.keys(sales.days).sort().map(anShift).filter(s=>s&&!s.live);
     const wxT=anWx[todayStr()], rv=wxT&&wxT.p[now.getHours()], rainNow=rv==null?null:rv>=anC("rainMm");
@@ -9110,7 +9130,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   }
   function ptHwSet(on){ hwUntil=on?Date.now()+ptSet("patrolHwMin")*60e3:0; try{ localStorage.setItem("tenko.patrolHwUntil",String(hwUntil)); }catch(e){} if(on) hwHideAll(); ptHwRender(); }
   // 高速利用中：取締りだけでなく、駐車禁止・日交乗り場・優良乗り場・森ビル乗り場・電車・飛行機の帯もすべて消して、終わるまで出さない（2026-11-16 ユーザー指定）
-  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner","acBanner","crBanner","ksBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
+  function hwHideAll(){ ptHide(); ["restBanner","standBanner","yuryoBanner","taxiBanner","trainBanner","airBanner","acBanner","crBanner","ksBanner","wbBanner"].forEach(id=>{ $(id).hidden=true; delete sdCurs[id]; }); sdCur=null; }
   function ptHwRender(){ const b=$("ptHwBtn"), m=$("ptHwMsg"), now=Date.now(), man=now<hwUntil;
     b.textContent=man?"🛣 高速利用中を終える（すべての通知を戻す）":"🛣 高速利用中（すべての通知を止める）"; b.classList.toggle("primary",man);
     m.textContent=man?`すべての通知（取締り・駐車禁止・乗り場・電車・飛行機）を止めています。あと${Math.ceil((hwUntil-now)/60e3)}分で自動で戻ります`
