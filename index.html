@@ -698,6 +698,9 @@ body.rtfull{overflow:hidden}
 .tgc .tg4 div{background:rgba(255,255,255,.75);padding:6px}
 .tgc .tg4 b{font-size:19px;color:#17201E}
 .tgtbl tr.tghit td{background:#FBE3EC;font-weight:800;color:#3A1022}   /* 現在地の区（2026-11-12） */
+.tpleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--sub);margin:4px 0}.tpleg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:2px solid #fff;box-shadow:0 0 0 1px #888}
+.tpm{width:24px;height:24px;box-sizing:border-box;border:2px solid #111;border-radius:6px;font-size:13px;line-height:20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.tpb{border:2px solid #D23C2F;border-radius:10px;padding:8px 10px;margin:6px 0;font-size:15px;line-height:1.5}.tpb b{color:#D23C2F}
 </style>
 
 <div id="obView" class="obview" hidden role="dialog" aria-modal="true" aria-labelledby="obTitle"><div class="obin2"><div class="obtop"><h2 id="obTitle"></h2><span class="obcount" id="obCount"></span></div><div id="obBody"></div><div class="obmsg" id="obMsg" role="alert"></div><div class="obnav"><button type="button" class="obbig" id="obBack">◀ 戻る</button><button type="button" class="obbig primary" id="obNext">次へ ▶</button></div><button type="button" class="obsub" id="obSkip" hidden></button><button type="button" class="obsub" id="obLater">あとで（閉じる）</button></div></div>
@@ -1351,6 +1354,7 @@ body.rtfull{overflow:hidden}
       <h2>電車が止まったら</h2>
       <div class="src">止まった路線を選ぶと、その路線の駅（東京23区・武蔵野市・三鷹市）を地図と一覧に出します。区域の外は地図を暗くしています。<b style="color:#D23C2F">赤い駅</b>は、半径1km以内にJR・地下鉄・私鉄などの別の路線の駅がない駅です。振替輸送が使いにくく、タクシーを待つ人が出やすい駅です。どの駅からも「ルート」でGoogleマップの道案内が開きます。</div>
       <div id="trInfo" class="grp"></div>
+      <div class="btnrow" id="trGo" hidden><button type="button" class="btn" data-nowgo>🧭 今どうする</button><button type="button" class="btn" id="trDemand">📍 需要予想</button></div>
       <div class="trtest" id="trBanTestRow"><button class="btn" id="trBanTest">🚃 運転見合わせ<small>テスト表示</small></button><button class="btn" id="trBanTestOk">🟢 再開<small>テスト表示</small></button></div>
       <div class="field"><label for="trainSel">止まった路線</label><select id="trainSel"><option value="">選んでください</option></select></div>
       <label class="check trchk"><input type="checkbox" id="trOnlyRed">赤い駅（近くに別の路線がない駅）だけ出す</label>
@@ -1360,6 +1364,14 @@ body.rtfull{overflow:hidden}
         <div class="evmapbtns"><button class="btn" id="trMeBtn">現在地</button><button class="btn" id="trFullBtn">全画面</button></div>
       </div>
       <div class="msg" id="trMsg" role="status"></div>
+      <!-- 都営の電車の位置（2026-11-18 本人指定）。都営の路線を選んだときだけ、地図に今走っている電車を出す -->
+      <div id="tpBox" class="grp" hidden>
+        <div class="infohead"><b>🚇 今走っている都営の電車</b><button type="button" class="btn" id="tpReload">更新</button></div>
+        <div class="tpleg"><span>🚃＝電車</span><span><i style="background:#3E9B4F"></i>遅れ1分まで</span><span><i style="background:#E0A800"></i>2〜4分</span><span><i style="background:#D23C2F"></i>5分以上</span></div>
+        <div class="msg" id="tpMsg" role="status"></div>
+        <div id="tpBunch"></div>
+        <div class="src">地図の点は、駅にいる電車はその駅に、駅と駅の間を走っている電車は真ん中に出します（1分ごとに自動で新しくします）。「まとめて着く」は、遅れている電車が続けて走っているときに、1駅あたり約2分として出した目安です。実際の時刻とはずれます。<br>出典：公共交通オープンデータセンター（東京都交通局の列車の位置の情報。CC BY 4.0）。データは正しくないことや遅れることがあります。</div>
+      </div>
       <div id="trainBox"></div>
       <h3 style="margin:14px 0 6px;font-size:15px">JR・東武・西武の運行情報（公式サイト）</h3>
       <div class="links">
@@ -1803,7 +1815,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 13:32</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 16:26</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -4462,6 +4474,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       addAreaMask(trMap); }
     setTimeout(()=>trMap.invalidateSize(),60);
     if(trLayer) trLayer.remove(); trLayer=L.layerGroup().addTo(trMap);
+    $("trGo").hidden=!isAdmin(); if(typeof tpDraw==="function") tpDraw(false);
     // 黄色：近く1km以内に別の路線はあるが、一番近い別の路線の駅まで500m以上ある駅。色はいつも付ける
     // チェックは絞り込みだけ：上＝赤だけ、下＝黄色だけ、両方＝赤と黄色、両方なし＝全部の駅
     const yon=true, yl=x=>!x.i&&x.d>=500, rk=x=>x.i?2:yl(x)?1:0, fR=$("trOnlyRed").checked, fY=$("trYel").checked;
@@ -4488,6 +4501,55 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("trainSel").addEventListener("change",()=>{ try{ localStorage.setItem("tenko.trainLine",$("trainSel").value); }catch(e){} renderTrainTab(false); });
   $("trMeBtn").onclick=async()=>{ if(!trMap) return; const p=await getPos(); if(!p){ $("trMsg").textContent="現在地が取れませんでした。位置情報の許可を確認してください"; return; }
     if(trMe) trMap.removeLayer(trMe); trMe=L.circleMarker([p.lat,p.lng],{radius:9,color:"#fff",weight:3,fillColor:"#2F6FD6",fillOpacity:1,bubblingMouseEvents:false}).bindTooltip("今ここ",{permanent:true,direction:"top"}).addTo(trMap); renderTrainTab(false,true); trMap.setView([p.lat,p.lng],Math.max(trMap.getZoom(),14)); };   // 一覧に現在地からの距離を出す
+  // ===== 都営の電車の位置（2026-11-18 本人指定）。公共交通オープンデータセンターの公開API（鍵なし・CC BY 4.0）をスマホから直接読む =====
+  // 遅れている電車が続けて走っていると、先の駅に短い間に何本も着く（タクシーを待つ人がまとめて出る）。1駅あたり約2分の目安で出す
+  const TP_API="https://api-public.odpt.org/api/v4/", TP_LINE={"都営浅草線":"Asakusa","都営三田線":"Mita","都営新宿線":"Shinjuku","都営大江戸線":"Oedo"};
+  const TP_DIR={Northbound:"北行き",Southbound:"南行き",Eastbound:"東行き",Westbound:"西行き",InnerLoop:"内回り",OuterLoop:"外回り"};
+  var tpSt=null, tpOrd=null, tpLayer=null, tpData=null, tpAt=0, tpBusy=false;
+  async function tpMeta(){ if(tpSt) return true;
+    try{ const c=JSON.parse(localStorage.getItem("tenko.toeiSt")||"null"); if(c&&c.st&&Date.now()-c.at<30*864e5){ tpSt=c.st; tpOrd=c.ord; return true; } }catch(e){}
+    try{ const [s,r]=await Promise.all(["Station","Railway"].map(k=>fetch(TP_API+"odpt:"+k+"?odpt:operator=odpt.Operator:Toei").then(x=>{ if(!x.ok) throw 0; return x.json(); })));
+      const st={}; s.forEach(x=>{ if(x["geo:lat"]!=null) st[x["owl:sameAs"]]=[x["geo:lat"],x["geo:long"],(x["odpt:stationTitle"]||{}).ja||x["dc:title"]||""]; });
+      const ord={}; r.forEach(x=>{ ord[x["owl:sameAs"]]=(x["odpt:stationOrder"]||[]).slice().sort((a,b)=>a["odpt:index"]-b["odpt:index"]).map(o=>o["odpt:station"]); });
+      tpSt=st; tpOrd=ord; try{ localStorage.setItem("tenko.toeiSt",JSON.stringify({at:Date.now(),st,ord})); }catch(e){} return true; }catch(e){ return false; } }
+  const tpNm=id=>id&&tpSt&&tpSt[id]?tpSt[id][2]:"ほかの会社の駅";
+  // 駅の並びの何番目か（大江戸線の都庁前のように2回出る駅は、ref に近い方）
+  function tpIdx(ord,id,ref){ let best=-1; ord.forEach((v,i)=>{ if(v===id&&(best<0||(ref!=null&&Math.abs(i-ref)<Math.abs(best-ref)))) best=i; }); return best; }
+  // 遅れている電車が続けて走っている所（同じ向き・1駅あいだ以内・3分以上の遅れが3本以上）
+  function tpBunches(trs,ord){
+    const out=[], byDir={};
+    trs.forEach(t=>{ const f=tpIdx(ord,t["odpt:fromStation"]), to=t["odpt:toStation"]; if(f<0) return; const ti=to?tpIdx(ord,to,f):-1;
+      (byDir[t["odpt:railDirection"]]=byDir[t["odpt:railDirection"]]||[]).push({t,p:ti>=0?(f+ti)/2:f,sg:ti>=0?Math.sign(ti-f):0,d:+t["odpt:delay"]||0}); });
+    Object.entries(byDir).forEach(([dir,xs])=>{ const sg=Math.sign(xs.reduce((a,x)=>a+x.sg,0)); if(!sg) return;
+      xs.sort((a,b)=>sg*(b.p-a.p));   // 先を走っている電車から
+      let g=[]; const flush=()=>{ if(g.length>=3){ const lead=g[0], last=g[g.length-1], ti=sg>0?Math.floor(lead.p)+1:Math.ceil(lead.p)-1;
+          if(ti>=0&&ti<ord.length){ const min=Math.max(1,Math.round(Math.abs(ti-last.p)*2)); out.push({dir:dir.replace(/^.*:/,""),st:ord[ti],n:g.length,min,dmin:Math.min(...g.map(x=>x.d)),dmax:Math.max(...g.map(x=>x.d))}); } } g=[]; };
+      xs.forEach(x=>{ if(x.d<180){ flush(); return; } if(g.length&&Math.abs(g[g.length-1].p-x.p)>1) flush(); g.push(x); }); flush(); });
+    return out.sort((a,b)=>b.n-a.n); }
+  async function tpDraw(force){
+    const l=$("trainSel").value, rw=TP_LINE[l];
+    if(tpLayer){ tpLayer.remove(); tpLayer=null; }
+    $("tpBox").hidden=!rw; if(!rw||!trMap) return;
+    if(force||!tpData||Date.now()-tpAt>50000){ if(tpBusy) return; tpBusy=true; $("tpMsg").textContent="電車の位置を読んでいます…";
+      try{ if(!(await tpMeta())) throw 0; const r=await fetch(TP_API+"odpt:Train?odpt:operator=odpt.Operator:Toei"); if(!r.ok) throw 0; tpData=await r.json(); tpAt=Date.now(); }
+      catch(e){ tpBusy=false; $("tpMsg").textContent="電車の位置を読めませんでした（電波か、データの配信が止まっているかもしれません）"; $("tpBunch").innerHTML=""; return; }
+      tpBusy=false; if($("trainSel").value!==l) return tpDraw(false); }
+    const id="odpt.Railway:Toei."+rw, ord=(tpOrd&&tpOrd[id])||[], trs=(tpData||[]).filter(t=>t["odpt:railway"]===id);
+    tpLayer=L.layerGroup().addTo(trMap); let late=0;
+    trs.forEach(t=>{ const a=tpSt[t["odpt:fromStation"]], b=t["odpt:toStation"]?tpSt[t["odpt:toStation"]]:null; if(!a) return;
+      const d=Math.round((+t["odpt:delay"]||0)/60), col=d>=5?"#D23C2F":d>=2?"#E0A800":"#3E9B4F", dir=(t["odpt:railDirection"]||"").replace(/^.*:/,"");
+      if(d>=5) late++;
+      const off=/North|East|Inner/.test(dir)?0.00035:-0.00035, ll=b?[(a[0]+b[0])/2+off,(a[1]+b[1])/2+off]:[a[0]+off,a[1]+off];
+      const dest=(t["odpt:destinationStation"]||[])[0];
+      L.marker(ll,{icon:L.divIcon({className:"",html:`<div class="tpm" style="background:${col}">🚃</div>`,iconSize:[24,24],iconAnchor:[12,12]}),bubblingMouseEvents:false})
+        .bindPopup(`<div style="font-size:15px;line-height:1.5"><b>${esc(tpNm(dest))}行き</b>（${esc(TP_DIR[dir]||"向き不明")}）<div>${b?`${esc(a[2])} → ${esc(b[2])} を走っています`:`${esc(a[2])}駅にいます`}</div><div><b style="color:${col}">${d?`遅れ 約${d}分`:"ほぼ時刻どおり"}</b></div></div>`).addTo(tpLayer); });
+    const hm=new Date(tpAt), hh=`${hm.getHours()}:${String(hm.getMinutes()).padStart(2,"0")}`;
+    $("tpMsg").textContent=trs.length?`${l}：今 ${trs.length}本（5分以上の遅れ ${late}本）・${hh}現在`:`${l}：今走っている電車のデータがありません（${hh}現在。夜中は止まっています）`;
+    const bs=tpBunches(trs,ord), t0=Date.now();
+    $("tpBunch").innerHTML=bs.length?bs.map(x=>{ const e=new Date(t0+x.min*60000); return `<div class="tpb">🚃 <b>${esc(tpNm(x.st))}駅</b>に、${e.getHours()}時${String(e.getMinutes()).padStart(2,"0")}分ごろまでに<b>${x.n}本</b>まとめて着きそう（${esc(TP_DIR[x.dir]||"")}・遅れ${Math.round(x.dmin/60)}〜${Math.round(x.dmax/60)}分・目安）</div>`; }).join(""):trs.length?`<div class="src">遅れた電車がまとめて着きそうな所は、今はありません。</div>`:""; }
+  $("tpReload").onclick=()=>tpDraw(true);
+  setInterval(()=>{ if(!document.hidden&&!$("subTrain").hidden&&TP_LINE[$("trainSel").value]) tpDraw(false); },60000);
+  $("trDemand").onclick=()=>menuOpen("demand");
   let evDay=null;
   const ymdOf=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   // イベントの日：メモの開始の日付。なければ自動の分は入っていたファイルの日、CSVの分は読み込んだ日
@@ -6968,7 +7030,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   async function nowOpen(){
     if(!isAdmin()) return;
     const sh=$("nowSheet"), B=$("nowBody"); sh.hidden=false; document.body.style.overflow="hidden";
-    B.innerHTML=`<div class="geo">現在地・天気・電車・羽田の到着便・病院を確かめています…</div>`;
+    B.innerHTML=`<div class="geo">現在地・天気・電車・羽田の到着便・病院・イベントを確かめています…</div>`;
     const notes=[], now=new Date(), cMin=now.getHours()*60+now.getMinutes(), cur=shiftNow(), w=cur?dow(cur):DOW[now.getDay()];
     const [p]=await Promise.all([getPos(true),anWxLoad([todayStr()]).catch(()=>{})]);
     if(!p) notes.push("現在地が取れなかったので、移動の時間は入れていません");
@@ -7012,6 +7074,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       hospSrv.map(h=>({h,q:[+h["緯度"],+h["経度"]]})).filter(o=>isFinite(o.q[0])&&isFinite(o.q[1])).map(o=>Object.assign(o,{dm:dmTo(o.q),st:hospState(o.h,now)}))
         .filter(o=>o.dm<=5000&&!o.st.closed&&o.st.next&&o.st.left>=nowTravel(o.dm)&&o.st.left<=nowTravel(o.dm)+60).sort((a,b)=>a.dm-b.dm).slice(0,2)
         .forEach(o=>add({t:`近くの${String(o.h["病院名"]).trim()}を覗いてみる`,r:nowRate(all,w,cMin,rainNow,r=>near(r,o.q,300)),ex:`（${o.st.next.lab} ${hospHm(o.st.next.m)}・あと${o.st.left}分）`},o.dm)); }
+    // 7 イベントの終わり（2026-11-18 本人指定）：着く頃に終了見込みのイベント（終了の20分前〜40分後に着ける・15km以内）。集客見込みの多い順に3つまで
+    { if(cfg.url&&!evSrv.length) await evFetch();
+      const nowT=Date.now(), hmT=d=>`${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
+      evAll().map(e=>({e,E:evTimes(e.memo,e.at).E,q:[+e.lat,+e.lng]})).filter(o=>o.E&&isFinite(o.q[0])&&isFinite(o.q[1])).map(o=>Object.assign(o,{dm:dmTo(o.q)}))
+        .filter(o=>{ if(o.dm!=null&&o.dm>15000) return false; const arr=nowT+(o.dm!=null?nowTravel(o.dm):0)*60000; return arr>=o.E.getTime()-20*60000&&arr<=o.E.getTime()+40*60000; })
+        .sort((a,b)=>evCapN(b.e)-evCapN(a.e)||a.E-b.E).slice(0,3)
+        .forEach(o=>{ const left=Math.round((o.E.getTime()-nowT)/60000), cap=evCap(o.e);
+          add({t:`${String(o.e.name||"イベント").trim()}の終わりに合わせて行く`,r:nowRate(all,w,cMin,rainNow,r=>near(r,o.q,500)),ex:`（終了見込み ${hmT(o.E)}・${left>=0?`あと${left}分`:`${-left}分過ぎ`}${cap?`・集客見込み ${cap}`:""}）`},o.dm); }); }
     opts.sort((a,b)=>b.eff-a.eff);
     nowLast={top,opts,ref,notes,w,rainNow,at:now}; nowRender();
   }
