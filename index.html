@@ -729,6 +729,9 @@ body.rtfull{overflow:hidden}
 #tabTenko .shift{padding:10px 12px;gap:6px}
 #tabTenko .times{gap:0 12px;line-height:1.3;margin:0}   /* dl の上下の余白（ブラウザの決まりで24px）をなくす。2026-11-19 本人指定 */
 #tabTenko .times dd,#tabTenko .times dt{padding:1px 0}
+/* 今日へのボタン（2026-11-19 本人指定） */
+.todayjump{border:1.5px solid var(--accent);color:var(--accent);background:var(--surface);border-radius:12px;padding:10px;font-weight:700;font-size:18px;width:100%}
+.shift.jumped{outline:3px solid var(--accent);outline-offset:2px}
 /* 文字とアイコンを大きく（行間は詰めたまま。2026-11-18 本人指定） */
 #menuHome .mtile .mi{width:84px;height:84px;border-radius:22px}
 #menuHome .mtile .mi .em{font-size:58px}
@@ -816,6 +819,9 @@ body.rtfull{overflow:hidden}
   <section class="next" id="nextCard" aria-live="polite"></section>
 
   <section class="meter" id="meter"></section>
+
+  <!-- 今日の勤務のカードへ動く（2026-11-19 本人指定） -->
+  <button class="todayjump" id="todayJump" type="button">📅 今日へ</button>
 
   <div class="list" id="list"></div>
 
@@ -1910,7 +1916,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-19 10:31</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-19 10:55</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2394,6 +2400,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       </button>`;
     };
     $("list").innerHTML=(before?card(before,true):"")+inP.map(c=>card(c,false)).join("") || "";
+    { const t=todayStr(); $("todayJump").textContent=`📅 今日 ${md(t)}（${dow(t)}）へ`; }
     resetBackup();   // データが変わったら、作ったバックアップは作り直してもらう
   }
 
@@ -2434,6 +2441,16 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   };
   $("cancelBtn").onclick=closeSheet; $("sheetBg").onclick=closeSheet;
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("sheet").hidden) closeSheet(); });
+  // 今日へ：今日の日付の勤務 → なければ今が勤務中の勤務（前の日の出社など）→ なければ次の勤務。今日の月度でなければ月度も切りかえる
+  $("todayJump").onclick=()=>{
+    const t=todayStr(), all=calc(), nowD=new Date(), nowAbs=dayNo(t)*DAY+nowD.getHours()*60+nowD.getMinutes();
+    let c=all.find(x=>x.r.date===t)||all.find(x=>x.ok&&x.start<=nowAbs&&nowAbs<=x.liveEnd)||all.find(x=>x.r.date>t);
+    const i=periodOf(c?c.r.date:t); if(i>=0&&i!==pIdx){ pIdx=i; render(); }
+    const el=c&&$("list").querySelector(`.shift[data-id="${c.r.id}"]`);
+    if(!el){ const b=$("todayJump"), o=b.textContent; b.textContent="今日からあとの勤務は、まだ入っていません"; setTimeout(()=>{ b.textContent=o; },2500); return; }
+    el.scrollIntoView({behavior:"smooth",block:"center"});
+    el.classList.add("jumped"); setTimeout(()=>el.classList.remove("jumped"),1800);
+  };
   $("list").addEventListener("click",e=>{ const b=e.target.closest(".shift"); if(b) openSheet(b.dataset.id); });
   $("addBtn").onclick=()=>openSheet(null);
   $("prevP").onclick=()=>{ if(pIdx>0){pIdx--;render();} };
