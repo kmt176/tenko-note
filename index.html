@@ -729,8 +729,25 @@ body.rtfull{overflow:hidden}
 #tabTenko .shift{padding:10px 12px;gap:6px}
 #tabTenko .times{gap:0 12px;line-height:1.3}
 #tabTenko .times dd,#tabTenko .times dt{padding:1px 0}
+/* 文字とアイコンを大きく（行間は詰めたまま。2026-11-18 本人指定） */
+#menuHome .mtile .mi{width:84px;height:84px;border-radius:22px}
+#menuHome .mtile .mi .em{font-size:58px}
+#menuHome .mtile .mi .emtx{width:62px;height:62px;font-size:44px;line-height:62px}
+#menuHome .mtile{font-size:16px}
+#tabTenko .shift .date{font-size:28px}
+#tabTenko .shift .dow{font-size:19px}
+#tabTenko .times{font-size:24px}
+#tabTenko .times dt{font-size:18px}
+#tabSales .meter .total{font-size:30px}
+#tabSales .sumgrid .h{font-size:14.5px}
+#tabSales .sumgrid .v{font-size:23px}
+#tabSales .ride .tm{font-size:22px}
+#tabSales .ride .amt{font-size:23px}
+#tabSales .ride .sub{font-size:15.5px}
+#tabSales .ride .chip{font-size:15px}
+#tabSales .paytbl{font-size:16.5px}
 /* メニュー：ボタン（四角）とまとまりの見出し */
-#menuHome .mtile{min-height:104px;gap:4px;padding:8px 2px}
+#menuHome .mtile{min-height:112px;gap:4px;padding:8px 2px}
 #menuHome .mtiles{gap:6px}
 #menuHome .mgrp{margin:10px 0 6px}
 #menuHome .mgrp:first-child{margin-top:0}
@@ -1893,7 +1910,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 22:53</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-18 23:56</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
