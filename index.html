@@ -1794,8 +1794,8 @@ body.rtfull{overflow:hidden}
           <h3 style="margin-top:14px">勤務予定表（会社の計画の取り込み・試験）</h3>
           <div class="src" id="aSchInfo"></div>
           <div class="field"><label for="aSchText">貼り付け（1行に1人。会社の予定表から作った「月度の初日 コード: 30日分の印」の形か、「コード: 日付,日付,…」の形）</label>
-            <textarea id="aSchText" rows="4" placeholder="2768: 2026-09-26,2026-09-28,2026-10-01
-2778: 2026-09-28,2026-09-30,2026-10-02"></textarea></div>
+            <textarea id="aSchText" rows="4" placeholder="12345: 2026-09-26,2026-09-28,2026-10-01
+23456: 2026-09-28,2026-09-30,2026-10-02"></textarea></div>
           <div class="src">「月度の初日 コード: 印」の形（例 2026-10-27 682: 夜・有・出…）は、同じ月度を置き換えます。印は 出・昼・夜＝出勤、公＝公休出勤（公出の印が付きます）、有・研・欠・特・「・」＝出勤しない日。氏名は取り込みません。「コード: 日付」の形は、すでにある日付に追加されます。</div>
           <div class="btnrow"><button class="btn primary" id="aSchSave">予定表を取り込む</button></div>
           <div class="msg" id="aSchMsg" role="status"></div>
@@ -1934,7 +1934,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-20 17:54</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-20 19:32</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2688,7 +2688,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   $("schCodeChange").onclick=()=>{
     if(!schChangeArmed){ schChangeArmed=true; $("schCodeChange").textContent="もう一度押すと変更できます"; return; }
     schChangeArmed=false; $("schCodeChange").textContent="社員コードを変更する";
-    cfg.empCode=""; saveCfg(); $("schCode").value=""; if($("restCode")){ $("restCode").value=""; restCodeUI(); } applySchLock(); $("schMsg").textContent="社員コードを消しました。新しいコードを入れてください"; $("schCode").focus();
+    cfg.empCode=""; saveCfg(); try{ localStorage.removeItem("tenko.tkList"); }catch(e){} $("schCode").value=""; if($("restCode")){ $("restCode").value=""; restCodeUI(); } applySchLock(); $("schMsg").textContent="社員コードを消しました。新しいコードを入れてください"; $("schCode").focus();
   };
   async function syncSchedule(silent){
     const m=$("schMsg"), code=(cfg.empCode||"").trim();
@@ -5351,7 +5351,12 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // 一覧はサーバーの ticketList（社員コードを入れた人だけ。記録の表のシート「受け取れないチケット」）。このスマホには tenko.tkList に控える（電波がないとき用）。
   // 写真は Gemini（各自のキー tenko.gemkey）で読むだけで保存しない。推測で「使えます」は出さない：読めない所があれば黄色
   var tkRows=null, tkAt=0, tkLast=null;
-  try{ const c=JSON.parse(localStorage.getItem("tenko.tkList")||"null"); if(c&&Array.isArray(c.rows)){ tkRows=c.rows; tkAt=c.at||0; } }catch(e){}
+  // 2026-11-20 本人指定（守りの強化A）：控えは読んだときの社員コードと組にする。コードが空・別のコードになった・サーバーに断られた、のどれかで控えをすぐ消す
+  var tkCode="";
+  try{ const c=JSON.parse(localStorage.getItem("tenko.tkList")||"null"); if(c&&Array.isArray(c.rows)){ tkRows=c.rows; tkAt=c.at||0; tkCode=String(c.code||""); } }catch(e){}
+  function tkForget(){ tkRows=null; tkAt=0; tkCode=""; try{ localStorage.removeItem("tenko.tkList"); }catch(e){} }
+  function tkCodeCheck(){ const now=String(cfg.empCode||"").trim(); if(tkRows&&(!now||tkCode!==now)) tkForget(); }
+  tkCodeCheck();
   const TK_TODAY=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
   const tkNC=v=>String(v||"").normalize("NFKC").toUpperCase().replace(/^\s*TC\.?/,"").replace(/[^0-9A-Z]/g,"").replace(/^0+(?=.)/,"");   // 会社コード：記号・「Tc.」・頭の0を外して比べる
   const tkNN=v=>{ const d=String(v||"").normalize("NFKC").replace(/[^0-9]/g,""); return d?+d:null; };   // 番号：数字だけ
@@ -5363,11 +5368,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     return {r:out,rev}; }
   const TK_I={date:0,kind:1,name:2,code:3,type:4,no:5,why:6,memo:7,chk:8};
   async function tkLoad(force){
+    tkCodeCheck();
     if(!cfg.url){ tkShowList(); return; }
     if(!force&&tkRows&&Date.now()-tkAt<60*60e3){ tkShowList(); return; }
-    try{ const j=await post({action:"ticketList",code:String(cfg.empCode||"")});
-      if(j&&j.ok&&Array.isArray(j.rows)){ tkRows=j.rows; tkAt=Date.now(); try{ localStorage.setItem("tenko.tkList",JSON.stringify({at:tkAt,rows:tkRows})); }catch(e){} }
-      else if(!tkRows) $("tkListMsg").textContent=(j&&j.error)||"一覧を読めませんでした"; }
+    try{ const code=String(cfg.empCode||"").trim(), q={action:"ticketList",code,passcode:cfg.npass||"",longPass:cfg.pass||""}; if(isAdmin()&&cfg.apass) q.adminPass=cfg.apass;
+      const j=await post(q);
+      if(j&&j.ok&&Array.isArray(j.rows)){ tkRows=j.rows; tkAt=Date.now(); tkCode=code; try{ localStorage.setItem("tenko.tkList",JSON.stringify({at:tkAt,rows:tkRows,code})); }catch(e){} }
+      else { if(j&&j.deny) tkForget(); $("tkListMsg").textContent=(j&&j.error)||"一覧を読めませんでした"; if(!tkRows){ tkShowList(); return; } } }
     catch(e){ if(!tkRows) $("tkListMsg").textContent="一覧を読めませんでした（電波）"; }
     tkShowList(); }
   function tkShowList(){
