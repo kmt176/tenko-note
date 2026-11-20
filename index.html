@@ -711,7 +711,7 @@ body.rtfull{overflow:hidden}
 .crkb.k1{background:#D23C2F}.crkb.k2{background:#E07B00}.crkb.k3{background:#E8B800;color:#3A2C00}.crkb.k4{background:#8A9391}.crkb.k0{background:transparent;color:var(--muted);border:1.5px dashed var(--muted);padding:0 7px}
 .crlegend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}.crlegend small{flex-basis:100%;color:var(--muted);font-size:13px}
 .crrow.crk1{border-left:6px solid #D23C2F;padding-left:8px;background:rgba(210,60,47,.10)}.crrow.crk2{border-left:5px solid #E07B00;padding-left:8px;background:rgba(224,123,0,.07)}.crrow.crk3{border-left:5px solid #E8B800;padding-left:8px}.crrow.crk4{border-left:5px solid #8A9391;padding-left:8px}
-.crdis{font-weight:800;color:#D23C2F}.crhint{color:var(--muted);font-size:13.5px}
+.crdis{font-weight:800;color:#D23C2F}.crev{font-size:13.5px;color:var(--muted)}.crev a{color:inherit}.crhint{color:var(--muted);font-size:13.5px}
 .crksel{min-height:40px;font-size:15px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:4px 6px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .crdis{color:#FF8A80}}
 .crauto{display:inline-block;margin-left:6px;padding:0 6px;border-radius:6px;background:#1D6A80;color:#fff;font-size:12px;font-weight:700;vertical-align:2px}
@@ -1341,7 +1341,8 @@ body.rtfull{overflow:hidden}
       <div class="src">東京国際クルーズターミナル（お台場・青海）と晴海客船ターミナルなどに入るクルーズ船の予定です。東京都港湾局の「客船入港予定」は、そのままアプリに取り込めない形（Power BI の画面）で公開されているので、見て手で入れてください。入れた予定は、このスマホの中だけに覚えます。<span id="crSrcAdm" hidden><br><b>管理者は、港湾局の予定がサーバーから自動で入ります（「港湾局」の印の分。12時間ごとに読み直します）。</b></span></div>
       <div class="btnrow"><a class="btn" style="text-decoration:none" href="https://www.kouwan.metro.tokyo.lg.jp/kanko/cruise" target="_blank" rel="noopener">港湾局の入港予定を開く</a><button type="button" class="btn" id="crAutoBtn" hidden>港湾局の予定を読み直す（管理者）</button></div>
       <div class="src" id="crAutoMsg" hidden></div>
-      <div class="crlegend"><span class="crkb k1">全員下船</span><span class="crkb k2">下船・乗船</span><span class="crkb k3">乗船</span><span class="crkb k4">寄港</span><span class="crkb k0">不明</span><small>区別は船会社の予定を見て、各予定の「区別」で決めてください。決めていない日は「不明」です（推測では決めません）</small></div>
+      <div class="src" id="crLineMsg" hidden></div>
+      <div class="crlegend"><span class="crkb k1">全員下船</span><span class="crkb k2">下船・乗船</span><span class="crkb k3">乗船</span><span class="crkb k4">寄港</span><span class="crkb k0">不明</span><small>飛鳥・三井オーシャン（サクラ・フジ）は、管理者のときだけ船会社の公式サイトの予定から自動で決めます（「船会社の予定から」の印）。ほかの船は、船会社の予定を見て各予定の「区別」で決めてください。決められない日は「不明」です（推測では決めません）</small></div>
       <div id="crForm" class="crform" hidden>
         <div class="row2"><div class="field"><label for="crDate">入港の日</label><input type="date" id="crDate"></div><div class="field"><label for="crTerm">ターミナル</label><select id="crTerm"><option>東京国際クルーズターミナル</option><option>晴海客船ターミナル</option><option>その他</option></select></div></div>
         <div class="row2"><div class="field"><label for="crIn">入港の時刻</label><input type="time" id="crIn"></div><div class="field"><label for="crOut">出港の時刻</label><input type="time" id="crOut"></div></div>
@@ -1930,7 +1931,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-19 13:29</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-20 12:43</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5590,7 +5591,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   var shipMode="tk"; try{ shipMode=localStorage.getItem("tenko.shipMode")||"tk"; }catch(e){}
   function shipModeDraw(){ if(!["tk","cr","both"].includes(shipMode)) shipMode="tk";
     $("shipModeSeg").querySelectorAll("[data-shipmode]").forEach(b=>b.setAttribute("aria-selected",b.dataset.shipmode===shipMode));
-    $("tkCard").hidden=shipMode==="cr"; $("crCard").hidden=shipMode==="tk"; if(shipMode!=="tk"){ crDraw(); crAutoLoad(false); } }
+    $("tkCard").hidden=shipMode==="cr"; $("crCard").hidden=shipMode==="tk"; if(shipMode!=="tk"){ crDraw(); crAutoLoad(false); crLineLoad(false); } }
   $("shipModeSeg").querySelectorAll("[data-shipmode]").forEach(b=>b.onclick=()=>{ shipMode=b.dataset.shipmode; try{ localStorage.setItem("tenko.shipMode",shipMode); }catch(e){} shipModeDraw(); if(shipMode!=="cr") loadShip(false); });
   // ----- クルーズ船（手で入れる。このスマホの中だけ tenko.cruise。設定は tenko.cruiseCfg） -----
   var crList=[], crCfg={bigN:2000,days:1,notify:true,offMin:60,disNotify:true,disPrev:"17:00",disDay:"05:00"}, crEditId=null;   // 起動時に showSub から先に呼ばれても困らないよう var
@@ -5610,7 +5611,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       else if(force) $("crAutoMsg").textContent=(j&&j.error)||"港湾局の予定を読めませんでした"; }
     catch(e){ if(force) $("crAutoMsg").textContent="港湾局の予定を読めませんでした（電波）"; }
     if(!$("crCard").hidden) crDraw(); }
-  $("crAutoBtn").onclick=()=>crAutoLoad(true);
+  $("crAutoBtn").onclick=()=>{ crAutoLoad(true); crLineLoad(true); };
+  async function crLineLoad(force){
+    if(!isAdmin()||!cfg.url) return; if(!force&&crLines&&Date.now()-(crLines.got||0)<24*3600e3) return;
+    try{ const j=await post({action:"admin",op:"cruiseLines",adminPass:cfg.apass,force:!!force});
+      if(j&&Array.isArray(j.items)){ crLines={got:Date.now(),at:j.at,items:j.items,error:j.error||""}; try{ localStorage.setItem("tenko.cruiseLines",JSON.stringify(crLines)); }catch(e){} } }
+    catch(e){}
+    if(!$("crCard").hidden) crDraw(); }
   const crSaveAll=()=>{ try{ localStorage.setItem("tenko.cruise",JSON.stringify(crList)); localStorage.setItem("tenko.cruiseCfg",JSON.stringify(crCfg)); return true; }catch(e){ return false; } };
   const crToday=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
   const crDaysTo=dt=>Math.round((new Date(dt+"T00:00:00")-new Date(crToday()+"T00:00:00"))/864e5);
@@ -5619,10 +5626,28 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const CRK={下船:{t:"全員下船（東京着）",c:1},下船乗船:{t:"下船・乗船",c:2},乗船:{t:"乗船（東京発）",c:3},寄港:{t:"寄港",c:4}};
   var crKindSet={}; try{ crKindSet=JSON.parse(localStorage.getItem("tenko.crKindSet")||"{}")||{}; }catch(e){ crKindSet={}; }
   const crKey=x=>x.date+"|"+String(x.name||"").replace(/\s/g,"");
-  function crKindOf(x){ if(x.auto) return CRK[crKindSet[crKey(x)]]?crKindSet[crKey(x)]:"";
+  // 船会社の公式サイトの予定（2026-11-20 本人指定：管理者個人だけ・週1回・日付と発着の港だけ）。サーバーの op cruiseLines。このスマホの tenko.cruiseLines に控える
+  var crLines=null; try{ crLines=JSON.parse(localStorage.getItem("tenko.cruiseLines")||"null"); }catch(e){ crLines=null; }
+  const crShipN=v=>String(v||"").replace(/\s|　/g,"").replace(/III$/,"Ⅲ").replace(/II$/,"Ⅱ");
+  const crTk=v=>/東京|晴海/.test(v||"");
+  const crMD=v=>`${+v.slice(5,7)}/${+v.slice(8,10)}`;
+  // 港湾局の予定（入港の日・出港の日）と、同じ船の船会社のクルーズを照らし合わせる。東京着の日＝全員下船、東京発の日＝乗船、両方＝下船・乗船、
+  // 東京以外から始まり東京以外で終わるクルーズの途中＝寄港。どれにも当たらなければ決めない（不明）
+  function crLineOf(x){
+    if(!isAdmin()||!crLines||!Array.isArray(crLines.items)) return null;
+    const nm=crShipN(x.name), d0=x.date, d1=x.outDate&&x.outDate>d0?x.outDate:d0, cs=crLines.items.filter(c=>crShipN(c.ship)===nm);
+    if(!cs.length) return null;
+    const arr=cs.filter(c=>crTk(c.to)&&c.e>=d0&&c.e<=d1), dep=cs.filter(c=>crTk(c.from)&&c.s>=d0&&c.s<=d1);
+    let k="", ev=[];
+    if(arr.length&&dep.length){ k="下船乗船"; ev=arr.concat(dep); } else if(arr.length){ k="下船"; ev=arr; } else if(dep.length){ k="乗船"; ev=dep; }
+    else { const mid=cs.filter(c=>c.s<d0&&c.e>d1&&!crTk(c.from)&&!crTk(c.to)); if(mid.length){ k="寄港"; ev=mid; } }
+    return k?{k,ev}:null; }
+  const crEvTxt=c=>`${crMD(c.s)} ${c.from}発〜${crMD(c.e)} ${c.to}着`;
+  function crKindOf(x){ if(x.auto){ if(CRK[crKindSet[crKey(x)]]) return crKindSet[crKey(x)]; const L=crLineOf(x); return L?L.k:""; }
     const k=String(x.kind||""); if(CRK[k]) return k; if(k.startsWith("寄港")) return "寄港"; if(k.startsWith("発着")) return "下船乗船"; return ""; }   // 前の「寄港・発着」の書き方も読む
   const crDis=x=>{ const k=crKindOf(x); return k==="下船"||k==="下船乗船"; };
   function crOffAt(x){ const m=/^(\d{1,2}):(\d{2})/.exec(x.in||""); if(!m) return ""; const v=+m[1]*60+(+m[2])+(Math.max(0,+crCfg.offMin||0)); return String(Math.floor(v/60)%24).padStart(2,"0")+":"+String(v%60).padStart(2,"0"); }
+  const crKindByLine=x=>x.auto&&!CRK[crKindSet[crKey(x)]]&&!!crLineOf(x);
   const crHint=x=>x.auto&&!crKindOf(x)&&/東京|晴海/.test((x.prev||"")+"|"+(x.next||""));
   function crDateTxt(dt){ const d=new Date(dt+"T00:00:00"), n=crDaysTo(dt); return `${d.getMonth()+1}/${d.getDate()}（${"日月火水木金土"[d.getDay()]}）${n===0?" 今日":n===1?" あした":n>1?` ${n}日後`:""}`; }
   function crDraw(){
@@ -5630,13 +5655,16 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("crOffMin").value=crCfg.offMin; $("crDisNotify").checked=!!crCfg.disNotify; $("crDisPrev").value=crCfg.disPrev||""; $("crDisDay").value=crCfg.disDay||"";
     const adm=isAdmin(); $("crAutoBtn").hidden=!adm; $("crAutoMsg").hidden=!adm; $("crSrcAdm").hidden=!adm;
     if(adm){ const d=crAuto&&crAuto.at?new Date(crAuto.at):null; $("crAutoMsg").textContent=crAuto&&crAuto.items?`🔄 港湾局の予定を自動で入れています（${crAuto.items.length}件・${d?`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}に読んだ分`:"読んだ時刻 不明"}）${crAuto.error?`・最新は読めませんでした：${crAuto.error}`:""}。管理者だけに出しています。出典：東京都港湾局「客船入港予定」`:"港湾局の予定は、まだ読んでいません"; }
+    $("crLineMsg").hidden=!adm;
+    if(adm){ const d=crLines&&crLines.at?new Date(crLines.at):null; $("crLineMsg").textContent=crLines&&crLines.items?`🔄 船会社の予定（飛鳥・三井オーシャン）を自動で照らし合わせています（${crLines.items.length}件・${d?`${d.getMonth()+1}/${d.getDate()}に読んだ分`:"読んだ日 不明"}・週1回読み直し）${crLines.error?`・一部読めませんでした：${crLines.error}`:""}。管理者だけに出しています。出典：郵船クルーズ・商船三井クルーズの公式サイト`:"船会社の予定は、まだ読んでいません"; }
     const t=crToday(), xs=crAll().sort((a,b)=>(a.date+(a.in||"")).localeCompare(b.date+(b.in||""))), up=xs.filter(x=>x.date>=t), past=xs.filter(x=>x.date<t).slice(-5);
     const row=x=>{ const k=crKindOf(x), kc=k?CRK[k].c:0; return `<div class="crrow${kc?` crk${kc}`:crBig(x)?" big":""}${x.date<t?" past":""}"><div class="crh"><span class="crn">🛳 ${esc(x.name||"（名前なし）")}${x.auto?`<span class="crauto">港湾局</span>`:""}</span><b>${crDateTxt(x.date)}</b></div>
-      <div><span class="crkb k${kc}">${k?CRK[k].t:"不明"}</span>${crHint(x)?` <span class="crhint">前の港か次の港が東京：東京発着かも（要確認）</span>`:""}</div>
+      <div><span class="crkb k${kc}">${k?CRK[k].t:"不明"}</span>${crKindByLine(x)?` <span class="crhint">船会社の予定から</span>`:""}${crHint(x)?` <span class="crhint">前の港か次の港が東京：東京発着かも（要確認）</span>`:""}</div>
+      ${crKindByLine(x)?`<div class="crev">もとにしたクルーズ：${crLineOf(x).ev.slice(0,3).map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(crEvTxt(c))}</a>`).join("・")}</div>`:""}
       ${crDis(x)?`<div class="crdis">🧳 入港 ${x.in?esc(x.in):"不明"}・下船の始まりの目安 ${crOffAt(x)?crOffAt(x)+"ごろ":"不明"}${crOffAt(x)?`（入港の${Math.max(0,+crCfg.offMin||0)}分後・目安）`:""}</div>`:""}
       <div>${esc(x.term||"")}・入港 ${x.in?esc(x.in):"不明"}・出港 ${x.outDate&&x.outDate!==x.date?`${+x.outDate.slice(5,7)}/${+x.outDate.slice(8,10)} `:""}${x.out?esc(x.out):"不明"}</div>
       <div>${x.auto?"定員":"乗客"} ${x.pax!=null&&x.pax!==""?`<span class="${crBig(x)?"crbig":""}">${Number(x.pax).toLocaleString()}人${crBig(x)?"（多い）":""}</span>`:"不明"}${x.gt?`・${Number(x.gt).toLocaleString()}トン`:""}${x.prev||x.next?`・${esc(x.prev||"不明")} → ${esc(x.next||"不明")}`:""}${x.memo?`・${esc(x.memo)}`:""}</div>
-      <div class="crb">${x.auto?`<select class="crksel" data-crk="${esc(crKey(x))}" aria-label="区別"><option value="">区別：不明</option>${Object.keys(CRK).map(c=>`<option value="${c}"${c===k?" selected":""}>${CRK[c].t}</option>`).join("")}</select>`:`<button type="button" class="btn" data-credit="${esc(x.id)}">直す</button>`}${x.date>=t?`<a class="btn" style="text-decoration:none" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.term&&x.term!=="その他"?x.term:"東京国際クルーズターミナル")}&travelmode=driving" target="_blank" rel="noopener">ルート案内</a>`:""}</div></div>`; };
+      <div class="crb">${x.auto?`<select class="crksel" data-crk="${esc(crKey(x))}" aria-label="区別"><option value="">${crLineOf(x)?`区別：自動（${CRK[crLineOf(x).k].t}）`:"区別：不明"}</option>${Object.keys(CRK).map(c=>`<option value="${c}"${c===crKindSet[crKey(x)]?" selected":""}>${CRK[c].t}</option>`).join("")}</select>`:`<button type="button" class="btn" data-credit="${esc(x.id)}">直す</button>`}${x.date>=t?`<a class="btn" style="text-decoration:none" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.term&&x.term!=="その他"?x.term:"東京国際クルーズターミナル")}&travelmode=driving" target="_blank" rel="noopener">ルート案内</a>`:""}</div></div>`; };
     $("crList").innerHTML=(up.length?`<h3 style="margin:12px 0 6px">これからの入港（${up.length}件）</h3>`+up.map(row).join(""):`<div class="geo" style="margin-top:10px">これからの入港予定は入っていません。「＋ 予定を足す」から入れてください</div>`)
       +(past.length?`<details style="margin-top:8px"><summary>過ぎた予定（最近の${past.length}件）</summary>${past.map(row).join("")}</details>`:"");
     $("crList").querySelectorAll("[data-credit]").forEach(b=>b.onclick=()=>crOpen(b.dataset.credit));
@@ -5687,7 +5715,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   setInterval(()=>{ if(!document.hidden) crDisCheck(); },600000);   // 開いたままのときも、朝の時刻を過ぎたら出す
   async function crCheck(){
     if((!crCfg.notify&&!crCfg.disNotify)||Date.now()<hwUntil) return;
-    await crAutoLoad(false);
+    await crAutoLoad(false); await crLineLoad(false);
     if(crDisCheck()||!crCfg.notify) return;
     const xs=crAll().filter(x=>{ const n=crDaysTo(x.date); return n>=0&&n<=(+crCfg.days||0); }).sort((a,b)=>a.date.localeCompare(b.date)); if(!xs.length) return;
     const key=crToday()+"|"+xs.map(x=>x.id).join(","); let last=""; try{ last=localStorage.getItem("tenko.cruiseNotified")||""; }catch(e){}
