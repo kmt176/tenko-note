@@ -714,6 +714,7 @@ body.rtfull{overflow:hidden}
 .crdis{font-weight:800;color:#D23C2F}.crev{font-size:13.5px;color:var(--muted)}.crev a{color:inherit}.crhint{color:var(--muted);font-size:13.5px}
 .crksel{min-height:40px;font-size:15px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:4px 6px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .crdis{color:#FF8A80}}
+.crpl{display:inline-block;margin-right:6px;padding:0 7px;border-radius:6px;font-size:13px;font-weight:800;color:#fff;vertical-align:1px}.crpl.ao{background:#1F5FAD}.crpl.ha{background:#2E7D4F}
 .crauto{display:inline-block;margin-left:6px;padding:0 6px;border-radius:6px;background:#1D6A80;color:#fff;font-size:12px;font-weight:700;vertical-align:2px}
 /* 売上・点呼時間・メニューの画面は、行間とすき間を詰める（文字の大きさはそのまま。押すものは高さ44pxより小さくしない。2026-11-18 本人指定） */
 :is(#tabSales,#tabTenko,#menuHome){line-height:1.4}
@@ -1934,7 +1935,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-21 11:07</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-21 14:03</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -5671,11 +5672,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("crLineMsg").hidden=!adm;
     if(adm){ const d=crLines&&crLines.at?new Date(crLines.at):null; $("crLineMsg").textContent=crLines&&crLines.items?`🔄 船会社の予定（飛鳥・三井オーシャン）を自動で照らし合わせています（${crLines.items.length}件・${d?`${d.getMonth()+1}/${d.getDate()}に読んだ分`:"読んだ日 不明"}・週1回読み直し）${crLines.error?`・一部読めませんでした：${crLines.error}`:""}。管理者だけに出しています。出典：郵船クルーズ・商船三井クルーズの公式サイト`:"船会社の予定は、まだ読んでいません"; }
     const t=crToday(), xs=crAll().sort((a,b)=>(a.date+(a.in||"")).localeCompare(b.date+(b.in||""))), up=xs.filter(x=>x.date>=t), past=xs.filter(x=>x.date<t).slice(-5);
+    // ターミナルの場所の印（2026-11-21 本人指定）：青海＝東京国際クルーズターミナル、晴海＝晴海客船ターミナル。ほかは付けない
+    const crPlace=tm=>/東京国際クルーズ|青海/.test(tm||"")?`<span class="crpl ao">青海</span>`:/晴海/.test(tm||"")?`<span class="crpl ha">晴海</span>`:"";
     const row=x=>{ const k=crKindOf(x), kc=k?CRK[k].c:0; return `<div class="crrow${kc?` crk${kc}`:crBig(x)?" big":""}${x.date<t?" past":""}"><div class="crh"><span class="crn">🛳 ${esc(x.name||"（名前なし）")}${x.auto?`<span class="crauto">港湾局</span>`:""}</span><b>${crDateTxt(x.date)}</b></div>
       <div><span class="crkb k${kc}">${k?CRK[k].t:"不明"}</span>${crKindByLine(x)?` <span class="crhint">船会社の予定から</span>`:""}${crHint(x)?` <span class="crhint">前の港か次の港が東京：東京発着かも（要確認）</span>`:""}</div>
       ${crKindByLine(x)?`<div class="crev">もとにしたクルーズ：${crLineOf(x).ev.slice(0,3).map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(crEvTxt(c))}</a>`).join("・")}</div>`:""}
       ${crDis(x)?`<div class="crdis">🧳 入港 ${x.in?esc(x.in):"不明"}・下船の始まりの目安 ${crOffAt(x)?crOffAt(x)+"ごろ":"不明"}${crOffAt(x)?`（入港の${Math.max(0,+crCfg.offMin||0)}分後・目安）`:""}</div>`:""}
-      <div>${esc(x.term||"")}・入港 ${x.in?esc(x.in):"不明"}・出港 ${x.outDate&&x.outDate!==x.date?`${+x.outDate.slice(5,7)}/${+x.outDate.slice(8,10)} `:""}${x.out?esc(x.out):"不明"}</div>
+      <div>${crPlace(x.term)}${esc(x.term||"")}・入港 ${x.in?esc(x.in):"不明"}・出港 ${x.outDate&&x.outDate!==x.date?`${+x.outDate.slice(5,7)}/${+x.outDate.slice(8,10)} `:""}${x.out?esc(x.out):"不明"}</div>
       <div>${x.auto?"定員":"乗客"} ${x.pax!=null&&x.pax!==""?`<span class="${crBig(x)?"crbig":""}">${Number(x.pax).toLocaleString()}人${crBig(x)?"（多い）":""}</span>`:"不明"}${x.gt?`・${Number(x.gt).toLocaleString()}トン`:""}${x.prev||x.next?`・${esc(x.prev||"不明")} → ${esc(x.next||"不明")}`:""}${x.memo?`・${esc(x.memo)}`:""}</div>
       <div class="crb">${x.auto?`<select class="crksel" data-crk="${esc(crKey(x))}" aria-label="区別"><option value="">${crLineOf(x)?`区別：自動（${CRK[crLineOf(x).k].t}）`:"区別：不明"}</option>${Object.keys(CRK).map(c=>`<option value="${c}"${c===crKindSet[crKey(x)]?" selected":""}>${CRK[c].t}</option>`).join("")}</select>`:`<button type="button" class="btn" data-credit="${esc(x.id)}">直す</button>`}${x.date>=t?`<a class="btn" style="text-decoration:none" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.term&&x.term!=="その他"?x.term:"東京国際クルーズターミナル")}&travelmode=driving" target="_blank" rel="noopener">ルート案内</a>`:""}</div></div>`; };
     $("crList").innerHTML=(up.length?`<h3 style="margin:12px 0 6px">これからの入港（${up.length}件）</h3>`+up.map(row).join(""):`<div class="geo" style="margin-top:10px">これからの入港予定は入っていません。「＋ 予定を足す」から入れてください</div>`)
