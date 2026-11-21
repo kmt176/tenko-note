@@ -1934,7 +1934,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-21 10:29</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-21 11:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2024,7 +2024,7 @@ body.rtfull{overflow:hidden}
       <dt>営業分析</dt><dd>上の「営業分析」で、1時間あたりの売上（休憩・回送を除いた時間で計算。1勤務あたりの回送・休憩の平均も）、日ごとの内訳（プルダウンで日を選ぶ）、曜日別・時間帯×曜日・乗車の多い場所・降ろしたあと次が早い場所・営業のしかた別（連続配車／配車／手上げ／乗り場）・乗車時間の長さ別・天気別の傾向と、1万円以上の乗車の一覧を見られます。期間は「この月度」「直近3か月」「全部」から選べます。金額はETC・アプリ手配料を除いたメーター料金の税抜です。</dd>
       <dt>過去の分をまとめて取り込む</dt><dd>「日報から取り込む」には、何日分でも続けて貼り付けられます（「出庫日:」ごとに1日）。「業務前点呼: 12:56」「業務後点呼: 08:48」の行があれば、点呼時間にその日の勤務がなくても作って取り込みます。すでに記録がある日は取り込みません。</dd>
     </dl>
-    <p><small>営業（分）・待ち（分）・アプリ料（配車でネット/QR以外は200円）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中に保存されます（仲間の合言葉と社員コードを入れた場合は、下の「仲間の速報」も見てください）。</small></p>
+    <p><small>営業（分）・待ち（分）・アプリ料（配車でGO Pay以外は200円。社内のネット/QR決済もかかります）は自動で計算します。住所は国土地理院、天気は気象庁アメダス（近くの観測所）のデータです。データはこのスマホの中に保存されます（仲間の合言葉と社員コードを入れた場合は、下の「仲間の速報」も見てください）。</small></p>
   </section>
 
   <section class="card help">
@@ -2112,7 +2112,7 @@ body.rtfull{overflow:hidden}
     <div class="pair" id="rAmtPair">
       <div class="field"><label for="rAmt">金額（円）</label><input type="text" class="yenin" id="rAmt" inputmode="none" readonly autocomplete="off"></div>
       <div class="field"><label for="rPay">決済</label>
-        <select id="rPay"><option>現金</option><option value="A:GOPAY">A:ネット/QR</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
+        <select id="rPay"><option>現金</option><option value="A:GOPAY">A:GO Pay</option><option value="A:QR">A:ネット/QR</option><option>C:ｸﾚｼﾞｯﾄ</option><option>K:交通系IC</option><option>Q:QUICPay</option><option>I:iD</option><option>W:WAON</option><option>ﾅ:nanaco</option><option>ｴ:Wdy</option><option>T:チケット</option><option>福祉券</option><option>B空転</option></select></div>
     </div>
     <small class="src" id="rAmtHint" style="margin-top:-6px">金額は現収＋未収（ETC・手配料も含める）</small>
     <!-- 定額運賃（羽田空港・成田空港・東京ディズニーリゾート。2026-11-12 ユーザー指定） -->
@@ -2198,9 +2198,10 @@ body.rtfull{overflow:hidden}
   // ===== 車種ごとの設定（管理者が決める：JPNタクシー／アルファード（GO PREMIUM専用）） =====
   // 乗務員は自分の車種を1回選ぶ。管理者が保存した値は Apps Script から読み込み、なければ下の初期値を使う
   const ALL_KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転"];
-  const ALL_PAYS=["現金","A:GOPAY","C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy","T:チケット","福祉券","B空転"];
+  const ALL_PAYS=["現金","A:GOPAY","A:QR","C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy","T:チケット","福祉券","B空転"];
   // 画面に出す決済の名前。保存する値は「A:GOPAY」のまま（過去の記録・計算・日報の取り込みと合わせるため）
-  const payLabel=p=>p==="A:GOPAY"?"A:ネット/QR":p;
+  // 2026-11-21 本人指定：Aを2つに分けた。A:GOPAY＝GO Pay（アプリ決済・手配料なし・初期値）、A:QR＝社内のネット/QR決済（手配料200円あり）。日報の記号はどちらも「ﾈ」。納金ではどちらも③その他未収
+  const payLabel=p=>p==="A:GOPAY"?"A:GO Pay":p==="A:QR"?"A:ネット/QR":p;
   const CAR_BASE={kinds:ALL_KINDS,pays:ALL_PAYS,appFee:200,thanks:true,rz:true,rzMustAm:90,rzMustPm:120,rzRules:null,tax:0.9,pay:0.62,bonus:0.1,maxKm:362,nokin:"10:30",kiko:"10:10",rep:21,margin:30,stay:3,viaMin:5,vias:DEFAULT_VIAS};
   // アルファードはGO専用：内容は配車だけ、決済はGO Payだけ、アプリ手配料なし、連続配車なし、給与の率0.44（ユーザーの比較表）
   const CAR_DEF={jpn:Object.assign({},CAR_BASE,{name:"JPNタクシー"}),alp:Object.assign({},CAR_BASE,{name:"アルファード（GO PREMIUM）",kinds:["配車"],pays:["A:GOPAY"],appFee:0,thanks:false,rz:false,pay:0.44})};
@@ -2216,6 +2217,8 @@ body.rtfull{overflow:hidden}
   const car=()=>{ const c=carOf(carType);
     if(offCfg.rz){ c.rz=false; c.kinds=c.kinds.filter(k=>k!=="連続配車"); }
     if(offCfg.thanks) c.thanks=false;
+    // 前に「選べる決済」を自分で決めた人にも、A:GO Pay があれば A:ネット/QR を出す（手配料を使う車種だけ）
+    if(c.appFee>0&&c.pays.includes("A:GOPAY")&&!c.pays.includes("A:QR")){ const i=c.pays.indexOf("A:GOPAY"); c.pays=[...c.pays.slice(0,i+1),"A:QR",...c.pays.slice(i+1)]; }
     return c; };
   const hm2m=v=>{ const m=/^(\d{1,2}):(\d{2})$/.exec(String(v||"").trim()); return m?+m[1]*60+ +m[2]:null; };
   const m2hm=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
@@ -6566,7 +6569,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
 
   // ---- 集計（売上管理Excelの「集計」シートと同じ計算） ----
   const CARD=["C:ｸﾚｼﾞｯﾄ","K:交通系IC","Q:QUICPay","I:iD","W:WAON","ﾅ:nanaco","ｴ:Wdy"];   // ② 日計表に載るもの
-  const OTHER=["A:GOPAY","T:チケット","福祉券"];                                        // ③ その他未収
+  const OTHER=["A:GOPAY","A:QR","T:チケット","福祉券"];                                        // ③ その他未収
   const PAYS=[...CARD,"現金","B空転",...OTHER];
   function settle(d,s){
     const c=d.check||{}, num=v=>v==null||v===""?null:+v, by=k=>s.byPay[k]||0;
@@ -7985,8 +7988,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   // 連続配車モードがオンの時間か（開始〜終了の間、または終了がまだ）
   const rzOnAt=(d,at)=>d.rides.some(m=>m.kind===RZ&&m.on!=null&&at>=m.on&&(m.off==null||at<=m.off));
-  // 決済の初期値：前の乗車と同じ。ただし連続配車モードがオンの間はネット/QR（ユーザー指定）
-  const payNow=(d,at)=>{ const ps=car().pays; if(at!=null&&rzOnAt(d,at)&&ps.includes("A:GOPAY")) return "A:GOPAY"; const p0=lastOf(d,"pay","A:GOPAY"); return ps.includes(p0)?p0:ps[0]; };
+  // 決済の初期値：前の乗車と同じ。ただし連続配車モードがオンの間は GO Pay（ユーザー指定）
+  const payNow=(d,at)=>{ const ps=car().pays; if(at!=null&&rzOnAt(d,at)&&ps.includes("A:GOPAY")) return "A:GOPAY"; let p0=lastOf(d,"pay","A:GOPAY"); if(p0==="A:QR") p0="A:GOPAY"; return ps.includes(p0)?p0:ps[0]; };   // A:ネット/QR はその1回だけ。次の乗車は GO Pay から
   // 入力画面の「内容」「決済」は、車種で使うものだけを出す（今の記録の値は残す）
   function fillOpts(id,list,cur){ const L=[...list]; if(cur&&!L.includes(cur)) L.push(cur); $(id).innerHTML=L.map(v=>`<option value="${esc(v)}">${esc(payLabel(v))}</option>`).join(""); }
   function kindNow0(d,at){
@@ -8635,7 +8638,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
 ・乗車地・降車地：日報のとおり（例：板橋区上板橋2）。
 ・メモ：備考の文字（例：SA#）。
 ・数字にカンマは付けない。値に「,」を入れない。`;
-  const PAY_ALIAS={"ﾈ":"A:GOPAY","ネット":"A:GOPAY","GO":"A:GOPAY","GOPAY":"A:GOPAY","A:ネット/QR":"A:GOPAY","ネット/QR":"A:GOPAY","C":"C:ｸﾚｼﾞｯﾄ","クレジット":"C:ｸﾚｼﾞｯﾄ","K":"K:交通系IC","Q":"Q:QUICPay","I":"I:iD","W":"W:WAON","ﾅ":"ﾅ:nanaco","ｴ":"ｴ:Wdy","T":"T:チケット","現収":"現金"};
+  const PAY_ALIAS={"ﾈ":"A:GOPAY","ネット":"A:GOPAY","GO":"A:GOPAY","GOPAY":"A:GOPAY","A:QR":"A:QR","A:ネット/QR":"A:QR","ネット/QR":"A:QR","GO Pay":"A:GOPAY","A:GO Pay":"A:GOPAY","C":"C:ｸﾚｼﾞｯﾄ","クレジット":"C:ｸﾚｼﾞｯﾄ","K":"K:交通系IC","Q":"Q:QUICPay","I":"I:iD","W":"W:WAON","ﾅ":"ﾅ:nanaco","ｴ":"ｴ:Wdy","T":"T:チケット","現収":"現金"};
   const KIND_ALIAS={"出":"出庫","入":"入庫","回":"回送","休":"休憩","迎車":"配車","流し":"手上げ","キャンセル":"CAN"};
   const HEAD_KEYS={"総営収":"total","アプリ手配料金":"app","ETC合計":"etc","ETC会社負担":"etcCo","ETC自己負担":"etcSelf","日計表の現収":"genshu","日計表の未収":"mishu","公的割引":"koteki","各種料金":"kakushu"};   // 公的割引＝日報の差引（10円単位）。障害者割引の額＝この数字×10円
   const KINDS=["連続配車","配車","手上げ","乗り場","CAN","B空転",...EVENTS];
@@ -8684,7 +8687,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
         // 10列目の合計金額（メーター料金）があれば、金額−合計金額−ETC＝200 を社内決済とする
         const fare=num(c[9]);
         if(fare!=null&&!Number.isNaN(fare)){ r.fare=fare;
-          if(amt&&isHai(kind)){ const diff=amt-fare-(etc||0); const inh=diff===200; if(inh!==appAuto(r)) r.inhouse=inh; } }
+          if(amt&&isHai(kind)){ const diff=amt-fare-(etc||0); const inh=diff===200; if(inh&&r.pay==="A:GOPAY"&&car().pays.includes("A:QR")) r.pay="A:QR"; if(inh!==appAuto(r)) r.inhouse=inh; } }   // ﾈ で手配料200円がある乗車は社内のネット/QR
         // 2行に分けた乗車の2行目（合計金額なし・同じ乗車時刻）には手配料を付けない
         else { const pv=rides[rides.length-1]; if(pv&&pv.fare!=null&&pv.on===r.on&&appAuto(r)) r.inhouse=false; }
         if(r.off==null) r.off=on;
