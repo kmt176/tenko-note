@@ -1934,7 +1934,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-20 19:32</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-21 10:29</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -8692,6 +8692,14 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
       rides.push(r);
     });
     if(!date) errs.push("「出庫日: YYYY-MM-DD」の行がありません");
+    // 迎2（配車）が2回以上続いたところは、全部「連続配車」にする（2026-11-21 本人指定）。手上げ・乗り場・休憩・回送・出庫・入庫で切れる。
+    // CAN・B空転は切らずに数えない。2行に分けた乗車（同じ乗車時刻）は1回と数える。連続配車の時間を記録した日は、あとの syncRz がその時間で付け直す
+    if(car().kinds.includes("連続配車")){
+      let run=[], n=0, lastOn=null;
+      const cut=()=>{ if(n>=2) run.forEach(r=>{ r.kind="連続配車"; }); run=[]; n=0; lastOn=null; };
+      rides.forEach(r=>{ if(r.kind==="配車"){ run.push(r); if(r.on!==lastOn) n++; lastOn=r.on; } else if(r.kind!=="CAN"&&r.kind!=="B空転") cut(); });
+      cut();
+    }
     // 連続配車の時間だけの日（明細なし）は、もうある勤務に連続配車の時間だけを入れる
     const rzOnly=!!rzRaw.length&&!rides.length;
     if(rzRaw.length&&date){
