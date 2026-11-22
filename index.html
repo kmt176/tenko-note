@@ -1935,7 +1935,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 15:06</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 20:59</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6310,6 +6310,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     return to-from-busy;
   }
 
+  // 1勤務の回送・休憩の合計（2026-11-22 本人指定：1日の売上の欄に出す）。勤務中で終わっていない分は今までを数える
+  function evMin(d,kd,act){ const now=act?nowMin(sDay):null; return d.rides.reduce((a,r)=>{ if(r.kind!==kd||r.on==null) return a; const e=r.off!=null?r.off:now; return e!=null&&e>r.on?a+e-r.on:a; },0); }
   // 営業時間（実車＋空車。休憩・回送を除く）と税抜営収。実車率（時間）と時間あたり売上に使う
   const pct=v=>(Math.round(v*1000)/10).toFixed(1)+"%";
   function workOf(k){
@@ -7793,11 +7795,12 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         ${simple?`<div><span class="h">営業時間</span><span class="v num">${hm(hrs)}</span></div>`:
         `<div><span class="h">配車／手上げ${s.noriba?"／乗り場":""}</span><span class="v num">${s.haisha}／${s.nagashi}${s.noriba?"／"+s.noriba:""}${s.renzoku?`<small style="display:block;font-size:13px;color:var(--muted)">うち連続配車 ${s.renzoku}</small>`:""}${s.thanks?`<small style="display:block;font-size:13px;color:var(--muted)">うちサンキュー ${s.thanks}</small>`:""}</span></div>
          <div><span class="h">実車時間</span><span class="v num">${hm(s.eig)}</span></div>
-         <div><span class="h">空車時間</span><span class="v num">${(e=>e==null?"—":hm(e))(emptyMin(d,act))}</span></div>`}
+         <div><span class="h">空車時間</span><span class="v num">${(e=>e==null?"—":hm(e))(emptyMin(d,act))}</span></div>
+         <div><span class="h">回送時間</span><span class="v num">${hm(evMin(d,"回送",act))}</span></div>
+         <div><span class="h">休憩時間</span><span class="v num">${hm(evMin(d,"休憩",act))}</span></div>`}
         <div><span class="h">税抜営収</span><span class="v num">${Y(shiftSales(k).amt*salesCfg().tax)}</span></div>
         ${simple?"":(t=>`<div><span class="h">実車率（時間）</span><span class="v num">${t?pct(t.eig/t.work):"—"}</span></div>
-         <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?Y(t.net/(t.work/60)):"—"}</span></div>
-         <div><span class="h">時給（給与＋賞与）</span><span class="v num">${t?Y(t.net*salesCfg().pay/(t.work/60)):"—"}<small style="display:block;font-size:13px;color:var(--muted)">休憩・回送を除く</small></span></div>`)(workOf(k))}
+         <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?Y(t.net/(t.work/60)):"—"}</span></div>`)(workOf(k))}
       </div>
       ${!simple&&(Object.keys(s.byPay).length||s.bku||s.app||s.etc)?`<details class="paydet" id="payDet"${payOpen?" open":""}><summary>決済別の内訳</summary><table class="paytbl paytop" aria-label="決済別の内訳"><tbody>
       ${PAYS.filter(p=>s.byPay[p]).map(p=>`<tr><td>${esc(payLabel(p))}</td><td class="n">${s.cntPay[p]}回</td><td class="n">${Y(s.byPay[p])}</td></tr>`).join("")}
