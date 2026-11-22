@@ -716,7 +716,7 @@ body.rtfull{overflow:hidden}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .crdis{color:#FF8A80}}
 /* 休憩までの時間のバー（2026-11-22 本人指定）：4時間以内（3:59まで）に10分以上の休憩。2時間で黄・3時間でオレンジ・3時間30分で赤 */
 .restbar{border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--surface)}
-.restbar .rbh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:15px}
+.restbar .rbh{display:flex;justify-content:space-between;align-items:baseline;gap:2px 8px;font-size:15px}
 .restbar .rbh b{font-size:17px}
 .rbtrack{position:relative;height:16px;margin:6px 0 2px;border-radius:8px;background:var(--sunk);overflow:hidden;border:1px solid var(--line)}
 .rbfill{position:absolute;left:0;top:0;bottom:0;border-radius:8px 0 0 8px;background:#2C7A4B}
@@ -724,7 +724,12 @@ body.rtfull{overflow:hidden}
 .rbtick{position:absolute;top:0;bottom:0;width:2px;background:var(--muted);opacity:.6}
 .rbscale{position:relative;height:16px;font-size:12px;color:var(--muted)}
 .rbscale span{position:absolute;transform:translateX(-50%);white-space:nowrap}.rbscale span:first-child{transform:none}.rbscale span:last-child{transform:translateX(-100%)}
-.restbar.r{border-color:#D23C2F}.restbar .rbnote{font-size:13px;color:var(--muted)}
+.restbar .rbnote{font-size:13px;color:var(--muted)}
+.restbar summary .rbh{display:inline-flex;width:calc(100% - 1.2em);vertical-align:top;flex-wrap:wrap}
+.restbar.y{border-color:#E8B800;border-width:2px}.restbar.o{border-color:#E07B00;border-width:2px}.restbar.r{border-color:#D23C2F;border-width:2.5px}
+.rbover{color:#D23C2F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .rbover{color:#FF8A80}}
+:root[data-theme="dark"] .rbover{color:#FF8A80}
 .admchk{margin-top:8px;padding:6px 10px;border:1.5px dashed var(--muted);border-radius:8px;font-size:14px;line-height:1.6;color:var(--ink)}
 .crpl{display:inline-block;margin-right:6px;padding:0 7px;border-radius:6px;font-size:13px;font-weight:800;color:#fff;vertical-align:1px}.crpl.ao{background:#1F5FAD}.crpl.ha{background:#2E7D4F}
 .crauto{display:inline-block;margin-left:6px;padding:0 6px;border-radius:6px;background:#1D6A80;color:#fff;font-size:12px;font-weight:700;vertical-align:2px}
@@ -921,7 +926,6 @@ body.rtfull{overflow:hidden}
 </div>
 
 <div class="wrap" id="tabSales" hidden>
-  <section class="restbar" id="restBar" hidden aria-live="polite"></section>
   <div class="seg" id="carSeg" role="tablist" aria-label="車種（管理者の確認用）" hidden></div>
   <div class="seg" role="tablist" aria-label="表示" id="sView">
     <button role="tab" data-view="day" aria-selected="true">勤務</button>
@@ -939,6 +943,7 @@ body.rtfull{overflow:hidden}
 
   <section class="meter" id="sSum" aria-live="polite"></section>
   <button class="btn primary nowgo" data-nowgo id="nowBtnSales" hidden>🧭 今どうする（試験）</button>
+  <section class="restbar" id="restBar" hidden><details id="restDet"><summary class="svsum" id="restSum">☕ 休憩までの時間</summary><div id="restBody"></div></details></section>   <!-- 2026-11-22 本人指定：今どうすると連続配車の間に。接遇と同じプルダウン（開いた・閉じたは tenko.restOpen）。「画面に出す機能」で外せる -->
   <section class="meter" id="rzCard" hidden></section>
   <details id="sHour" hidden><summary>時間帯別の売上</summary><div class="src">乗車した時刻の時間帯ごとの合計（ETC・アプリ手配料を除いたメーター料金）。</div><div id="sHourBody"></div></details>
 
@@ -1948,7 +1953,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 21:53</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 22:23</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2828,7 +2833,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   function fillCarSel(){ $("carSel").innerHTML=CAR_TYPES.map(t=>`<option value="${t}">${escC(carOf(t).name)}</option>`).join(""); $("carSel").value=carType; }
   fillCarSel(); $("carSel").addEventListener("change",()=>setCar($("carSel").value));
   // 画面に出す機能（個人のオン・オフ）。車種で使わない機能は、ここにも出さない
-  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","日交乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["yuryo","優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","駐車禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true]];
+  const OFF_ITEMS=[["rz","連続配車（ボタン・コアタイムのボタン・連続配車の画面）",()=>carOf(carType).rz],["rzweek","連続配車の週の目標（出庫〜入庫の60%など。月によって使わないときは外す）",()=>carOf(carType).rz],["thanks","サンキューチケットのチェック",()=>carOf(carType).thanks],["inhouse","社内決済のチェック（アプリ手配料は今まで通り自動で数えます）",()=>carOf(carType).appFee>0],["hw","走行距離（高速道路の距離控除）",()=>true],["route","走行ルート（Googleマップのタイムライン）",()=>true],["taxi","専用乗り場の不足のお知らせ（画面上の帯）",()=>true],["trainban","電車が止まったときのお知らせ（画面上の薄いピンクの帯）",()=>true],["trainsound","電車のお知らせの音（iPhoneはマナーモードのときは鳴りません）",()=>true],["wake","アプリを開いている間は画面を消さない（電池を少し多く使います）",()=>true],["patrol","取締りの場所に近づいたら、音（ピーポーン）と黄色の帯で知らせる（アプリを開いている間だけ。位置を見続けるので電池を多めに使います）",()=>true],["stand","日交乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["yuryo","優良乗り場に近づいたら、音（ピロリン）と緑の帯で知らせる（アプリを開いている間だけ）",()=>true],["rest2","駐車禁止ポイント（クレーム発生）に近づいたら・エリアに入ったら、音（ビー・ビー・ビー）とオレンジの帯で知らせる",()=>true],["buttons","乗車・降車などのボタン（日報の取り込みだけで記録する人向け。「会社を出た時間」のボタンは残ります。仕様上おすすめしません：乗車の位置、連続配車の時間などが記録されなくなります）",()=>true],["sv","接遇チェック",()=>true],["restbar","休憩までの時間のバー",()=>true]];
   function renderOffBox(){ const el=$("offBox"); if(!el) return;
     el.innerHTML=OFF_ITEMS.filter(([,,ok])=>ok()).map(([k,label])=>{ const lk=k==="rzweek"&&adminLock.rzweek; return `<label class="check"><input type="checkbox" data-off="${k}" ${offCfg[k]?"":"checked"}${lk?" disabled":""}>${escC(label)}${lk?`<br><small style="color:var(--warn)">管理者が全員「使わない」にしています</small>`:""}</label>`; }).join("");
     el.querySelectorAll("[data-off]").forEach(b=>b.onchange=()=>{ if(b.checked) delete offCfg[b.dataset.off]; else offCfg[b.dataset.off]=true;
@@ -3245,6 +3250,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   const SV_DESC_DEFAULT=`乗車の前に「乗車接遇」、降車の前に「降車接遇」を押します。<b>録音も文字も保存しません</b>。画面をつけたままにしてください。操作は必ず停車中に。反応しなくなったときは、ほかのアプリをすべて閉じてからもう一度試してください（マイクを取り合って動かなくなることがあります）。`;
   // 接遇チェックの見出し・説明文（管理者が変えられる）。アプリを開いたときに「cars」で全員が受け取る
   // 接遇チェックのプルダウンの開いた・閉じたを覚える（初めは閉じる）。動いている間は閉じても止めない
+  (()=>{ const d=$("restDet"); try{ d.open=localStorage.getItem("tenko.restOpen")==="1"; }catch(e){}
+    d.addEventListener("toggle",()=>{ try{ localStorage.setItem("tenko.restOpen",d.open?"1":""); }catch(e){} }); })();
   (()=>{ const d=$("svDet"); try{ d.open=localStorage.getItem("tenko.svOpen")==="1"; }catch(e){}
     d.addEventListener("toggle",()=>{ try{ localStorage.setItem("tenko.svOpen",d.open?"1":""); }catch(e){} }); })();
   function applySvText(){
@@ -6301,7 +6308,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         if(isHai(r.kind)) s.haisha++; if(r.kind==="連続配車") s.renzoku++; if(r.thanks) s.thanks++; if(r.kind==="手上げ") s.nagashi++; if(r.kind==="乗り場") s.noriba++;
         s.app+=r._app; s.etc+=+r.etc||0; if(r._eig>0) s.eig+=r._eig;
       }
-      const end=r.off!=null?r.off:r.on; if(end!=null) prevEnd=end;
+      // 待ちの起点＝それまでに終わった記録のうち一番遅い時刻。連続配車モード（開始〜終了の長い記録）は起点にしない（2026-11-22：モードの終了時刻が起点になり、休憩明けにモードを始めた最初の乗車の待ちがマイナスになっていた）
+      const end=r.kind===RZ?null:r.off!=null?r.off:r.on; if(end!=null) prevEnd=prevEnd==null?end:Math.max(prevEnd,end);
     });
     return s;
   }
@@ -6338,13 +6346,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   function renderRestBar(){
     const el=$("restBar"); if(!el) return;
-    const k=shiftNow(), r=restState(k); if(!r){ el.hidden=true; return; }
+    const k=shiftNow(), r=offCfg.restbar||!k||sDay!==k?null:restState(k); if(!r){ el.hidden=true; return; }
     const lv=r.el>=210?"r":r.el>=180?"o":r.el>=120?"y":"", left=REST_LIM-r.el, pc=Math.min(100,r.el/240*100);
     const tk=m=>`<i class="rbtick" style="left:${m/240*100}%"></i>`;
-    el.className="restbar"+(lv==="r"?" r":""); el.hidden=false;
-    el.innerHTML=`<div class="rbh"><span>☕ ${r.cur?`<b>休憩中</b>（${r.cur.min}分${r.cur.min<REST_MIN?`・あと${REST_MIN-r.cur.min}分で10分`:"・10分をこえました"}）`:`休憩なしで <b class="num">${hm(r.el)}</b>`}</span>
-      <span>${left>=0?`あと <b class="num">${hm(left)}</b>（${clock(((r.dead%DAY)+DAY)%DAY)}まで）`:`<b style="color:#D23C2F">4時間をこえています</b>`}</span></div>
-      <div class="rbtrack" role="img" aria-label="休憩なしの時間 ${hm(r.el)}（4時間まで）"><div class="rbfill ${lv}" style="width:${pc}%"></div>${tk(120)}${tk(180)}${tk(210)}</div>
+    el.className="restbar"+(lv?" "+lv:""); el.hidden=false;
+    $("restSum").innerHTML=`<span class="rbh"><span>☕ ${r.cur?`<b>休憩中</b>（${r.cur.min}分${r.cur.min<REST_MIN?`・あと${REST_MIN-r.cur.min}分で10分`:"・10分をこえました"}）`:`休憩なしで <b class="num">${hm(r.el)}</b>`}</span>
+      <span>${left>=0?`あと <b class="num">${hm(left)}</b>（${clock(((r.dead%DAY)+DAY)%DAY)}まで）`:`<b class="rbover">4時間をこえています</b>`}</span></span>`;
+    $("restBody").innerHTML=`<div class="rbtrack" role="img" aria-label="休憩なしの時間 ${hm(r.el)}（4時間まで）"><div class="rbfill ${lv}" style="width:${pc}%"></div>${tk(120)}${tk(180)}${tk(210)}</div>
       <div class="rbscale"><span style="left:0">0</span><span style="left:50%">2時間</span><span style="left:75%">3時間</span><span style="left:100%">4時間</span></div>
       <div class="rbnote">4時間以内（3時間59分まで）に、10分以上の休憩を1回。休憩ボタンの記録から数えます</div>`;
   }
@@ -7800,8 +7808,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   var payOpen=false;   // 売上のまとめの「決済別の内訳」を開いているか（tenko.payOpen）
   function renderSales(reset){
-    renderRestBar();
     if(reset||!sDay) sDay=activeDay();
+    renderRestBar();
     // 点呼に勤務がない日（点呼を使っていない人も）は、入力の画面を出さない
     const noShift=!sDay||(!hasShift(sDay)&&!hasData(sales.days[sDay]));
     ["sSum","rzCard","sDetail","sSimple","ckCard","hwCard","gasCard","rtCard","sHour"].forEach(id=>{ if(noShift) $(id).hidden=true; });
