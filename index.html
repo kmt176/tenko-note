@@ -714,6 +714,7 @@ body.rtfull{overflow:hidden}
 .crdis{font-weight:800;color:#D23C2F}.crev{font-size:13.5px;color:var(--muted)}.crev a{color:inherit}.crhint{color:var(--muted);font-size:13.5px}
 .crksel{min-height:40px;font-size:15px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:4px 6px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .crdis{color:#FF8A80}}
+.admchk{margin-top:8px;padding:6px 10px;border:1.5px dashed var(--muted);border-radius:8px;font-size:14px;line-height:1.6;color:var(--ink)}
 .crpl{display:inline-block;margin-right:6px;padding:0 7px;border-radius:6px;font-size:13px;font-weight:800;color:#fff;vertical-align:1px}.crpl.ao{background:#1F5FAD}.crpl.ha{background:#2E7D4F}
 .crauto{display:inline-block;margin-left:6px;padding:0 6px;border-radius:6px;background:#1D6A80;color:#fff;font-size:12px;font-weight:700;vertical-align:2px}
 /* 売上・点呼時間・メニューの画面は、行間とすき間を詰める（文字の大きさはそのまま。押すものは高さ44pxより小さくしない。2026-11-18 本人指定） */
@@ -1935,7 +1936,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 20:59</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 21:15</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6310,6 +6311,9 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     return to-from-busy;
   }
 
+  // 出庫〜入庫の時間（空車時間と同じ決め方：入庫前の勤務中は今まで）。管理者の確かめ用（2026-11-22）
+  function spanMin(d,act){ const ev=k=>d.rides.find(r=>r.kind===k&&r.on!=null), timed=d.rides.filter(r=>r.on!=null), st=ev("出庫"), en=ev("入庫"); if(!timed.length) return null;
+    const from=st?st.on:Math.min(...timed.map(r=>r.on)), to=en?en.on:act?nowMin(sDay):Math.max(...timed.map(r=>r.off!=null?r.off:r.on)); return to>from?to-from:null; }
   // 1勤務の回送・休憩の合計（2026-11-22 本人指定：1日の売上の欄に出す）。勤務中で終わっていない分は今までを数える
   function evMin(d,kd,act){ const now=act?nowMin(sDay):null; return d.rides.reduce((a,r)=>{ if(r.kind!==kd||r.on==null) return a; const e=r.off!=null?r.off:now; return e!=null&&e>r.on?a+e-r.on:a; },0); }
   // 営業時間（実車＋空車。休憩・回送を除く）と税抜営収。実車率（時間）と時間あたり売上に使う
@@ -7802,6 +7806,8 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         ${simple?"":(t=>`<div><span class="h">実車率（時間）</span><span class="v num">${t?pct(t.eig/t.work):"—"}</span></div>
          <div><span class="h">時間あたり（税抜）</span><span class="v num">${t?Y(t.net/(t.work/60)):"—"}</span></div>`)(workOf(k))}
       </div>
+      ${!simple&&isAdmin()?(()=>{ const e=emptyMin(d,act), sp=spanMin(d,act), kv=evMin(d,"回送",act), ky=evMin(d,"休憩",act), sum=e==null?null:s.eig+e+kv;   // 管理者だけの一時的な確かめ（2026-11-22 本人指定）
+        return `<div class="admchk"><b>🔧 確かめ用（管理者だけ）</b><br>実車＋空車＋回送 <span class="num">${sum==null?"—":hm(sum)}</span>・出庫〜入庫 <span class="num">${sp==null?"—":hm(sp)}</span>${sum!=null&&sp!=null?`<br>差 <span class="num">${sp-sum<0?"−":""}${hm(Math.abs(sp-sum))}</span>（休憩 ${hm(ky)}${ky?"。休憩を回送とは別に記録した分が差に出ます":""}）`:""}</div>`; })():""}
       ${!simple&&(Object.keys(s.byPay).length||s.bku||s.app||s.etc)?`<details class="paydet" id="payDet"${payOpen?" open":""}><summary>決済別の内訳</summary><table class="paytbl paytop" aria-label="決済別の内訳"><tbody>
       ${PAYS.filter(p=>s.byPay[p]).map(p=>`<tr><td>${esc(payLabel(p))}</td><td class="n">${s.cntPay[p]}回</td><td class="n">${Y(s.byPay[p])}</td></tr>`).join("")}
       <tr class="tot"><td>合計（メーター日計）</td><td class="n">${s.count}回</td><td class="n">${Y(s.total)}</td></tr>
