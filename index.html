@@ -714,6 +714,17 @@ body.rtfull{overflow:hidden}
 .crdis{font-weight:800;color:#D23C2F}.crev{font-size:13.5px;color:var(--muted)}.crev a{color:inherit}.crhint{color:var(--muted);font-size:13.5px}
 .crksel{min-height:40px;font-size:15px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:4px 6px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .crdis{color:#FF8A80}}
+/* 休憩までの時間のバー（2026-11-22 本人指定）：4時間以内（3:59まで）に10分以上の休憩。2時間で黄・3時間でオレンジ・3時間30分で赤 */
+.restbar{border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--surface)}
+.restbar .rbh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:15px}
+.restbar .rbh b{font-size:17px}
+.rbtrack{position:relative;height:16px;margin:6px 0 2px;border-radius:8px;background:var(--sunk);overflow:hidden;border:1px solid var(--line)}
+.rbfill{position:absolute;left:0;top:0;bottom:0;border-radius:8px 0 0 8px;background:#2C7A4B}
+.rbfill.y{background:#E8B800}.rbfill.o{background:#E07B00}.rbfill.r{background:#D23C2F}
+.rbtick{position:absolute;top:0;bottom:0;width:2px;background:var(--muted);opacity:.6}
+.rbscale{position:relative;height:16px;font-size:12px;color:var(--muted)}
+.rbscale span{position:absolute;transform:translateX(-50%);white-space:nowrap}.rbscale span:first-child{transform:none}.rbscale span:last-child{transform:translateX(-100%)}
+.restbar.r{border-color:#D23C2F}.restbar .rbnote{font-size:13px;color:var(--muted)}
 .admchk{margin-top:8px;padding:6px 10px;border:1.5px dashed var(--muted);border-radius:8px;font-size:14px;line-height:1.6;color:var(--ink)}
 .crpl{display:inline-block;margin-right:6px;padding:0 7px;border-radius:6px;font-size:13px;font-weight:800;color:#fff;vertical-align:1px}.crpl.ao{background:#1F5FAD}.crpl.ha{background:#2E7D4F}
 .crauto{display:inline-block;margin-left:6px;padding:0 6px;border-radius:6px;background:#1D6A80;color:#fff;font-size:12px;font-weight:700;vertical-align:2px}
@@ -910,6 +921,7 @@ body.rtfull{overflow:hidden}
 </div>
 
 <div class="wrap" id="tabSales" hidden>
+  <section class="restbar" id="restBar" hidden aria-live="polite"></section>
   <div class="seg" id="carSeg" role="tablist" aria-label="車種（管理者の確認用）" hidden></div>
   <div class="seg" role="tablist" aria-label="表示" id="sView">
     <button role="tab" data-view="day" aria-selected="true">勤務</button>
@@ -1936,7 +1948,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 21:27</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-22 21:53</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6311,6 +6323,31 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     return to-from-busy;
   }
 
+  // 休憩までの時間（2026-11-22 本人指定）：出庫か、最後の10分以上の休憩が終わった時刻から数える。4時間以内（3:59まで）に次の10分以上の休憩が要る。
+  // 休憩中は、休憩を始めた時刻で止めて「休憩中」と出す（10分以上になって終わると、そこから数え直し）。10分未満の休憩は数え直さない
+  const REST_MIN=10, REST_LIM=239;
+  function restState(k){
+    const d=k&&sales.days[k]; if(!d||!d.rides) return null;
+    const st=d.rides.find(r=>r.kind==="出庫"&&r.on!=null); if(!st||d.rides.some(r=>r.kind==="入庫"&&r.on!=null)) return null;
+    const now=nowMin(k); let base=st.on, cur=null;
+    d.rides.filter(r=>r.kind==="休憩"&&r.on!=null&&r.on>=st.on).sort((x,y)=>x.on-y.on).forEach(r=>{
+      if(r.off==null){ if(r.on<=now) cur=r; return; }
+      if(r.off-r.on>=REST_MIN&&r.off>base) base=r.off; });
+    const until=cur?Math.max(base,cur.on):now, el=Math.max(0,until-base);
+    return {el,base,dead:base+REST_LIM,cur:cur?{on:cur.on,min:Math.max(0,now-cur.on)}:null};
+  }
+  function renderRestBar(){
+    const el=$("restBar"); if(!el) return;
+    const k=shiftNow(), r=restState(k); if(!r){ el.hidden=true; return; }
+    const lv=r.el>=210?"r":r.el>=180?"o":r.el>=120?"y":"", left=REST_LIM-r.el, pc=Math.min(100,r.el/240*100);
+    const tk=m=>`<i class="rbtick" style="left:${m/240*100}%"></i>`;
+    el.className="restbar"+(lv==="r"?" r":""); el.hidden=false;
+    el.innerHTML=`<div class="rbh"><span>☕ ${r.cur?`<b>休憩中</b>（${r.cur.min}分${r.cur.min<REST_MIN?`・あと${REST_MIN-r.cur.min}分で10分`:"・10分をこえました"}）`:`休憩なしで <b class="num">${hm(r.el)}</b>`}</span>
+      <span>${left>=0?`あと <b class="num">${hm(left)}</b>（${clock(((r.dead%DAY)+DAY)%DAY)}まで）`:`<b style="color:#D23C2F">4時間をこえています</b>`}</span></div>
+      <div class="rbtrack" role="img" aria-label="休憩なしの時間 ${hm(r.el)}（4時間まで）"><div class="rbfill ${lv}" style="width:${pc}%"></div>${tk(120)}${tk(180)}${tk(210)}</div>
+      <div class="rbscale"><span style="left:0">0</span><span style="left:50%">2時間</span><span style="left:75%">3時間</span><span style="left:100%">4時間</span></div>
+      <div class="rbnote">4時間以内（3時間59分まで）に、10分以上の休憩を1回。休憩ボタンの記録から数えます</div>`;
+  }
   // 出庫〜入庫の時間（空車時間と同じ決め方：入庫前の勤務中は今まで）。管理者の確かめ用（2026-11-22）
   function spanMin(d,act){ const ev=k=>d.rides.find(r=>r.kind===k&&r.on!=null), timed=d.rides.filter(r=>r.on!=null), st=ev("出庫"), en=ev("入庫"); if(!timed.length) return null;
     const from=st?st.on:Math.min(...timed.map(r=>r.on)), to=en?en.on:act?nowMin(sDay):Math.max(...timed.map(r=>r.off!=null?r.off:r.on)); return to>from?to-from:null; }
@@ -7763,6 +7800,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   }
   var payOpen=false;   // 売上のまとめの「決済別の内訳」を開いているか（tenko.payOpen）
   function renderSales(reset){
+    renderRestBar();
     if(reset||!sDay) sDay=activeDay();
     // 点呼に勤務がない日（点呼を使っていない人も）は、入力の画面を出さない
     const noShift=!sDay||(!hasShift(sDay)&&!hasData(sales.days[sDay]));
@@ -9099,6 +9137,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   $("sPrev").onclick=()=>moveDay(-1); $("sNext").onclick=()=>moveDay(1);
   // 乗車中は、経過時間の表示を1分ごとに更新する
   setInterval(()=>{ if(!$("tabSales").hidden&&!$("sDayView").hidden&&$("rSheet").hidden) renderSales(); },60000);
+  setInterval(()=>{ if(!$("tabSales").hidden) renderRestBar(); },30000);   // 休憩までの時間のバーは、月度の集計や営業分析を見ているときも動かす
   // 連続配車の浮かせたボタンは、どのタブを見ていてもコアタイムの出入りに合わせて1分ごとに出し引きする
   setInterval(renderRzFloat,60000);
   renderRzFloat();
