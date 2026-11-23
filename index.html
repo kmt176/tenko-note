@@ -730,6 +730,8 @@ body.rtfull{overflow:hidden}
 .rbover{color:#D23C2F}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .rbover{color:#FF8A80}}
 :root[data-theme="dark"] .rbover{color:#FF8A80}
+.moftag{display:inline-block;font-style:normal;font-size:12px;font-weight:800;padding:0 6px;border-radius:6px;vertical-align:1px;color:#fff;white-space:nowrap}.moftag.adm{background:#5B6472}.moftag.g1{background:#1F5FAD}
+#menuOffBox .check input{flex-shrink:0}
 .moffh{margin:14px 0 4px;font-size:16px}
 .admchk{margin-top:8px;padding:6px 10px;border:1.5px dashed var(--muted);border-radius:8px;font-size:14px;line-height:1.6;color:var(--ink)}
 .crpl{display:inline-block;margin-right:6px;padding:0 7px;border-radius:6px;font-size:13px;font-weight:800;color:#fff;vertical-align:1px}.crpl.ao{background:#1F5FAD}.crpl.ha{background:#2E7D4F}
@@ -1955,7 +1957,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-23 09:12</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-23 09:31</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3586,13 +3588,14 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
   // メニューに出すボタン（2026-11-23 本人指定）：1つずつ出す・出さないを選ぶ（このスマホだけ・tenko.menuOff）。設定・バックアップ・使い方はいつも出す。
   // 知らせのある画面のボタンを外すと、その知らせ（音と帯）も止める。付け直すと知らせも戻す（「画面に出す機能」の知らせのチェックも一緒に変わる）
   const MENU_FIX=new Set(["set","bk","help"]);
+  const MENU_ADM=new Set(((MENU_GROUPS.find(g=>g[0].startsWith("管理者だけ"))||[])[2]||[]).map(x=>x[0]));   // 「管理者だけ」の欄のボタン（印を付ける。2026-11-23 本人指定）
   const MENU_NOTIF={patrol:["patrol"],stand:["stand"],yuryo:["yuryo"],rest2:["rest2"],taxi:["taxi"],train:["trainban","trainsound"]};
   let menuOff={}; try{ menuOff=JSON.parse(localStorage.getItem("tenko.menuOff")||"{}")||{}; }catch(e){ menuOff={}; }
   const menuVisible=k=>!(menuOff[k]&&!MENU_FIX.has(k))&&menuVisible0(k);
   function renderMenuOffBox(){ const el=$("menuOffBox"); if(!el) return;
     const xs=[]; MENU_GROUPS.forEach(([,,ys])=>ys.forEach(x=>{ if(!MENU_FIX.has(x[0])&&menuVisible0(x[0])) xs.push(x); }));
     el.innerHTML=`<h4 class="moffh">メニューに出すボタン</h4><div class="src">チェックを外すと、メニューにそのボタンが出なくなります。知らせのある画面（取締り・日交乗り場・森ビル・優良乗り場・駐車禁止・電車）は、外すと知らせの音と帯も止まります。設定・バックアップ・使い方はいつも出ます。${menuStyle==="tile"?"":"<br><b>今はメニューが横並びの形なので、ボタンの一覧の形にしたときに効きます。</b>"}</div>`+
-      xs.map(x=>`<label class="check"><input type="checkbox" data-moff="${x[0]}" ${menuOff[x[0]]?"":"checked"}><span>${micon(x[0])} ${esc(x[3])}${MENU_NOTIF[x[0]]?`<small style="display:block;color:var(--muted);font-size:13px">外すと知らせも止まります</small>`:""}</span></label>`).join("");
+      xs.map(x=>`<label class="check"><input type="checkbox" data-moff="${x[0]}" ${menuOff[x[0]]?"":"checked"}><span>${micon(x[0])} ${esc(x[3])}${MENU_ADM.has(x[0])?` <i class="moftag adm">管理者のみ</i>`:G1ONLY.has(x[0])?` <i class="moftag g1">グループ1</i>`:""}${MENU_NOTIF[x[0]]?`<small style="display:block;color:var(--muted);font-size:13px">外すと知らせも止まります</small>`:""}</span></label>`).join("");
     el.querySelectorAll("[data-moff]").forEach(b=>b.onchange=()=>{ const k=b.dataset.moff;
       if(b.checked) delete menuOff[k]; else menuOff[k]=true;
       try{ localStorage.setItem("tenko.menuOff",JSON.stringify(menuOff)); }catch(e){}
