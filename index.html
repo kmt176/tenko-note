@@ -1974,7 +1974,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-24 20:50</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-24 21:07</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -6685,7 +6685,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     const fuku=by("福祉券"), gCash=cash+bku+fuku, gMis=mishu-fuku;
     const swap=gen!=null&&mis!=null&&gen-gCash>0&&gMis-mis===gen-gCash?gen-gCash:0;
     const swapRides=swap?(s.rows||[]).filter(x=>!isEv(x.kind)&&x.pay&&x.pay!=="現金"&&x.pay!=="福祉券"&&+x.amt===swap):[];
-    return {swap,swapRides,fuku,meter,card,other,mishu,bku,cash,app,etc,etcCo,etcSelf,total,meterCalc,
+    // GO配車（日報の備考に「A」）なのに現金の乗車（2026-11-24 本人指定）：決済エラーのあと GO Pay で払われても、日報では現収になるため。
+    //   本当に車内で現金をもらうこともあるので、自動では変えずに知らせるだけ。「現金のまま」を押した乗車（goCashOk）と、2行に分けた乗車の現金の側は出さない
+    const evs=(s.rows||[]).filter(x=>!isEv(x.kind));
+    const goCash=evs.filter(x=>x.pay==="現金"&&+x.amt>0&&/A/.test(x.memo||"")&&!x.goCashOk&&!evs.some(y=>y!==x&&y.on===x.on));
+    return {swap,swapRides,fuku,goCash,meter,card,other,mishu,bku,cash,app,etc,etcCo,etcSelf,total,meterCalc,
       // 簡易入力は決済の内訳がないので、納金は出さない
       nokin:total==null||d.mode==="simple"?null:((total-mishu)+(etc-etcCo)+app)-bku,
       meterOk:meterCalc!=null&&meterCalc===meter,
@@ -8027,6 +8031,9 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("ckResult").innerHTML=simple?`<div class="geo">簡易入力では決済の内訳がないため、納金額と照合は出しません。売上額①を入れれば鍵をかけられます。</div>`:
       st.total==null?`<div class="geo">売上額①（日報の総営収）を入れると、納金額と照合の結果を出します。</div>`:
       `<div class="checks">
+        ${st.goCash.length&&!d.locked?`<div class="grp" style="margin:4px 0;border-left:6px solid var(--warn)"><b>GO配車で現収の乗車があります。GO Payで払われていたら、決済を選び直してください</b>
+          <div class="src">決済がエラーになり、あとでGO Payで払われた乗車も、日報では現収になります。車内で本当に現金をもらったときは「現金のまま」を押してください。</div>
+          ${st.goCash.map(x=>`<div class="btnrow" style="align-items:center"><span>${tm(x.on)} の乗車 ${yen(x.amt)}円${x.onAddr?`（${esc(x.onAddr)}）`:""}</span><button class="btn" data-gopay="${esc(x.id)}">GO Payにする</button><button class="btn" data-gocash="${esc(x.id)}">現金のまま</button></div>`).join("")}</div>`:""}
         ${st.meterOk?`<span class="pill ok">メーター照合 OK（${yen(st.meter)}円）</span>`:`<span class="pill bad">メーター照合 NG：記録の合計 ${yen(st.meter)}円／明細書から ${yen(st.meterCalc)}円（差 ${yen(st.meter-st.meterCalc)}円）</span>${!st.etcSelf&&st.etc?`<small class="err">ETC自己負担が0のままになっていませんか？高速道路利用明細の「納金分」の入力漏れがないか確認してください。</small>`:""}`}
         ${st.swap?`<div class="grp" style="margin:4px 0;border-left:6px solid var(--warn)"><b>日報では現収・記録では未収の乗車が ${yen(st.swap)}円 あります</b>${st.swapRides.length?`（${st.swapRides.map(x=>`${tm(x.on)} の乗車 ${yen(x.amt)}円・${esc(payLabel(x.pay))}`).join("、")}）`:""}
           <div class="src">決済がエラーになり、あとで決済された場合などです。記録（未収）のままでOKで、納金額もこのままです。納金明細書の伝達事項に書いてください。下のボタンで、伝達事項に文を入れられます（あとで直せます）。</div>
@@ -8037,6 +8044,11 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         ${st.sumOk==null?"":`<span class="pill ${st.sumOk?"ok":"warn"}">日計表の合計 ${st.sumOk?"OK":"要確認"}</span>`}
       </div>
       <div class="src">メーター照合：①＋⑦＋⑤−⑥−ETC自己負担−⑧ が、記録の合計（メーター日計）と同じならOK。納金額＝①−④＋⑤−⑥＋⑦−⑧。</div>`;
+    // GO配車で現金の乗車：GO Pay にする／現金のまま（2026-11-24）
+    $("ckResult").querySelectorAll("[data-gopay],[data-gocash]").forEach(b=>b.onclick=()=>{ const dd=ensureDay(sDay); if(dd.locked&&!guard(dd)) return;
+      const r=dd.rides.find(x=>x.id===(b.dataset.gopay||b.dataset.gocash)); if(!r) return;
+      if(b.dataset.gopay) r.pay="A:GOPAY"; else r.goCashOk=true;
+      saveSales(); renderSales(); });
     // 決済エラーの付け替え：伝達事項に文を足す
     $("ckResult").querySelectorAll("[data-swapnote]").forEach(b=>b.onclick=()=>{ const dd=ensureDay(sDay); if(dd.locked&&!guard(dd)) return;
       const what=st.swapRides.length?st.swapRides.map(x=>`${tm(x.on)}乗車（${yen(x.amt)}円）`).join("・"):`${yen(st.swap)}円分`;
