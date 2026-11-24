@@ -1943,6 +1943,8 @@ body.rtfull{overflow:hidden}
   </section>
   <section class="card" id="hpoolCard" hidden>
     <div class="src" id="hpInfo">読み込んでいます…</div>
+    <div class="field"><label for="hpKind">見るもの</label><select id="hpKind"></select></div>
+    <div class="src" id="hpKindNote"></div>
     <div class="hpwrap"><table class="hptbl" id="hpTbl"></table></div>
     <div class="msg" id="hpTip" role="status">ます目を押すと、くわしく出ます</div>
     <div class="field"><label for="hpDay">曜日ごとの24時間</label><select id="hpDay"><option value="0">月曜日</option><option value="1">火曜日</option><option value="2">水曜日</option><option value="3">木曜日</option><option value="4">金曜日</option><option value="5">土曜日</option><option value="6">日曜日</option></select></div>
@@ -1972,7 +1974,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-23 22:14</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-24 18:49</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -3592,7 +3594,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     pay:{t:"📈 売上差額チェック",d:"給与明細とアプリの売上の差を、月度ごとに見ます（管理者のみ）。",ids:["payDiffCard"]},
     ticket:{t:"🎫 チケット確認",d:"お客様からタクシーチケットを受け取るときに、写真を撮って（または手で入れて）、受け取れないチケットの一覧と照らし合わせます。",ids:["ticketCard"]},
     teigaku:{t:"💴 定額運賃",d:"羽田空港・成田空港・東京ディズニーリゾートの定額運賃です。行き先と区を選ぶと、4つの料金が出ます。有料道路の料金は別です。",ids:["teigakuCard"]},
-    hpool:{t:"🚕 羽田プールの動き（試し）",d:"羽田の第3待機所（前方のカメラ）で、1時間のうち列が動いた分の数です。多いほど、はけが良い目安です。本人のPCが毎朝6時に数え直して送ります（管理者のみ）。",ids:["hpoolCard"]},
+    hpool:{t:"🚕 羽田プールの動き（試し）",d:"羽田の第3待機所（前方のカメラ）の写真から数えた、1時間あたりの動きです。「見るもの」で、一番前の列から出ていった台数・詰めてきた台数・空っぽだった分・列が動いた分を切りかえられます。本人のPCが毎朝6時に数え直して送ります（管理者のみ）。",ids:["hpoolCard"]},
     place:{t:"🏥 乗せた場所の名前をまとめて確かめる",d:"乗せた場所の施設名を、一覧でまとめて確かめます（管理者とグループ1の人だけ）。",ids:["placeCard"]}};
   const PAGE_IDS=[].concat(...Object.values(PAGES).map(p=>p.ids)), MOVE_IDS=PAGE_IDS.concat(["shareCard"]), setPh={};
   let menuStyle="tile"; try{ menuStyle=localStorage.getItem("tenko.menuStyle")||"tile"; }catch(e){}
@@ -6701,18 +6703,29 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       if(j.none){ $("hpInfo").textContent="まだ数字が届いていません（本人のPCが毎朝6時に送ります）"; return; }
       hpData=j; hpDraw(); }
     catch(e){ $("hpInfo").textContent="通信できませんでした。電波のよいところでもう一度"; } }
+  // 見るもの（2026-11-24 追加）：動いた分（前から）／一番前の列から出ていった台数／詰めてきた台数／空っぽだった分
+  const HP_KINDS={
+    v:{l:"列が動いた分",u:"分",tip:x=>`1時間に約${x}分動いた`,note:"1時間のうち、写真が変わった分の数です。出ていく車と入ってくる車を区別していません。"},
+    out:{l:"出ていった台数（目安）",u:"台",tip:x=>`1時間に約${x}台、一番前の列から出ていった`,note:"一番前の列（三角コーンの右から右奥へ並ぶ列）から、出口（建物の手前）へ出ていった台数の目安です。手前の3台分だけを数えるので、実際より少なめに出ます。1分のうちに入れかわった車は数えもれます。多いほど、はけが良い目安です。"},
+    inn:{l:"詰めてきた台数（目安）",u:"台",tip:x=>`1時間に約${x}台、うしろの列から詰めてきた`,note:"一番前の列が空いたあと、うしろの列から前に詰めてきた台数の目安です（手前の3台分まで）。"},
+    emp:{l:"一番前が空っぽの分",u:"分",tip:x=>`1時間のうち約${x}分、一番前の列に車がいなかった`,note:"一番前の列に1台もいなかった分の数です。長いほど、待っている車が少ない（空いている）目安です。呼ばれた直後の1〜2分も空っぽに入ります。"}};
   function hpDraw(){ const d=hpData; if(!d) return;
-    const WDN=["月","火","水","木","金","土","日"], v=d.v||[], n=d.n||[], mx=Math.max(1,...v.filter(x=>x!=null));
+    const ks=$("hpKind"), xs=d.x||{}, have=Object.keys(HP_KINDS).filter(k=>k==="v"||Array.isArray(xs[k]));
+    if(ks.dataset.keys!==have.join()){ const cur=ks.value; ks.innerHTML=have.map(k=>`<option value="${k}">${HP_KINDS[k].l}</option>`).join(""); ks.value=have.includes(cur)?cur:(have.includes("out")?"out":"v"); ks.dataset.keys=have.join(); }
+    ks.onchange=hpDraw;
+    const K=HP_KINDS[ks.value]||HP_KINDS.v;
+    const WDN=["月","火","水","木","金","土","日"], v=(ks.value==="v"?d.v:xs[ks.value])||[], n=d.n||[], mx=Math.max(1,...v.filter(x=>x!=null));
     const at=d.at?new Date(d.at+9*3600e3).toISOString().slice(5,16).replace("-","/").replace("T"," "):"不明";
-    $("hpInfo").innerHTML=`記録：${esc(d.period||"不明")}　（送られてきたのは ${at}）<br>ます目の数字は「1時間のうち、列が動いた分の数」（多いほど、はけが良い目安）。「・」はまだ記録がない時間です。${d.th!=null?`「動いた」は、写真の変わったところが${esc(String(Math.round(d.th*1000)/10))}%以上の1分です。`:""}出ていく車と入ってくる車を区別していません。`;
+    $("hpInfo").innerHTML=`記録：${esc(d.period||"不明")}　（送られてきたのは ${at}）<br>ます目の数字は、1時間あたりの数です（何日分かの平均）。「・」はまだ記録がない時間です。${d.th!=null?`「列が動いた」は、写真の変わったところが${esc(String(Math.round(d.th*1000)/10))}%以上の1分です。`:""}`;
+    $("hpKindNote").textContent=K.note;
     const lv=x=>x==null?"":x/mx>=.8?"l4":x/mx>=.6?"l3":x/mx>=.4?"l2":x/mx>=.2?"l1":"l0";
     let h="<tr><th></th>"+Array.from({length:24},(_,i)=>`<th>${i}</th>`).join("")+"</tr>";
     for(let w=0;w<7;w++){ h+=`<tr><th>${WDN[w]}</th>`; for(let hr=0;hr<24;hr++){ const x=v[w*24+hr]; h+=`<td class="${x==null?"none":lv(x)}" data-hp="${w*24+hr}">${x==null?"・":Math.round(x)}</td>`; } h+="</tr>"; }
     $("hpTbl").innerHTML=h;
     $("hpTbl").querySelectorAll("[data-hp]").forEach(td=>td.onclick=()=>{ const i=+td.dataset.hp, x=v[i];
-      $("hpTip").textContent=`${WDN[Math.floor(i/24)]}曜 ${i%24}時台：`+(x==null?"まだ記録がありません":`1時間に約${Math.round(x)}分動いた（${n[i]||0}日分の平均）`); });
+      $("hpTip").textContent=`${WDN[Math.floor(i/24)]}曜 ${i%24}時台：`+(x==null?"まだ記録がありません":`${K.tip(Math.round(x))}（${n[i]||0}日分の平均）`); });
     const sel=$("hpDay"); if(!sel.dataset.init){ sel.value=String((new Date(Date.now()+9*3600e3).getUTCDay()+6)%7); sel.dataset.init="1"; }
-    const bars=()=>{ const w=+sel.value; $("hpBars").innerHTML=Array.from({length:24},(_,hr)=>{ const x=v[w*24+hr]; return `<div class="${x==null?"none":""}" style="height:${x==null?2:Math.max(2,x/mx*100)}%" title="${hr}時台 ${x==null?"記録なし":Math.round(x)+"分"}"></div>`; }).join(""); };
+    const bars=()=>{ const w=+sel.value; $("hpBars").innerHTML=Array.from({length:24},(_,hr)=>{ const x=v[w*24+hr]; return `<div class="${x==null?"none":""}" style="height:${x==null?2:Math.max(2,x/mx*100)}%" title="${hr}時台 ${x==null?"記録なし":Math.round(x)+K.u}"></div>`; }).join(""); };
     sel.onchange=bars; bars();
     $("hpHrs").innerHTML=Array.from({length:24},(_,i)=>`<span>${i%3?"":i}</span>`).join("");
     $("hpSrc").textContent="出典："+(d.src||"不明");
