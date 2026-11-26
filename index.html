@@ -861,6 +861,9 @@ body.rtfull{overflow:hidden}
   <div class="list" id="list"></div>
 
   <button class="add" id="addBtn">＋ 勤務を追加</button>
+  <!-- 有給（2026-11-26 本人指定）：登録・取り消し・日付の変更、残りの回数、1年分の履歴 -->
+  <button class="add" id="yuAddBtn">＋ 有給を登録</button>
+  <section class="card" id="yuCard"></section>
 
   <section class="card" id="schedCard">
     <h2>会社の予定表から計画を入れる</h2>
@@ -1974,7 +1977,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-25 16:05</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-26 12:01</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2189,6 +2192,20 @@ body.rtfull{overflow:hidden}
   </div>
 </div>
 
+<!-- 有給の登録・直す（2026-11-26 本人指定。時間の入力はなし） -->
+<div class="sheet" id="yuSheet" hidden role="dialog" aria-modal="true" aria-labelledby="yuSheetTitle">
+  <div class="in">
+    <h2 id="yuSheetTitle">有給を登録</h2>
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn primary" id="yuSaveBtn">保存</button>
+      <button class="btn" id="yuCancelBtn">閉じる</button>
+      <button class="btn danger" id="yuDelBtn">有給を取り消す</button>
+    </div>
+    <div class="field"><label for="yuDate">有給の日（出社する予定だった日）</label><input type="date" id="yuDate"></div>
+    <div class="src">時間の入力はいりません。有給の日の金額は、その月度に出勤した乗務（公出を除く）の売上の平均で、売上の月度の集計に出ます。拘束時間・回数・実車時間には入れません。</div>
+    <div class="msg" id="yuMsg" role="status"></div>
+  </div>
+</div>
 <div class="sheet-bg" id="sheetBg" hidden></div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="in">
@@ -2298,6 +2315,10 @@ body.rtfull{overflow:hidden}
   { let moved=false; Object.keys(sales.days).forEach(k=>{ if(!sales.days[k].kode) return; const r=recs.find(x=>x.date===k); if(!r) return; r.kode=true; delete sales.days[k].kode; moved=true; });
     if(moved){ lsSave(KEY,JSON.stringify(recs),"点呼の記録"); lsSave(SKEY,JSON.stringify(sales),"売上"); } }
   const isKode=k=>{ const r=recs.find(x=>x.date===k); return !!((r&&r.kode)||(sales.days[k]&&sales.days[k].kode)); };
+  // 有給（2026-11-26 本人指定）：点呼の記録（recs）には混ぜず sales.yukyu に持つ（拘束時間・休息・連勤・売上の回数などの計算を変えないため）
+  //   days[日付]={src:"hand"|"sch", fix:{amt,n,at}}（fix＝月度が締まって決まった金額）、skip＝予定表の「有」を本人が取り消した日、start＝起算日、per＝年の付与回数
+  function yuCfg(){ const y=sales.yukyu=sales.yukyu||{}; y.days=y.days||{}; y.skip=y.skip||{}; if(!(+y.per>0)) y.per=5; return y; }
+  const isYu=k=>!!(sales.yukyu&&sales.yukyu.days&&sales.yukyu.days[k]);
 
   const $=id=>document.getElementById(id);
   // 声の入力は、ほかの画面へ移ったとき・アプリを閉じたとき（裏に回したとき）に必ず止める（2026-11-15 見直しの提案13・ユーザー指定）
@@ -2460,7 +2481,12 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
         ${c.ok?`<div class="chips">${chipsFor(c)}</div>`:""}
       </button>`;
     };
-    $("list").innerHTML=(before?card(before,true):"")+inP.map(c=>card(c,false)).join("") || "";
+    // 有給の日も、日付の順に並べる（押すと日付の変更・取り消し）
+    const yuIn=Object.keys((sales.yukyu&&sales.yukyu.days)||{}).filter(k=>k>=P.start&&k<=P.end);
+    const items=inP.map(c=>({k:c.r.date,h:card(c,false)})).concat(yuIn.map(k=>({k,h:`<button class="shift yu" data-yu="${k}">
+        <div class="top"><span class="date num">${md(k)}</span><span class="dow">${dow(k)}曜</span><span class="kind">🌴 有給${sales.yukyu.days[k].src==="sch"?"（予定表）":""}</span></div></button>`}))).sort((a,b)=>a.k<b.k?-1:a.k>b.k?1:0);
+    $("list").innerHTML=(before?card(before,true):"")+items.map(x=>x.h).join("") || "";
+    setTimeout(()=>{ try{ renderYu(); }catch(e){} },0);   // 有給の残り・履歴（売上の計算を使うので、読み込みが終わってから）
     { const t=todayStr(); $("todayJump").textContent=`📅 今日 ${md(t)}（${dow(t)}）へ`; }
     resetBackup();   // データが変わったら、作ったバックアップは作り直してもらう
   }
@@ -2481,7 +2507,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     $("fDate").value=r.date; $("fPb").value=r.pb; $("fPa").value=r.pa; $("fAb").value=r.ab; $("fAa").value=r.aa; $("fSh").value=r.sh||""; $("fKode").checked=!!r.kode;
     $("sheet").hidden=$("sheetBg").hidden=false; liveCalc(); $("fDate").focus();
   }
-  function closeSheet(){ $("sheet").hidden=$("sheetBg").hidden=true; }
+  function closeSheet(){ $("sheet").hidden=$("sheetBg").hidden=true; $("yuSheet").hidden=true; }
   function formRec(){ const r={id:editId||("r"+Date.now()),date:$("fDate").value,pb:$("fPb").value,pa:$("fPa").value,ab:$("fAb").value,aa:$("fAa").value}; if($("fSh").value) r.sh=$("fSh").value; if($("fKode").checked) r.kode=true; return r; }
   function liveCalc(){
     const f=formRec(); if(!f.date){ $("live").textContent="出社日を入れてください"; return; }
@@ -2501,7 +2527,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     recs=recs.filter(x=>x.id!==editId); save(); closeSheet(); render();
   };
   $("cancelBtn").onclick=closeSheet; $("sheetBg").onclick=closeSheet;
-  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("sheet").hidden) closeSheet(); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&(!$("sheet").hidden||!$("yuSheet").hidden)) closeSheet(); });
   // 今日へ：今日の日付の勤務 → なければ今が勤務中の勤務（前の日の出社など）→ なければ次の勤務。今日の月度でなければ月度も切りかえる
   $("todayJump").onclick=()=>{
     const t=todayStr(), all=calc(), nowD=new Date(), nowAbs=dayNo(t)*DAY+nowD.getHours()*60+nowD.getMinutes();
@@ -2512,8 +2538,31 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     el.scrollIntoView({behavior:"smooth",block:"center"});
     el.classList.add("jumped"); setTimeout(()=>el.classList.remove("jumped"),1800);
   };
-  $("list").addEventListener("click",e=>{ const b=e.target.closest(".shift"); if(b) openSheet(b.dataset.id); });
+  $("list").addEventListener("click",e=>{ const b=e.target.closest(".shift"); if(!b) return; if(b.dataset.yu) openYu(b.dataset.yu); else openSheet(b.dataset.id); });
   $("addBtn").onclick=()=>openSheet(null);
+  // ---- 有給の登録・直す・取り消す（2026-11-26 本人指定） ----
+  let yuEdit=null, yuDelArmed=false;
+  // 有給にできない日：点呼の実績がある日・売上の記録がある日（実際に勤務した日）
+  function yuBlock(k){ const r=recs.find(x=>x.date===k); if(r&&(r.ab||r.aa)) return "この日は点呼の実績が入っているので、有給にできません";
+    const d=sales.days[k]; if(d&&d.rides&&d.rides.some(x=>!EVENTS.includes(x.kind))) return "この日は売上の記録があるので、有給にできません"; return ""; }
+  // 有給にした日の、点呼の計画（実績のないもの）は外す（予定表から入った出番の計画など）
+  function yuDropPlan(k){ const i=recs.findIndex(x=>x.date===k&&!x.ab&&!x.aa); if(i<0) return false; recs.splice(i,1); save(); return true; }
+  function yuAdd(k,src){ const y=yuCfg(); y.days[k]={src}; delete y.skip[k]; return yuDropPlan(k); }
+  function yuRemove(k){ const y=yuCfg(), o=y.days[k]; if(!o) return; if(o.src==="sch") y.skip[k]=1; delete y.days[k]; }   // 予定表の「有」を取り消した日は、次に予定表を読んでも戻さない
+  function openYu(k){ yuEdit=k||null; yuDelArmed=false; $("yuDelBtn").textContent="有給を取り消す"; $("yuMsg").textContent="";
+    $("yuSheetTitle").textContent=k?"有給を直す":"有給を登録"; $("yuDelBtn").hidden=!k; $("yuDate").value=k||todayStr();
+    $("yuSheet").hidden=$("sheetBg").hidden=false; $("yuDate").focus(); }
+  $("yuAddBtn").onclick=()=>openYu(null);
+  $("yuCancelBtn").onclick=closeSheet;
+  $("yuSaveBtn").onclick=()=>{ const k=$("yuDate").value; if(!k){ $("yuMsg").textContent="日にちを入れてください"; return; }
+    if(k!==yuEdit&&isYu(k)){ $("yuMsg").textContent="この日はもう有給になっています"; return; }
+    const bl=yuBlock(k); if(bl){ $("yuMsg").textContent=bl; return; }
+    if(yuEdit&&yuEdit!==k) yuRemove(yuEdit);
+    if(yuEdit!==k) yuAdd(k,"hand");
+    saveSales(); const i=periodOf(k); if(i>=0) pIdx=i; closeSheet(); render(); };
+  $("yuDelBtn").onclick=()=>{ if(!yuEdit) return;
+    if(!yuDelArmed){ yuDelArmed=true; $("yuDelBtn").textContent="もう一度押すと取り消し"; return; }
+    yuRemove(yuEdit); saveSales(); closeSheet(); render(); };
   $("prevP").onclick=()=>{ if(pIdx>0){pIdx--;render();} };
   $("nextP").onclick=()=>{ if(pIdx<PERIODS.length-1){pIdx++;render();} };
 
@@ -2749,7 +2798,15 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       // 予定表の「昼」「夜」＝日勤・夜勤（j.sh。サーバーが古いと来ないので、そのときは今までどおり隔日として入れる）
       let added=0, noTime=0; const kode=new Set(j.kode||[]), work=new Set(j.dates||[]), shOf=d=>(j.sh&&j.sh[d])||"", chg=[];
       const md2=d=>(+d.slice(5,7))+"/"+(+d.slice(8,10));
+      // 有給（2026-11-26 本人指定）：予定表の「有」の日を有給にする（j.yu。サーバーが古いと来ないので、そのときは何もしない）
+      //   予定表から入った有給で、予定表が直されて「有」でなくなった日は外す（月度が締まって金額が決まった日は残す）。自分で登録した有給はさわらない
+      let yuCh=false;
+      if(j.yu){ const y=yuCfg(), yset=new Set(j.yu), inCv=d=>(j.cover||[]).some(([a,b])=>d>=a&&d<=b);
+        Object.keys(y.days).forEach(d=>{ const o=y.days[d]; if(o.src==="sch"&&!o.fix&&inCv(d)&&!yset.has(d)){ delete y.days[d]; yuCh=true; chg.push(md2(d)+"（有給でなくなった）"); } });
+        j.yu.forEach(d=>{ if(y.days[d]||y.skip[d]||yuBlock(d)) return; yuAdd(d,"sch"); yuCh=true; chg.push(md2(d)+"（有給）"); }); }
+      if(yuCh) saveSales();
       (j.dates||[]).forEach(d=>{
+        if(isYu(d)) return;   // 有給の日には、出番の計画を入れない
         const ex=recs.find(r=>r.date===d), sh=shOf(d);
         if(ex){
           if(ex.ab) return;   // まだ業務前点呼をしていない勤務だけ
@@ -6778,6 +6835,56 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     return {k,d,s,st,has,amt,est:st.total==null,cnt:d.mode==="simple"?+d.simple.cnt||0:s.count};
   }
 
+  // ---- 有給の金額（2026-11-26 本人指定） ----
+  // 1回分＝その月度に出勤した乗務（公出・有給の日を除く、売上のある勤務）の「売上（総営収・税込）」の平均。
+  // 月度の途中は「見込み」。月度が終わり、出勤した乗務の総営収が全部入ったら、その平均で決める（fix に残す）
+  function yuAvg(i){ const P=PERIODS[i]; if(!P) return null;
+    const ks=[...new Set([...Object.keys(sales.days),...recs.map(r=>r.date)])].filter(k=>k>=P.start&&k<=P.end&&!isKode(k)&&!isYu(k));
+    const xs=ks.map(shiftSales).filter(x=>x.has);
+    return {n:xs.length,avg:xs.length?xs.reduce((a,x)=>a+x.amt,0)/xs.length:null,est:xs.some(x=>x.est)}; }
+  function yuAmtOf(k){ const o=yuCfg().days[k]; if(!o) return null;
+    if(o.fix) return {amt:o.fix.amt,n:o.fix.n,fixed:true};
+    const a=yuAvg(periodOf(k)); return {amt:a&&a.avg!=null?Math.round(a.avg):null,n:a?a.n:0,fixed:false}; }
+  function yuFreeze(){ const y=yuCfg(), t=todayStr(); let ch=false;
+    Object.keys(y.days).forEach(k=>{ const o=y.days[k]; if(o.fix) return; const i=periodOf(k), P=PERIODS[i]; if(!P||P.end>=t) return;
+      const a=yuAvg(i); if(!a||a.avg==null||a.est) return; o.fix={amt:Math.round(a.avg),n:a.n,at:t}; ch=true; });
+    if(ch) saveSales(); }
+  // 有給の付与の期間：起算日から1年ごと。今の期間は「起算日（その年）〜次の起算日の前日」で、前日が過ぎると残りは消える
+  const addYear=(k,n)=>{ const d=new Date(k+"T00:00:00"); d.setFullYear(d.getFullYear()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  const addDay=(k,n)=>{ const d=new Date(k+"T00:00:00"); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  const addMonth=(k,n)=>{ const d=new Date(k+"T00:00:00"); d.setMonth(d.getMonth()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+  function yuTerm(){ const y=yuCfg(), t=todayStr(); if(!y.start) return null; if(t<y.start) return {before:true,start:y.start};
+    let g=y.start, n=0; while(addYear(y.start,n+1)<=t) n++; g=addYear(y.start,n);
+    const end=addDay(addYear(y.start,n+1),-1), used=Object.keys(y.days).filter(k=>k>=g&&k<=end).length;
+    return {start:g,end,used,per:+y.per,left:+y.per-used,warnFrom:addMonth(end,-3)}; }
+  const ymdJ=k=>`${+k.slice(0,4)}/${+k.slice(5,7)}/${+k.slice(8,10)}`;
+  function renderYu(){ const el=$("yuCard"); if(!el) return; yuFreeze();
+    const y=yuCfg(), T=yuTerm(), t=todayStr(), cf=salesCfg();
+    const hist=Object.keys(y.days).filter(k=>k>addYear(t,-1)).sort().reverse();   // 1年分の履歴（これからの予定も含む）
+    const warn=T&&!T.before&&T.left>0&&t>=T.warnFrom?`<div class="pill warn" style="display:block;margin:6px 0">⚠ 有給があと${T.left}回残っています。${ymdJ(T.end)}を過ぎると消えます</div>`:"";
+    el.innerHTML=`<h2>有給休暇</h2>
+      ${!T?`<div class="src">下の「起算日」を入れると、使った回数と残りを出します。</div>`:T.before?`<div class="src">起算日（${ymdJ(T.start)}）より前なので、まだ有給はありません。</div>`
+      :`<div class="row"><span>残り</span><span class="total num">${T.left}<small style="font-size:16px;color:var(--muted)"> / ${T.per}回</small></span></div>
+        <div class="src num">${ymdJ(T.start)}〜${ymdJ(T.end)}の分：使った ${T.used}回・残り ${T.left}回（${ymdJ(T.end)}を過ぎると消えます）</div>${T.left<0?`<div class="pill warn" style="display:block;margin:6px 0">年の回数（${T.per}回）より多く登録されています。日付と設定を確かめてください</div>`:""}`}
+      ${warn}
+      <details${hist.length?"":" hidden"}><summary>1年分の履歴（${hist.length}回）</summary><table class="cmpt"><thead><tr><td>日</td><td>金額（税込・税抜）</td><td>入れ方</td></tr></thead><tbody>${hist.map(k=>{ const a=yuAmtOf(k);
+        return `<tr><td class="num">${md(k)}（${dow(k)}）<br><small>${k.slice(0,4)}年</small></td><td class="num">${a&&a.amt!=null?`${yen(a.amt)}円<br><small>税抜 ${yen(a.amt*cf.tax)}円・${a.fixed?"確定":"見込み"}</small>`:"—<br><small>出勤の売上がまだない</small>"}</td><td>${y.days[k].src==="sch"?"予定表":"手で登録"}</td></tr>`; }).join("")}</tbody></table></details>
+      <details><summary>有給の設定（起算日・年の回数）</summary>
+        <div class="field"><label for="yuStart">起算日（有給がもらえる日。入社6か月後の日など）</label><input type="date" id="yuStart" value="${esc(y.start||"")}"></div>
+        <div class="field"><label for="yuPer">1年にもらえる回数（乗務の数）</label><input type="number" id="yuPer" min="1" max="30" inputmode="numeric" value="${+y.per}"></div>
+        <div class="src">起算日から1年ごとに数え直します。次の起算日の前日を過ぎると、残りは消えます（繰り越しはしません）。消える3か月前から、残りがあればお知らせを出します。</div>
+      </details>`;
+    $("yuStart").onchange=()=>{ const v=$("yuStart").value; if(v) y.start=v; else delete y.start; saveSales(); renderYu(); };
+    $("yuPer").onchange=()=>{ const v=Math.round(+$("yuPer").value); if(v>=1&&v<=30){ y.per=v; saveSales(); } renderYu(); };
+  }
+  // 月度の集計に出す有給の分（概算給与・賞与積立には入れない。2026-11-26 本人指定：会社に確かめるまで分けて出す）
+  function yuMonthHtml(P,cf,netWork){ const ks=Object.keys(yuCfg().days).filter(k=>k>=P.start&&k<=P.end).sort(); if(!ks.length) return "";
+    const as=ks.map(yuAmtOf), ok=as.every(a=>a&&a.amt!=null), sum=as.reduce((s,a)=>s+((a&&a.amt)||0),0), fixed=as.every(a=>a&&a.fixed), n=as[0]?as[0].n:0;
+    return `<div class="grp" style="margin-top:8px"><div class="row"><span>🌴 有給 ${ks.length}回分<small style="font-size:13px;color:var(--muted)">（${fixed?"確定":"見込み"}）</small></span><span class="num" style="font-size:22px;font-weight:700">${ok?yen(sum*cf.tax):"—"}<small style="font-size:14px;color:var(--muted)"> 円</small></span></div>
+      <div class="src num">税抜。税込 ${ok?yen(sum):"—"}円。1回分＝出勤した${n}乗務（公出を除く）の売上（総営収・税込）の平均 ${ok?yen(sum/ks.length):"—"}円${fixed?"":"。月度の途中や総営収が未入力のあいだは見込みで、変わります"}</div>
+      ${ok?`<div class="row" style="margin-top:4px"><span>出勤分＋有給分（税抜）</span><span class="num" style="font-size:18px;font-weight:700">${yen(netWork+sum*cf.tax)}<small style="font-size:14px;color:var(--muted)"> 円</small></span></div>`:""}
+      <div class="src">有給の分は、上の概算給与・賞与積立には入れていません（会社のきまりを確かめるまで分けて出します）。</div></div>`; }
+
   // ---- 月度の集計 ----
   let mIdx=-1, sView="day";
   try{ sView=localStorage.getItem("tenko.sview")||"day"; }catch(e){}
@@ -6840,7 +6947,7 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     // 6月度は12月度〜5月度、12月度は6月度〜11月度の積み立てを、その月の賞与見込みとして出す
     const bonusRow=P.m===6||P.m===12?(()=>{ let b=0; for(let i=mIdx-6;i<mIdx;i++) b+=periodNet(i)*cf.pay*cf.bonus;
       return `<div class="row" style="margin-top:8px"><span>${P.m}月の賞与見込み<small style="font-size:13px;color:var(--muted)">（${P.m===6?"12月度〜5月度":"6月度〜11月度"}）</small></span><span class="num" style="font-size:22px;font-weight:700">${yen(b)}<small style="font-size:14px;color:var(--muted)"> 円</small></span></div>`; })():"";
-    $("mSum").innerHTML=mSumHtml(done,cf,bonusRow);
+    yuFreeze(); $("mSum").innerHTML=mSumHtml(done,cf,bonusRow,yuMonthHtml(P,cf,net));   // 有給の分は別に出す（2026-11-26）
     // 時間帯別：詳細入力の勤務だけで、1勤務あたりの平均と合計
     const hd=done.filter(x=>x.d.mode!=="simple"&&x.d.rides.some(r=>!isEv(r.kind)));
     const hs=Array(24).fill(0); hd.forEach(x=>hourly(x.d).forEach((v,h)=>hs[h]+=v));
@@ -6859,9 +6966,13 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
       $("mGoalIn").addEventListener("change",()=>{ const v=numOf($("mGoalIn").value); sales.cfg=Object.assign(salesCfg(),{goals:Object.assign({},(sales.cfg&&sales.cfg.goals)||{},{[gk]:v||null})}); saveSales(); renderMonth(); });
     }
     if(hd.length) $("mHour").innerHTML=hourBars(hs,hs.map(v=>v/hd.length));
-    $("mList").innerHTML=rows.slice().reverse().map(x=>`<button class="mrow" data-k="${x.k}">
+    // 有給の日も日付の順に並べる（押しても何もしない。直すのは点呼の画面）
+    const yuRows=Object.keys(yuCfg().days).filter(k=>k>=P.start&&k<=P.end).map(k=>{ const a=yuAmtOf(k);
+      return {k,h:`<div class="mrow"><span class="d num">${md(k)}（${dow(k)}）</span><span>🌴</span><span class="a num">${a&&a.amt!=null?yen(a.amt*cf.tax)+"円":"—"}</span>
+        <span class="s">有給（${a&&a.fixed?"確定":"見込み"}・回数・実車時間には入れない）</span></div>`}; });
+    $("mList").innerHTML=rows.map(x=>({k:x.k,h:`<button class="mrow" data-k="${x.k}">
         <span class="d num">${md(x.k)}（${dow(x.k)}）</span><span>${x.d.locked?"🔒":""}</span><span class="a num">${x.has?yen(x.amt*cf.tax)+"円":"未入力"}</span>
-        <span class="s">${x.has?`${x.cnt}回${x.st.nokin!=null?"・納金 "+yen(x.st.nokin)+"円":""}${x.est?"・総営収未入力（見込み）":""}`:"この勤務の売上はまだありません"}</span></button>`).join("")||`<div class="geo">この月度の勤務はまだありません</div>`;
+        <span class="s">${x.has?`${x.cnt}回${x.st.nokin!=null?"・納金 "+yen(x.st.nokin)+"円":""}${x.est?"・総営収未入力（見込み）":""}`:"この勤務の売上はまだありません"}</span></button>`})).concat(yuRows).sort((a,b)=>a.k<b.k?1:a.k>b.k?-1:0).map(x=>x.h).join("")||`<div class="geo">この月度の勤務はまだありません</div>`;
     mCalcFill(cf);
   }
   function mCalcFill(cf){
@@ -9987,7 +10098,7 @@ ETC自己負担: 数字（高速道路利用明細が添付されているとき
   // 保存したデータをスマホが勝手に消さないよう依頼する（対応していない機種では何もしない）
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   // 計算の自動試験の入口（tests	est_calc.py が使う）。このパソコンで試すとき（localhost）だけ出し、公開のページでは出さない（2026-11-10）
-  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) window.__T={calc,limitOf,monthCap,periodOf,PERIODS,dayCalc,settle,shiftSales,workOf,periodNet,salesCfg,getDay,parseNippo:typeof parseNippo==="function"?parseNippo:null};
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) window.__T={yuAvg,yuAmtOf,yuTerm,yuFreeze,calc,limitOf,monthCap,periodOf,PERIODS,dayCalc,settle,shiftSales,workOf,periodNet,salesCfg,getDay,parseNippo:typeof parseNippo==="function"?parseNippo:null};
   renderLinks();
   if(PROD) $("lResult").innerHTML=`<div class="geo">目的地を入れて「時間を調べる」を押すと、行きと帰り（高速・一般道）の時間と、業務後点呼の期限に間に合うかをここに出します。${cfg.pass?"":"<br>はじめに、下の「仲間用の合言葉」で合言葉を入れてください。"}</div>`;
   else showDemo();
