@@ -133,7 +133,7 @@ details summary{padding:6px 0}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-18 12:01</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-27 09:58</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -230,8 +230,8 @@ let HW=null;   // highway.json
 const COL=["#E8590C","#E8590C","#1864AB","#1864AB"], WT=[4,2.5,4,2.5];
 function drawHw(){
   hwLayer.clearLayers(); if(!HW) return;
-  HW.ways.forEach(([c,f])=>{ const pts=[]; for(let i=0;i<f.length;i+=2) pts.push([f[i],f[i+1]]);
-    L.polyline(pts,{renderer:ren,color:COL[c],weight:WT[c],opacity:c%2?.75:.95,interactive:false}).addTo(hwLayer); });
+  HW.ways.forEach(([c,f,ring])=>{ const pts=[]; for(let i=0;i<f.length;i+=2) pts.push([f[i],f[i+1]]);
+    L.polyline(pts,{renderer:ren,color:COL[c],weight:ring?7:WT[c],opacity:c%2?.75:.95,interactive:false}).addTo(hwLayer); });   // C1・C2は少し太く（2026-11-27 本人指定）
 }
 // 名前：大きくしたときだけ、見えている範囲の分を出す（JCT・SA/PAは12から、出口は13から、料金所は15から）
 function drawLbl(){
