@@ -63,6 +63,7 @@ body.full .panel{display:none}
 .hwl{font:800 13px/1.15 -apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;white-space:nowrap;color:#17201E;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;transform:translate(-50%,-130%);pointer-events:none}
 .hwl.j{color:#5F3DC4}.hwl.p{color:#2B8A3E}.hwl.sh{color:#C2410C}.hwl.nx{color:#1864AB}
 .hwl.big{font-size:15px}
+.hwl.x{font-size:15px}.hwl.x.big{font-size:17px}/* インターチェンジ・出口の名前は少し大きく（2026-11-27 本人指定） */
 .badge{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;color:#fff;font:800 15px/1 sans-serif;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
 .badge.in{background:#2B8A3E}.badge.out{background:#C92A2A}.badge.chg{background:#5F3DC4;font-size:12px}
 .bname{display:inline-block;width:max-content;font:800 15px/1.2 sans-serif;white-space:nowrap;background:#fff;border:2px solid #17201E;border-radius:8px;padding:2px 6px;color:#17201E;box-shadow:0 1px 4px rgba(0,0,0,.3)}
@@ -133,7 +134,7 @@ details summary{padding:6px 0}
 <button id="fullOff" class="fullbtn" hidden>全画面を閉じる</button>
 <div id="gPanel" class="gpanel" hidden><div class="gbar"><b>🚦 渋滞込みの時間（Google）</b><button type="button" class="btn" id="gClose">閉じる</button></div><div id="gMap"></div><div id="gInfo"></div></div>
 <div class="panel" id="panel">
-  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-27 09:58</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
+  <div class="ph"><div class="pht"><b>🛣️ 高速マップ</b><span class="ver">版 2026-11-27 10:31</span></div><button id="fullOn">全画面</button><button id="fold">閉じる</button></div>
   <div class="pb" id="pbody">
     <div class="box">
       <b>出発</b>
@@ -248,7 +249,7 @@ function drawLbl(){
     if(t==="T"&&z<15) return; if(t==="X"&&z<13) return; if((t==="J"||t==="P")&&z<12) return;
     const key=t+n; if(seen.has(key)&&z<15) return; seen.add(key);
     const cls=t==="J"?"j":t==="P"?"p":c===0?"sh":"nx";
-    L.marker([la,lo],{interactive:false,keyboard:false,icon:L.divIcon({className:"",iconSize:[0,0],html:`<div class="hwl ${cls}${z>=14?" big":""}">${t==="P"?"🅿 ":""}${esc(n)}</div>`})}).addTo(lblLayer); });
+    L.marker([la,lo],{interactive:false,keyboard:false,icon:L.divIcon({className:"",iconSize:[0,0],html:`<div class="hwl ${cls}${t==="X"?" x":""}${z>=14?" big":""}">${t==="P"?"🅿 ":""}${esc(n)}</div>`})}).addTo(lblLayer); });
 }
 map.on("moveend",drawLbl);
 
