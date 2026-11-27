@@ -283,7 +283,8 @@ a.flink:active{background:var(--sunk)}
 .patrolbanner.acbanner2{background:#E3F0FB;color:#123E66;border-bottom-color:#8DB8E0}.acbanner2 button{color:#123E66!important}
 .shiprow{border-bottom:1px solid var(--line);padding:9px 4px;font-size:15px}.shipfrom{display:flex;justify-content:space-between;gap:8px}.shipwhen{margin-top:2px}.shipeta{font-size:18px}.shipst{margin-left:6px;font-size:14px}.shipplan{color:var(--muted);font-size:14px}.shiprow.past{opacity:.5}.shiprow.s-cancel{background:rgba(210,60,47,.08)}.shiprow.s-cancel .shipst{color:#D23C2F;margin-left:8px}.shiprow.s-wait .shipst{color:var(--accent)}.shipnext.s-wait{border-color:var(--accent)}
 .shiprow.s-late .shipst,.shiprow.s-late .shipeta,.shiprow.s-cond .shipst,.shiprow.s-cond .shipeta{color:#E8890C}.shipraw{margin-top:10px;font-size:13px;color:var(--muted)}.shipraw div{margin:4px 0}.shipty{font-size:13px}.shipty.big{font-weight:700}.shipalert{border-left:6px solid #E8890C;background:rgba(232,137,12,.1);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
-.noticepop{position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}.noticepop[hidden]{display:none}.noticebox{background:var(--surface);color:var(--ink);border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}.noticebox b{font-size:18px}.noticebox small{color:var(--muted)}#noticeText{font-size:16px;line-height:1.6;white-space:pre-wrap}.noticebox .btn{align-self:flex-end;min-width:120px}
+.noticepop{position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}.noticepop[hidden]{display:none}.noticebox{background:var(--surface);color:var(--ink);border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}/* 長い文でも「読んだ」が画面の外に出ないように（2026-11-27） */.noticebox b{font-size:18px}.noticebox small{color:var(--muted)}
+.nthead{display:flex;align-items:center;gap:8px}.nthead b{flex:1}.ntfs{display:flex;gap:6px}.noticebox .ntfs .btn{min-width:0;padding:6px 10px;font-size:15px;align-self:auto}/* お知らせの文字の大きさ（2026-11-27 本人指定） */#noticeText{font-size:16px;line-height:1.6;white-space:pre-wrap;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1 1 auto;min-height:0;overscroll-behavior:contain}.noticebox .btn{align-self:flex-end;min-width:120px;flex:none}
 .qrbox{max-width:380px;align-items:stretch;max-height:calc(100vh - 40px);overflow:auto}.qrsteps b,.qrtxt b{font-size:inherit}.qrimg{background:#fff;border-radius:12px;padding:10px;width:min(72vw,260px);height:min(72vw,260px);margin:4px auto}.qrimg svg{display:block}
 .qrurl{text-align:center;font:700 15px/1.4 var(--num);word-break:break-all;color:var(--accent)}.qrtxt{font-size:14px;line-height:1.6}.qrsteps{margin:0;padding-left:20px;font-size:14px;line-height:1.6}.qrbox .btn{align-self:stretch!important}
 .ntrow{border-top:1px solid var(--line);padding:8px 0}.ntrow small{color:var(--muted)}
@@ -810,7 +811,7 @@ body.rtfull{overflow:hidden}
   <div class="qrtxt">タクシー乗務員向けの、無料のスマホ用ツールです（有志が作った非公式のツールで、会社のものではありません）。点呼時間のチェック、売上の記録、休憩場・乗り場・電車の乱れの地図などが使えます。アプリストアからのインストールは要りません。</div>
   <ol class="qrsteps"><li><b>スマホのカメラでこのQRコードを読み取って</b>、出てきた表示をタップします。</li><li><b>ホーム画面に追加</b>します。iPhone：共有ボタン→「ホーム画面に追加」／Android：右上の︙→「ホーム画面に追加」</li><li>次からは、<b>ホーム画面のアイコンから</b>開きます。</li></ol>
   <button type="button" class="btn primary" id="qrClose">閉じる</button></div></div>
-<div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><b id="noticeHead">📢 お知らせ</b><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
+<div id="noticePop" class="noticepop" hidden role="dialog" aria-modal="true" aria-labelledby="noticeHead"><div class="noticebox"><div class="nthead"><b id="noticeHead">📢 お知らせ</b><span class="ntfs"><button type="button" class="btn" id="noticeFsDn" aria-label="文字を小さくする">Ａ−</button><button type="button" class="btn" id="noticeFsUp" aria-label="文字を大きくする">Ａ＋</button></span></div><small id="noticeDate"></small><div id="noticeText"></div><button type="button" class="btn primary" id="noticeOk">読んだ</button></div></div>
 <div id="patrolBanner" class="patrolbanner" hidden role="alert"><span id="patrolBannerText"></span><button type="button" id="patrolBannerClose" aria-label="閉じる">×</button></div>
 <div id="speedBanner" class="patrolbanner" hidden role="alert"><span id="speedBannerText"></span><button type="button" id="speedBannerClose" aria-label="閉じる">×</button></div>
 <div id="ksBanner" class="patrolbanner ksbanner" hidden role="status"><span id="ksBannerText" style="flex:1;min-width:0;font-size:17px;font-weight:700;line-height:1.5"></span><button type="button" id="ksBannerClose" aria-label="閉じる">×</button></div>
@@ -1977,7 +1978,7 @@ body.rtfull{overflow:hidden}
 <div class="wrap" id="tabHelp" hidden>
   <div id="helpBack" class="menuback" hidden><button type="button" class="btn" id="helpBackBtn">← メニュー</button><b>📖 使い方</b></div>
   <section class="card help">
-    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-26 12:01</span><button class="btn" id="appReload">更新</button></div>
+    <div class="infohead"><h2>点呼ノートの使い方</h2><span class="verpill">版 2026-11-27 08:49</span><button class="btn" id="appReload">更新</button></div>
     <p><small>有志が作った非公式のツールです。会社のものではありません。無料で使えます。アプリストアからのインストールは不要です。右上の「版」は、このアプリの版の日時です。新しい版が出ているのに古いままのときは、「更新」ボタンを押してください（ホーム画面に保存している場合は、特にキャッシュが残りやすいです）。データが消えることはありません。</small></p>
     <p><small>アプリの時刻：<span class="num" id="appClock">--:--:--</span>（乗車・降車などのボタンは、この時刻で記録します。スマホの時計表示とずれていないか、ここで確かめられます）</small></p>
     <p>点呼の時刻から、拘束時間のルールを自動でチェックします。売上の記録・集計、みんなで共有する休憩場の地図、森ビルの専用乗り場の空き状況も見られます。<span class="member-only">朝のロングを受けてよいかも、渋滞予測込みで判定します。</span></p>
@@ -2954,11 +2955,15 @@ const hmj=m=>{ const s=m<0?"-":""; m=Math.abs(Math.round(m)); const h=Math.floor
     try{ const j=await post({action:"admin",op:"notes",adminPass:cfg.apass}); if(!j||!j.ok||!Array.isArray(j.notes)) return;
       admNotes=j.notes.map(n=>Object.assign({},n,{adm:1})); try{ localStorage.setItem("tenko.admNotes",JSON.stringify(admNotes)); }catch(e){} showNotice(); renderNoticeCard(); }catch(e){}
   }
+  // お知らせの文字の大きさ（Ａ−・Ａ＋。端末に覚える。12〜28px、初めは16px。2026-11-27 本人指定）
+  function noticeFs(step){ let v=16; try{ v=+localStorage.getItem("tenko.noticeFs")||16; }catch(e){} v=Math.min(28,Math.max(12,v+step*2)); try{ localStorage.setItem("tenko.noticeFs",String(v)); }catch(e){} const t=$("noticeText"); if(t) t.style.fontSize=v+"px"; if($("noticeFsDn")) $("noticeFsDn").disabled=v<=12; if($("noticeFsUp")) $("noticeFsUp").disabled=v>=28; }
+  if($("noticeFsDn")) $("noticeFsDn").onclick=()=>noticeFs(-1);
+  if($("noticeFsUp")) $("noticeFsUp").onclick=()=>noticeFs(1);
   function showNotice(){
     const rd=noticeRead(), now=Date.now(), x=allNotices().filter(n=>!rd.includes(n.id)&&new Date(n.until).getTime()>now).slice(-1)[0];   // 古いものから順に1つずつ
     const box=$("noticePop"); if(!box) return;
     if(!x){ box.hidden=true; return; }
-    $("noticeText").textContent=x.text; $("noticeDate").textContent=`${ntDate(x.at)} ${x.adm?"点呼データ（管理者だけ）":"管理者から"}`;
+    noticeFs(0); $("noticeText").textContent=x.text; $("noticeDate").textContent=`${ntDate(x.at)} ${x.adm?"点呼データ（管理者だけ）":"管理者から"}`;
     box.hidden=false;
     $("noticeOk").onclick=()=>{ const r=noticeRead(); if(!r.includes(x.id)) r.push(x.id); try{ localStorage.setItem("tenko.noticeRead",JSON.stringify(r.slice(-50))); }catch(e){} box.hidden=true; renderNoticeCard(); setTimeout(showNotice,300); };
   }
